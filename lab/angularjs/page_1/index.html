@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PuppetJs with AngularJS demo</title>
+
+  <!-- define base URL for the subpages -->
+  <base href="./../">
+
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+
+  <!-- include PuppetJs with dependencies -->
+  <script src="../../lib/json-patch/src/json-patch-duplex.js"></script>
+  <script src="../../src/puppet.js"></script>
+
+  <!-- include jQuery (required by Handsontable) -->
+  <script src="js/jquery.min.js"></script>
+
+  <!-- include Angular -->
+  <script src="js/angular.js"></script>
+
+  <!-- include Handsontable directive -->
+  <script src="directives/ui-handsontable/angular-ui-handsontable.full.js"></script>
+  <link rel="stylesheet" type="text/css" href="directives/ui-handsontable/angular-ui-handsontable.full.css">
+
+  <!-- include page load animation directive -->
+  <script src="directives/angular.animateMe.js"></script>
+
+  <!-- include dummy colorful buttons directive -->
+  <script src="directives/x-btn.js"></script>
+
+  <!-- include ngPartial directive -->
+  <script src="directives/angular.ngPartial.js"></script>
+
+  <!-- mock server responses -->
+  <script src="../../test/lib/sinon-1.7.1.js"></script>
+  <script src="../../test/mockServer.js"></script>
+
+  <!-- include app -->
+  <script src="js/app.js"></script>
+
+</head>
+<body ng-app="MyApp" ng-controller="AppController">
+
+<ul>
+  <li><a href="./page_1">Page 1</a></li>
+  <li><a href="./page_2">Page 2</a></li>
+</ul>
+
+<div ng-partial="subpage.html" ng-bind="{{subpage}}"></div>
+
+<hr>
+
+<p>
+  <small>The main document was loaded as <code>{{mainFile}}</code>.</small>
+</p>
+</body>
+</html>

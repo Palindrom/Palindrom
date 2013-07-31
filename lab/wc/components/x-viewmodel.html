@@ -1,0 +1,44 @@
+<link rel="import" href="animate-me.html">
+<link rel="import" href="x-btn-group.html">
+<link rel="import" href="x-viewmodel-page.html">
+<link rel="import" href="x-handsontable.html">
+
+<script src="../../../lib/json-patch/src/json-patch-duplex.js"></script>
+<script src="../../../src/puppet.js"></script>
+
+<script type="text/javascript" src="../../../test/lib/sinon-1.7.1.js"></script>
+<script type="text/javascript" src="../../../test/mockServer.js"></script>
+
+<element name="x-viewmodel">
+  <template>
+    <ul>
+      <li><a href="../page_1">Page 1</a></li>
+      <li><a href="../page_2">Page 2</a></li>
+    </ul>
+
+    <div is="animate-me">
+      <x-viewmodel-page model="{{ viewmodel }}" view="{{ viewmodel.subpage.html }}"></x-viewmodel-page>
+    </div>
+
+    <hr>
+
+    <p>
+      <small>The main document was loaded as <code>{{pathname}}</code>.</small>
+    </p>
+  </template>
+
+  <script>
+    Polymer.register(this, {
+      viewmodel: {},
+      ready: function () {
+        this.pathname = window.location.pathname;
+
+        var that = this;
+        var puppet = new Puppet(window.location.href, function (obj) {
+          that.viewmodel = obj;
+          puppet.catchExternaLink(that.webkitShadowRoot);
+        });
+      }
+    });
+  </script>
+</element>

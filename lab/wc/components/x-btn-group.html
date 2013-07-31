@@ -1,0 +1,24 @@
+<link rel="import" href="x-btn.html">
+<element name="x-btn-group">
+  <template>
+    <style>
+      .btn-group {
+        padding: 4px;
+        border: 2px dashed #aaa;
+        float: left;
+        border-radius: 4px;
+      }
+
+      .clear {
+        clear: left;
+      }
+    </style>
+    <div class="btn-group">
+      <content></content>
+    </div>
+    <div class="clear"></div>
+  </template>
+  <script>
+    Polymer.register(this);
+  </script>
+</element>

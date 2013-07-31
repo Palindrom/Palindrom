@@ -1,0 +1,44 @@
+<element name="x-btn" attributes="label value skin">
+  <template>
+    <style>
+      .btn {
+        background: #0F9D23;
+        width: 65px;
+        padding: 9px 0;
+        color: #FFF;
+        margin: 0 1px 1px 0;
+        float: left;
+      }
+
+      .btn .small {
+        font-size: 11px;
+        text-align: center;
+      }
+
+      .btn .big {
+        font-size: 22px;
+        text-align: center;
+      }
+
+      .btn.pink {
+        background: hotpink;
+      }
+
+      .btn.blue {
+        background: cornflowerblue;
+      }
+
+      .btn.gray {
+        background: #222;
+      }
+    </style>
+    <div class="btn {{ skin }}">
+      <div class="small">{{ label }}</div>
+      <div class="big">{{ value }}</div>
+    </div>
+    <content></content>
+  </template>
+  <script>
+    Polymer.register(this);
+  </script>
+</element>

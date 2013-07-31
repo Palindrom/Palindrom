@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PuppetJs with MVC demo</title>
+
+  <base href="./../">
+  <script src="js/polymer.min.js"></script>
+  <script src="js/mdv_extra.js"></script>
+
+  <!-- include PuppetJs with dependencies -->
+  <script src="../../lib/json-patch/src/json-patch-duplex.js"></script>
+  <script src="../../src/puppet.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+
+  <script src="js/handsontable/jquery.min.js"></script>
+  <script src="js/handsontable/jquery.handsontable.full.js"></script>
+  <link rel="stylesheet" type="text/css" href="js/handsontable/jquery.handsontable.full.css">
+
+  <!-- mock server responses -->
+  <script src="../../test/lib/sinon-1.7.1.js"></script>
+  <script src="../../test/mockServer.js"></script>
+
+  <style>
+    .bookTitle {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      font-style: italic;
+    }
+  </style>
+
+  <link rel="import" href="components/x-html.html">
+</head>
+<body>
+
+<ul>
+  <li><a href="./page_1">Page 1</a></li>
+  <li><a href="./page_2">Page 2</a></li>
+</ul>
+
+<template id="test" bind>
+  <template bind="{{ subpage }}">
+    <x-html content="{{ html }}"></x-html>
+  </template>
+</template>
+
+<script>
+  new Puppet(window.location.href, function (obj) {
+    document.getElementById('test').model = obj;
+  });
+</script>
+
+</body>
+</html>

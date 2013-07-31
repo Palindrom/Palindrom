@@ -1,0 +1,34 @@
+<h1>This is Page 2 for `{{ model.username }}`</h1>
+
+<p>Page 2 also has some text. It can be partially or fully loaded.</p>
+
+<p>Cool thing about this page is that it has some buttons which are declared only in this partial</p>
+
+<x-btn-group>
+  <x-btn label="First" value="BTN" skin="green"></x-btn>
+  <x-btn label="Second" value="BTN" skin="pink"></x-btn>
+  <x-btn label="Third" value="BTN" skin="gray"></x-btn>
+</x-btn-group>
+
+<h2>Data grid</h2>
+
+<p>All data on this page is updated using JSON Patch against the data model</p>
+
+<div style="margin-bottom: 2em">
+  <x-handsontable id="example1" datarows="{{ model.subpage.people }}" settings="{{ model.subpage.settings }}"
+                  XXXwidth="400">
+    <datacolumn width="30" readOnly value="id" title="ID"></datacolumn>
+    <datacolumn width="70" value="name.first" title="First Name"></datacolumn>
+    <datacolumn width="100" value="name.last" title="Last Name"></datacolumn>
+    <datacolumn type="autocomplete" source="genderList" value="gender"
+                title="Gender"></datacolumn>
+    <datacolumn type="numeric" value="age" title="Age"></datacolumn>
+    <datacolumn type="checkbox" value="languages.english" title="English" checkedTemplate="Yes"
+                uncheckedTemplate="No"></datacolumn>
+    <datacolumn type="checkbox" value="languages.spanish" title="Spanish" checkedTemplate="Yes"
+                uncheckedTemplate="No"></datacolumn>
+    <datacolumn type="checkbox" value="languages.french" title="French" checkedTemplate="Yes"
+                uncheckedTemplate="No"></datacolumn>
+    <datacolumn type="numeric" value="salary" title="Salary" format="$ 0,0.00"></datacolumn>
+  </x-handsontable>
+</div>
