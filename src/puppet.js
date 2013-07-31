@@ -3,9 +3,9 @@
   var lastClickHandler;
 
   /**
-   * Defines a connection to a remove URL, returns callback to a object that is persistent between browser and server
-   * @param remoteUrl
-   * @param callback
+   * Defines a connection to a remote PATCH server, returns callback to a object that is persistent between browser and server
+   * @param remoteUrl If undefined, current window.location.href will be used as the PATCH server URL
+   * @param callback Called after initial state object is received from the server
    */
   function Puppet(remoteUrl, callback) {
     this.remoteUrl = remoteUrl;
