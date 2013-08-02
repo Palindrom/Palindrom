@@ -119,7 +119,15 @@
 
   Puppet.prototype.xhr = function (url, accept, data, callback) {
     var req = new XMLHttpRequest();
-    req.addEventListener('load', callback, false);
+    var that = this;
+    req.addEventListener('load', function (event) {
+      if (event.target.status >= 400 && event.target.status < 599) {
+        throw new Error("Server responded with error " + event.target.status + " " + event.target.statusText + ". More details in developer tools Network tab");
+      }
+      else {
+        callback.call(that, event);
+      }
+    }, false);
     url = url || window.location.href;
     if (data) {
       req.open("PATCH", url, true);
