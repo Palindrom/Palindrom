@@ -379,5 +379,6 @@ declare var exports:any;
 if (typeof exports !== "undefined") {
   exports.apply = jsonpatch.apply;
   exports.observe = jsonpatch.observe;
+  exports.unobserve = jsonpatch.unobserve;
   exports.generate = jsonpatch.generate;
 }
