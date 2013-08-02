@@ -12,19 +12,19 @@
     this.callback = callback;
     this.obj = null;
     this.observer = null;
-    this.referer = readCookie("Location");
-    eraseCookie("Location");
+    this.referer = null;
+    this.handleResponseCookie();
     this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this));
   }
 
   //http://www.quirksmode.org/js/cookies.html
   function createCookie(name, value, days) {
+    var expires = "";
     if (days) {
       var date = new Date();
       date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-      var expires = "; expires=" + date.toGMTString();
+      expires = "; expires=" + date.toGMTString();
     }
-    else var expires = "";
     document.cookie = name + "=" + value + expires + "; path=/";
   }
 
@@ -46,7 +46,6 @@
   }
 
   Puppet.prototype.bootstrap = function (event) {
-    this.handleResponseHeader(event.target);
     this.obj = JSON.parse(event.target.responseText);
     this.observe();
     if (this.callback) {
@@ -66,6 +65,19 @@
     }
   };
 
+  /**
+   * JavaScript cannot read HTTP "Location" header for the main HTML document, but it can read cookies
+   * So if you want to establish session in the main HTML document, send "Location" value as a cookie
+   * The cookie will be erased (replaced with empty value) after reading
+   */
+  Puppet.prototype.handleResponseCookie = function () {
+    var location = readCookie('Location');
+    if (location) { //if cookie exists and is not empty
+      this.referer = location;
+      eraseCookie('Location');
+    }
+  };
+
   Puppet.prototype.observe = function () {
     this.observer = jsonpatch.observe(this.obj, this.handleLocalChange.bind(this));
   };
@@ -82,7 +94,6 @@
   };
 
   Puppet.prototype.handleRemoteChange = function (event) {
-    this.handleResponseHeader(event.target);
     var patches = JSON.parse(event.target.responseText);
     this.unobserve();
     jsonpatch.apply(this.obj, patches);
@@ -121,6 +132,8 @@
     var req = new XMLHttpRequest();
     var that = this;
     req.addEventListener('load', function (event) {
+      that.handleResponseCookie();
+      that.handleResponseHeader(event.target);
       if (event.target.status >= 400 && event.target.status < 599) {
         throw new Error("Server responded with error " + event.target.status + " " + event.target.statusText + ". More details in developer tools Network tab");
       }
