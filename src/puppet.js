@@ -94,7 +94,7 @@
   };
 
   Puppet.prototype.handleRemoteChange = function (event) {
-    var patches = JSON.parse(event.target.responseText);
+    var patches = JSON.parse(event.target.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
     this.unobserve();
     jsonpatch.apply(this.obj, patches);
     this.observe();
