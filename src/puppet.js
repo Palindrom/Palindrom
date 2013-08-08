@@ -25,24 +25,28 @@
       date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
       expires = "; expires=" + date.toGMTString();
     }
-    document.cookie = name + "=" + value + expires;
+    document.cookie = name + "=" + value + expires + '; path=/';
   }
 
-  //http://www.quirksmode.org/js/cookies.html
   function readCookie(name) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    for (var i = 0; i < ca.length; i++) {
-      var c = ca[i];
-      while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-      if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
+    return readCookies()[name];
   }
 
   //http://www.quirksmode.org/js/cookies.html
   function eraseCookie(name) {
     createCookie(name, "", -1);
+  }
+
+  //https://github.com/js-coder/cookie.js/blob/gh-pages/cookie.js
+  function readCookies() {
+    if (document.cookie === '') return {};
+    var cookies = document.cookie.split('; ')
+      , result = {};
+    for (var i = 0, l = cookies.length; i < l; i++) {
+      var item = cookies[i].split('=');
+      result[decodeURIComponent(item[0])] = decodeURIComponent(item[1]);
+    }
+    return result;
   }
 
   Puppet.prototype.bootstrap = function (event) {
@@ -129,6 +133,9 @@
   };
 
   Puppet.prototype.xhr = function (url, accept, data, callback) {
+    //this.handleResponseCookie();
+    eraseCookie('Location'); //more invasive cookie erasing because sometimes the cookie was still visible in the requests
+
     var req = new XMLHttpRequest();
     var that = this;
     req.addEventListener('load', function (event) {
