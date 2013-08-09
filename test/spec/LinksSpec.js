@@ -6,8 +6,7 @@ describe("Links", function () {
 
     new Puppet('/', initSpy);
 
-    this.server.respondWith('{"hello": "world"}');
-    this.server.respond();
+    this.server.respond('{"hello": "world"}');
 
     waitsFor(function () {
       return initSpy.wasCalled;

@@ -14,8 +14,7 @@ describe("Puppet", function () {
 
       new Puppet(window.location.href, initSpy);
 
-      this.server.respondWith('{"hello": "world"}');
-      this.server.respond();
+      this.server.respond('{"hello": "world"}');
 
       waitsFor(function () {
         return initSpy.wasCalled;
@@ -34,8 +33,7 @@ describe("Puppet", function () {
 
       new Puppet('/test', initSpy);
 
-      this.server.respondWith('{"hello": "world"}');
-      this.server.respond();
+      this.server.respond('{"hello": "world"}');
 
       waitsFor(function () {
         return initSpy.wasCalled;
