@@ -94,11 +94,21 @@
   };
 
   Puppet.prototype.handleLocalChange = function (patches) {
-    this.xhr(this.referer || this.remoteUrl, 'application/json-patch+json', JSON.stringify(patches), this.handleRemoteChange.bind(this));
+    var txt = JSON.stringify(patches);
+    if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
+      throw new Error("PuppetJs did not handle Jasmine test case correctly");
+    }
+    this.xhr(this.referer || this.remoteUrl, 'application/json-patch+json', txt, this.handleRemoteChange.bind(this));
   };
 
   Puppet.prototype.handleRemoteChange = function (event) {
+    if (!this.observer) {
+      return; //ignore remote change if we are not watching anymore
+    }
     var patches = JSON.parse(event.target.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
+    if (patches.length === void 0) {
+      throw new Error("Patches should be an array");
+    }
     this.unobserve();
     jsonpatch.apply(this.obj, patches);
     this.observe();

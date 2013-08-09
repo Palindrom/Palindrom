@@ -4,7 +4,7 @@ describe("Links", function () {
 
     var initSpy = jasmine.createSpy();
 
-    new Puppet('/', initSpy);
+    this.puppet = new Puppet('/', initSpy);
 
     this.server.respond('{"hello": "world"}');
 
@@ -14,6 +14,7 @@ describe("Links", function () {
   });
 
   afterEach(function () {
+    this.puppet.unobserve();
     this.server.restore();
   });
 
@@ -21,7 +22,6 @@ describe("Links", function () {
     var a = document.createElement('A');
     a.innerHTML = 'Link';
     a.href = href;
-    //console.log("href", href);
     document.body.appendChild(a);
     document.body.addEventListener('click', clickHandler);
     a.click();
