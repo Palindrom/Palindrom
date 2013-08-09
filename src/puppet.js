@@ -49,8 +49,24 @@
     return result;
   }
 
+  var PuppetJsClickTrigger$ = "PuppetJsClickTrigger$";
+
+  function recursiveMarkObjNulls(obj) {
+    for (var key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        if (typeof key === "string" && obj[key] === null) {
+          obj[key] = PuppetJsClickTrigger$;
+        }
+        else if (typeof obj[key] === "object") {
+          recursiveMarkObjNulls(obj[key]);
+        }
+      }
+    }
+  }
+
   Puppet.prototype.bootstrap = function (event) {
     this.obj = JSON.parse(event.target.responseText);
+    recursiveMarkObjNulls(this.obj);
     this.observe();
     if (this.callback) {
       this.callback(this.obj);
@@ -99,6 +115,15 @@
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
     }
     this.xhr(this.referer || this.remoteUrl, 'application/json-patch+json', txt, this.handleRemoteChange.bind(this));
+    var that = this;
+    patches.forEach(function (patch) {
+      if ((patch.op === "add" || patch.op === "replace" || patch.op === "test") && patch.value === null) {
+        that.unobserve();
+        patch.value = PuppetJsClickTrigger$;
+        jsonpatch.apply(that.obj, [patch]);
+        that.observe();
+      }
+    });
   };
 
   Puppet.prototype.handleRemoteChange = function (event) {
@@ -109,6 +134,11 @@
     if (patches.length === void 0) {
       throw new Error("Patches should be an array");
     }
+    patches.forEach(function (patch) {
+      if (patch.op === "add" || patch.op === "replace" || patch.op === "test") {
+        recursiveMarkObjNulls(patch);
+      }
+    });
     this.unobserve();
     jsonpatch.apply(this.obj, patches);
     this.observe();
@@ -135,6 +165,9 @@
       event.preventDefault();
       history.pushState(null, null, target.href);
       this.changeState(target.href);
+    }
+    else if (target.type === 'submit') {
+      event.preventDefault();
     }
   };
 
