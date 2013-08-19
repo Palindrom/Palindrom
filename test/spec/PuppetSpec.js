@@ -62,7 +62,7 @@ describe("Puppet", function () {
 
       waits(100);
 
-      runs(function() {
+      runs(function () {
         expect(patchSpy.callCount).toBe(2);
         expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"galaxy"}]');
 
@@ -90,7 +90,7 @@ describe("Puppet", function () {
 
       waits(0);
 
-      runs(function() {
+      runs(function () {
         expect(patchSpy.callCount).toBe(2);
         expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"galaxy"}]');
 
@@ -118,7 +118,7 @@ describe("Puppet", function () {
 
       waits(0);
 
-      runs(function() {
+      runs(function () {
         expect(patchSpy.callCount).toBe(2);
         expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"galaxy"}]');
 
@@ -132,7 +132,7 @@ describe("Puppet", function () {
 
       waits(0);
 
-      runs(function() {
+      runs(function () {
         expect(patchSpy.callCount).toBe(3);
         expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"cosmos"}]');
       });
