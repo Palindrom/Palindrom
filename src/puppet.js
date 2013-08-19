@@ -1,6 +1,8 @@
 (function (global) {
 
-  var lastClickHandler;
+  var lastClickHandler
+    , lastPopstateHandler
+    , lastBlurHandler;
 
   /**
    * Defines a connection to a remote PATCH server, returns callback to a object that is persistent between browser and server
@@ -13,6 +15,7 @@
     this.obj = null;
     this.observer = null;
     this.referer = null;
+    this.queue = [];
     this.handleResponseCookie();
     this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this));
   }
@@ -50,13 +53,13 @@
   }
 
   /**
-   * PuppetJsClickTrigger$ contains Unicode symbols for "NULL" text rendered stylized using Unicode 
+   * PuppetJsClickTrigger$ contains Unicode symbols for "NULL" text rendered stylized using Unicode
    * character "SYMBOL FOR NULL" (2400)
-   * 
+   *
    * With PuppetJs, any property having `null` value will be rendered as stylized "NULL" text
    * to emphasize that it probably should be set as empty string instead.
-   * 
-   * The benefit of having this string is that any local change to `null` value (also  
+   *
+   * The benefit of having this string is that any local change to `null` value (also
    * from `null` to `null`) can be detected and sent as `null` to the server.
    */
   var PuppetJsClickTrigger$ = "\u2400";
@@ -83,9 +86,12 @@
     }
     if (lastClickHandler) {
       document.body.removeEventListener('click', lastClickHandler);
+      window.removeEventListener('popstate', lastPopstateHandler);
+      document.body.removeEventListener('blur', lastBlurHandler, true);
     }
     document.body.addEventListener('click', lastClickHandler = this.clickHandler.bind(this));
-    window.addEventListener('popstate', this.historyHandler.bind(this)); //better here than in constructor, because Chrome triggers popstate on page load
+    window.addEventListener('popstate', lastPopstateHandler = this.historyHandler.bind(this)); //better here than in constructor, because Chrome triggers popstate on page load
+    document.body.addEventListener('blur', lastBlurHandler = this.sendLocalChange.bind(this), true);
   };
 
   Puppet.prototype.handleResponseHeader = function (xhr) {
@@ -109,13 +115,44 @@
   };
 
   Puppet.prototype.observe = function () {
-    this.observer = jsonpatch.observe(this.obj, this.handleLocalChange.bind(this));
+    this.observer = jsonpatch.observe(this.obj, this.queueLocalChange.bind(this));
   };
 
   Puppet.prototype.unobserve = function () {
     if (this.observer) { //there is a bug in JSON-Patch when trying to unobserve something that is already unobserved
       jsonpatch.unobserve(this.obj, this.observer);
       this.observer = null;
+    }
+  };
+
+  Puppet.prototype.queueLocalChange = function (patches) {
+    Array.prototype.push.apply(this.queue, patches);
+    if ((document.activeElement.nodeName !== 'INPUT' && document.activeElement.nodeName !== 'TEXTAREA') || document.activeElement.getAttribute('update-on') === 'input') {
+      this.sendLocalChange();
+    }
+  };
+
+  Puppet.prototype.sendLocalChange = function () {
+    jsonpatch.generate(this.observer);
+    if (this.queue.length) {
+      this.flattenPatches(this.queue);
+      this.handleLocalChange(this.queue);
+      this.queue.length = 0;
+    }
+  };
+
+  //merges redundant patches
+  Puppet.prototype.flattenPatches = function (patches) {
+    var seen = {};
+    for (var i = patches.length - 1; i >= 0; i--) {
+      if (patches[i].op === 'replace') {
+        if (seen[patches[i].path]) {
+          patches.splice(i, 1);
+        }
+        else {
+          seen[patches[i].path] = true;
+        }
+      }
     }
   };
 

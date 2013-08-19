@@ -31,6 +31,21 @@ puppet.onRemoteChange = function (patches) {
 };
 ```
 
+### Sending client changes to server
+
+PuppetJs detects changes to the observed object in real time. However, change patches are
+queued and not sent to the server until a `blur` event occurs. It is because normally there is no business need to save
+a partially filled field and in many cases it may be harmful to data integrity. Another benefit is performance
+ improvement due to reduced number of requests.
+
+To force sending changes on each key stroke (for example to implement live search), you can configure it
+per input field (given that this field is bound to observed object):
+
+```html
+<input update-on="blur"><!-- default behavior: update server on blur -->
+<input update-on="input"><!-- update server on key stroke -->
+```
+
 ### Dependencies
 
 PuppetJs is dependent on [Starcounter-Jack/JSON-Patch](https://github.com/Starcounter-Jack/JSON-Patch) to observe changes in local scope, generate patches to be sent to the server and apply changes received from the server.
