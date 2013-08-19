@@ -5,10 +5,6 @@ Client side library that binds Web Components or AngularJs to server side view m
 
 Implements [Server communication](https://github.com/Starcounter-Jack/PuppetJs/wiki/Server-communication).
 
-### To-do
-
-* Register  `document.model` (currently available as `puppet.obj`, where `puppet` is name of the PuppetJs instance)
-
 ### Usage
 
 Install by adding source to your head:
