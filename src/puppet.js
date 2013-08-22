@@ -64,14 +64,36 @@
    */
   var PuppetJsClickTrigger$ = "\u2400";
 
-  function recursiveMarkObjNulls(obj) {
+  function markObjPropertyByPath(obj, path) {
+    var parent;
+    var keys = path.split('/');
+    keys.forEach(function (key) {
+      if (key !== '') {
+        parent = obj;
+        obj = obj[key];
+      }
+    });
+    recursiveMarkObjProperties(obj, parent, keys[keys.length - 1]);
+  }
+
+  function recursiveMarkObjProperties(obj, parent, _key) {
+    if (parent && obj && typeof obj === "object" && !obj.hasOwnProperty('$parent')) {
+      Object.defineProperty(obj, '$parent', {
+        enumerable: false,
+        get: function () {
+          return parent;
+        }
+      });
+    }
+
+    if (typeof _key === "string" && parent[_key] === null) {
+      parent[_key] = PuppetJsClickTrigger$;
+    }
+
     for (var key in obj) {
       if (obj.hasOwnProperty(key)) {
-        if (typeof key === "string" && obj[key] === null) {
-          obj[key] = PuppetJsClickTrigger$;
-        }
-        else if (typeof obj[key] === "object") {
-          recursiveMarkObjNulls(obj[key]);
+        if (typeof obj[key] === "object") {
+          recursiveMarkObjProperties(obj[key], obj, key);
         }
       }
     }
@@ -79,7 +101,7 @@
 
   Puppet.prototype.bootstrap = function (event) {
     this.obj = JSON.parse(event.target.responseText);
-    recursiveMarkObjNulls(this.obj);
+    recursiveMarkObjProperties(this.obj);
     this.observe();
     if (this.callback) {
       this.callback(this.obj);
@@ -163,14 +185,15 @@
     }
     this.xhr(this.referer || this.remoteUrl, 'application/json-patch+json', txt, this.handleRemoteChange.bind(this));
     var that = this;
+    this.unobserve();
     patches.forEach(function (patch) {
       if ((patch.op === "add" || patch.op === "replace" || patch.op === "test") && patch.value === null) {
-        that.unobserve();
         patch.value = PuppetJsClickTrigger$;
         jsonpatch.apply(that.obj, [patch]);
-        that.observe();
       }
+      markObjPropertyByPath(that.obj, patch.path);
     });
+    this.observe();
   };
 
   Puppet.prototype.handleRemoteChange = function (event) {
@@ -181,13 +204,14 @@
     if (patches.length === void 0) {
       throw new Error("Patches should be an array");
     }
-    patches.forEach(function (patch) {
-      if (patch.op === "add" || patch.op === "replace" || patch.op === "test") {
-        recursiveMarkObjNulls(patch);
-      }
-    });
     this.unobserve();
     jsonpatch.apply(this.obj, patches);
+    var that = this;
+    patches.forEach(function (patch) {
+      if (patch.op === "add" || patch.op === "replace" || patch.op === "test") {
+        markObjPropertyByPath(that.obj, patch.path);
+      }
+    });
     this.observe();
     if (this.onRemoteChange) {
       this.onRemoteChange(patches);
