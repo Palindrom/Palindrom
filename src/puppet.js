@@ -33,15 +33,14 @@
   var PuppetJsClickTrigger$ = "\u2400";
 
   function markObjPropertyByPath(obj, path) {
-    var parent;
     var keys = path.split('/');
-    keys.forEach(function (key) {
-      if (key !== '') {
-        parent = obj;
-        obj = obj[key];
+    var len = keys.length;
+    if (keys.length > 2) {
+      for (var i = 1; i < len - 1; i++) {
+        obj = obj[keys[i]];
       }
-    });
-    recursiveMarkObjProperties(parent, keys[keys.length - 1]);
+    }
+    recursiveMarkObjProperties(obj, keys[len - 1]);
   }
 
   function placeMarkers(parent, key) {
