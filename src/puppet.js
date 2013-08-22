@@ -20,38 +20,6 @@
     this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this));
   }
 
-  //http://www.quirksmode.org/js/cookies.html
-  function createCookie(name, value, days) {
-    var expires = "";
-    if (days) {
-      var date = new Date();
-      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-      expires = "; expires=" + date.toGMTString();
-    }
-    document.cookie = name + "=" + value + expires + '; path=/';
-  }
-
-  function readCookie(name) {
-    return readCookies()[name];
-  }
-
-  //http://www.quirksmode.org/js/cookies.html
-  function eraseCookie(name) {
-    createCookie(name, "", -1);
-  }
-
-  //https://github.com/js-coder/cookie.js/blob/gh-pages/cookie.js
-  function readCookies() {
-    if (document.cookie === '') return {};
-    var cookies = document.cookie.split('; ')
-      , result = {};
-    for (var i = 0, l = cookies.length; i < l; i++) {
-      var item = cookies[i].split('=');
-      result[decodeURIComponent(item[0])] = decodeURIComponent(item[1]);
-    }
-    return result;
-  }
-
   /**
    * PuppetJsClickTrigger$ contains Unicode symbols for "NULL" text rendered stylized using Unicode
    * character "SYMBOL FOR NULL" (2400)
@@ -136,10 +104,10 @@
    * The cookie will be erased (replaced with empty value) after reading
    */
   Puppet.prototype.handleResponseCookie = function () {
-    var location = readCookie('Location');
+    var location = cookie.read('Location');
     if (location) { //if cookie exists and is not empty
       this.referer = location;
-      eraseCookie('Location');
+      cookie.erase('Location');
     }
   };
 
@@ -255,7 +223,7 @@
 
   Puppet.prototype.xhr = function (url, accept, data, callback) {
     //this.handleResponseCookie();
-    eraseCookie('Location'); //more invasive cookie erasing because sometimes the cookie was still visible in the requests
+    cookie.erase('Location'); //more invasive cookie erasing because sometimes the cookie was still visible in the requests
 
     var req = new XMLHttpRequest();
     var that = this;
@@ -290,6 +258,42 @@
     element.addEventListener("click", function (event) {
       window.PuppetExternalLink = event.target;
     });
+  };
+
+  /**
+   * Cookie helper
+   * reference: http://www.quirksmode.org/js/cookies.html
+   * reference: https://github.com/js-coder/cookie.js/blob/gh-pages/cookie.js
+   */
+  var cookie = {
+    create: function createCookie(name, value, days) {
+      var expires = "";
+      if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toGMTString();
+      }
+      document.cookie = name + "=" + value + expires + '; path=/';
+    },
+
+    readAll: function readCookies() {
+      if (document.cookie === '') return {};
+      var cookies = document.cookie.split('; ')
+        , result = {};
+      for (var i = 0, l = cookies.length; i < l; i++) {
+        var item = cookies[i].split('=');
+        result[decodeURIComponent(item[0])] = decodeURIComponent(item[1]);
+      }
+      return result;
+    },
+
+    read: function readCookie(name) {
+      return cookie.readAll()[name];
+    },
+
+    erase: function eraseCookie(name) {
+      cookie.create(name, "", -1);
+    }
   };
 
   global.Puppet = Puppet;
