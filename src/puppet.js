@@ -73,27 +73,34 @@
         obj = obj[key];
       }
     });
-    recursiveMarkObjProperties(obj, parent, keys[keys.length - 1]);
+    recursiveMarkObjProperties(parent, keys[keys.length - 1]);
   }
 
-  function recursiveMarkObjProperties(obj, parent, _key) {
-    if (parent && obj && typeof obj === 'object' && !obj.hasOwnProperty('$parent')) {
-      Object.defineProperty(obj, '$parent', {
+  function placeMarkers(parent, key) {
+    var subject = parent[key];
+    if (subject === null) {
+      parent[key] = PuppetJsClickTrigger$;
+    }
+    else if (typeof subject === 'object' && !subject.hasOwnProperty('$parent')) {
+      Object.defineProperty(subject, '$parent', {
         enumerable: false,
         get: function () {
           return parent;
         }
       });
     }
+  }
 
-    if (typeof _key === 'string' && parent[_key] === null) {
-      parent[_key] = PuppetJsClickTrigger$;
+  function recursiveMarkObjProperties(parent, key) {
+    if (key && parent) {
+      placeMarkers(parent, key);
+      parent = parent[key];
     }
 
-    for (var key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        if (typeof obj[key] === 'object') {
-          recursiveMarkObjProperties(obj[key], obj, key);
+    if (parent) {
+      for (var i in parent) {
+        if (parent.hasOwnProperty(i) && typeof parent[i] === 'object') {
+          recursiveMarkObjProperties(parent, i);
         }
       }
     }
