@@ -77,7 +77,7 @@
   }
 
   function recursiveMarkObjProperties(obj, parent, _key) {
-    if (parent && obj && typeof obj === "object" && !obj.hasOwnProperty('$parent')) {
+    if (parent && obj && typeof obj === 'object' && !obj.hasOwnProperty('$parent')) {
       Object.defineProperty(obj, '$parent', {
         enumerable: false,
         get: function () {
@@ -86,13 +86,13 @@
       });
     }
 
-    if (typeof _key === "string" && parent[_key] === null) {
+    if (typeof _key === 'string' && parent[_key] === null) {
       parent[_key] = PuppetJsClickTrigger$;
     }
 
     for (var key in obj) {
       if (obj.hasOwnProperty(key)) {
-        if (typeof obj[key] === "object") {
+        if (typeof obj[key] === 'object') {
           recursiveMarkObjProperties(obj[key], obj, key);
         }
       }
