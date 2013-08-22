@@ -10,6 +10,7 @@
    * @param callback Called after initial state object is received from the server
    */
   function Puppet(remoteUrl, callback) {
+    this.debug = true;
     this.remoteUrl = remoteUrl;
     this.callback = callback;
     this.obj = null;
@@ -220,6 +221,36 @@
     this.changeState(location.href);
   };
 
+  Puppet.prototype.showError = function (heading, description) {
+    if (this.debug) {
+      var DIV = document.getElementById('puppetjs-error');
+      if(!DIV) {
+        DIV = document.createElement('DIV');
+        DIV.id = 'puppetjs-error';
+        DIV.style.border = '1px solid #dFb5b4';
+        DIV.style.background = '#fcf2f2';
+        DIV.style.padding = '10px 16px';
+        if (document.body.firstChild) {
+          document.body.insertBefore(DIV, document.body.firstChild);
+        }
+        else {
+          document.body.appendChild(DIV);
+        }
+      }
+
+      var H1 = document.createElement('H1');
+      H1.innerHTML = heading;
+
+      var PRE = document.createElement('PRE');
+      PRE.innerHTML = description;
+      PRE.style.whiteSpace = 'pre-wrap';
+
+      DIV.appendChild(H1);
+      DIV.appendChild(PRE);
+    }
+    throw new Error(description);
+  };
+
   Puppet.prototype.xhr = function (url, accept, data, callback) {
     //this.handleResponseCookie();
     cookie.erase('Location'); //more invasive cookie erasing because sometimes the cookie was still visible in the requests
@@ -229,8 +260,8 @@
     req.addEventListener('load', function (event) {
       that.handleResponseCookie();
       that.handleResponseHeader(event.target);
-      if (event.target.status >= 400 && event.target.status < 599) {
-        throw new Error("Server responded with error " + event.target.status + " " + event.target.statusText + ". More details in developer tools Network tab");
+      if (event.target.status >= 400 && event.target.status <= 599) {
+        that.showError('PuppetJs JSON response error', 'Server responded with error ' + event.target.status + ' ' + event.target.statusText + '\n\n' + event.target.responseText);
       }
       else {
         callback.call(that, event);
