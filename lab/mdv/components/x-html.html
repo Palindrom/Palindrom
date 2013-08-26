@@ -1,5 +1,5 @@
-<element name="x-html">
-  <script>
+<script>
+  (function () {
     function getModel(node) {
       return node.model;
     }
@@ -29,7 +29,7 @@
 
       setTimeout(function () {
         var inScripts = customElement.firstChild.content.querySelectorAll('script');
-        inScripts.forEach(function(inScript) {
+        inScripts.forEach(function (inScript) {
           executeComponentScript(inScript.textContent, customElement, 'script')
         });
       }, 0);
@@ -73,28 +73,26 @@
       inFunc.call(context);
     };
 
-    // When <element> is in document, we might run in wrong context.
-    // Only do work when this == <element>.
-    if (this !== window) { //will be true if browser supports Custom Elements
-      this.register({
-        prototype: {
-          readyCallback: function () {
-            var customElement = this;
-            loadTemplate(customElement);
+    var XHTMLPrototype = Object.create(HTMLElement.prototype);
+    XHTMLPrototype.createdCallback = function () {
+      var customElement = this;
+      loadTemplate(customElement);
 
-            var observer = new MutationObserver(function (mutations) {
-              mutations.forEach(function (mutation) {
-                if (mutation.type === "attributes" && mutation.attributeName === "content") {
-                  loadTemplate(customElement);
-                }
-              });
-            });
-            observer.observe(this, {
-              attributes: true
-            });
+      var observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
+          if (mutation.type === "attributes" && mutation.attributeName === "content") {
+            loadTemplate(customElement);
           }
-        }
+        });
       });
-    }
-  </script>
-</element>
+      observer.observe(this, {
+        attributes: true
+      });
+    };
+    XHTMLPrototype.readyCallback = XHTMLPrototype.createdCallback; //required for compatibility with polymer.js < 20130816
+
+    document.register('x-html', {
+      prototype: XHTMLPrototype
+    });
+  })();
+</script>
