@@ -9,11 +9,11 @@
    * @param remoteUrl If undefined, current window.location.href will be used as the PATCH server URL
    * @param callback Called after initial state object is received from the server
    */
-  function Puppet(remoteUrl, callback) {
+  function Puppet(remoteUrl, callback, obj) {
     this.debug = true;
     this.remoteUrl = remoteUrl;
     this.callback = callback;
-    this.obj = null;
+    this.obj = obj || {};
     this.observer = null;
     this.referer = null;
     this.queue = [];
@@ -74,8 +74,23 @@
     }
   }
 
+  function recursiveExtend(par, obj) {
+    for(var i in obj) {
+      if(obj.hasOwnProperty(i)) {
+        if(typeof obj[i] === 'object' && par.hasOwnProperty(i)) {
+          recursiveExtend(par[i], obj[i]);
+        }
+        else {
+          par[i] = obj[i];
+        }
+      }
+    }
+  }
+
   Puppet.prototype.bootstrap = function (event) {
-    this.obj = JSON.parse(event.target.responseText);
+    var tmp = JSON.parse(event.target.responseText);
+    recursiveExtend(this.obj, tmp);
+
     recursiveMarkObjProperties(this.obj);
     this.observe();
     if (this.callback) {
@@ -92,7 +107,7 @@
   };
 
   Puppet.prototype.handleResponseHeader = function (xhr) {
-    var location = xhr.getResponseHeader('Location');
+    var location = xhr.getResponseHeader('X-Location') || xhr.getResponseHeader('Location');
     if (location) {
       this.referer = location;
     }
@@ -125,7 +140,11 @@
   Puppet.prototype.queueLocalChange = function (patches) {
     Array.prototype.push.apply(this.queue, patches);
     if ((document.activeElement.nodeName !== 'INPUT' && document.activeElement.nodeName !== 'TEXTAREA') || document.activeElement.getAttribute('update-on') === 'input') {
-      this.sendLocalChange();
+      if (this.queue.length) {
+        this.flattenPatches(this.queue);
+        this.handleLocalChange(this.queue);
+        this.queue.length = 0;
+      }
     }
   };
 
@@ -158,6 +177,7 @@
     if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
     }
+    //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
     this.xhr(this.referer || this.remoteUrl, 'application/json-patch+json', txt, this.handleRemoteChange.bind(this));
     var that = this;
     this.unobserve();
@@ -201,7 +221,11 @@
     this.xhr(href, 'application/json-patch+json', null, this.handleRemoteChange.bind(this));
   };
 
-  Puppet.prototype.clickHandler = function (event) {
+  Puppet.prototype.clickHandler = function (event, url) {
+    if(event.detail && event.detail.target) {
+      //detail is Polymer
+      event = event.detail;
+    }
     var target = event.target;
     if (window.PuppetExternalLink) {
       target = window.PuppetExternalLink;
@@ -214,6 +238,9 @@
     }
     else if (target.type === 'submit') {
       event.preventDefault();
+    }
+    else {
+      this.sendLocalChange(); //needed for checkbox
     }
   };
 
