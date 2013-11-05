@@ -18,7 +18,7 @@ var full = {
     settings: {
 
     },
-    html: "@partials/page_1.html"
+    html: "./partials/page_1.html"
   }
 };
 
@@ -71,10 +71,10 @@ server.xhr.addFilter(function (method, url) {
 var lastUrl = window.location.href;
 
 if (lastUrl.indexOf('page_1') > -1) {
-  full.subpage.html = '@partials/page_1.html';
+  full.subpage.html = './partials/page_1.html';
 }
 else if (lastUrl.indexOf('page_2') > -1) {
-  full.subpage.html = '@partials/page_2.html';
+  full.subpage.html = './partials/page_2.html';
 }
 
 server.respondWith(function (xhr) {
@@ -83,10 +83,10 @@ server.respondWith(function (xhr) {
     if (xhr.url !== lastUrl) {
       lastUrl = xhr.url;
       if (lastUrl.indexOf('page_1') > -1) {
-        patches.push({op: 'replace', path: '/subpage/html', value: '@partials/page_1.html'});
+        patches.push({op: 'replace', path: '/subpage/html', value: './partials/page_1.html'});
       }
       else if (lastUrl.indexOf('page_2') > -1) {
-        patches.push({op: 'replace', path: '/subpage/html', value: '@partials/page_2.html'});
+        patches.push({op: 'replace', path: '/subpage/html', value: './partials/page_2.html'});
       }
     }
 

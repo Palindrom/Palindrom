@@ -6,9 +6,9 @@
 
     function loadTemplate(customElement) {
       var template = customElement.getAttribute('content');
-      if (template && template.indexOf('@') === 0) {
+      if (template && (template.indexOf('/') === 0 || template.indexOf('./') === 0)) {
         //load partial from HTTP server/cache
-        var href = template.substr(1);
+         var href = template; //.substr(1);
         var oReq = new XMLHttpRequest();
         oReq.onload = function (event) {
           reattachTemplate(customElement, event.target.responseText);
@@ -29,6 +29,7 @@
 
       setTimeout(function () {
         var inScripts = customElement.firstChild.content.querySelectorAll('script');
+        inScripts = Array.prototype.slice.call(inScripts, 0); //convert to array
         inScripts.forEach(function (inScript) {
           executeComponentScript(inScript.textContent, customElement, 'script')
         });

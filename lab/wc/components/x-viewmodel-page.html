@@ -17,9 +17,9 @@
     Polymer('x-viewmodel-page', {
       viewChanged: function () {
         if (typeof this.view === 'string') { //otherwise there is a Polymer exception on page load
-          if (this.view && this.view.indexOf('@') === 0) {
+          if (this.view && (this.view.indexOf('/') === 0 || this.view.indexOf('./') === 0)) {
             //load partial from HTTP server/cache
-            var href = this.view.substr(1);
+            var href = this.view;
             var oReq = new XMLHttpRequest();
             var that = this;
             oReq.onload = function (event) {
