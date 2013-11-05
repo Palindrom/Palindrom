@@ -8,6 +8,7 @@
    * Defines a connection to a remote PATCH server, returns callback to a object that is persistent between browser and server
    * @param remoteUrl If undefined, current window.location.href will be used as the PATCH server URL
    * @param callback Called after initial state object is received from the server
+   * @param obj Optional object where the parsed JSON data will be inserted
    */
   function Puppet(remoteUrl, callback, obj) {
     this.debug = true;
@@ -221,7 +222,7 @@
     this.xhr(href, 'application/json-patch+json', null, this.handleRemoteChange.bind(this));
   };
 
-  Puppet.prototype.clickHandler = function (event, url) {
+  Puppet.prototype.clickHandler = function (event) {
     if(event.detail && event.detail.target) {
       //detail is Polymer
       event = event.detail;
