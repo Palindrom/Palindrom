@@ -1,4 +1,4 @@
-<element name="animate-me">
+<polymer-element name="animate-me">
   <template>
     <div id="animation">
       <content></content>
@@ -38,10 +38,10 @@
       refreshPosition();
     }
 
-    Polymer.register(this, {
-      ready: function () {
+    Polymer('animate-me', {
+      enteredView: function () {
         animateElement(this.$.animation);
       }
     });
   </script>
-</element>
+</polymer-element>

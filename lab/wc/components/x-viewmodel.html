@@ -1,7 +1,7 @@
 <link rel="import" href="animate-me.html">
 <link rel="import" href="x-btn-group.html">
 <link rel="import" href="x-viewmodel-page.html">
-<link rel="import" href="x-handsontable.html">
+<link rel="import" href="handsontable-table.html">
 
 <script src="../../../lib/json-patch/src/json-patch-duplex.js"></script>
 <script src="../../../src/puppet.js"></script>
@@ -9,7 +9,7 @@
 <script type="text/javascript" src="../../../test/lib/sinon-1.7.1.js"></script>
 <script type="text/javascript" src="../../../test/mockServer.js"></script>
 
-<element name="x-viewmodel">
+<polymer-element name="x-viewmodel">
   <template>
     <ul>
       <li><a href="../page_1">Page 1</a></li>
@@ -28,9 +28,9 @@
   </template>
 
   <script>
-    Polymer.register(this, {
+    Polymer('x-viewmodel', {
       viewmodel: {},
-      ready: function () {
+      created: function () {
         this.pathname = window.location.pathname;
 
         var that = this;
@@ -41,4 +41,4 @@
       }
     });
   </script>
-</element>
+</polymer-element>

@@ -1,4 +1,4 @@
-<element name="x-viewmodel-page" attributes="model view">
+<polymer-element name="x-viewmodel-page" attributes="model view">
   <template>[This will be replaced by view. View can contain MDV that will be bound to model]</template>
   <script>
     Polymer.bindHTML = function (html, element) {
@@ -14,7 +14,7 @@
       }
     };
 
-    Polymer.register(this, {
+    Polymer('x-viewmodel-page', {
       viewChanged: function () {
         if (typeof this.view === 'string') { //otherwise there is a Polymer exception on page load
           if (this.view && this.view.indexOf('@') === 0) {
@@ -43,9 +43,9 @@
         }
         this.webkitShadowRoot.appendChild(Polymer.bindHTML(html, this));
       },
-      ready: function () {
+      created: function () {
 
       }
     });
   </script>
-</element>
+</polymer-element>
