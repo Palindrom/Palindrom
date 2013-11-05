@@ -1,5 +1,5 @@
 JSON-Patch
-==========
+===============
 
 A leaner and meaner implementation of JSON-Patch. Small footprint. High performance.
 Also support dual directions! I.e. you can both apply patches and generate patches.
@@ -51,6 +51,9 @@ Call require to get the instance:
 var jsonpatch = require('fast-json-patch')
 ```
 
+:bulb: Node.js supports native `Object.observe` in preview release 0.11.x (and only when started with `--harmony_observation` flag). With stable versions of Node, a shimmed version of `Object.observe` is used.
+
+
 ## Usage
 
 Applying patches:
@@ -99,3 +102,65 @@ To run *JSLitmus* performance tests, press "Run Tests" button.
  - Run command `jasmine-node --matchall --config duplex no src/test.js`
 4. Testing **json-patch-duplex.js**
  - Run command `jasmine-node --matchall --config duplex yes src/test.js src/test-duplex.js`
+
+## API
+
+#### jsonpatch.apply (`obj` Object, `patches` Array) : boolean
+
+Available in *json-patch.js* and *json-patch-duplex.js*
+
+Applies `patches` array on `obj`.
+
+If patch was succesfully applied, returns `true`. Otherwise returns `false`.
+
+If there was a `test` patch in `patches` array, returns the result of the test.
+
+If there was more then one patch in the array, the result of the last patch is returned.
+
+#### jsonpatch.observe (`obj` Object, `callback` Function (optional)) : `observer` Object
+
+Available in *json-patch-duplex.js*
+
+Sets up an deep observer on `obj` that listens for changes in object tree. When changes are detected, the optional
+callback is called with the generated patches array as the parameter.
+
+Returns `observer`.
+
+#### jsonpatch.generate (`obj` Object, `observer` Object) : `patches` Array
+
+Available in *json-patch-duplex.js*
+
+If there are pending changes in `obj`, returns them synchronously. If a `callback` was defined in `observe`
+method, it will be triggered synchronously as well.
+
+If there are no pending changes in `obj`, returns an empty array.
+
+#### jsonpatch.unobserve (`obj` Object, `observer` Object) : void
+
+Available in *json-patch-duplex.js*
+
+Destroys the observer set up on `obj`.
+
+Any remaining changes are delivered synchronously (as in `jsonpatch.generate`). Note: this is different that ES6/7 `Object.unobserve`, which delivers remaining changes asynchronously.
+
+## Changelog
+
+#### 0.3.5 (Oct 28, 2013)
+
+Bugfix:
+- issues with calling observe/unobserve method on an object multiple times in Chrome (native Object.observe) ([#20](https://github.com/Starcounter-Jack/JSON-Patch/issues/20))
+
+#### 0.3.4 (Oct 16, 2013)
+
+Bugfix:
+- generate array item `remove` patches in reverse order, so they can be correctly applied in order they were generated ([#16](https://github.com/Starcounter-Jack/JSON-Patch/issues/16))
+
+#### 0.3.3 (Oct 11, 2013)
+
+Bugfixes:
+- properly escape `~` and `/` characters in poiner paths ([#19](https://github.com/Starcounter-Jack/JSON-Patch/pull/19))
+- generated patch contained array `length` (only in native Object.observe version) ([#14](https://github.com/Starcounter-Jack/JSON-Patch/issues/14))
+- `jsonpatch.unobserve` now delivers pending changes immediately (previously last-minute changes could be lost)
+- stability fixes for browsers with native `Object.observe` (Chrome)
+- code cleanup
+- removed sourcemap reference from output js file

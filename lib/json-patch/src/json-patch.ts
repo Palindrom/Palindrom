@@ -1,4 +1,4 @@
-// json-patch.js 0.3.2
+// json-patch.js 0.3.5
 // (c) 2013 Joachim Wester
 // MIT license
 
@@ -47,12 +47,15 @@ module jsonpatch {
   var arrOps = {
     add: function (arr, i) {
       arr.splice(i, 0, this.value);
+      return true;
     },
     remove: function (arr, i) {
       arr.splice(i, 1);
+      return true;
     },
     replace: function (arr, i) {
       arr[i] = this.value;
+      return true;
     },
     move: objOps.move,
     copy: objOps.copy,
@@ -71,7 +74,7 @@ module jsonpatch {
   }
 
   /// Apply a json-patch operation on an object tree
-  export function apply(tree:any, patches:any[], listen?:any):boolean {
+  export function apply(tree:any, patches:any[]):boolean {
     var result = false
       , p = 0
       , plen = patches.length
@@ -96,7 +99,7 @@ module jsonpatch {
         else {
           var key = keys[t];
           if (key.indexOf('~') != -1)
-            key = key.replace('~1', '/').replace('~0', '~'); // escape chars
+            key = key.replace(/~1/g, '/').replace(/~0/g, '~'); // escape chars
           t++;
           if (t >= len) {
             result = objOps[patch.op].call(patch, obj, key, tree); // Apply patch
