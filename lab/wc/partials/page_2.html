@@ -1,4 +1,4 @@
-<h1>This is Page 2 for `{{ model.username }}`</h1>
+<h1>This is Page 2 for `{{ username }}`</h1>
 
 <p>Page 2 also has some text. It can be partially or fully loaded.</p>
 
@@ -15,7 +15,7 @@
 <p>All data on this page is updated using JSON Patch against the data model</p>
 
 <div style="margin-bottom: 2em">
-  <handsontable-table id="example1" datarows="{{ model.subpage.people }}" settings="{{ model.subpage.settings }}"
+  <handsontable-table id="example1" datarows="{{ subpage.people }}" settings="{{ subpage.settings }}"
                   XXXwidth="400">
     <handsontable-column width="30" readOnly value="id" title="ID"></handsontable-column>
     <handsontable-column width="70" value="name.first" title="First Name"></handsontable-column>

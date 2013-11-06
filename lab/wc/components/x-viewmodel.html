@@ -1,6 +1,6 @@
 <link rel="import" href="animate-me.html">
 <link rel="import" href="x-btn-group.html">
-<link rel="import" href="x-viewmodel-page.html">
+<link rel="import" href="x-html.html">
 <link rel="import" href="handsontable-table.html">
 
 <script src="../../../lib/json-patch/src/json-patch-duplex.js"></script>
@@ -17,7 +17,9 @@
     </ul>
 
     <div is="animate-me">
-      <x-viewmodel-page model="{{ viewmodel }}" view="{{ viewmodel.subpage.html }}"></x-viewmodel-page>
+      <template bind="{{ viewmodel }}">
+        <x-html content="{{ subpage.html }}"></x-html>
+      </template>
     </div>
 
     <hr>
