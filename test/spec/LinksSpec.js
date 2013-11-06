@@ -83,4 +83,14 @@ describe("Links", function () {
       expect(historySpy.callCount).toBe(0);
     });
   });
+
+  describe("should be accessible via API", function() {
+    it("should change history state programatically", function () {
+      var historySpy = spyOn(window.history, 'pushState');
+
+      this.puppet.morphUrl("/page2");
+
+      expect(historySpy.callCount).toBe(1);
+    });
+  });
 });

@@ -234,8 +234,7 @@
     }
     if (target.href && this.isApplicationLink(target)) {
       event.preventDefault();
-      history.pushState(null, null, target.href);
-      this.changeState(target.href);
+      this.morphUrl(target.href);
     }
     else if (target.type === 'submit') {
       event.preventDefault();
@@ -310,6 +309,16 @@
       req.setRequestHeader('X-Referer', this.referer);
     }
     req.send(data);
+  };
+
+  /**
+   * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
+   * so that the URL handlers can be executed on the server
+   * @param href
+   */
+  Puppet.prototype.morphUrl = function (url) {
+    history.pushState(null, null, url);
+    this.changeState(url);
   };
 
   Puppet.prototype.catchExternaLink = function (element) {
