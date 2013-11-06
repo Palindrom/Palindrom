@@ -53,3 +53,9 @@ PuppetJs is dependent on [Starcounter-Jack/JSON-Patch](https://github.com/Starco
 ### Testing
 
 Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
+
+### Changelog
+
+#### 0.1.0 (Nov 6, 2013)
+
+First numbered version

@@ -1,0 +1,26 @@
+{
+  "name": "puppetjs",
+  "version": "0.1.0",
+  "description": "",
+  "homepage": "https://github.com/PuppetJs/PuppetJs",
+  "keywords": ["json", "patch", "http", "rest"],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/PuppetJs/PuppetJs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/PuppetJs/PuppetJs/issues"
+  },
+  "author": {
+    "name": "Joachim Wester",
+    "email": "joachimwester@me.com",
+    "url": "http://www.starcounter.com/"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://www.opensource.org/licenses/MIT"
+    }
+  ],
+  "main": "./src/puppet.js"
+}

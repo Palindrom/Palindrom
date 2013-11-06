@@ -1,3 +1,7 @@
+// puppet.js 0.1.0
+// (c) 2013 Joachim Wester
+// MIT license
+
 (function (global) {
 
   var lastClickHandler
