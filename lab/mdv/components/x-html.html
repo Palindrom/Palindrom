@@ -1,14 +1,22 @@
 <script>
   (function () {
+    Object.defineProperty(Node.prototype, 'model', {
+      get: function () {
+        return this.bindings.content.model;
+      }
+    });
+
     function getModel(node) {
-      return node.model;
+      if (node.bindings) {
+        return node.bindings.content.model;
+      }
     }
 
     function loadTemplate(customElement) {
       var template = customElement.getAttribute('content');
       if (template && (template.indexOf('/') === 0 || template.indexOf('./') === 0)) {
         //load partial from HTTP server/cache
-         var href = template; //.substr(1);
+        var href = template; //.substr(1);
         var oReq = new XMLHttpRequest();
         oReq.onload = function (event) {
           reattachTemplate(customElement, event.target.responseText);

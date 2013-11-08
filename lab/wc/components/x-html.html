@@ -1,9 +1,15 @@
-<script src="x-html/mdv_extra.js"></script>
-
 <script>
   (function () {
+    Object.defineProperty(Node.prototype, 'model', {
+      get: function () {
+        return this.bindings.content.model;
+      }
+    });
+
     function getModel(node) {
-      return node.model;
+      if (node.bindings) {
+        return node.bindings.content.model;
+      }
     }
 
     function loadTemplate(customElement) {
