@@ -26,9 +26,15 @@
       }
     }
 
-    function reattachTemplate(customElement, template) {
-      customElement.innerHTML = '<template bind>' + template + '</template>';
-      customElement.firstChild.model = customElement.model;
+    function reattachTemplate(customElement, html) {
+      customElement.innerHTML = '<template bind>' + html + '</template>';
+
+      var template = customElement.firstChild;
+      var content = template.content;
+      HTMLImports.importer.load(content, function () {
+        HTMLImports.parser.parse(content);
+        customElement.firstChild.model = customElement.model;
+      });
 
       setTimeout(function () {
         var inScripts = customElement.firstChild.content.querySelectorAll('script');
