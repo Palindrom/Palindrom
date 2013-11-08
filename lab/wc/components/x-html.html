@@ -2,15 +2,11 @@
   (function () {
     Object.defineProperty(Node.prototype, 'model', {
       get: function () {
-        return this.bindings.content.model;
+        if (this.bindings) {
+          return this.bindings.content.model;
+        }
       }
     });
-
-    function getModel(node) {
-      if (node.bindings) {
-        return node.bindings.content.model;
-      }
-    }
 
     function loadTemplate(customElement) {
       var template = customElement.getAttribute('content');
@@ -32,8 +28,7 @@
 
     function reattachTemplate(customElement, template) {
       customElement.innerHTML = '<template bind>' + template + '</template>';
-      var model = getModel(customElement);
-      customElement.firstChild.model = model;
+      customElement.firstChild.model = customElement.model;
 
       setTimeout(function () {
         var inScripts = customElement.firstChild.content.querySelectorAll('script');
