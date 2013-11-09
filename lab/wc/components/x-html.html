@@ -1,3 +1,23 @@
+<!--
+x-html.html v20131109
+
+Usage:
+
+Load HTML partial from string:
+  <x-html content="{{ var }}"></x-html>
+  where `var` equals "<b>some</b> HTML"
+
+Load HTML partial from URL:
+  <x-html content="{{ var }}"></x-html>
+  where `var` equals "./path/to/file.html", a path relative to the document that must start with / or ./
+
+Your HTML partials can contain:
+ - regular HTML
+ - inline scripts using `<script>//JS code here</script>`
+ - inline styles using `<style>/*CSS code here*/</style>`
+ - external stylesheets using `<link rel="stylesheet" href="path/to/file.css">`, with `href` value relative to the document
+ - HTML imports using `<link rel="import" href="path/to/file.html">`, with `href` value relative to the document
+-->
 <script>
   (function () {
     Object.defineProperty(Node.prototype, 'model', {
@@ -31,18 +51,35 @@
 
       var template = customElement.firstChild;
       var content = template.content;
-      HTMLImports.importer.load(content, function () {
-        HTMLImports.parser.parse(content);
-        customElement.firstChild.model = customElement.model;
+
+      var specialElems = content.querySelectorAll(['style', 'link[rel=stylesheet]', 'script']);
+      specialElems = Array.prototype.slice.call(specialElems, 0); //convert to array
+      specialElems.forEach(function (elem) {
+        elem.parentNode.removeChild(elem); //avoid being processed by HTMLImports
       });
 
-      setTimeout(function () {
-        var inScripts = customElement.firstChild.content.querySelectorAll('script');
-        inScripts = Array.prototype.slice.call(inScripts, 0); //convert to array
-        inScripts.forEach(function (inScript) {
-          executeComponentScript(inScript.textContent, customElement, 'script')
+      HTMLImports.importer.load(content, function () {
+        HTMLImports.parser.parse(content);
+        template.model = customElement.model;
+
+        specialElems.forEach(function (elem) {
+          if (elem.nodeName === 'STYLE') {
+            customElement.appendChild(elem);
+          }
+          else if (elem.nodeName === 'LINK') { //appending <link rel="stylesheet"> to Shadow DOM does not have any effect (9 Nov, 2013)
+            var style = document.createElement('style');
+            style.innerHTML = '@import url(' + elem.getAttribute('href') + ');';
+            setTimeout(function () { //must be async, otherwise custom elements in demo puppetjs/lab/wc/page_2 display improperly
+              customElement.appendChild(style);
+            }, 0);
+          }
+          else if (elem.nodeName === 'SCRIPT') {
+            setTimeout(function () { //must be async
+              executeComponentScript(elem.textContent, customElement, 'script')
+            }, 0);
+          }
         });
-      }, 0);
+      });
     }
 
     /**
