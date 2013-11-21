@@ -62,7 +62,7 @@ Object.defineProperty(server.xhr.prototype, "response", {
 
 server.xhr.useFilters = true;
 server.xhr.addFilter(function (method, url) {
-  if (url.indexOf('partial') > -1 || url.indexOf('components') > -1) {  //'components' required to make SinonJS work with Polymer's HTMLImports.js
+  if (url.indexOf('partials/') > -1 || url.indexOf('components/') > -1 || url.indexOf('lib/') > -1) { //if partial or HTML Import, use real XHR
     return (true);
   }
   return (false);
