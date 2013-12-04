@@ -56,6 +56,13 @@ Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
 
 ### Changelog
 
+#### 0.1.1 (Dec 4, 2013)
+
+- HTTP referer header (described in [Server communication](https://github.com/Starcounter-Jack/PuppetJs/wiki/Server-communication)) will now show an error if set in a XHR response. The only permitted way is to set it in the main HTML document response HTTP headers
+- Upgrade to [&lt;x-html&gt;](https://github.com/PuppetJs/x-html) to v0.0.20131126
+- Refactor examples in `lab/` to use the updated &lt;x-html&gt;
+- In case of error, display the error message with absolute positioning
+
 #### 0.1.0 (Nov 6, 2013)
 
 First numbered version

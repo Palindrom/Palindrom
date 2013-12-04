@@ -1,4 +1,4 @@
-// puppet.js 0.1.0
+// puppet.js 0.1.1
 // (c) 2013 Joachim Wester
 // MIT license
 
