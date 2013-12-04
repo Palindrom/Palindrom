@@ -80,9 +80,9 @@
   }
 
   function recursiveExtend(par, obj) {
-    for(var i in obj) {
-      if(obj.hasOwnProperty(i)) {
-        if(typeof obj[i] === 'object' && par.hasOwnProperty(i)) {
+    for (var i in obj) {
+      if (obj.hasOwnProperty(i)) {
+        if (typeof obj[i] === 'object' && par.hasOwnProperty(i)) {
           recursiveExtend(par[i], obj[i]);
         }
         else {
@@ -227,7 +227,7 @@
   };
 
   Puppet.prototype.clickHandler = function (event) {
-    if(event.detail && event.detail.target) {
+    if (event.detail && event.detail.target) {
       //detail is Polymer
       event = event.detail;
     }
