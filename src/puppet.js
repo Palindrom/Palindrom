@@ -255,18 +255,16 @@
   Puppet.prototype.showError = function (heading, description) {
     if (this.debug) {
       var DIV = document.getElementById('puppetjs-error');
-      if(!DIV) {
+      if (!DIV) {
         DIV = document.createElement('DIV');
         DIV.id = 'puppetjs-error';
         DIV.style.border = '1px solid #dFb5b4';
         DIV.style.background = '#fcf2f2';
         DIV.style.padding = '10px 16px';
-        if (document.body.firstChild) {
-          document.body.insertBefore(DIV, document.body.firstChild);
-        }
-        else {
-          document.body.appendChild(DIV);
-        }
+        DIV.style.position = 'absolute';
+        DIV.style.top = '0';
+        DIV.style.left = '0';
+        document.body.appendChild(DIV);
       }
 
       var H1 = document.createElement('H1');
