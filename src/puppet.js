@@ -22,7 +22,9 @@
     this.observer = null;
     this.referer = null;
     this.queue = [];
+    this.refererSettable = true;
     this.handleResponseCookie();
+    this.refererSettable = false;
     this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this));
   }
 
@@ -114,11 +116,13 @@
   Puppet.prototype.handleResponseHeader = function (xhr) {
     var location = xhr.getResponseHeader('X-Location') || xhr.getResponseHeader('Location');
     if (location) {
-      this.referer = location;
+      this.setReferer(location);
     }
   };
 
   /**
+   * PuppetJs does not use cookies because of sessions (you need to take care of it in your application code)
+   * Reason PuppetJs handles cookies is different:
    * JavaScript cannot read HTTP "Location" header for the main HTML document, but it can read cookies
    * So if you want to establish session in the main HTML document, send "Location" value as a cookie
    * The cookie will be erased (replaced with empty value) after reading
@@ -126,10 +130,20 @@
   Puppet.prototype.handleResponseCookie = function () {
     var location = cookie.read('Location');
     if (location) { //if cookie exists and is not empty
-      this.referer = location;
+      this.setReferer(location);
       cookie.erase('Location');
     }
   };
+
+  Puppet.prototype.setReferer = function (referer) {
+    if (this.referer) {
+      this.showError("Error: Referer already set", "Server attempted to set a referer for more than one time during the session. The referer value may have been lost due to server restart or an error in the application logic\n\nPrevious referer: " + this.referer + "\nNew referer: " + referer);
+    }
+    else if (!this.refererSettable) { //this is a subset of PuppetJs specification, investigating less rigorous model but this one seems most stable
+      this.showError("Error: Referer not set by the master HTML document", "Referer was expected to be set in the master HTML document (as a HTTP cookie with named 'Location'), but it was not found.\n\nInstead, server attempted to set the referer at a later stage.\n\nPlease discuss.\n\nPrevious referer: " + this.referer + "\nNew referer: " + referer);
+    }
+    this.referer = referer;
+  }
 
   Puppet.prototype.observe = function () {
     this.observer = jsonpatch.observe(this.obj, this.queueLocalChange.bind(this));
@@ -331,6 +345,7 @@
 
   /**
    * Cookie helper
+   * @see Puppet.prototype.handleResponseCookie
    * reference: http://www.quirksmode.org/js/cookies.html
    * reference: https://github.com/js-coder/cookie.js/blob/gh-pages/cookie.js
    */
