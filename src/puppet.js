@@ -278,6 +278,7 @@
         DIV.style.position = 'absolute';
         DIV.style.top = '0';
         DIV.style.left = '0';
+        DIV.style.zIndex = '999';
         document.body.appendChild(DIV);
       }
 
