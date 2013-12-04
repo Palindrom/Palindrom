@@ -143,7 +143,7 @@
       this.showError("Error: Referer not set by the master HTML document", "Referer was expected to be set in the master HTML document (as a HTTP cookie with named 'Location'), but it was not found.\n\nInstead, server attempted to set the referer at a later stage.\n\nPlease discuss.\n\nPrevious referer: " + this.referer + "\nNew referer: " + referer);
     }
     this.referer = referer;
-  }
+  };
 
   Puppet.prototype.observe = function () {
     this.observer = jsonpatch.observe(this.obj, this.queueLocalChange.bind(this));
@@ -331,7 +331,7 @@
   /**
    * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
    * so that the URL handlers can be executed on the server
-   * @param href
+   * @param url
    */
   Puppet.prototype.morphUrl = function (url) {
     history.pushState(null, null, url);
