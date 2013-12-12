@@ -25,6 +25,16 @@
     this.refererSettable = true;
     this.handleResponseCookie();
     this.refererSettable = false;
+
+    this.ignoreCache = [];
+    this.ignoreAdd = null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
+
+    //usage:
+    //puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to server
+    //puppet.ignoreAdd = /./; //ignore all the "add" operations
+    //puppet.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
+    //puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
+
     this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this));
   }
 
@@ -159,8 +169,8 @@
   Puppet.prototype.queueLocalChange = function (patches) {
     Array.prototype.push.apply(this.queue, patches);
     if ((document.activeElement.nodeName !== 'INPUT' && document.activeElement.nodeName !== 'TEXTAREA') || document.activeElement.getAttribute('update-on') === 'input') {
+      this.flattenPatches(this.queue);
       if (this.queue.length) {
-        this.flattenPatches(this.queue);
         this.handleLocalChange(this.queue);
         this.queue.length = 0;
       }
@@ -169,18 +179,39 @@
 
   Puppet.prototype.sendLocalChange = function () {
     jsonpatch.generate(this.observer);
+    this.flattenPatches(this.queue);
     if (this.queue.length) {
-      this.flattenPatches(this.queue);
       this.handleLocalChange(this.queue);
       this.queue.length = 0;
     }
   };
 
-  //merges redundant patches
+  Puppet.prototype.isIgnored = function (path, op) {
+    if (this.ignoreAdd) {
+      if (op === 'add' && this.ignoreAdd.test(path)) {
+        this.ignoreCache[path] = true;
+        return true;
+      }
+      var arr = path.split('/');
+      var joined = '';
+      for (var i = 1, ilen = arr.length; i < ilen; i++) {
+        joined += '/' + arr[i];
+        if (this.ignoreCache[joined]) {
+          return true; //once we decided to ignore something that was added, other operations (replace, remove, ...) are ignored as well
+        }
+      }
+    }
+    return false;
+  };
+
+  //merges redundant patches and ignores private member changes
   Puppet.prototype.flattenPatches = function (patches) {
     var seen = {};
     for (var i = patches.length - 1; i >= 0; i--) {
-      if (patches[i].op === 'replace') {
+      if (this.isIgnored(patches[i].path, patches[i].op)) {
+        patches.splice(i, 1); //ignore changes to properties that start with PRIVATE_PREFIX
+      }
+      else if (patches[i].op === 'replace') {
         if (seen[patches[i].path]) {
           patches.splice(i, 1);
         }
