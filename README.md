@@ -46,6 +46,18 @@ per input field (given that this field is bound to observed object):
 <input update-on="input"><!-- update server on key stroke -->
 ```
 
+### Ignoring local changes
+
+If you want to create a property in the observed object that will remain local, there is an `ignoreAdd` property that
+let's you disregard client-side "add" operations in the object using a regular expression. Sample usage:
+
+```javascript
+puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to server
+puppet.ignoreAdd = /./; //ignore all the "add" operations
+puppet.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
+puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
+```
+
 ### Dependencies
 
 PuppetJs is dependent on [Starcounter-Jack/JSON-Patch](https://github.com/Starcounter-Jack/JSON-Patch) to observe changes in local scope, generate patches to be sent to the server and apply changes received from the server.
@@ -55,6 +67,14 @@ PuppetJs is dependent on [Starcounter-Jack/JSON-Patch](https://github.com/Starco
 Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
 
 ### Changelog
+
+#### 0.1.2 (Dec 13, 2013)
+
+- New property `puppet.ignoreAdd` allows to ignore local "add" operations in the observed object, allowing client-only properties that will not be propagated to server (solves [#10](https://github.com/PuppetJs/PuppetJs/issues/10) and [#12](https://github.com/PuppetJs/PuppetJs/issues/12))
+- Fixed lint code errors
+- Fixed exception in Angular example (`ng-partial` directive)
+- Upgrade to [&lt;x-html&gt;](https://github.com/PuppetJs/x-html) to v0.0.20131213
+- Upgrade Polymer to v0.1.0
 
 #### 0.1.1 (Dec 4, 2013)
 
