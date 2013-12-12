@@ -21,17 +21,14 @@ angular.module('ngPartial', []).directive('ngPartial', function ($http, $templat
 
         scope.$watch(srcExp, function ngIncludeWatchAction(value) {
           var thisChangeId = ++changeCounter;
-          console.log('value', value);
 
           if (value) {
-            if (value.indexOf('@') === 0) {
-              var href = value.substr(1);
-              $http.get(href, {cache: $templateCache}).success(function (response) {
+            if (value.indexOf('/') === 0 || value.indexOf('./') === 0) {
+              $http.get(value, {cache: $templateCache}).success(function (response) {
                 if (thisChangeId !== changeCounter) return;
 
                 if (childScope) childScope.$destroy();
                 childScope = scope.$new();
-                console.log('childScope', childScope);
 
                 element.html(response);
                 $compile(element.contents())(childScope);
@@ -43,9 +40,7 @@ angular.module('ngPartial', []).directive('ngPartial', function ($http, $templat
                 });
             }
             else {
-              console.log('da', value);
               if (thisChangeId !== changeCounter) return;
-              console.log('dawa', value);
 
               if (childScope) childScope.$destroy();
               childScope = scope.$new();
