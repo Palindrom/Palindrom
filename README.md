@@ -68,6 +68,13 @@ Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
 
 ### Changelog
 
+#### 0.1.3 (Dec 20, 2013)
+
+- Use shadowRoot instead of webkitShadowRoot if available
+- Recommended to use PuppetJS in Chrome with Web Platform features flag enabled (otherwise you may experience an issue with the link catching)
+- Upgrade to [&lt;x-html&gt;](https://github.com/PuppetJs/x-html) to v0.0.20131220
+- Upgrade Polymer to v0.1.1
+
 #### 0.1.2 (Dec 13, 2013)
 
 - New property `puppet.ignoreAdd` allows to ignore local "add" operations in the observed object, allowing client-only properties that will not be propagated to server (solves [#10](https://github.com/PuppetJs/PuppetJs/issues/10) and [#12](https://github.com/PuppetJs/PuppetJs/issues/12))
