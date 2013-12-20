@@ -369,7 +369,14 @@
     this.changeState(url);
   };
 
+  /**
+   * Add an event listener that catches clicks on links
+   * @param element shadowRoot
+   */
   Puppet.prototype.catchExternaLink = function (element) {
+    if (element.impl) { //Polymer
+      element = element.impl;
+    }
     element.addEventListener("click", function (event) {
       window.PuppetExternalLink = event.target;
     });

@@ -38,7 +38,7 @@
         var that = this;
         var puppet = new Puppet(window.location.href, function (obj) {
           that.viewmodel = obj;
-          puppet.catchExternaLink(that.webkitShadowRoot);
+          puppet.catchExternaLink(that.shadowRoot || that.webkitShadowRoot);
         });
       }
     });
