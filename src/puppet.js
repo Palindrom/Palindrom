@@ -77,16 +77,11 @@
   }
 
   function recursiveMarkObjProperties(parent, key) {
-    if (key && parent) {
-      placeMarkers(parent, key);
-      parent = parent[key];
-    }
-
-    if (parent) {
-      for (var i in parent) {
-        if (parent.hasOwnProperty(i) && typeof parent[i] === 'object') {
-          recursiveMarkObjProperties(parent, i);
-        }
+    placeMarkers(parent, key);
+    parent = parent[key];
+    for (var i in parent) {
+      if (parent.hasOwnProperty(i) && typeof parent[i] === 'object') {
+        recursiveMarkObjProperties(parent, i);
       }
     }
   }
@@ -108,7 +103,7 @@
     var tmp = JSON.parse(event.target.responseText);
     recursiveExtend(this.obj, tmp);
 
-    recursiveMarkObjProperties(this.obj);
+    recursiveMarkObjProperties(this, "obj");
     this.observe();
     if (this.callback) {
       this.callback(this.obj);

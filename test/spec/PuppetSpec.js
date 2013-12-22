@@ -25,6 +25,24 @@ describe("Puppet", function () {
         expect(initSpy).toHaveBeenCalledWith(jasmine.any(Object));
       });
     });
+
+    it("should accept a JSON that has an empty string as a key (which is valid)", function () {
+      var initSpy = jasmine.createSpy();
+
+      this.puppet = new Puppet(window.location.href, initSpy);
+      var that = this;
+
+      this.server.respond('{"hello": "world","": {"hola": "mundo"}}');
+
+      waitsFor(function () {
+        return initSpy.wasCalled;
+      }, 10);
+
+      runs(function () {
+        expect(initSpy).toHaveBeenCalledWith(jasmine.any(Object));
+        expect(that.puppet.obj[""].hola).toBe("mundo");
+      });
+    });
   });
 
   /// ajax
