@@ -1,4 +1,6 @@
 describe("IgnoreAdd", function () {
+  jsonpatch.intervals = [10];
+
   beforeEach(function () {
     this.server = sinon.fakeServer.create();
   });
@@ -18,7 +20,7 @@ describe("IgnoreAdd", function () {
 
     this.server.respond('{"hello": 0}');
 
-    waits(0);
+    waits(10);
 
     runs(function () {
       obj.hello = 1;
@@ -26,7 +28,7 @@ describe("IgnoreAdd", function () {
       obj.$privateProp = 1;
     });
 
-    waits(0);
+    waits(10);
 
     runs(function () {
       expect(patchSpy.callCount).toBe(2);
@@ -44,14 +46,14 @@ describe("IgnoreAdd", function () {
 
     this.server.respond('{"hello": 0}');
 
-    waits(0);
+    waits(10);
 
     runs(function () {
       obj.publicProp = 1;
       obj.$privateProp = 1;
     });
 
-    waits(0);
+    waits(10);
 
     runs(function () {
       expect(patchSpy.callCount).toBe(2);
@@ -60,7 +62,7 @@ describe("IgnoreAdd", function () {
       obj.$privateProp = 2;
     });
 
-    waits(0);
+    waits(10);
 
     runs(function () {
       expect(patchSpy.callCount).toBe(3);
@@ -78,14 +80,14 @@ describe("IgnoreAdd", function () {
 
     this.server.respond('{"hello": 0}');
 
-    waits(0);
+    waits(10);
 
     runs(function () {
       obj.publicProp = ["a", "b", "c"];
       obj.$privateProp = ["a", "b", "c"];
     });
 
-    waits(0);
+    waits(10);
 
     runs(function () {
       expect(patchSpy.callCount).toBe(2);
@@ -94,7 +96,7 @@ describe("IgnoreAdd", function () {
       obj.$privateProp[2] = "cc";
     });
 
-    waits(0);
+    waits(10);
 
     runs(function () {
       expect(patchSpy.callCount).toBe(3);
@@ -112,14 +114,14 @@ describe("IgnoreAdd", function () {
 
     this.server.respond('{"hello": 0}');
 
-    waits(0);
+    waits(10);
 
     runs(function () {
       expect(patchSpy.callCount).toBe(1);
       obj.$privateProp = 1;
     });
 
-    waits(0);
+    waits(10);
 
     runs(function () {
       expect(patchSpy.callCount).toBe(1);
