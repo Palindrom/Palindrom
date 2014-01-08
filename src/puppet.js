@@ -265,7 +265,7 @@
    * @returns {boolean}
    */
   Puppet.prototype.isApplicationLink = function (elem) {
-    if(typeof elem === 'string') {
+    if (typeof elem === 'string') {
       //type string is reported in Polymer / Canary (Web Platform features disabled)
       var parser = document.createElement('A');
       parser.href = elem;
@@ -284,9 +284,9 @@
       event = event.detail;
     }
     var target = event.target;
-    if (window.PuppetExternalLink) {
-      target = window.PuppetExternalLink;
-      window.PuppetExternalLink = null;
+    if (target.impl) {
+      //impl is Polymer
+      target = target.impl;
     }
     if (target.href && this.isApplicationLink(target)) {
       event.preventDefault();
@@ -383,7 +383,6 @@
    * @deprecated
    */
   Puppet.prototype.catchExternaLink = function (element) {
-    //deprecated
     //now it is handled by Puppet.prototype.fixShadowRootClicks
   };
 
@@ -410,7 +409,7 @@
 
   /**
    * Catches clicks in Shadow DOM
-   * @see https://groups.google.com/forum/#!topic/polymer-dev/fDRlCT7nNPU
+   * @see <a href="https://groups.google.com/forum/#!topic/polymer-dev/fDRlCT7nNPU">discussion</a>
    */
   Puppet.prototype.fixShadowRootClicks = function () {
     //existing shadow roots
