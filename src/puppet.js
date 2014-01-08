@@ -116,6 +116,7 @@
     document.body.addEventListener('click', lastClickHandler = this.clickHandler.bind(this));
     window.addEventListener('popstate', lastPopstateHandler = this.historyHandler.bind(this)); //better here than in constructor, because Chrome triggers popstate on page load
     document.body.addEventListener('blur', lastBlurHandler = this.sendLocalChange.bind(this), true);
+    this.fixShadowRootClicks();
   };
 
   Puppet.prototype.handleResponseHeader = function (xhr) {
@@ -258,8 +259,19 @@
     }
   };
 
-  Puppet.prototype.isApplicationLink = function (href) {
-    return (href.protocol == window.location.protocol && href.host == window.location.host);
+  /**
+   * Returns information if a given element is an internal application link that PuppetJS should intercept into a history push
+   * @param elem HTMLElement or String
+   * @returns {boolean}
+   */
+  Puppet.prototype.isApplicationLink = function (elem) {
+    if(typeof elem === 'string') {
+      //type string is reported in Polymer / Canary (Web Platform features disabled)
+      var parser = document.createElement('A');
+      parser.href = elem;
+      elem = parser;
+    }
+    return (elem.protocol == window.location.protocol && elem.host == window.location.host);
   };
 
   Puppet.prototype.changeState = function (href) {
@@ -278,6 +290,7 @@
     }
     if (target.href && this.isApplicationLink(target)) {
       event.preventDefault();
+      event.stopPropagation();
       this.morphUrl(target.href);
     }
     else if (target.type === 'submit') {
@@ -367,14 +380,53 @@
   /**
    * Add an event listener that catches clicks on links
    * @param element shadowRoot
+   * @deprecated
    */
   Puppet.prototype.catchExternaLink = function (element) {
-    if (element.impl) { //Polymer
-      element = element.impl;
+    //deprecated
+    //now it is handled by Puppet.prototype.fixShadowRootClicks
+  };
+
+  /**
+   * Returns array of shadow roots inside of a element (recursive)
+   * @param el
+   * @param out (Optional)
+   */
+  Puppet.prototype.findShadowRoots = function (el, out) {
+    if (!out) {
+      out = [];
     }
-    element.addEventListener("click", function (event) {
-      window.PuppetExternalLink = event.target;
-    });
+    for (var i = 0, ilen = el.childNodes.length; i < ilen; i++) {
+      if (el.childNodes[i].nodeType === 1) {
+        if (el.childNodes[i].shadowRoot) {
+          out.push(el.childNodes[i].shadowRoot);
+          this.findShadowRoots(el.childNodes[i].shadowRoot, out);
+        }
+        this.findShadowRoots(el.childNodes[i], out);
+      }
+    }
+    return out;
+  };
+
+  /**
+   * Catches clicks in Shadow DOM
+   * @see https://groups.google.com/forum/#!topic/polymer-dev/fDRlCT7nNPU
+   */
+  Puppet.prototype.fixShadowRootClicks = function () {
+    //existing shadow roots
+    var shadowRoots = this.findShadowRoots(document.documentElement);
+    for (var i = 0, ilen = shadowRoots.length; i < ilen; i++) {
+      (shadowRoots[i].impl || shadowRoots[i]).addEventListener("click", this.clickHandler.bind(this));
+    }
+
+    //future shadow roots
+    var old = Element.prototype.createShadowRoot;
+    var that = this;
+    Element.prototype.createShadowRoot = function () {
+      var shadowRoot = old.apply(this, arguments);
+      (shadowRoot.impl || shadowRoot).addEventListener("click", that.clickHandler.bind(that));
+      return shadowRoot;
+    }
   };
 
   /**
