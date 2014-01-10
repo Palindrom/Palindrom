@@ -68,6 +68,12 @@ Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
 
 ### Changelog
 
+#### 0.1.4 (Jan 10, 2013)
+
+- Redo the how the internal application clicks are intercepted by PuppetJS and changed into a patch and history push (previous implementation stopped working in ShadowDOM)
+- Deprecate `catchExternaLink` (no need to use it anymore)
+- Fixed an infinite loop when a key in the JSON file was an empty string and its value was an object ([#14](https://github.com/PuppetJs/PuppetJs/issues/14))
+
 #### 0.1.3 (Dec 20, 2013)
 
 - Use shadowRoot instead of webkitShadowRoot if available
