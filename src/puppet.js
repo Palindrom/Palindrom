@@ -142,11 +142,8 @@
   };
 
   Puppet.prototype.setReferer = function (referer) {
-    if (this.referer) {
-      this.showError("Error: Referer already set", "Server attempted to set a referer for more than one time during the session. The referer value may have been lost due to server restart or an error in the application logic\n\nPrevious referer: " + this.referer + "\nNew referer: " + referer);
-    }
-    else if (!this.refererSettable) { //this is a subset of PuppetJs specification, investigating less rigorous model but this one seems most stable
-      this.showError("Error: Referer not set by the master HTML document", "Referer was expected to be set in the master HTML document (as a HTTP cookie with named 'Location'), but it was not found.\n\nInstead, server attempted to set the referer at a later stage.\n\nPlease discuss.\n\nPrevious referer: " + this.referer + "\nNew referer: " + referer);
+    if(this.referer && this.referer !== referer) {
+      this.showError("Error: Session lost", "Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.referer + "\nNew session ID: " + referer);
     }
     this.referer = referer;
   };
