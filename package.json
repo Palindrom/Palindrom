@@ -1,6 +1,6 @@
 {
   "name": "puppetjs",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "",
   "homepage": "https://github.com/PuppetJs/PuppetJs",
   "keywords": ["json", "patch", "http", "rest"],
