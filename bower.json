@@ -1,0 +1,27 @@
+{
+  "name": "PuppetJs",
+  "version": "0.1.5",
+  "homepage": "https://github.com/PuppetJs/PuppetJs",
+  "description": "Client side library that binds Web Components or AngularJs to server side view models using JSON-Patch.",
+  "main": "src/puppet.js",
+  "keywords": [
+    "JSON-patch",
+    "web components",
+    "angularjs"
+  ],
+  "license": "MIT",
+  "ignore": [
+  ],
+  "dependencies": {
+    "fast-json-patch": "~0.3.6"
+  },
+  "devDependencies": {
+    "platform": "Polymer/platform#0.1.3",
+    "polymer": "Polymer/polymer#0.1.3",
+    "x-html": "~0.0.20140122"
+  },
+  "resolutions": {
+    "polymer": "0.1.3",
+    "platform": "0.1.3"
+  }
+}

@@ -5,15 +5,19 @@ Client side library that binds Web Components or AngularJs to server side view m
 
 Implements [Server communication](https://github.com/Starcounter-Jack/PuppetJs/wiki/Server-communication).
 
-### Usage
+### Installation
 
-Install by adding source to your head:
+You can install it using [bower](http://bower.io/) `bower install PuppetJs` or just download from [github](https://github.com/PuppetJs/PuppetJs).
+
+Then add source to your head:
 
 ```html
 <!-- include PuppetJs with dependencies -->
-<script src="lib/json-patch/src/json-patch-duplex.js"></script>
-<script src="src/puppet.js"></script>
+<script src="bower_components/fast-json-patch/src/json-patch-duplex.js"></script>
+<script src="bower_components/PuppetJs/src/puppet.js"></script>
 ```
+
+### Usage
 
 After DOM is ready, initialize with the constructor:
 
