@@ -60,15 +60,16 @@ Object.defineProperty(server.xhr.prototype, "response", {
   }
 });
 
+var lastUrl = window.location.href;
+
 server.xhr.useFilters = true;
 server.xhr.addFilter(function (method, url) {
-  if (url.indexOf('partials/') > -1 || url.indexOf('components/') > -1 || url.indexOf('lib/') > -1) { //if partial or HTML Import, use real XHR
-    return (true);
+  //apply only to `*/test*`, `*lab/{smth}`, `*lab/{smth}/`, and `*lab/{smth}/page*`
+  if( url.match("/test|lab/\\w+(/?$|page)") ){
+    return false;
   }
-  return (false);
+  return true;
 });
-
-var lastUrl = window.location.href;
 
 if (lastUrl.indexOf('page_1') > -1) {
   full.subpage.html = './partials/page_1.html';

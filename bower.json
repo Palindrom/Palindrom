@@ -16,12 +16,8 @@
     "fast-json-patch": "~0.3.6"
   },
   "devDependencies": {
-    "platform": "Polymer/platform#0.1.3",
-    "polymer": "Polymer/polymer#0.1.3",
-    "x-html": "~0.0.20140122"
-  },
-  "resolutions": {
-    "polymer": "0.1.3",
-    "platform": "0.1.3"
+    "platform": "Polymer/platform#~0.2",
+    "polymer": "Polymer/polymer#~0.2",
+    "x-html": "#c8a50d3cc570c6655288e2e6b9448adef1246ea4"
   }
 }
