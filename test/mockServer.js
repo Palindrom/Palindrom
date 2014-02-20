@@ -65,7 +65,7 @@ var lastUrl = window.location.href;
 server.xhr.useFilters = true;
 server.xhr.addFilter(function (method, url) {
   //apply only to `*/test*`, `*lab/{smth}`, `*lab/{smth}/`, and `*lab/{smth}/page*`
-  if( url.match("/test|lab/\\w+(/?$|page)") ){
+  if( url.match("/test|lab/\\w+(/?$|/page)") ){
     return false;
   }
   return true;
