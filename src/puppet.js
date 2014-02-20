@@ -3,6 +3,16 @@
 // MIT license
 
 (function (global) {
+  /**
+   * Sugar function to bind model change on click with Polymer.
+   * @param {Node} element DOM Node
+   * @param {Object} [value]   any value to be set, if not given `element.value` or
+   *                            value attribute will be used.
+   */
+  global.setModelValue = function setModelValue(element, value){
+      return (element.bindings || wrap(element).bindings).bind
+                .setValue( value || element.value || element.getAttribute("value") );
+  };
 
   var lastClickHandler
     , lastPopstateHandler
