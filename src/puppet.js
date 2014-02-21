@@ -347,7 +347,15 @@
     throw new Error(description);
   };
 
-  Puppet.prototype.xhr = function (url, accept, data, callback) {
+  /**
+   * Internal method to perform XMLHttpRequest
+   * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
+   * @param accept (Optional) HTTP accept header
+   * @param data (Optional) Data payload
+   * @param callback (Optional) function
+   * @param beforeSend (Optional) Function that modifies the XHR object before the request is sent. Added for hackability
+   */
+  Puppet.prototype.xhr = function (url, accept, data, callback, beforeSend) {
     //this.handleResponseCookie();
     cookie.erase('Location'); //more invasive cookie erasing because sometimes the cookie was still visible in the requests
 
@@ -376,6 +384,9 @@
     }
     if (this.referer) {
       req.setRequestHeader('X-Referer', this.referer);
+    }
+    if (beforeSend) {
+      beforeSend.call(that, req);
     }
     req.send(data);
   };
