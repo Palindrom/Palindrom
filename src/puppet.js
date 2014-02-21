@@ -10,7 +10,7 @@
    *                            value attribute will be used.
    */
   global.setModelValue = function setModelValue(element, value){
-      return (element.bindings || wrap(element).bindings).bind
+      return (element.bindings || ShadowDOMPolyfill.wrap(element).bindings).bind
                 .setValue( value || element.value || element.getAttribute("value") );
   };
 
