@@ -18,6 +18,6 @@
   "devDependencies": {
     "platform": "Polymer/platform#~0.2",
     "polymer": "Polymer/polymer#~0.2",
-    "x-html": "#c8a50d3cc570c6655288e2e6b9448adef1246ea4"
+    "x-html": "~0.0.20140221"
   }
 }
