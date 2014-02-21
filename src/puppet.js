@@ -295,10 +295,16 @@
       //impl is Polymer
       target = target.impl;
     }
-    if (target.href && this.isApplicationLink(target)) {
+
+    //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
+    //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
+    //while target.getAttribute("href") returns desired href (as string)
+    var href = target.href || target.getAttribute("href");
+
+    if (href && this.isApplicationLink(href)) {
       event.preventDefault();
       event.stopPropagation();
-      this.morphUrl(target.href);
+      this.morphUrl(href);
     }
     else if (target.type === 'submit') {
       event.preventDefault();
