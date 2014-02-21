@@ -32,9 +32,7 @@
     this.observer = null;
     this.referer = null;
     this.queue = [];
-    this.refererSettable = true;
     this.handleResponseCookie();
-    this.refererSettable = false;
 
     this.ignoreCache = [];
     this.ignoreAdd = null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
@@ -399,15 +397,6 @@
   Puppet.prototype.morphUrl = function (url) {
     history.pushState(null, null, url);
     this.changeState(url);
-  };
-
-  /**
-   * Add an event listener that catches clicks on links
-   * @param element shadowRoot
-   * @deprecated
-   */
-  Puppet.prototype.catchExternaLink = function (element) {
-    //now it is handled by Puppet.prototype.fixShadowRootClicks
   };
 
   /**
