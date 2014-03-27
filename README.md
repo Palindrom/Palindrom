@@ -72,6 +72,14 @@ Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
 
 ### Changelog
 
+#### 0.1.7 (Mar 27, 2014)
+
+- fix ShadowDOMPolyfill problem in Canary ([#17](https://github.com/PuppetJs/PuppetJs/issues/17))
+- change bindings to bindings_ - makes code ready for Polymer 0.2.2 ([#18](https://github.com/PuppetJs/PuppetJs/issues/18))
+- replace "wc" and "mdv" examples with a new one for Polymer
+- the new Polymer example shows usage of `setModelValue` and `update-on="input"`
+- remove the dependencies of the removed examples
+
 #### 0.1.6 (Feb 21, 2014)
 
 - New `beforeSend` callback in `puppet.xhr` for hackability
