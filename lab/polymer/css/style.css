@@ -1,0 +1,29 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+article {
+    display: flex;
+}
+
+section {
+    flex: 1;
+    margin-right: 20px;
+}
+
+p.detail {
+    font-size: 0.95em;
+    margin-bottom: 2em;
+    color: #444;
+}
+
+code {
+    font-family: Consolas, monospace;
+    background: #EEE;
+    padding: 1px;
+    font-size: 0.9em;
+}
+
+label {
+    margin-top: 1em;
+}

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PuppetJs with Polymer demo</title>
+  <script src="../../../platform/platform.js"></script>
+  <link rel="import" href="components/my-menu-button.html">
+
+  <!-- include PuppetJs with dependencies -->
+  <script src="../../../fast-json-patch/src/json-patch-duplex.js"></script>
+  <script src="../../src/puppet.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+
+  <!-- mock server responses -->
+  <script src="../../test/lib/sinon-1.7.1.js"></script>
+  <script src="js/mockServer.js"></script>
+</head>
+<body>
+
+<h1>PuppetJs + Polymer</h1>
+
+<p>This demo shows usage with Polymer's TemplateBinding outside and inside of Polymer Element</p>
+
+<article>
+  <section>
+    <h2>
+      Capturing Links
+    </h2>
+
+    <p>Clicking one of the links contained in a Polymer Element (or in regular DOM, doesn't matter) actually sends a
+      PATCH</p>
+
+    <ul>
+      <li><a href="index.html">Albert Einstein</a> (index.html)</li>
+      <li>
+        <my-menu-button href="subpage.html">Nikola Tesla</my-menu-button>
+        (subpage.html)
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>
+      Capturing input
+    </h2>
+
+    <template id="test" bind>
+      <h4>Welcome <em>{{user.fullName}}!</em></h4>
+
+      <p>
+        <label>First Name<input type="text" value="{{user.firstName$}}"></label>
+      </p>
+
+      <p class="detail">
+        By default, patches are generated on <code>blur</code>
+      </p>
+
+      <p>
+        <label>First Name (live)<input update-on="input" type="text" value="{{user.firstName$}}"></label>
+      </p>
+
+      <p class="detail">
+        With <code>update-on="input"</code> attribute, patches are generated on every keystroke
+      </p>
+
+      <p>
+        <label>Last Name<input type="text" value="{{user.lastName$}}"></label>
+      </p>
+
+      <button bind="{{user.resetName$}}" onclick="setModelValue(this, null)">Replace with Newton!
+      </button>
+    </template>
+  </section>
+
+  <!--<section>
+    <h2>Patches console</h2>
+    <pre>Patches go here</pre>
+  </section>-->
+</article>
+
+
+<script>
+  new Puppet(window.location.href, function (obj) {
+    document.getElementById('test').model = obj;
+  });
+</script>
+
+</body>
+</html>
