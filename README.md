@@ -72,6 +72,10 @@ Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
 
 ### Changelog
 
+#### 0.1.? (??)
+
+- `setModelValue(elem, value)` separated, and changed to `getModel(elem).property = value` [Polyjuice/model-operations](https://github.com/Polyjuice/model-operations)
+
 #### 0.1.7 (Mar 27, 2014)
 
 - fix ShadowDOMPolyfill problem in Canary ([#17](https://github.com/PuppetJs/PuppetJs/issues/17))

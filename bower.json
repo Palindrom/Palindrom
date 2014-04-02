@@ -10,12 +10,12 @@
     "angularjs"
   ],
   "license": "MIT",
-  "ignore": [
-  ],
+  "ignore": [],
   "dependencies": {
     "fast-json-patch": "~0.3.6"
   },
   "devDependencies": {
-    "polymer": "Polymer/polymer#~0.2"
+    "polymer": "Polymer/polymer#~0.2",
+    "model-operations": "Polyjuice/model-operations"
   }
 }

@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>PuppetJs with Polymer demo</title>
   <script src="../../../platform/platform.js"></script>
+  <link rel="import" href="../../../model-operations/model-operations.html">
   <link rel="import" href="components/my-menu-button.html">
 
   <!-- include PuppetJs with dependencies -->
@@ -68,7 +69,7 @@
         <label>Last Name<input type="text" value="{{user.lastName$}}"></label>
       </p>
 
-      <button bind="{{user.resetName$}}" onclick="setModelValue(this, null)">Replace with Newton!
+      <button onclick="getModel(this).user.resetName$ = null">Replace with Newton!
       </button>
     </template>
   </section>
