@@ -72,13 +72,18 @@ Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
 
 ### Changelog
 
+#### 0.1.9 (Apr 22, 2014)
+
+- bugfix: did not intercept clicks on elements nested in `<a>`
+- bugfix: event listener on links inside Shadow DOM did not work with Polymer 0.2.2
+- set the dev dependency on `Polymer/polymer` without specifying the version number, which should help to avoid conflicts in Bower
+
 #### 0.1.8 (Apr 2, 2014)
 
 - `setModelValue(elem, value)` separated, and changed to `getModel(elem).property = value` [Polyjuice/model-operations](https://github.com/Polyjuice/model-operations). Now, instead of
 `<button bind="{{Remove$}}" onclick="setModelValue(this)" value="null"></button>`
 use
 `<button onclick="getModel(elem).Remove$ = null"></button>`
-
 
 #### 0.1.7 (Mar 27, 2014)
 
