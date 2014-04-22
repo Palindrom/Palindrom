@@ -15,7 +15,7 @@
     "fast-json-patch": "~0.3.6"
   },
   "devDependencies": {
-    "polymer": "Polymer/polymer#~0.2",
+    "polymer": "Polymer/polymer",
     "model-operations": "Polyjuice/model-operations"
   }
 }
