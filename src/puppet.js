@@ -283,6 +283,13 @@
       target = target.impl;
     }
 
+    if(target.nodeName !== 'A') {
+      var parentA = closestParent(target, 'A');
+      if(parentA) {
+        target = parentA;
+      }
+    }
+
     //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
     //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
     //while target.getAttribute("href") returns desired href (as string)
@@ -465,6 +472,17 @@
     erase: function eraseCookie(name) {
       cookie.create(name, "", -1);
     }
+  };
+
+  //goes up the DOM tree (including given element) until it finds an element that matches the nodeName
+  var closestParent = function (elem, nodeName) {
+    while (elem != null) {
+      if (elem.nodeType === 1 && nodeName == elem.nodeName) {
+        return elem;
+      }
+      elem = elem.parentNode;
+    }
+    return null;
   };
 
   global.Puppet = Puppet;
