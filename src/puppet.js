@@ -425,7 +425,7 @@
     var that = this;
     Element.prototype.createShadowRoot = function () {
       var shadowRoot = old.apply(this, arguments);
-      (shadowRoot.impl || shadowRoot).addEventListener("click", that.clickHandler.bind(that));
+      shadowRoot.addEventListener("click", that.clickHandler.bind(that));
       return shadowRoot;
     }
   };
