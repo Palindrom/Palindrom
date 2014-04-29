@@ -10,7 +10,10 @@
     "angularjs"
   ],
   "license": "MIT",
-  "ignore": [],
+  "ignore": [
+    "lab/",
+    "test/"
+  ],
   "dependencies": {
     "fast-json-patch": "~0.3.6"
   },
