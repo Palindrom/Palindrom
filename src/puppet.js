@@ -33,6 +33,18 @@
     //puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
 
     this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this));
+
+    /**
+     * There is on "onpushstate" event, so PuppetJS needs to wrap history.pushState to know when it is called
+     * @type {Function}
+     * @private
+     */
+    var history_pushState = history.pushState;
+    var that = this;
+    history.pushState = function(data, title, url) {
+      history_pushState(data, title, url);
+      that.changeState(url);
+    };
   }
 
   /**
@@ -392,7 +404,6 @@
    */
   Puppet.prototype.morphUrl = function (url) {
     history.pushState(null, null, url);
-    this.changeState(url);
   };
 
   /**
