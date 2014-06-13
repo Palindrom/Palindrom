@@ -72,6 +72,10 @@ Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
 
 ### Changelog
 
+#### 0.1.11 (Jun 13, 2014)
+
+- fix error "Uncaught TypeError: Illegal invocation"
+
 #### 0.1.10 (Jun 13, 2014)
 
 - always trigger internal `changeState` behavior when history.push is detected (not only when `morphUrl` was called)
