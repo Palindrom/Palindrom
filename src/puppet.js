@@ -39,10 +39,10 @@
      * @type {Function}
      * @private
      */
-    var history_pushState = history.pushState;
+    var history_pushState = window.history.pushState;
     var that = this;
-    history.pushState = function(data, title, url) {
-      history_pushState(data, title, url);
+    window.history.pushState = function (data, title, url) {
+      history_pushState.call(window.history, data, title, url);
       that.changeState(url);
     };
   }
