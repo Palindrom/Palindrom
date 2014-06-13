@@ -72,6 +72,10 @@ Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
 
 ### Changelog
 
+#### 0.1.10 (Jun 13, 2014)
+
+- always trigger internal `changeState` behavior when history.push is detected (not only when `morphUrl` was called)
+
 #### 0.1.9 (Apr 22, 2014)
 
 - bugfix: did not intercept clicks on elements nested in `<a>`
