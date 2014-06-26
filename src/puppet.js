@@ -255,6 +255,13 @@
     jsonpatch.apply(this.obj, patches);
     var that = this;
     patches.forEach(function (patch) {
+      if (patch.path === "/") {
+        var desc = event.target.responseText;
+        if (desc.length > 103) {
+          desc = desc.substring(0, 100) + "...";
+        }
+        that.showWarning("Server pushed patch that replaces the object root", desc);
+      }
       if (patch.op === "add" || patch.op === "replace" || patch.op === "test") {
         markObjPropertyByPath(that.obj, patch.path);
       }
@@ -322,6 +329,15 @@
 
   Puppet.prototype.historyHandler = function (/*event*/) {
     this.changeState(location.href);
+  };
+
+  Puppet.prototype.showWarning = function (heading, description) {
+    if (this.debug && global.console && console.warn) {
+      if (description) {
+        heading += " (" + description + ")";
+      }
+      console.warn("PuppetJs warning: " + heading);
+    }
   };
 
   Puppet.prototype.showError = function (heading, description) {
