@@ -72,6 +72,10 @@ Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
 
 ### Changelog
 
+#### 0.1.12 (Jun 27, 2014)
+
+- show console warning when patch from server replaces object root (only when the `debug` flag is set to true)
+
 #### 0.1.11 (Jun 13, 2014)
 
 - fix error "Uncaught TypeError: Illegal invocation"
