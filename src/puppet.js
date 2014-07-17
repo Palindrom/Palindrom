@@ -1,6 +1,7 @@
-// puppet.js 0.1.12
-// (c) 2013 Joachim Wester
-// MIT license
+/*! puppet.js 0.1.12
+ * (c) 2013 Joachim Wester
+ * MIT license
+ */
 
 (function (global) {
   var lastClickHandler
@@ -272,21 +273,6 @@
     }
   };
 
-  /**
-   * Returns information if a given element is an internal application link that PuppetJS should intercept into a history push
-   * @param elem HTMLElement or String
-   * @returns {boolean}
-   */
-  Puppet.prototype.isApplicationLink = function (elem) {
-    if (typeof elem === 'string') {
-      //type string is reported in Polymer / Canary (Web Platform features disabled)
-      var parser = document.createElement('A');
-      parser.href = elem;
-      elem = parser;
-    }
-    return (elem.protocol == window.location.protocol && elem.host == window.location.host);
-  };
-
   Puppet.prototype.changeState = function (href) {
     this.xhr(href, 'application/json-patch+json', null, this.handleRemoteChange.bind(this));
   };
@@ -314,7 +300,7 @@
     //while target.getAttribute("href") returns desired href (as string)
     var href = target.href || target.getAttribute("href");
 
-    if (href && this.isApplicationLink(href)) {
+    if (href && Puppet.isApplicationLink(href)) {
       event.preventDefault();
       event.stopPropagation();
       this.morphUrl(href);
@@ -462,6 +448,21 @@
       shadowRoot.addEventListener("click", that.clickHandler.bind(that));
       return shadowRoot;
     }
+  };
+
+  /**
+   * Returns information if a given element is an internal application link that PuppetJS should intercept into a history push
+   * @param elem HTMLElement or String
+   * @returns {boolean}
+   */
+  Puppet.isApplicationLink = function (elem) {
+    if (typeof elem === 'string') {
+      //type string is reported in Polymer / Canary (Web Platform features disabled)
+      var parser = document.createElement('A');
+      parser.href = elem;
+      elem = parser;
+    }
+    return (elem.protocol == window.location.protocol && elem.host == window.location.host);
   };
 
   /**

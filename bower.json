@@ -12,7 +12,9 @@
   "license": "MIT",
   "ignore": [
     "lab/",
-    "test/"
+    "test/",
+    "Gruntfile.js",
+    "node_modules"
   ],
   "dependencies": {
     "fast-json-patch": "~0.3.6"
