@@ -66,6 +66,29 @@ puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that sta
 
 PuppetJs is dependent on [Starcounter-Jack/JSON-Patch](https://github.com/Starcounter-Jack/JSON-Patch) to observe changes in local scope, generate patches to be sent to the server and apply changes received from the server.
 
+### Development
+
+In order to minify it locally you'll need a basic setup.
+
+* Install [Grunt](http://gruntjs.com/):
+
+    ```sh
+    $ [sudo] npm install -g grunt-cli
+    ```
+
+* Install local dependencies:
+
+    ```sh
+    $ npm install
+    ```
+
+* To minify project.
+
+    ```sh
+    $ grunt uglify
+    ```
+
+
 ### Testing
 
 Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.

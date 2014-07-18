@@ -4,7 +4,7 @@ module.exports = function(grunt) {
     uglify: {
       options: {
         sourceMap: true,
-        sourceMapName: 'puppet.js.map',
+        sourceMapName: 'puppet.min.js.map',
         sourceMapIncludeSources: true,
         preserveComments: "some"
         //banner: grunt.file.read('banner.txt') + '// @version: <%= buildversion %>'
