@@ -3,17 +3,26 @@
 <polymer-element name="puppet-animation">
   <template>
     <style>
-      #puppet {
+      #puppetAnim {
         width: 107px;
         height: 145px;
         position: fixed;
+        left: 0;
+        bottom: 125px;
+      }
+
+      #puppet {
+        width: 107px;
+        height: 145px;
       }
 
       .mirrored {
         transform: rotateY(180deg);
       }
     </style>
-    <img id="puppet" src="puppet.png">
+    <div id="puppetAnim">
+      <img id="puppet" src="puppet.png">
+    </div>
   </template>
   <script>
     function animatePuppet() {
@@ -36,12 +45,14 @@
 
           that.position = that.position + that.step * that.direction;
 
-          that.$.puppet.style.left = maxLeft * that.position / 100 + "px";
+          var left = maxLeft * that.position / 100 + "px";
 
           var jumpLength = 4; //1-20
           var jumpHeight = 100; //px
 
-          that.$.puppet.style.bottom = (10 + Math.abs(jumpHeight * Math.sin(that.position / jumpLength)) ) + "px";
+          var bottom = Math.abs(jumpHeight * Math.sin(that.position / jumpLength)) + "px";
+
+          that.$.puppetAnim.style.transform = 'translate(' + left + ', ' + bottom + ')';
 
           if (that.position >= 100 || that.position <= 0) {
             that.direction = -that.direction;
