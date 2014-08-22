@@ -1,0 +1,63 @@
+<link rel="import" href="../../../../polymer/polymer.html">
+
+<polymer-element name="puppet-animation">
+  <template>
+    <style>
+      #puppet {
+        width: 107px;
+        height: 145px;
+        position: fixed;
+      }
+
+      .mirrored {
+        transform: rotateY(180deg);
+      }
+    </style>
+    <img id="puppet" src="puppet.png">
+  </template>
+  <script>
+    function animatePuppet() {
+
+    }
+
+    Polymer("puppet-animation", {
+      position: 0, //0 .. 100
+      direction: 1,
+      step: 1,
+      width: 107,
+      height: 145,
+      ready: function () {
+        this.animateStep();
+      },
+      animateStep: function () {
+        var that = this;
+        window.requestAnimationFrame(function () {
+          var maxLeft = window.innerWidth - that.width;
+
+          that.position = that.position + that.step * that.direction;
+
+          that.$.puppet.style.left = maxLeft * that.position / 100 + "px";
+
+          var jumpLength = 4; //1-20
+          var jumpHeight = 100; //px
+
+          that.$.puppet.style.bottom = (10 + Math.abs(jumpHeight * Math.sin(that.position / jumpLength)) ) + "px";
+
+          if (that.position >= 100 || that.position <= 0) {
+            that.direction = -that.direction;
+            if (that.direction > 0) {
+              that.$.puppet.classList.remove("mirrored");
+            }
+            else {
+              that.$.puppet.classList.add("mirrored");
+            }
+          }
+
+          window.requestAnimationFrame(function () {
+            that.animateStep();
+          });
+        })
+      }
+    });
+  </script>
+</polymer-element>
