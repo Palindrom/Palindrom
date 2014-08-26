@@ -21,6 +21,7 @@
     this.obj = obj || {};
     this.observer = null;
     this.referer = null;
+    this.useWebSocket = false; //change to TRUE to enable WebSocket connection
     this.queue = [];
     this.handleResponseCookie();
 
@@ -127,6 +128,26 @@
     window.addEventListener('popstate', lastPopstateHandler = this.historyHandler.bind(this)); //better here than in constructor, because Chrome triggers popstate on page load
     document.body.addEventListener('blur', lastBlurHandler = this.sendLocalChange.bind(this), true);
     this.fixShadowRootClicks();
+
+    if (this.useWebSocket) {
+      this.webSocketUpgrade();
+    }
+  };
+
+  /**
+   * Send a WebSocket upgrade request to the server.
+   * For testing purposes WS upgrade url is hardcoded now in PuppetJS (replace __default/ID with __default/wsupgrade/ID)
+   * In future, server should suggest the WebSocket upgrade URL
+   */
+  Puppet.prototype.webSocketUpgrade = function () {
+    var that = this;
+    var host = window.location.host;
+    var wsPath = this.referer.replace(/__([^\/]*)\//g, "__$1/wsupgrade/");
+    this._ws = new WebSocket("ws://" + host + wsPath);
+    this._ws.onmessage = function (event) {
+      var patches = JSON.parse(event.data);
+      that.handleRemoteChange(patches);
+    }
   };
 
   Puppet.prototype.handleResponseHeader = function (xhr) {
@@ -230,8 +251,16 @@
     if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
     }
-    //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
-    this.xhr(this.referer || this.remoteUrl, 'application/json-patch+json', txt, this.handleRemoteChange.bind(this));
+    if (this.useWebSocket) {
+      this._ws.send(txt);
+    }
+    else {
+      //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
+      this.xhr(this.referer || this.remoteUrl, 'application/json-patch+json', txt, function (event) {
+        var patches = JSON.parse(event.target.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
+        that.handleRemoteChange(patches);
+      });
+    }
     var that = this;
     this.unobserve();
     patches.forEach(function (patch) {
@@ -244,11 +273,10 @@
     this.observe();
   };
 
-  Puppet.prototype.handleRemoteChange = function (event) {
+  Puppet.prototype.handleRemoteChange = function (patches) {
     if (!this.observer) {
       return; //ignore remote change if we are not watching anymore
     }
-    var patches = JSON.parse(event.target.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
     if (patches.length === void 0) {
       throw new Error("Patches should be an array");
     }
@@ -274,7 +302,11 @@
   };
 
   Puppet.prototype.changeState = function (href) {
-    this.xhr(href, 'application/json-patch+json', null, this.handleRemoteChange.bind(this));
+    var that = this;
+    this.xhr(href, 'application/json-patch+json', null, function (event) {
+      var patches = JSON.parse(event.target.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
+      that.handleRemoteChange(patches);
+    });
   };
 
   Puppet.prototype.clickHandler = function (event) {
@@ -406,6 +438,7 @@
    */
   Puppet.prototype.morphUrl = function (url) {
     history.pushState(null, null, url);
+    this.changeState(url);
   };
 
   /**
