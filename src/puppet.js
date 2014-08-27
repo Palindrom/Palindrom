@@ -438,7 +438,6 @@
    */
   Puppet.prototype.morphUrl = function (url) {
     history.pushState(null, null, url);
-    this.changeState(url);
   };
 
   /**
