@@ -8,6 +8,8 @@
     , lastPopstateHandler
     , lastBlurHandler;
 
+  var READY_STATE_LOADED = 4;
+
   /**
    * Defines a connection to a remote PATCH server, returns callback to a object that is persistent between browser and server
    * @param remoteUrl If undefined, current window.location.href will be used as the PATCH server URL
@@ -23,6 +25,7 @@
     this.referer = null;
     this.useWebSocket = false; //change to TRUE to enable WebSocket connection
     this.localPatchQueue = [];
+    this.xhrQueue = [];
     this.handleResponseCookie();
 
     this.ignoreCache = [];
@@ -400,8 +403,14 @@
     cookie.erase('Location'); //more invasive cookie erasing because sometimes the cookie was still visible in the requests
 
     var req = new XMLHttpRequest();
+    this.xhrQueue.push(req);
     var that = this;
     req.onload = function () {
+      if(that.xhrQueue[0] != req) {
+        return;
+      }
+      that.xhrQueue.splice(0, 1); //remove myself from queue
+
       var res = this;
       that.handleResponseCookie();
       that.handleResponseHeader(res);
@@ -410,6 +419,12 @@
       }
       else {
         callback.call(that, res);
+      }
+
+      if(that.xhrQueue.length > 0) {//execute queued response
+        if(that.xhrQueue[0].readyState == READY_STATE_LOADED) {
+          that.xhrQueue[0].onload();
+        }
       }
     };
     url = url || window.location.href;

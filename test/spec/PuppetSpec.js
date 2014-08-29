@@ -298,7 +298,7 @@ describe("Puppet", function () {
       }, 0);
     });
 
-    xit('should queue patches until response comes', function (done) {
+    it('should queue up patches until response comes', function (done) {
       var obj;
       this.puppet = new Puppet('/test', function (myObj) {
         obj = myObj;
