@@ -22,7 +22,7 @@
     this.observer = null;
     this.referer = null;
     this.useWebSocket = false; //change to TRUE to enable WebSocket connection
-    this.queue = [];
+    this.localPatchQueue = [];
     this.handleResponseCookie();
 
     this.ignoreCache = [];
@@ -191,22 +191,22 @@
   };
 
   Puppet.prototype.queueLocalChange = function (patches) {
-    Array.prototype.push.apply(this.queue, patches);
+    Array.prototype.push.apply(this.localPatchQueue, patches);
     if ((document.activeElement.nodeName !== 'INPUT' && document.activeElement.nodeName !== 'TEXTAREA') || document.activeElement.getAttribute('update-on') === 'input') {
-      this.flattenPatches(this.queue);
-      if (this.queue.length) {
-        this.handleLocalChange(this.queue);
-        this.queue.length = 0;
+      this.flattenPatches(this.localPatchQueue);
+      if (this.localPatchQueue.length) {
+        this.handleLocalChange(this.localPatchQueue);
+        this.localPatchQueue.length = 0;
       }
     }
   };
 
   Puppet.prototype.sendLocalChange = function () {
     jsonpatch.generate(this.observer);
-    this.flattenPatches(this.queue);
-    if (this.queue.length) {
-      this.handleLocalChange(this.queue);
-      this.queue.length = 0;
+    this.flattenPatches(this.localPatchQueue);
+    if (this.localPatchQueue.length) {
+      this.handleLocalChange(this.localPatchQueue);
+      this.localPatchQueue.length = 0;
     }
   };
 
