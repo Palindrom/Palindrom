@@ -1,21 +1,18 @@
 describe("Links", function () {
-  beforeEach(function () {
-    this.server = sinon.fakeServer.create();
-
-    var initSpy = jasmine.createSpy();
-
-    this.puppet = new Puppet('/', initSpy);
-
-    this.server.respond('{"hello": "world"}');
-
-    waitsFor(function () {
-      return initSpy.wasCalled;
-    }, 10);
+  beforeEach(function (done) {
+    jasmine.Ajax.install();
+    this.puppet = new Puppet('/');
+    jasmine.Ajax.requests.mostRecent().response({
+      "status": 200,
+      "contentType": 'application/json',
+      "responseText": '{"hello": "world"}'
+    });
+    setTimeout(done, 10);
   });
 
   afterEach(function () {
     this.puppet.unobserve();
-    this.server.restore();
+    jasmine.Ajax.uninstall();
   });
 
   function createLinkTest(href) {
@@ -40,7 +37,7 @@ describe("Links", function () {
       var href = 'test';
       createLinkTest(href);
 
-      expect(historySpy.callCount).toBe(1);
+      expect(historySpy.calls.count()).toBe(1);
     });
 
     it("absolute path", function () {
@@ -49,7 +46,7 @@ describe("Links", function () {
       var href = '/test';
       createLinkTest(href);
 
-      expect(historySpy.callCount).toBe(1);
+      expect(historySpy.calls.count()).toBe(1);
     });
 
     it("full URL in the same host, same port", function () {
@@ -58,7 +55,7 @@ describe("Links", function () {
       var href = window.location.protocol + '//' + window.location.host + '/test'; //http://localhost:8888/test
       createLinkTest(href);
 
-      expect(historySpy.callCount).toBe(1);
+      expect(historySpy.calls.count()).toBe(1);
     });
   });
 
@@ -70,7 +67,7 @@ describe("Links", function () {
       var href = window.location.protocol + '//' + window.location.hostname + ':' + port + '/test'; //http://localhost:88881/test
       createLinkTest(href);
 
-      expect(historySpy.callCount).toBe(0);
+      expect(historySpy.calls.count()).toBe(0);
     });
 
     it("full URL in the same host, different schema", function () {
@@ -80,7 +77,7 @@ describe("Links", function () {
       var href = protocol + '//' + window.location.host + '/test'; //https://localhost:8888/test
       createLinkTest(href);
 
-      expect(historySpy.callCount).toBe(0);
+      expect(historySpy.calls.count()).toBe(0);
     });
   });
 
@@ -90,7 +87,7 @@ describe("Links", function () {
 
       this.puppet.morphUrl("/page2");
 
-      expect(historySpy.callCount).toBe(1);
+      expect(historySpy.calls.count()).toBe(1);
     });
   });
 });

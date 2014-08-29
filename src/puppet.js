@@ -110,8 +110,8 @@
     }
   }
 
-  Puppet.prototype.bootstrap = function (event) {
-    var tmp = JSON.parse(event.target.responseText);
+  Puppet.prototype.bootstrap = function (res) {
+    var tmp = JSON.parse(res.responseText);
     recursiveExtend(this.obj, tmp);
 
     recursiveMarkObjProperties(this, "obj");
@@ -256,8 +256,8 @@
     }
     else {
       //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
-      this.xhr(this.referer || this.remoteUrl, 'application/json-patch+json', txt, function (event) {
-        var patches = JSON.parse(event.target.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
+      this.xhr(this.referer || this.remoteUrl, 'application/json-patch+json', txt, function (res) {
+        var patches = JSON.parse(res.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
         that.handleRemoteChange(patches);
       });
     }
@@ -285,7 +285,7 @@
     var that = this;
     patches.forEach(function (patch) {
       if (patch.path === "/") {
-        var desc = event.target.responseText;
+        var desc = JSON.stringify(patches);
         if (desc.length > 103) {
           desc = desc.substring(0, 100) + "...";
         }
@@ -303,8 +303,8 @@
 
   Puppet.prototype.changeState = function (href) {
     var that = this;
-    this.xhr(href, 'application/json-patch+json', null, function (event) {
-      var patches = JSON.parse(event.target.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
+    this.xhr(href, 'application/json-patch+json', null, function (res) {
+      var patches = JSON.parse(res.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
       that.handleRemoteChange(patches);
     });
   };
@@ -401,16 +401,17 @@
 
     var req = new XMLHttpRequest();
     var that = this;
-    req.addEventListener('load', function (event) {
+    req.onload = function () {
+      var res = this;
       that.handleResponseCookie();
-      that.handleResponseHeader(event.target);
-      if (event.target.status >= 400 && event.target.status <= 599) {
-        that.showError('PuppetJs JSON response error', 'Server responded with error ' + event.target.status + ' ' + event.target.statusText + '\n\n' + event.target.responseText);
+      that.handleResponseHeader(res);
+      if (res.status >= 400 && res.status <= 599) {
+        that.showError('PuppetJs JSON response error', 'Server responded with error ' + res.status + ' ' + res.statusText + '\n\n' + res.responseText);
       }
       else {
-        callback.call(that, event);
+        callback.call(that, res);
       }
-    }, false);
+    };
     url = url || window.location.href;
     if (data) {
       req.open("PATCH", url, true);
