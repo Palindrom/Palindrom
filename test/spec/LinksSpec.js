@@ -1,7 +1,9 @@
 describe("Links", function () {
+  var puppet;
+
   beforeEach(function (done) {
     jasmine.Ajax.install();
-    this.puppet = new Puppet('/');
+    puppet = new Puppet('/');
     jasmine.Ajax.requests.mostRecent().response({
       "status": 200,
       "contentType": 'application/json',
@@ -11,7 +13,7 @@ describe("Links", function () {
   });
 
   afterEach(function () {
-    this.puppet.unobserve();
+    puppet.unobserve();
     jasmine.Ajax.uninstall();
   });
 
@@ -85,7 +87,7 @@ describe("Links", function () {
     it("should change history state programatically", function () {
       var historySpy = spyOn(window.history, 'pushState');
 
-      this.puppet.morphUrl("/page2");
+      puppet.morphUrl("/page2");
 
       expect(historySpy.calls.count()).toBe(1);
     });

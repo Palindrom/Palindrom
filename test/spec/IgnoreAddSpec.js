@@ -56,12 +56,24 @@ describe("IgnoreAdd", function () {
       obj.$privateProp = 1;
 
       setTimeout(function () {
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 200,
+          "contentType": 'application/json-patch+json',
+          "responseText": '[]'
+        });
+
         expect(patchSpy.calls.count()).toBe(2);
         expect(patchSpy).toHaveBeenCalledWith('[{"op":"add","path":"/publicProp","value":1}]');
         obj.publicProp = 2;
         obj.$privateProp = 2;
 
         setTimeout(function () {
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 200,
+            "contentType": 'application/json-patch+json',
+            "responseText": '[]'
+          });
+
           expect(patchSpy.calls.count()).toBe(3);
           expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/publicProp","value":2}]');
           done();
@@ -89,12 +101,24 @@ describe("IgnoreAdd", function () {
       obj.$privateProp = ["a", "b", "c"];
 
       setTimeout(function () {
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 200,
+          "contentType": 'application/json-patch+json',
+          "responseText": '[]'
+        });
+
         expect(patchSpy.calls.count()).toBe(2);
         expect(patchSpy).toHaveBeenCalledWith('[{"op":"add","path":"/publicProp","value":["a","b","c"]}]');
         obj.publicProp[2] = "cc";
         obj.$privateProp[2] = "cc";
 
         setTimeout(function () {
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 200,
+            "contentType": 'application/json-patch+json',
+            "responseText": '[]'
+          });
+
           expect(patchSpy.calls.count()).toBe(3);
           expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/publicProp/2","value":"cc"}]');
           done();

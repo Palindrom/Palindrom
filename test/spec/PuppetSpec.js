@@ -251,12 +251,24 @@ describe("Puppet", function () {
         triggerMouseup(INPUT); //trigger patch generation
 
         setTimeout(function () {
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 200,
+            "contentType": 'application/json-patch+json',
+            "responseText": '[{"op":"replace","path":"/hello","value":"O"}]'
+          });
+
           INPUT.value = "On";
           obj.hello = INPUT.value;
           triggerMouseup(INPUT);
           INPUT.blur();
 
           setTimeout(function () {
+            jasmine.Ajax.requests.mostRecent().response({
+              "status": 200,
+              "contentType": 'application/json-patch+json',
+              "responseText": '[{"op":"replace","path":"/hello","value":"On"}]'
+            });
+
             expect(patchSpy.calls.count()).toBe(3);
             expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"O"}]');
             expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"On"}]');
@@ -320,20 +332,20 @@ describe("Puppet", function () {
 
           setTimeout(function () {
             //reply to Sopot
-            expect(jasmine.Ajax.requests.at(2).params).toBe('[{"op":"replace","path":"/city","value":"Sopot"}]');
-            jasmine.Ajax.requests.at(2).response({
+            expect(jasmine.Ajax.requests.at(1).params).toBe('[{"op":"replace","path":"/city","value":"Gdansk"}]');
+            jasmine.Ajax.requests.at(1).response({
               "status": 200,
               "contentType": 'application/json-patch+json',
-              "responseText": '[{"op": "replace", "path": "/city", "value": "Changed to Sopot"}]'
+              "responseText": '[{"op": "replace", "path": "/city", "value": "Changed to Gdansk"}]'
             });
 
             setTimeout(function () {
               //reply to Gdansk
-              expect(jasmine.Ajax.requests.at(1).params).toBe('[{"op":"replace","path":"/city","value":"Gdansk"}]');
-              jasmine.Ajax.requests.at(1).response({
+              expect(jasmine.Ajax.requests.at(2).params).toBe('[{"op":"replace","path":"/city","value":"Sopot"}]');
+              jasmine.Ajax.requests.at(2).response({
                 "status": 200,
                 "contentType": 'application/json-patch+json',
-                "responseText": '[{"op": "replace", "path": "/city", "value": "Changed to Gdansk"}]'
+                "responseText": '[{"op": "replace", "path": "/city", "value": "Changed to Sopot"}]'
               });
 
               setTimeout(function () {
