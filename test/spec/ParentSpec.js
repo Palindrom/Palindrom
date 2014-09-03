@@ -1,103 +1,111 @@
 describe("Parent", function () {
   beforeEach(function () {
-    this.server = sinon.fakeServer.create();
+    jasmine.Ajax.install();
   });
 
   afterEach(function () {
     this.puppet.unobserve();
-    this.server.restore();
+    jasmine.Ajax.uninstall();
   });
 
   describe("attach $parent to each child object", function () {
-    it("should return parent when $parent keyword is used (shallow)", function () {
+    it("should return parent when $parent keyword is used (shallow)", function (done) {
       var initSpy = jasmine.createSpy();
 
       this.puppet = new Puppet(window.location.href, initSpy);
 
-      this.server.respond('{"hello": "world", "child": {}}');
+      initSpy.and.callFake(function() {
+        expect(this.obj.child.$parent.hello).toEqual("world");
+        done();
+      });
 
-      waitsFor(function () {
-        return initSpy.wasCalled;
-      }, 10);
-
-      runs(function () {
-        expect(this.puppet.obj.child.$parent.hello).toEqual("world");
+      jasmine.Ajax.requests.mostRecent().response({
+        "status": 200,
+        "contentType": 'application/json',
+        "responseText": '{"hello": "world", "child": {}}'
       });
     });
 
-    it("should return parent when $parent keyword is used (deep)", function () {
+    it("should return parent when $parent keyword is used (deep)", function (done) {
       var initSpy = jasmine.createSpy();
 
       this.puppet = new Puppet(window.location.href, initSpy);
 
-      this.server.respond('{"hello": "world", "children": [{"first": "1st"}, {"second": "2nd"}]}');
+      initSpy.and.callFake(function() {
+        expect(this.obj.children[0].$parent.$parent.children[1].second).toEqual("2nd");
+        done();
+      });
 
-      waitsFor(function () {
-        return initSpy.wasCalled;
-      }, 10);
-
-      runs(function () {
-        expect(this.puppet.obj.children[0].$parent.$parent.children[1].second).toEqual("2nd");
+      jasmine.Ajax.requests.mostRecent().response({
+        "status": 200,
+        "contentType": 'application/json',
+        "responseText": '{"hello": "world", "children": [{"first": "1st"}, {"second": "2nd"}]}'
       });
     });
 
-    it("should return parent on a locally added property", function () {
-      var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').andCallThrough();
+    it("should return parent on a locally added property", function (done) {
+      var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
 
       this.puppet = new Puppet(window.location.href, function () {
       });
 
-      this.server.respond('{"hello": "world", "child": {}}');
+      jasmine.Ajax.requests.mostRecent().response({
+        "status": 200,
+        "contentType": 'application/json',
+        "responseText": '{"hello": "world", "child": {}}'
+      });
 
-      waits(0);
-
-      runs(function () {
-        this.puppet.obj.children = [
+      var that = this;
+      setTimeout(function () {
+        that.puppet.obj.children = [
           {first: "1st"},
           {second: "2nd"}
         ];
         triggerMouseup();
-      });
 
-      waits(10);
-
-      runs(function () {
-        expect(this.puppet.obj.children[0].$parent.$parent.children[1].second).toEqual("2nd");
-        expect(patchSpy.callCount).toBe(2); //only children should generate a patch ($parent getter should not)
-        expect(patchSpy).toHaveBeenCalledWith('[{"op":"add","path":"/children","value":[{"first":"1st"},{"second":"2nd"}]}]');
-      });
+        setTimeout(function () {
+          expect(that.puppet.obj.children[0].$parent.$parent.children[1].second).toEqual("2nd");
+          expect(patchSpy.calls.count()).toBe(2); //only children should generate a patch ($parent getter should not)
+          expect(patchSpy).toHaveBeenCalledWith('[{"op":"add","path":"/children","value":[{"first":"1st"},{"second":"2nd"}]}]');
+          done();
+        }, 10);
+      }, 0);
     });
 
-    it("should return parent on a remotely added property", function () {
-      var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').andCallThrough();
+    it("should return parent on a remotely added property", function (done) {
+      var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
 
       this.puppet = new Puppet(window.location.href, function () {
       });
 
-      this.server.respond('{"hello": "world", "child": {}}');
+      jasmine.Ajax.requests.mostRecent().response({
+        "status": 200,
+        "contentType": 'application/json',
+        "responseText": '{"hello": "world", "child": {}}'
+      });
 
-      waits(0);
-
-      runs(function () {
-        this.puppet.obj.children = [
+      var that = this;
+      setTimeout(function () {
+        that.puppet.obj.children = [
           {first: "1st"},
           {second: "2nd"}
         ];
         triggerMouseup();
-      });
 
-      waits(10);
+        setTimeout(function () {
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 200,
+            "contentType": 'application/json-patch+json',
+            "responseText": '[{"op":"add","path":"/children/0/remotes","value":[{"first":"1st"},{"second":"2nd"}]}]'
+          });
 
-      runs(function () {
-        this.server.respond('[{"op":"add","path":"/children/0/remotes","value":[{"first":"1st"},{"second":"2nd"}]}]');
-      });
-
-      waits(10);
-
-      runs(function () {
-        expect(this.puppet.obj.children[0].remotes.$parent.remotes[1].second).toEqual("2nd");
-        expect(patchSpy.callCount).toBe(2);
-      });
+          setTimeout(function () {
+            expect(that.puppet.obj.children[0].remotes.$parent.remotes[1].second).toEqual("2nd");
+            expect(patchSpy.calls.count()).toBe(2);
+            done();
+          }, 10);
+        }, 10);
+      }, 0);
     });
   });
 });

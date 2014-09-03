@@ -1,26 +1,33 @@
 describe("Error", function () {
   beforeEach(function () {
-    this.server = sinon.fakeServer.create();
+    jasmine.Ajax.install();
   });
 
   afterEach(function () {
     this.puppet.unobserve();
-    this.server.restore();
+    jasmine.Ajax.uninstall();
   });
 
   /// init
   describe("on error response", function () {
     it("should show a message when status code 400 comes from the server (bootstrap)", function () {
-      var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').andCallThrough();
       this.puppet = new Puppet('/test');
+      var exceptionRaised = false;
 
-      this.server.respondWith(function (xhr) {
-        xhr.respond(400, 'application/json', 'Custom msg');
-      });
-      this.server.respond();
+      try {
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 400,
+          "contentType": 'application/json',
+          "responseText": 'Custom msg'
+        });
+      }
+      catch (e) {
+        exceptionRaised = true;
+      }
 
       var DIV = document.getElementById('puppetjs-error');
 
+      expect(exceptionRaised).toBe(true);
       expect(DIV).toBeTruthy();
       expect(DIV.innerHTML).toContain('PuppetJs JSON response error');
       expect(DIV.innerHTML).toContain('400');
@@ -30,16 +37,23 @@ describe("Error", function () {
     });
 
     it("should show a message when status code 599 comes from the server (bootstrap)", function () {
-      var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').andCallThrough();
       this.puppet = new Puppet('/test');
+      var exceptionRaised = false;
 
-      this.server.respondWith(function (xhr) {
-        xhr.respond(599, 'application/json', 'Custom msg');
-      });
-      this.server.respond();
+      try {
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 599,
+          "contentType": 'application/json',
+          "responseText": 'Custom msg'
+        });
+      }
+      catch (e) {
+        exceptionRaised = true;
+      }
 
       var DIV = document.getElementById('puppetjs-error');
 
+      expect(exceptionRaised).toBe(true);
       expect(DIV).toBeTruthy();
       expect(DIV.innerHTML).toContain('PuppetJs JSON response error');
       expect(DIV.innerHTML).toContain('599');
@@ -48,79 +62,109 @@ describe("Error", function () {
       DIV.parentNode.removeChild(DIV);
     });
 
-    it("should show a message when status code 400 comes from the server (patch)", function () {
-      var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').andCallThrough();
+    it("should show a message when status code 400 comes from the server (patch)", function (done) {
+      var exceptionRaised = false;
       var obj;
 
       this.puppet = new Puppet('/test', function (myObj) {
         obj = myObj;
       });
 
-      this.server.respond('{"hello": "world"}');
+      jasmine.Ajax.requests.mostRecent().response({
+        "status": 200,
+        "contentType": 'application/json',
+        "responseText": '{"hello": "world"}'
+      });
 
       obj.hello = "galaxy";
       triggerMouseup();
 
-      waits(100);
-
-      runs(function () {
-        this.server.respondWith(function (xhr) {
-          xhr.respond(400, 'application/json', 'Custom msg');
-        });
-        this.server.respond();
+      setTimeout(function () {
+        try {
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 400,
+            "contentType": 'application/json',
+            "responseText": 'Custom msg'
+          });
+        }
+        catch (e) {
+          exceptionRaised = true;
+        }
 
         var DIV = document.getElementById('puppetjs-error');
 
+        expect(exceptionRaised).toBe(true);
         expect(DIV).toBeTruthy();
         expect(DIV.innerHTML).toContain('PuppetJs JSON response error');
         expect(DIV.innerHTML).toContain('400');
         expect(DIV.innerHTML).toContain('Custom msg');
 
         DIV.parentNode.removeChild(DIV);
-      });
+        done();
+      }, 100);
     });
 
-    it("should show a message when status code 599 comes from the server (patch)", function () {
-      var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').andCallThrough();
+    it("should show a message when status code 599 comes from the server (patch)", function (done) {
+      var exceptionRaised = false;
       var obj;
 
       this.puppet = new Puppet('/test', function (myObj) {
         obj = myObj;
       });
 
-      this.server.respond('{"hello": "world"}');
+      jasmine.Ajax.requests.mostRecent().response({
+        "status": 200,
+        "contentType": 'application/json',
+        "responseText": '{"hello": "world"}'
+      });
 
       obj.hello = "galaxy";
       triggerMouseup();
 
-      waits(0);
-
-      runs(function () {
-        this.server.respondWith(function (xhr) {
-          xhr.respond(599, 'application/json', 'Custom msg');
-        });
-        this.server.respond();
+      setTimeout(function () {
+        try {
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 599,
+            "contentType": 'application/json',
+            "responseText": 'Custom msg'
+          });
+        }
+        catch (e) {
+          exceptionRaised = true;
+        }
 
         var DIV = document.getElementById('puppetjs-error');
 
+        expect(exceptionRaised).toBe(true);
         expect(DIV).toBeTruthy();
         expect(DIV.innerHTML).toContain('PuppetJs JSON response error');
         expect(DIV.innerHTML).toContain('599');
         expect(DIV.innerHTML).toContain('Custom msg');
 
         DIV.parentNode.removeChild(DIV);
-      });
+        done();
+      }, 0);
     });
 
     it("should NOT show a message when debug == false", function () {
-      var patchSpy = spyOn(XMLHttpRequest.prototype, 'send')
       this.puppet = new Puppet('/test');
       this.puppet.debug = false;
+      var exceptionRaised = false;
 
-      this.server.respond(599, '{"hello": "world"}');
+      try {
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 599,
+          "contentType": 'application/json',
+          "responseText": 'Custom msg'
+        });
+      }
+      catch (e) {
+        exceptionRaised = true;
+      }
 
       var DIV = document.getElementById('puppetjs-error');
 
+      expect(exceptionRaised).toBe(true);
       expect(DIV).toBeFalsy();
     });
   });

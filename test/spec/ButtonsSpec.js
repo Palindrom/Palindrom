@@ -1,13 +1,14 @@
 describe("Buttons", function () {
+  var puppet;
   beforeEach(function () {
-    this.server = sinon.fakeServer.create();
+    jasmine.Ajax.install();
   });
 
   afterEach(function () {
-    if(this.puppet) {
-      this.puppet.unobserve();
+    if(puppet) {
+      puppet.unobserve();
     }
-    this.server.restore();
+    jasmine.Ajax.uninstall();
   });
 
   function createButtonTest(callback) {
@@ -32,41 +33,44 @@ describe("Buttons", function () {
       BUTTON.parentNode.removeChild(BUTTON);
     });
 
-    it("should send null patch when button is clicked", function () {
+    it("should send null patch when button is clicked", function (done) {
       var obj
-        , patchSpy
+        , patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough()
         , BUTTON;
 
-      this.puppet = new Puppet('/test', function (myObj) {
+      puppet = new Puppet('/test', function (myObj) {
         obj = myObj;
       });
 
-      waits(0);
-
-      runs(function () {
-
-        this.server.respond('{"hello": "world", "SendButton": null}');
-
-        patchSpy = spyOn(XMLHttpRequest.prototype, 'send').andCallThrough();
+      setTimeout(function () {
+        expect(patchSpy.calls.count()).toBe(1);
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 200,
+          "contentType": 'application/json',
+          "responseText": '{"hello": "world", "SendButton": null}'
+        });
 
         BUTTON = createButtonTest(function () {
           obj.SendButton = null;
         });
         triggerMouseup(BUTTON);
 
-      });
+        setTimeout(function () {
+          expect(patchSpy.calls.count()).toBe(2);
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 200,
+            "contentType": 'application/json-patch+json',
+            "responseText": '[]'
+          });
 
-      waits(0);
-
-      runs(function () {
-        expect(patchSpy.callCount).toBe(1);
-        expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/SendButton","value":null}]');
-        BUTTON.parentNode.removeChild(BUTTON);
-      })
-
+          expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/SendButton","value":null}]');
+          BUTTON.parentNode.removeChild(BUTTON);
+          done();
+        }, 100);
+      }, 100);
     });
 
-    it("should send null patch twice", function () {
+    it("should send null patch twice", function (done) {
       var obj
         , patchSpy
         , BUTTON;
@@ -75,10 +79,12 @@ describe("Buttons", function () {
         obj = myObj;
       });
 
-      waits(0);
-
-      runs(function () {
-        this.server.respond('{"hello": "world", "SendButton": null}');
+      setTimeout(function () {
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 200,
+          "contentType": 'application/json',
+          "responseText": '{"hello": "world", "SendButton": null}'
+        });
 
         patchSpy = spyOn(XMLHttpRequest.prototype, 'send');
 
@@ -86,29 +92,36 @@ describe("Buttons", function () {
           obj.SendButton = null;
         });
         triggerMouseup(BUTTON);
-      });
 
-      waits(0);
+        setTimeout(function () {
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 200,
+            "contentType": 'application/json-patch+json',
+            "responseText": '[]'
+          });
 
-      runs(function () {
-        expect(patchSpy.callCount).toBe(1);
-        expect(patchSpy.mostRecentCall.args[0]).toBe('[{"op":"replace","path":"/SendButton","value":null}]');
-        triggerMouseup(BUTTON);
-      });
+          expect(patchSpy.calls.count()).toBe(1);
+          expect(patchSpy.calls.mostRecent().args[0]).toBe('[{"op":"replace","path":"/SendButton","value":null}]');
+          triggerMouseup(BUTTON);
 
-      waits(0);
+          setTimeout(function () {
+            jasmine.Ajax.requests.mostRecent().response({
+              "status": 200,
+              "contentType": 'application/json-patch+json',
+              "responseText": '[]'
+            });
 
-      runs(function () {
-        expect(patchSpy.callCount).toBe(2);
-        expect(patchSpy.mostRecentCall.args[0]).toBe('[{"op":"replace","path":"/SendButton","value":null}]');
-        BUTTON.parentNode.removeChild(BUTTON);
-      })
-
+            expect(patchSpy.calls.count()).toBe(2);
+            expect(patchSpy.calls.mostRecent().args[0]).toBe('[{"op":"replace","path":"/SendButton","value":null}]');
+            BUTTON.parentNode.removeChild(BUTTON);
+            done();
+          }, 0);
+        }, 0);
+      }, 0);
     });
 
-    it("should send null patch twice when null was defined in a patch", function () {
-      var that = this
-        , obj
+    it("should send null patch twice when null was defined in a patch", function (done) {
+      var obj
         , patchSpy
         , BUTTON
         , BUTTON2;
@@ -117,12 +130,14 @@ describe("Buttons", function () {
         obj = myObj;
       });
 
-      waits(0);
+      setTimeout(function () {
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 200,
+          "contentType": 'application/json',
+          "responseText": '{"hello": "world", "SendButton": null}'
+        });
 
-      runs(function () {
-        this.server.respond('{"hello": "world", "SendButton": null}');
-
-        patchSpy = spyOn(XMLHttpRequest.prototype, 'send').andCallThrough();
+        patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
 
         BUTTON = createButtonTest(function () {
           obj.SendButton = null;
@@ -132,25 +147,31 @@ describe("Buttons", function () {
         BUTTON2 = createButtonTest(function () {
           obj.AnotherButton = null;
         });
-      });
 
-      waits(0);
+        setTimeout(function () {
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 200,
+            "contentType": 'application/json-patch+json',
+            "responseText": '[{"op": "add", "path": "/AnotherButton", "value": null}]'
+          });
 
-      runs(function () {
-        that.server.respond('[{"op": "add", "path": "/AnotherButton", "value": null}]');
+          triggerMouseup(BUTTON2);
 
-        triggerMouseup(BUTTON2);
-      });
+          setTimeout(function () {
+            jasmine.Ajax.requests.mostRecent().response({
+              "status": 200,
+              "contentType": 'application/json-patch+json',
+              "responseText": '[]'
+            });
 
-      waits(0);
-
-      runs(function () {
-        expect(patchSpy.callCount).toBe(2);
-        expect(patchSpy.mostRecentCall.args[0]).toBe('[{"op":"replace","path":"/AnotherButton","value":null}]');
-        BUTTON.parentNode.removeChild(BUTTON);
-        BUTTON2.parentNode.removeChild(BUTTON2);
-      });
-
+            expect(patchSpy.calls.count()).toBe(2);
+            expect(patchSpy.calls.mostRecent().args[0]).toBe('[{"op":"replace","path":"/AnotherButton","value":null}]');
+            BUTTON.parentNode.removeChild(BUTTON);
+            BUTTON2.parentNode.removeChild(BUTTON2);
+            done();
+          }, 0);
+        }, 0);
+      }, 0);
     });
   });
 });

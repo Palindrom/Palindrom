@@ -22,7 +22,7 @@
     this.observer = null;
     this.referer = null;
     this.useWebSocket = false; //change to TRUE to enable WebSocket connection
-    this.queue = [];
+    this.localPatchQueue = [];
     this.handleResponseCookie();
 
     this.ignoreCache = [];
@@ -34,7 +34,8 @@
     //puppet.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
     //puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
 
-    this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this));
+    this.cancelled = false;
+    this.lastXhrPromise = this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this));
 
     /**
      * There is on "onpushstate" event, so PuppetJS needs to wrap history.pushState to know when it is called
@@ -110,8 +111,8 @@
     }
   }
 
-  Puppet.prototype.bootstrap = function (event) {
-    var tmp = JSON.parse(event.target.responseText);
+  Puppet.prototype.bootstrap = function (res) {
+    var tmp = JSON.parse(res.responseText);
     recursiveExtend(this.obj, tmp);
 
     recursiveMarkObjProperties(this, "obj");
@@ -173,17 +174,19 @@
   };
 
   Puppet.prototype.setReferer = function (referer) {
-    if(this.referer && this.referer !== referer) {
+    if (this.referer && this.referer !== referer) {
       this.showError("Error: Session lost", "Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.referer + "\nNew session ID: " + referer);
     }
     this.referer = referer;
   };
 
   Puppet.prototype.observe = function () {
+    this.cancelled = false;
     this.observer = jsonpatch.observe(this.obj, this.queueLocalChange.bind(this));
   };
 
   Puppet.prototype.unobserve = function () {
+    this.cancelled = true;
     if (this.observer) { //there is a bug in JSON-Patch when trying to unobserve something that is already unobserved
       jsonpatch.unobserve(this.obj, this.observer);
       this.observer = null;
@@ -191,22 +194,22 @@
   };
 
   Puppet.prototype.queueLocalChange = function (patches) {
-    Array.prototype.push.apply(this.queue, patches);
+    Array.prototype.push.apply(this.localPatchQueue, patches);
     if ((document.activeElement.nodeName !== 'INPUT' && document.activeElement.nodeName !== 'TEXTAREA') || document.activeElement.getAttribute('update-on') === 'input') {
-      this.flattenPatches(this.queue);
-      if (this.queue.length) {
-        this.handleLocalChange(this.queue);
-        this.queue.length = 0;
+      this.flattenPatches(this.localPatchQueue);
+      if (this.localPatchQueue.length) {
+        this.handleLocalChange(this.localPatchQueue);
+        this.localPatchQueue.length = 0;
       }
     }
   };
 
   Puppet.prototype.sendLocalChange = function () {
     jsonpatch.generate(this.observer);
-    this.flattenPatches(this.queue);
-    if (this.queue.length) {
-      this.handleLocalChange(this.queue);
-      this.queue.length = 0;
+    this.flattenPatches(this.localPatchQueue);
+    if (this.localPatchQueue.length) {
+      this.handleLocalChange(this.localPatchQueue);
+      this.localPatchQueue.length = 0;
     }
   };
 
@@ -231,22 +234,28 @@
   //merges redundant patches and ignores private member changes
   Puppet.prototype.flattenPatches = function (patches) {
     var seen = {};
-    for (var i = patches.length - 1; i >= 0; i--) {
-      if (this.isIgnored(patches[i].path, patches[i].op)) {
+    for (var i = 0, ilen = patches.length; i < ilen; i++) {
+      if (this.isIgnored(patches[i].path, patches[i].op)) { //if it is ignored, remove patch
         patches.splice(i, 1); //ignore changes to properties that start with PRIVATE_PREFIX
+        ilen--;
+        i--;
       }
-      else if (patches[i].op === 'replace') {
-        if (seen[patches[i].path]) {
+      else if (patches[i].op === 'replace') { //if it is already seen in the patches array, replace the previous instance
+        if (seen[patches[i].path] !== undefined) {
+          patches[seen[patches[i].path]] = patches[i];
           patches.splice(i, 1);
+          ilen--;
+          i--;
         }
         else {
-          seen[patches[i].path] = true;
+          seen[patches[i].path] = i;
         }
       }
     }
   };
 
   Puppet.prototype.handleLocalChange = function (patches) {
+    var that = this;
     var txt = JSON.stringify(patches);
     if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
@@ -256,12 +265,13 @@
     }
     else {
       //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
-      this.xhr(this.referer || this.remoteUrl, 'application/json-patch+json', txt, function (event) {
-        var patches = JSON.parse(event.target.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
-        that.handleRemoteChange(patches);
+      this.lastXhrPromise = this.lastXhrPromise.then(function () {
+        return that.xhr(that.referer || that.remoteUrl, 'application/json-patch+json', txt, function (res) {
+          var patches = JSON.parse(res.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
+          that.handleRemoteChange(patches);
+        })
       });
     }
-    var that = this;
     this.unobserve();
     patches.forEach(function (patch) {
       if ((patch.op === "add" || patch.op === "replace" || patch.op === "test") && patch.value === null) {
@@ -285,7 +295,7 @@
     var that = this;
     patches.forEach(function (patch) {
       if (patch.path === "/") {
-        var desc = event.target.responseText;
+        var desc = JSON.stringify(patches);
         if (desc.length > 103) {
           desc = desc.substring(0, 100) + "...";
         }
@@ -303,9 +313,11 @@
 
   Puppet.prototype.changeState = function (href) {
     var that = this;
-    this.xhr(href, 'application/json-patch+json', null, function (event) {
-      var patches = JSON.parse(event.target.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
-      that.handleRemoteChange(patches);
+    this.lastXhrPromise = this.lastXhrPromise.then(function () {
+      return that.xhr(href, 'application/json-patch+json', null, function (res) {
+        var patches = JSON.parse(res.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
+        that.handleRemoteChange(patches);
+      })
     });
   };
 
@@ -320,9 +332,9 @@
       target = target.impl;
     }
 
-    if(target.nodeName !== 'A') {
+    if (target.nodeName !== 'A') {
       var parentA = closestParent(target, 'A');
-      if(parentA) {
+      if (parentA) {
         target = parentA;
       }
     }
@@ -398,37 +410,46 @@
   Puppet.prototype.xhr = function (url, accept, data, callback, beforeSend) {
     //this.handleResponseCookie();
     cookie.erase('Location'); //more invasive cookie erasing because sometimes the cookie was still visible in the requests
-
-    var req = new XMLHttpRequest();
     var that = this;
-    req.addEventListener('load', function (event) {
-      that.handleResponseCookie();
-      that.handleResponseHeader(event.target);
-      if (event.target.status >= 400 && event.target.status <= 599) {
-        that.showError('PuppetJs JSON response error', 'Server responded with error ' + event.target.status + ' ' + event.target.statusText + '\n\n' + event.target.responseText);
+    return new Promise(function (resolve, reject) {
+      if (that.cancelled) {
+        console.error("PuppetJs: Promise cancelled on request");
+        reject();
+        return;
+      }
+      var req = new XMLHttpRequest();
+      req.onload = function () {
+        var res = this;
+        that.handleResponseCookie();
+        that.handleResponseHeader(res);
+        if (res.status >= 400 && res.status <= 599) {
+          that.showError('PuppetJs JSON response error', 'Server responded with error ' + res.status + ' ' + res.statusText + '\n\n' + res.responseText);
+          reject();
+        }
+        else {
+          callback.call(that, res);
+          resolve();
+        }
+      };
+      url = url || window.location.href;
+      if (data) {
+        req.open("PATCH", url, true);
+        req.setRequestHeader('Content-Type', 'application/json-patch+json');
       }
       else {
-        callback.call(that, event);
+        req.open("GET", url, true);
       }
-    }, false);
-    url = url || window.location.href;
-    if (data) {
-      req.open("PATCH", url, true);
-      req.setRequestHeader('Content-Type', 'application/json-patch+json');
-    }
-    else {
-      req.open("GET", url, true);
-    }
-    if (accept) {
-      req.setRequestHeader('Accept', accept);
-    }
-    if (this.referer) {
-      req.setRequestHeader('X-Referer', this.referer);
-    }
-    if (beforeSend) {
-      beforeSend.call(that, req);
-    }
-    req.send(data);
+      if (accept) {
+        req.setRequestHeader('Accept', accept);
+      }
+      if (that.referer) {
+        req.setRequestHeader('X-Referer', that.referer);
+      }
+      if (beforeSend) {
+        beforeSend.call(that, req);
+      }
+      req.send(data);
+    });
   };
 
   /**
