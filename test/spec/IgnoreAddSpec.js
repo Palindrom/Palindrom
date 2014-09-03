@@ -151,4 +151,31 @@ describe("IgnoreAdd", function () {
       }, 10);
     }, 10);
   });
+
+  it('should not send a patch when added property is replaced', function (done) {
+    var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
+    var obj;
+    this.puppet = new Puppet('/test', function (myObj) {
+      obj = myObj;
+    });
+    this.puppet.ignoreAdd = /\/\$.+/;
+
+    jasmine.Ajax.requests.mostRecent().response({
+      "status": 200,
+      "contentType": 'application/json',
+      "responseText": '{"hello": 0}'
+    });
+
+    setTimeout(function () {
+      expect(patchSpy.calls.count()).toBe(1);
+      obj.$privateProp = 1;
+      obj.$privateProp = 2;
+      triggerMouseup();
+
+      setTimeout(function () {
+        expect(patchSpy.calls.count()).toBe(1);
+        done();
+      }, 20);
+    }, 20);
+  });
 });

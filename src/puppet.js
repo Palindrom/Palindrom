@@ -234,16 +234,21 @@
   //merges redundant patches and ignores private member changes
   Puppet.prototype.flattenPatches = function (patches) {
     var seen = {};
-    for (var i = patches.length - 1; i >= 0; i--) {
-      if (this.isIgnored(patches[i].path, patches[i].op)) {
+    for (var i = 0, ilen = patches.length; i < ilen; i++) {
+      if (this.isIgnored(patches[i].path, patches[i].op)) { //if it is ignored, remove patch
         patches.splice(i, 1); //ignore changes to properties that start with PRIVATE_PREFIX
+        ilen--;
+        i--;
       }
-      else if (patches[i].op === 'replace') {
-        if (seen[patches[i].path]) {
+      else if (patches[i].op === 'replace') { //if it is already seen in the patches array, replace the previous instance
+        if (seen[patches[i].path] !== undefined) {
+          patches[seen[patches[i].path]] = patches[i];
           patches.splice(i, 1);
+          ilen--;
+          i--;
         }
         else {
-          seen[patches[i].path] = true;
+          seen[patches[i].path] = i;
         }
       }
     }
