@@ -17,6 +17,7 @@
       }
 
       .mirrored {
+        -webkit-transform: rotateY(180deg);
         transform: rotateY(180deg);
       }
     </style>
@@ -53,6 +54,7 @@
           var bottom = Math.abs(jumpHeight * Math.sin(that.position / jumpLength)) + "px";
 
           that.$.puppetAnim.style.transform = 'translate(' + left + ', ' + bottom + ')';
+          that.$.puppetAnim.style.webkitTransform =  that.$.puppetAnim.style.transform;
 
           if (that.position >= 100 || that.position <= 0) {
             that.direction = -that.direction;
