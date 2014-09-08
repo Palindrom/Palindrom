@@ -15,6 +15,10 @@
    * @param obj Optional object where the parsed JSON data will be inserted
    */
   function Puppet(remoteUrl, callback, obj) {
+    if (window.Promise === undefined) {
+      throw new Error("Promise API not available. If you are using an outdated browser, make sure to load a Promise/A+ shim, e.g. https://github.com/jakearchibald/es6-promise");
+    }
+
     this.debug = true;
     this.remoteUrl = remoteUrl;
     this.callback = callback;
