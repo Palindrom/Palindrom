@@ -1,3 +1,5 @@
+jasmine.Ajax.install();
+
 var full = {
   user: {
     fullName: "",
@@ -19,45 +21,33 @@ function handlePageLoad(url) {
     full.user.fullName = 'Albert Einstein';
   }
 }
-handlePageLoad(window.location.href);
-
-var server = sinon.fakeServer.create();
-server.autoRespond = true;
-server.autoRespondAfter = 100;
-
-Object.defineProperty(server.xhr.prototype, "response", {
-  get: function () {
-    return this.responseText; //'response' getter required to make SinonJS work with Polymer's HTMLImports.js
-  }
-});
-
-server.xhr.useFilters = true;
-server.xhr.addFilter(function (method, url) {
-  //apply only to `/lab/polymer`, `/lab/polymer/`, `/lab/polymer/index.html`, `/lab/polymer/subpage.html
-  if (url.match("(/lab/polymer/?$|index\.html$|subpage\.html$)")) {
-    return false;
-  }
-  return true;
-});
 
 var lastUrl = window.location.href;
 handlePageLoad(lastUrl);
 
-server.respondWith(function (xhr) {
-  var inPatches = xhr.requestBody ? JSON.parse(xhr.requestBody) : [];
-  var outPatches = [];
+var stub = jasmine.Ajax.stubRequest(/(\/lab\/polymer\/?$|index\.html$|subpage\.html$)/);
+stub.andReturn({
+  "responseText": "Error"
+});
 
-  if (xhr.requestHeaders['Accept'] == 'application/json-patch+json') {
-    if (xhr.url != lastUrl) {
-      handlePageLoad(xhr.url);
-      lastUrl = xhr.url;
+var _old = XMLHttpRequest.prototype.send;
+XMLHttpRequest.prototype.send = function (data) {
+  if (data == null && this.requestHeaders['Accept'] == 'application/json') {
+    stub.responseText = JSON.stringify(full);
+  }
+  else if (this.requestHeaders['Accept'] == 'application/json-patch+json') {
+    var inPatches = data ? JSON.parse(data) : [];
+    var outPatches = [];
+
+    if (this.url != lastUrl) {
+      handlePageLoad(this.url);
+      lastUrl = this.url;
       outPatches.push({op: 'replace', path: '/user/firstName$', value: full.user.firstName$});
       outPatches.push({op: 'replace', path: '/user/lastName$', value: full.user.lastName$});
       outPatches.push({op: 'replace', path: '/user/fullName', value: full.user.fullName});
     }
 
     jsonpatch.apply(full, inPatches);
-
 
     inPatches.forEach(function (patch) {
       if (patch.op == "replace" &&
@@ -78,9 +68,11 @@ server.respondWith(function (xhr) {
       }
     });
 
-    xhr.respond(200, 'application/json-patch', JSON.stringify(outPatches));
+    stub.responseText = JSON.stringify(outPatches);
   }
   else {
-    xhr.respond(200, 'application/json', JSON.stringify(full));
+    stub.responseText = "Error";
   }
-});
+
+  return _old.apply(this, [].slice.call(arguments));
+};

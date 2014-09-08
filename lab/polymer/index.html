@@ -15,7 +15,9 @@
   <link rel="stylesheet" type="text/css" href="css/style.css">
 
   <!-- mock server responses -->
-  <script src="../../test/lib/sinon-1.7.1.js"></script>
+  <script src="../../test/lib/jasmine/jasmine.js"></script>
+  <script>window.jasmine = jasmineRequire.core(jasmineRequire);</script>
+  <script src="../../test/lib/jasmine-ajax/lib/mock-ajax.js"></script>
   <script src="js/mockServer.js"></script>
 </head>
 <body>
