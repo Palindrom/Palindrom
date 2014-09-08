@@ -9,6 +9,7 @@
   <link rel="import" href="components/puppet-animation.html">
 
   <!-- include PuppetJs with dependencies -->
+  <script src="../../test/lib/promise.js"></script>
   <script src="../../../fast-json-patch/src/json-patch-duplex.js"></script>
   <script src="../../src/puppet.js"></script>
 
@@ -85,8 +86,10 @@
 
 
 <script>
-  new Puppet(window.location.href, function (obj) {
-    document.getElementById('test').model = obj;
+  window.addEventListener('polymer-ready', function () {
+    new Puppet(window.location.href, function (obj) {
+      document.getElementById('test').model = obj;
+    });
   });
 </script>
 
