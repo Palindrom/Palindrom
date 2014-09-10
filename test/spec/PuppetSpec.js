@@ -21,10 +21,10 @@ describe("Puppet", function () {
         "responseText": '{"hello": "world"}'
       });
 
-      setTimeout(function() {
+      setTimeout(function () {
         expect(initSpy).toHaveBeenCalledWith(jasmine.any(Object));
         done();
-      }, 0);
+      }, 1); //promise shim resolves after 1 ms
     });
 
     it("should accept a JSON that has an empty string as a key (which is valid)", function (done) {
@@ -39,11 +39,11 @@ describe("Puppet", function () {
         "responseText": '{"hello": "world","": {"hola": "mundo"}}'
       });
 
-      setTimeout(function() {
+      setTimeout(function () {
         expect(initSpy).toHaveBeenCalledWith(jasmine.any(Object));
         expect(that.puppet.obj[""].hola).toBe("mundo");
         done();
-      }, 0);
+      }, 1); //promise shim resolves after 1 ms
     });
   });
 
@@ -60,7 +60,7 @@ describe("Puppet", function () {
         "responseText": '{"hello": "world"}'
       });
 
-      setTimeout(function() {
+      setTimeout(function () {
         expect(initSpy).toHaveBeenCalledWith({"hello": "world"});
         done();
       }, 10);
@@ -85,20 +85,22 @@ describe("Puppet", function () {
       obj.hello = "galaxy";
       triggerMouseup();
 
-      setTimeout(function() {
-        expect(patchSpy.calls.count()).toBe(2);
-        expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"galaxy"}]');
+      setTimeout(function () { //wait for jsonpatch.generate
+        setTimeout(function () { //wait xhr request promise
+          expect(patchSpy.calls.count()).toBe(2);
+          expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"galaxy"}]');
 
-        jasmine.Ajax.requests.mostRecent().response({
-          "status": 200,
-          "contentType": 'application/json-patch+json',
-          "responseText": '[{"op":"replace","path":"/hello","value":"universe"}]'
-        });
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 200,
+            "contentType": 'application/json-patch+json',
+            "responseText": '[{"op":"replace","path":"/hello","value":"universe"}]'
+          });
 
-        expect(obj.hello).toEqual("universe");
+          expect(obj.hello).toEqual("universe");
 
-        done();
-      }, 100);
+          done();
+        }, 1); //promise shim resolves after 1 ms
+      }, 1); //promise shim resolves after 1 ms
     });
 
     it("should not patch changes after unobserve() was called", function (done) {
@@ -110,7 +112,7 @@ describe("Puppet", function () {
         obj = myObj;
       });
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().response({ //responds immediately
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world"}'
@@ -120,24 +122,26 @@ describe("Puppet", function () {
 
       expect(patchSpy.calls.count()).toBe(1);
       obj.hello = "galaxy";
+
       triggerMouseup();
 
-      setTimeout(function() {
-        expect(patchSpy.calls.count()).toBe(2);
-        expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"galaxy"}]');
+      setTimeout(function () { //wait for jsonpatch.generate
+        setTimeout(function () { //wait xhr request promise
+          expect(patchSpy.calls.count()).toBe(2);
+          expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"galaxy"}]');
 
-        that.puppet.unobserve();
+          that.puppet.unobserve();
 
-        jasmine.Ajax.requests.mostRecent().response({
-          "status": 200,
-          "contentType": 'application/json-patch+json',
-          "responseText": '[{"op":"replace","path":"/hello","value":"universe"}]'
-        });
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 200,
+            "contentType": 'application/json-patch+json',
+            "responseText": '[{"op":"replace","path":"/hello","value":"universe"}]'
+          });
 
-        expect(obj.hello).toEqual("galaxy");
-
-        done();
-      }, 0);
+          expect(obj.hello).toEqual("galaxy");
+          done();
+        }, 1); //promise shim resolves after 1 ms
+      }, 1); //promise shim resolves after 1 ms
     });
 
     it("should patch changes after observe() was called", function (done) {
@@ -160,29 +164,33 @@ describe("Puppet", function () {
       obj.hello = "galaxy";
       triggerMouseup();
 
-      setTimeout(function() {
-        expect(patchSpy.calls.count()).toBe(2);
-        expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"galaxy"}]');
+      setTimeout(function () { //wait for jsonpatch.generate
+        setTimeout(function () { //wait xhr request promise
+          expect(patchSpy.calls.count()).toBe(2);
+          expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"galaxy"}]');
 
-        that.puppet.unobserve();
+          that.puppet.unobserve();
 
-        jasmine.Ajax.requests.mostRecent().response({
-          "status": 200,
-          "contentType": 'application/json-patch+json',
-          "responseText": '[{"op":"replace","path":"/hello","value":"universe"}]'
-        });
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 200,
+            "contentType": 'application/json-patch+json',
+            "responseText": '[{"op":"replace","path":"/hello","value":"universe"}]'
+          });
 
-        that.puppet.observe();
-        obj.hello = "cosmos";
-        triggerMouseup();
+          that.puppet.observe();
+          obj.hello = "cosmos";
+          triggerMouseup();
 
-        setTimeout(function() {
-          expect(patchSpy.calls.count()).toBe(3);
-          expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"cosmos"}]');
+          setTimeout(function () { //wait for jsonpatch.generate
+            setTimeout(function () { //wait xhr request promise
+              expect(patchSpy.calls.count()).toBe(3);
+              expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"cosmos"}]');
 
-          done();
-        }, 0);
-      }, 0);
+              done();
+            }, 1); //promise shim resolves after 1 ms
+          }, 1); //promise shim resolves after 1 ms
+        }, 1); //promise shim resolves after 1 ms
+      }, 1); //promise shim resolves after 1 ms
     });
   });
 
@@ -204,26 +212,28 @@ describe("Puppet", function () {
         "responseText": '{"hello": "world"}'
       });
 
-      setTimeout(function () {
-        INPUT.focus();
-        INPUT.value = "H";
-        obj.hello = INPUT.value;
-        triggerMouseup(INPUT); //trigger patch generation
+      INPUT.focus();
+      INPUT.value = "H";
+      obj.hello = INPUT.value;
+      triggerMouseup(INPUT); //trigger patch generation
 
-        setTimeout(function () {
+      setTimeout(function () { //wait for jsonpatch.generate
+        setTimeout(function () { //wait xhr request promise
           INPUT.value = "Hi";
           obj.hello = INPUT.value;
           triggerMouseup(INPUT);
           INPUT.blur();
 
-          setTimeout(function () {
-            expect(patchSpy.calls.count()).toBe(2);
-            expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"Hi"}]');
-            INPUT.parentNode.removeChild(INPUT);
-            done();
-          }, 10);
-        }, 10);
-      }, 0);
+          setTimeout(function () { //wait for jsonpatch.generate
+            setTimeout(function () { //wait xhr request promise
+              expect(patchSpy.calls.count()).toBe(2);
+              expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"Hi"}]');
+              INPUT.parentNode.removeChild(INPUT);
+              done();
+            }, 1); //promise shim resolves after 1 ms
+          }, 1); //promise shim resolves after 1 ms
+        }, 1); //promise shim resolves after 1 ms
+      }, 1); //promise shim resolves after 1 ms
     });
 
     it('should send key stroke changes immediately - with attribute update-on="input"', function (done) {
@@ -244,13 +254,14 @@ describe("Puppet", function () {
         "responseText": '{"hello": "world"}'
       });
 
-      setTimeout(function () {
-        INPUT.focus();
-        INPUT.value = "O";
-        obj.hello = INPUT.value;
-        triggerMouseup(INPUT); //trigger patch generation
 
-        setTimeout(function () {
+      INPUT.focus();
+      INPUT.value = "O";
+      obj.hello = INPUT.value;
+      triggerMouseup(INPUT); //trigger patch generation
+
+      setTimeout(function () { //wait for jsonpatch.generate
+        setTimeout(function () { //wait xhr request promise
           jasmine.Ajax.requests.mostRecent().response({
             "status": 200,
             "contentType": 'application/json-patch+json',
@@ -262,21 +273,23 @@ describe("Puppet", function () {
           triggerMouseup(INPUT);
           INPUT.blur();
 
-          setTimeout(function () {
-            jasmine.Ajax.requests.mostRecent().response({
-              "status": 200,
-              "contentType": 'application/json-patch+json',
-              "responseText": '[{"op":"replace","path":"/hello","value":"On"}]'
-            });
+          setTimeout(function () { //wait for jsonpatch.generate
+            setTimeout(function () { //wait xhr request promise
+              jasmine.Ajax.requests.mostRecent().response({
+                "status": 200,
+                "contentType": 'application/json-patch+json',
+                "responseText": '[{"op":"replace","path":"/hello","value":"On"}]'
+              });
 
-            expect(patchSpy.calls.count()).toBe(3);
-            expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"O"}]');
-            expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"On"}]');
-            INPUT.parentNode.removeChild(INPUT);
-            done();
-          }, 10);
-        }, 10);
-      }, 0);
+              expect(patchSpy.calls.count()).toBe(3);
+              expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"O"}]');
+              expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"On"}]');
+              INPUT.parentNode.removeChild(INPUT);
+              done();
+            }, 1); //promise shim resolves after 1 ms
+          }, 1); //promise shim resolves after 1 ms
+        }, 1); //promise shim resolves after 1 ms
+      }, 1); //promise shim resolves after 1 ms
     });
 
     it('should send clicks on a button', function (done) {
@@ -298,16 +311,16 @@ describe("Puppet", function () {
         "responseText": '{"hello": null}'
       });
 
-      setTimeout(function () {
-        triggerMouseup(BUTTON);
+      triggerMouseup(BUTTON);
 
-        setTimeout(function () {
+      setTimeout(function () { //wait for jsonpatch.generate
+        setTimeout(function () { //wait xhr request promise
           expect(patchSpy.calls.count()).toBe(2);
           expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":null}]');
           BUTTON.parentNode.removeChild(BUTTON);
           done();
-        }, 0);
-      }, 0);
+        }, 1); //promise shim resolves after 1 ms
+      }, 1); //promise shim resolves after 1 ms
     });
 
     it('should queue up patches until response comes', function (done) {
@@ -322,40 +335,40 @@ describe("Puppet", function () {
         "responseText": '{"city": "Gdynia"}'
       });
 
-      setTimeout(function () {
-        obj.city = "Gdansk";
-        triggerMouseup();
+      obj.city = "Gdansk";
+      triggerMouseup();
 
-        setTimeout(function () {
+      setTimeout(function () { //wait for jsonpatch.generate
+        setTimeout(function () { //wait xhr request promise
           obj.city = "Sopot";
           triggerMouseup();
 
-          setTimeout(function () {
-            //reply to Sopot
-            expect(jasmine.Ajax.requests.at(1).params).toBe('[{"op":"replace","path":"/city","value":"Gdansk"}]');
-            jasmine.Ajax.requests.at(1).response({
-              "status": 200,
-              "contentType": 'application/json-patch+json',
-              "responseText": '[{"op": "replace", "path": "/city", "value": "Changed to Gdansk"}]'
-            });
-
-            setTimeout(function () {
-              //reply to Gdansk
-              expect(jasmine.Ajax.requests.at(2).params).toBe('[{"op":"replace","path":"/city","value":"Sopot"}]');
-              jasmine.Ajax.requests.at(2).response({
+          setTimeout(function () { //wait for jsonpatch.generate
+            setTimeout(function () { //wait xhr request promise
+              //reply to Sopot
+              expect(jasmine.Ajax.requests.at(1).params).toBe('[{"op":"replace","path":"/city","value":"Gdansk"}]');
+              jasmine.Ajax.requests.at(1).response({
                 "status": 200,
                 "contentType": 'application/json-patch+json',
-                "responseText": '[{"op": "replace", "path": "/city", "value": "Changed to Sopot"}]'
+                "responseText": '[{"op": "replace", "path": "/city", "value": "Changed to Gdansk"}]'
               });
 
               setTimeout(function () {
+                //reply to Gdansk
+                expect(jasmine.Ajax.requests.at(2).params).toBe('[{"op":"replace","path":"/city","value":"Sopot"}]');
+                jasmine.Ajax.requests.at(2).response({
+                  "status": 200,
+                  "contentType": 'application/json-patch+json',
+                  "responseText": '[{"op": "replace", "path": "/city", "value": "Changed to Sopot"}]'
+                });
+
                 expect(obj.city).toBe("Changed to Sopot");
                 done();
               }, 100);
-            }, 100);
-          }, 100);
-        }, 0);
-      }, 0);
+            }, 1); //promise shim resolves after 1 ms
+          }, 1); //promise shim resolves after 1 ms
+        }, 1); //promise shim resolves after 1 ms
+      }, 1); //promise shim resolves after 1 ms
     });
   });
 });

@@ -24,17 +24,17 @@ describe("IgnoreAdd", function () {
       "responseText": '{"hello": 0}'
     });
 
-    setTimeout(function () {
-      obj.hello = 1;
-      obj.publicProp = 1;
-      obj.$privateProp = 1;
+    obj.hello = 1;
+    obj.publicProp = 1;
+    obj.$privateProp = 1;
 
-      setTimeout(function () {
+    setTimeout(function () { //wait for jsonpatch.generate
+      setTimeout(function () { //wait xhr request promise
         expect(patchSpy.calls.count()).toBe(2);
         expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":1},{"op":"add","path":"/publicProp","value":1}]');
         done();
-      }, 10);
-    }, 10);
+      }, 1); //promise shim resolves after 1 ms
+    }, 20);
   });
 
   it('should not send replace patch to an ignored property', function (done) {
@@ -51,11 +51,11 @@ describe("IgnoreAdd", function () {
       "responseText": '{"hello": 0}'
     });
 
-    setTimeout(function () {
-      obj.publicProp = 1;
-      obj.$privateProp = 1;
+    obj.publicProp = 1;
+    obj.$privateProp = 1;
 
-      setTimeout(function () {
+    setTimeout(function () { //wait for jsonpatch.generate
+      setTimeout(function () { //wait xhr request promise
         jasmine.Ajax.requests.mostRecent().response({
           "status": 200,
           "contentType": 'application/json-patch+json',
@@ -67,19 +67,21 @@ describe("IgnoreAdd", function () {
         obj.publicProp = 2;
         obj.$privateProp = 2;
 
-        setTimeout(function () {
-          jasmine.Ajax.requests.mostRecent().response({
-            "status": 200,
-            "contentType": 'application/json-patch+json',
-            "responseText": '[]'
-          });
+        setTimeout(function () { //wait for jsonpatch.generate
+          setTimeout(function () { //wait xhr request promise
+            jasmine.Ajax.requests.mostRecent().response({
+              "status": 200,
+              "contentType": 'application/json-patch+json',
+              "responseText": '[]'
+            });
 
-          expect(patchSpy.calls.count()).toBe(3);
-          expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/publicProp","value":2}]');
-          done();
-        }, 10);
-      }, 10);
-    }, 10);
+            expect(patchSpy.calls.count()).toBe(3);
+            expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/publicProp","value":2}]');
+            done();
+          }, 1); //promise shim resolves after 1 ms
+        }, 20);
+      }, 1); //promise shim resolves after 1 ms
+    }, 20);
   });
 
   it('should not send replace patch to an ignored deep object', function (done) {
@@ -96,11 +98,11 @@ describe("IgnoreAdd", function () {
       "responseText": '{"hello": 0}'
     });
 
-    setTimeout(function () {
-      obj.publicProp = ["a", "b", "c"];
-      obj.$privateProp = ["a", "b", "c"];
+    obj.publicProp = ["a", "b", "c"];
+    obj.$privateProp = ["a", "b", "c"];
 
-      setTimeout(function () {
+    setTimeout(function () { //wait for jsonpatch.generate
+      setTimeout(function () { //wait xhr request promise
         jasmine.Ajax.requests.mostRecent().response({
           "status": 200,
           "contentType": 'application/json-patch+json',
@@ -112,19 +114,21 @@ describe("IgnoreAdd", function () {
         obj.publicProp[2] = "cc";
         obj.$privateProp[2] = "cc";
 
-        setTimeout(function () {
-          jasmine.Ajax.requests.mostRecent().response({
-            "status": 200,
-            "contentType": 'application/json-patch+json',
-            "responseText": '[]'
-          });
+        setTimeout(function () { //wait for jsonpatch.generate
+          setTimeout(function () { //wait xhr request promise
+            jasmine.Ajax.requests.mostRecent().response({
+              "status": 200,
+              "contentType": 'application/json-patch+json',
+              "responseText": '[]'
+            });
 
-          expect(patchSpy.calls.count()).toBe(3);
-          expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/publicProp/2","value":"cc"}]');
-          done();
-        }, 10);
-      }, 10);
-    }, 10);
+            expect(patchSpy.calls.count()).toBe(3);
+            expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/publicProp/2","value":"cc"}]');
+            done();
+          }, 1); //promise shim resolves after 1 ms
+        }, 20);
+      }, 1); //promise shim resolves after 1 ms
+    }, 20);
   });
 
   it('should not send any patch if all changes were ignored', function (done) {
@@ -141,15 +145,15 @@ describe("IgnoreAdd", function () {
       "responseText": '{"hello": 0}'
     });
 
-    setTimeout(function () {
-      expect(patchSpy.calls.count()).toBe(1);
-      obj.$privateProp = 1;
+    expect(patchSpy.calls.count()).toBe(1);
+    obj.$privateProp = 1;
 
-      setTimeout(function () {
+    setTimeout(function () {
+      setTimeout(function () { //wait xhr request promise
         expect(patchSpy.calls.count()).toBe(1);
         done();
-      }, 10);
-    }, 10);
+      }, 1); //promise shim resolves after 1 ms
+    }, 20); //promise shim resolves after 1 ms
   });
 
   it('should not send a patch when added property is replaced', function (done) {
@@ -166,16 +170,16 @@ describe("IgnoreAdd", function () {
       "responseText": '{"hello": 0}'
     });
 
-    setTimeout(function () {
-      expect(patchSpy.calls.count()).toBe(1);
-      obj.$privateProp = 1;
-      obj.$privateProp = 2;
-      triggerMouseup();
+    expect(patchSpy.calls.count()).toBe(1);
+    obj.$privateProp = 1;
+    obj.$privateProp = 2;
+    triggerMouseup();
 
-      setTimeout(function () {
+    setTimeout(function () { //wait for jsonpatch.generate
+      setTimeout(function () { //wait xhr request promise
         expect(patchSpy.calls.count()).toBe(1);
         done();
-      }, 20);
+      }, 1); //promise shim resolves after 1 ms
     }, 20);
   });
 });

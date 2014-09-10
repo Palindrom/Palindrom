@@ -9,7 +9,7 @@ describe("Links", function () {
       "contentType": 'application/json',
       "responseText": '{"hello": "world"}'
     });
-    setTimeout(done, 10);
+    setTimeout(done, 1);
   });
 
   afterEach(function () {

@@ -42,7 +42,6 @@ describe("Buttons", function () {
         obj = myObj;
       });
 
-      setTimeout(function () {
         expect(patchSpy.calls.count()).toBe(1);
         jasmine.Ajax.requests.mostRecent().response({
           "status": 200,
@@ -55,7 +54,8 @@ describe("Buttons", function () {
         });
         triggerMouseup(BUTTON);
 
-        setTimeout(function () {
+      setTimeout(function () { //wait for jsonpatch.generate
+        setTimeout(function () { //wait xhr request promise
           expect(patchSpy.calls.count()).toBe(2);
           jasmine.Ajax.requests.mostRecent().response({
             "status": 200,
@@ -66,8 +66,8 @@ describe("Buttons", function () {
           expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/SendButton","value":null}]');
           BUTTON.parentNode.removeChild(BUTTON);
           done();
-        }, 100);
-      }, 100);
+        }, 1); //promise shim resolves after 1 ms
+      }, 1); //promise shim resolves after 1 ms
     });
 
     it("should send null patch twice", function (done) {
@@ -79,7 +79,6 @@ describe("Buttons", function () {
         obj = myObj;
       });
 
-      setTimeout(function () {
         jasmine.Ajax.requests.mostRecent().response({
           "status": 200,
           "contentType": 'application/json',
@@ -93,7 +92,8 @@ describe("Buttons", function () {
         });
         triggerMouseup(BUTTON);
 
-        setTimeout(function () {
+      setTimeout(function () { //wait for jsonpatch.generate
+        setTimeout(function () { //wait xhr request promise
           jasmine.Ajax.requests.mostRecent().response({
             "status": 200,
             "contentType": 'application/json-patch+json',
@@ -104,7 +104,8 @@ describe("Buttons", function () {
           expect(patchSpy.calls.mostRecent().args[0]).toBe('[{"op":"replace","path":"/SendButton","value":null}]');
           triggerMouseup(BUTTON);
 
-          setTimeout(function () {
+          setTimeout(function () { //wait for jsonpatch.generate
+            setTimeout(function () { //wait xhr request promise
             jasmine.Ajax.requests.mostRecent().response({
               "status": 200,
               "contentType": 'application/json-patch+json',
@@ -115,9 +116,10 @@ describe("Buttons", function () {
             expect(patchSpy.calls.mostRecent().args[0]).toBe('[{"op":"replace","path":"/SendButton","value":null}]');
             BUTTON.parentNode.removeChild(BUTTON);
             done();
-          }, 0);
-        }, 0);
-      }, 0);
+            }, 1); //promise shim resolves after 1 ms
+          }, 1); //promise shim resolves after 1 ms
+        }, 1); //promise shim resolves after 1 ms
+      }, 1); //promise shim resolves after 1 ms
     });
 
     it("should send null patch twice when null was defined in a patch", function (done) {
@@ -130,7 +132,6 @@ describe("Buttons", function () {
         obj = myObj;
       });
 
-      setTimeout(function () {
         jasmine.Ajax.requests.mostRecent().response({
           "status": 200,
           "contentType": 'application/json',
@@ -148,7 +149,8 @@ describe("Buttons", function () {
           obj.AnotherButton = null;
         });
 
-        setTimeout(function () {
+      setTimeout(function () { //wait for jsonpatch.generate
+        setTimeout(function () { //wait xhr request promise
           jasmine.Ajax.requests.mostRecent().response({
             "status": 200,
             "contentType": 'application/json-patch+json',
@@ -157,7 +159,8 @@ describe("Buttons", function () {
 
           triggerMouseup(BUTTON2);
 
-          setTimeout(function () {
+          setTimeout(function () { //wait for jsonpatch.generate
+            setTimeout(function () { //wait xhr request promise
             jasmine.Ajax.requests.mostRecent().response({
               "status": 200,
               "contentType": 'application/json-patch+json',
@@ -169,9 +172,10 @@ describe("Buttons", function () {
             BUTTON.parentNode.removeChild(BUTTON);
             BUTTON2.parentNode.removeChild(BUTTON2);
             done();
-          }, 0);
-        }, 0);
-      }, 0);
+            }, 1); //promise shim resolves after 1 ms
+          }, 1); //promise shim resolves after 1 ms
+        }, 1); //promise shim resolves after 1 ms
+      }, 1); //promise shim resolves after 1 ms
     });
   });
 });

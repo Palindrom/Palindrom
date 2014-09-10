@@ -14,7 +14,7 @@ describe("Parent", function () {
 
       this.puppet = new Puppet(window.location.href, initSpy);
 
-      initSpy.and.callFake(function() {
+      initSpy.and.callFake(function () {
         expect(this.obj.child.$parent.hello).toEqual("world");
         done();
       });
@@ -31,7 +31,7 @@ describe("Parent", function () {
 
       this.puppet = new Puppet(window.location.href, initSpy);
 
-      initSpy.and.callFake(function() {
+      initSpy.and.callFake(function () {
         expect(this.obj.children[0].$parent.$parent.children[1].second).toEqual("2nd");
         done();
       });
@@ -56,20 +56,20 @@ describe("Parent", function () {
       });
 
       var that = this;
-      setTimeout(function () {
-        that.puppet.obj.children = [
-          {first: "1st"},
-          {second: "2nd"}
-        ];
-        triggerMouseup();
+      that.puppet.obj.children = [
+        {first: "1st"},
+        {second: "2nd"}
+      ];
+      triggerMouseup();
 
-        setTimeout(function () {
+      setTimeout(function () { //wait for jsonpatch.generate
+        setTimeout(function () { //wait xhr request promise
           expect(that.puppet.obj.children[0].$parent.$parent.children[1].second).toEqual("2nd");
           expect(patchSpy.calls.count()).toBe(2); //only children should generate a patch ($parent getter should not)
           expect(patchSpy).toHaveBeenCalledWith('[{"op":"add","path":"/children","value":[{"first":"1st"},{"second":"2nd"}]}]');
           done();
-        }, 10);
-      }, 0);
+        }, 1); //promise shim resolves after 1 ms
+      }, 1); //promise shim resolves after 1 ms
     });
 
     it("should return parent on a remotely added property", function (done) {
@@ -85,27 +85,26 @@ describe("Parent", function () {
       });
 
       var that = this;
-      setTimeout(function () {
-        that.puppet.obj.children = [
-          {first: "1st"},
-          {second: "2nd"}
-        ];
-        triggerMouseup();
+      that.puppet.obj.children = [
+        {first: "1st"},
+        {second: "2nd"}
+      ];
+      triggerMouseup();
 
-        setTimeout(function () {
+      setTimeout(function () { //wait for jsonpatch.generate
+        setTimeout(function () { //wait xhr request promise
+
           jasmine.Ajax.requests.mostRecent().response({
             "status": 200,
             "contentType": 'application/json-patch+json',
             "responseText": '[{"op":"add","path":"/children/0/remotes","value":[{"first":"1st"},{"second":"2nd"}]}]'
           });
 
-          setTimeout(function () {
-            expect(that.puppet.obj.children[0].remotes.$parent.remotes[1].second).toEqual("2nd");
-            expect(patchSpy.calls.count()).toBe(2);
-            done();
-          }, 10);
-        }, 10);
-      }, 0);
+          expect(that.puppet.obj.children[0].remotes.$parent.remotes[1].second).toEqual("2nd");
+          expect(patchSpy.calls.count()).toBe(2);
+          done();
+        }, 1); //promise shim resolves after 1 ms
+      }, 1); //promise shim resolves after 1 ms
     });
   });
 });
