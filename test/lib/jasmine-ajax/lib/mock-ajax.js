@@ -30,7 +30,20 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
-(function() {
+getJasmineRequireObj().ajax = function(jRequire) {
+  var $ajax = {};
+
+  $ajax.RequestStub = jRequire.AjaxRequestStub();
+  $ajax.RequestTracker = jRequire.AjaxRequestTracker();
+  $ajax.StubTracker = jRequire.AjaxStubTracker();
+  $ajax.ParamParser = jRequire.AjaxParamParser();
+  $ajax.fakeRequest = jRequire.AjaxFakeRequest();
+  $ajax.MockAjax = jRequire.MockAjax($ajax);
+
+  return $ajax.MockAjax;
+};
+
+getJasmineRequireObj().AjaxFakeRequest = function() {
   function extend(destination, source, propertiesToSkip) {
     propertiesToSkip = propertiesToSkip || [];
     for (var property in source) {
@@ -50,12 +63,170 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     return false;
   }
 
+  function fakeRequest(global, requestTracker, stubTracker, paramParser) {
+    function FakeXMLHttpRequest() {
+      requestTracker.track(this);
+      this.requestHeaders = {};
+      this.overriddenMimeType = null;
+    }
+
+    function findHeader(name, headers) {
+      name = name.toLowerCase();
+      for (var header in headers) {
+        if (header.toLowerCase() === name) {
+          return headers[header];
+        }
+      }
+    }
+
+    function normalizeHeaders(rawHeaders, contentType) {
+      var headers = [];
+
+      if (rawHeaders) {
+        if (rawHeaders instanceof Array) {
+          headers = rawHeaders;
+        } else {
+          for (var headerName in rawHeaders) {
+            if (rawHeaders.hasOwnProperty(headerName)) {
+              headers.push({ name: headerName, value: rawHeaders[headerName] });
+            }
+          }
+        }
+      } else {
+        headers.push({ name: "Content-Type", value: contentType || "application/json" });
+      }
+
+      return headers;
+    }
+
+    var iePropertiesThatCannotBeCopied = ['responseBody', 'responseText', 'responseXML', 'status', 'statusText', 'responseTimeout'];
+    extend(FakeXMLHttpRequest.prototype, new global.XMLHttpRequest(), iePropertiesThatCannotBeCopied);
+    extend(FakeXMLHttpRequest.prototype, {
+      open: function() {
+        this.method = arguments[0];
+        this.url = arguments[1];
+        this.username = arguments[3];
+        this.password = arguments[4];
+        this.readyState = 1;
+        this.onreadystatechange();
+      },
+
+      setRequestHeader: function(header, value) {
+        if(this.requestHeaders.hasOwnProperty(header)) {
+          this.requestHeaders[header] = [this.requestHeaders[header], value].join(', ');
+        } else {
+          this.requestHeaders[header] = value;
+        }
+      },
+
+      overrideMimeType: function(mime) {
+        this.overriddenMimeType = mime;
+      },
+
+      abort: function() {
+        this.readyState = 0;
+        this.status = 0;
+        this.statusText = "abort";
+        this.onreadystatechange();
+      },
+
+      readyState: 0,
+
+      onload: function() {
+      },
+
+      onreadystatechange: function(isTimeout) {
+      },
+
+      status: null,
+
+      send: function(data) {
+        this.params = data;
+        this.readyState = 2;
+        this.onreadystatechange();
+
+        var stub = stubTracker.findStub(this.url, data, this.method);
+        if (stub) {
+          this.response(stub);
+        }
+      },
+
+      contentType: function() {
+        return findHeader('content-type', this.requestHeaders);
+      },
+
+      data: function() {
+        if (!this.params) {
+          return {};
+        }
+
+        return paramParser.findParser(this).parse(this.params);
+      },
+
+      getResponseHeader: function(name) {
+        name = name.toLowerCase();
+        var resultHeader;
+        for(var i = 0; i < this.responseHeaders.length; i++) {
+          var header = this.responseHeaders[i];
+          if (name === header.name.toLowerCase()) {
+            if (resultHeader) {
+              resultHeader = [resultHeader, header.value].join(', ');
+            } else {
+              resultHeader = header.value;
+            }
+          }
+        }
+        return resultHeader;
+      },
+
+      getAllResponseHeaders: function() {
+        var responseHeaders = [];
+        for (var i = 0; i < this.responseHeaders.length; i++) {
+          responseHeaders.push(this.responseHeaders[i].name + ': ' +
+            this.responseHeaders[i].value);
+        }
+        return responseHeaders.join('\r\n');
+      },
+
+      responseText: null,
+
+      response: function(response) {
+        if (this.readyState === 4) {
+          throw new Error("FakeXMLHttpRequest already completed");
+        }
+        this.status = response.status;
+        this.statusText = response.statusText || "";
+        this.responseText = response.responseText || "";
+        this.readyState = 4;
+        this.responseHeaders = normalizeHeaders(response.responseHeaders, response.contentType);
+
+        this.onload();
+        this.onreadystatechange();
+      },
+
+      responseTimeout: function() {
+        if (this.readyState === 4) {
+          throw new Error("FakeXMLHttpRequest already completed");
+        }
+        this.readyState = 4;
+        jasmine.clock().tick(30000);
+        this.onreadystatechange('timeout');
+      }
+    });
+
+    return FakeXMLHttpRequest;
+  }
+
+  return fakeRequest;
+};
+
+getJasmineRequireObj().MockAjax = function($ajax) {
   function MockAjax(global) {
-    var requestTracker = new RequestTracker(),
-      stubTracker = new StubTracker(),
-      paramParser = new ParamParser(),
+    var requestTracker = new $ajax.RequestTracker(),
+      stubTracker = new $ajax.StubTracker(),
+      paramParser = new $ajax.ParamParser(),
       realAjaxFunction = global.XMLHttpRequest,
-      mockAjaxFunction = fakeRequest(requestTracker, stubTracker, paramParser);
+      mockAjaxFunction = $ajax.fakeRequest(global, requestTracker, stubTracker, paramParser);
 
     this.install = function() {
       global.XMLHttpRequest = mockAjaxFunction;
@@ -69,8 +240,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       paramParser.reset();
     };
 
-    this.stubRequest = function(url, data) {
-      var stub = new RequestStub(url, data);
+    this.stubRequest = function(url, data, method) {
+      var stub = new $ajax.RequestStub(url, data, method);
       stubTracker.addStub(stub);
       return stub;
     };
@@ -92,32 +263,15 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     this.stubs = stubTracker;
   }
 
-  function StubTracker() {
-    var stubs = [];
+  return MockAjax;
+};
 
-    this.addStub = function(stub) {
-      stubs.push(stub);
-    };
-
-    this.reset = function() {
-      stubs = [];
-    };
-
-    this.findStub = function(url, data) {
-      for (var i = stubs.length - 1; i >= 0; i--) {
-        var stub = stubs[i];
-        if (stub.matches(url, data)) {
-          return stub;
-        }
-      }
-    };
-  }
-
+getJasmineRequireObj().AjaxParamParser = function() {
   function ParamParser() {
     var defaults = [
       {
         test: function(xhr) {
-          return /^application\/json/.test(xhr.contentType());
+          return (/^application\/json/).test(xhr.contentType());
         },
         parse: function jsonParser(paramString) {
           return JSON.parse(paramString);
@@ -166,110 +320,53 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     this.reset();
   }
 
-  function fakeRequest(requestTracker, stubTracker, paramParser) {
-    function FakeXMLHttpRequest() {
-      requestTracker.track(this);
-      this.requestHeaders = {};
+  return ParamParser;
+};
+
+getJasmineRequireObj().AjaxRequestStub = function() {
+  function RequestStub(url, stubData, method) {
+    var normalizeQuery = function(query) {
+      return query ? query.split('&').sort().join('&') : undefined;
+    };
+
+    if (url instanceof RegExp) {
+      this.url = url;
+      this.query = undefined;
+    } else {
+      var split = url.split('?');
+      this.url = split[0];
+      this.query = split.length > 1 ? normalizeQuery(split[1]) : undefined;
     }
 
-    var iePropertiesThatCannotBeCopied = ['responseBody', 'responseText', 'responseXML', 'status', 'statusText', 'responseTimeout'];
-    extend(FakeXMLHttpRequest.prototype, new window.XMLHttpRequest(), iePropertiesThatCannotBeCopied);
-    extend(FakeXMLHttpRequest.prototype, {
-      open: function() {
-        this.method = arguments[0];
-        this.url = arguments[1];
-        this.username = arguments[3];
-        this.password = arguments[4];
-        this.readyState = 1;
-        this.onreadystatechange();
-      },
+    this.data = normalizeQuery(stubData);
+    this.method = method;
 
-      setRequestHeader: function(header, value) {
-        this.requestHeaders[header] = value;
-      },
+    this.andReturn = function(options) {
+      this.status = options.status || 200;
 
-      abort: function() {
-        this.readyState = 0;
-        this.status = 0;
-        this.statusText = "abort";
-        this.onreadystatechange();
-      },
+      this.contentType = options.contentType;
+      this.responseText = options.responseText;
+    };
 
-      readyState: 0,
-
-      onload: function() {
-      },
-
-      onreadystatechange: function(isTimeout) {
-      },
-
-      status: null,
-
-      send: function(data) {
-        this.params = data;
-        this.readyState = 2;
-        this.onreadystatechange();
-
-        var stub = stubTracker.findStub(this.url, data);
-        if (stub) {
-          this.response(stub);
-        }
-      },
-
-      contentType: function() {
-        for (var header in this.requestHeaders) {
-          if (header.toLowerCase() === 'content-type') {
-            return this.requestHeaders[header];
-          }
-        }
-      },
-
-      data: function() {
-        if (!this.params) {
-          return {};
-        }
-
-        return paramParser.findParser(this).parse(this.params);
-      },
-
-      getResponseHeader: function(name) {
-        return this.responseHeaders[name];
-      },
-
-      getAllResponseHeaders: function() {
-        var responseHeaders = [];
-        for (var i in this.responseHeaders) {
-          if (this.responseHeaders.hasOwnProperty(i)) {
-            responseHeaders.push(i + ': ' + this.responseHeaders[i]);
-          }
-        }
-        return responseHeaders.join('\r\n');
-      },
-
-      responseText: null,
-
-      response: function(response) {
-        this.status = response.status;
-        this.statusText = response.statusText || "";
-        this.responseText = response.responseText || "";
-        this.readyState = 4;
-        this.responseHeaders = response.responseHeaders ||
-          {"Content-Type": response.contentType || "application/json" };
-
-        this.onload();
-        this.onreadystatechange();
-      },
-
-      responseTimeout: function() {
-        this.readyState = 4;
-        jasmine.clock().tick(30000);
-        this.onreadystatechange('timeout');
+    this.matches = function(fullUrl, data, method) {
+      var matches = false;
+      fullUrl = fullUrl.toString();
+      if (this.url instanceof RegExp) {
+        matches = this.url.test(fullUrl);
+      } else {
+        var urlSplit = fullUrl.split('?'),
+            url = urlSplit[0],
+            query = urlSplit[1];
+        matches = this.url === url && this.query === normalizeQuery(query);
       }
-    });
-
-    return FakeXMLHttpRequest;
+      return matches && (!this.data || this.data === normalizeQuery(data)) && (!this.method || this.method === method);
+    };
   }
 
+  return RequestStub;
+};
+
+getJasmineRequireObj().AjaxRequestTracker = function() {
   function RequestTracker() {
     var requests = [];
 
@@ -298,7 +395,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     };
 
     this.filter = function(url_to_match) {
-      if (requests.length == 0) return [];
       var matching_requests = [];
 
       for (var i = 0; i < requests.length; i++) {
@@ -309,7 +405,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             url_to_match(requests[i])) {
             matching_requests.push(requests[i]);
         } else {
-          if (requests[i].url == url_to_match) {
+          if (requests[i].url === url_to_match) {
             matching_requests.push(requests[i]);
           }
         }
@@ -319,44 +415,37 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     };
   }
 
-  function RequestStub(url, stubData) {
-    var normalizeQuery = function(query) {
-      return query ? query.split('&').sort().join('&') : undefined;
+  return RequestTracker;
+};
+
+getJasmineRequireObj().AjaxStubTracker = function() {
+  function StubTracker() {
+    var stubs = [];
+
+    this.addStub = function(stub) {
+      stubs.push(stub);
     };
 
-    if (url instanceof RegExp) {
-      this.url = url;
-      this.query = undefined;
-    } else {
-      var split = url.split('?');
-      this.url = split[0];
-      this.query = split.length > 1 ? normalizeQuery(split[1]) : undefined;
-    }
-
-    this.data = normalizeQuery(stubData);
-
-    this.andReturn = function(options) {
-      this.status = options.status || 200;
-
-      this.contentType = options.contentType;
-      this.responseText = options.responseText;
+    this.reset = function() {
+      stubs = [];
     };
 
-    this.matches = function(fullUrl, data) {
-      var matches = false;
-      fullUrl = fullUrl.toString();
-      if (this.url instanceof RegExp) {
-        matches = this.url.test(fullUrl);
-      } else {
-        var urlSplit = fullUrl.split('?'),
-            url = urlSplit[0],
-            query = urlSplit[1];
-        matches = this.url === url && this.query === normalizeQuery(query);
+    this.findStub = function(url, data, method) {
+      for (var i = stubs.length - 1; i >= 0; i--) {
+        var stub = stubs[i];
+        if (stub.matches(url, data, method)) {
+          return stub;
+        }
       }
-      return matches && (!this.data || this.data === normalizeQuery(data));
     };
   }
 
+  return StubTracker;
+};
+
+(function() {
+  var jRequire = getJasmineRequireObj(),
+      MockAjax = jRequire.ajax(jRequire);
   if (typeof window === "undefined" && typeof exports === "object") {
     exports.MockAjax = MockAjax;
     jasmine.Ajax = new MockAjax(exports);
