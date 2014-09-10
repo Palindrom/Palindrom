@@ -6,7 +6,8 @@
 (function (global) {
   var lastClickHandler
     , lastPopstateHandler
-    , lastBlurHandler;
+    , lastBlurHandler
+    , lastPuppet;
 
   /**
    * Defines a connection to a remote PATCH server, returns callback to a object that is persistent between browser and server
@@ -132,7 +133,11 @@
     document.body.addEventListener('click', lastClickHandler = this.clickHandler.bind(this));
     window.addEventListener('popstate', lastPopstateHandler = this.historyHandler.bind(this)); //better here than in constructor, because Chrome triggers popstate on page load
     document.body.addEventListener('blur', lastBlurHandler = this.sendLocalChange.bind(this), true);
-    this.fixShadowRootClicks();
+
+    if (!lastPuppet) {
+      lastPuppet = this;
+      this.fixShadowRootClicks();
+    }
 
     if (this.useWebSocket) {
       this.webSocketUpgrade();
@@ -479,9 +484,10 @@
     }
     for (var i = 0, ilen = el.childNodes.length; i < ilen; i++) {
       if (el.childNodes[i].nodeType === 1) {
-        if (el.childNodes[i].shadowRoot) {
-          out.push(el.childNodes[i].shadowRoot);
-          this.findShadowRoots(el.childNodes[i].shadowRoot, out);
+        var shadowRoot = el.childNodes[i].shadowRoot || el.childNodes[i].polymerShadowRoot_;
+        if (shadowRoot) {
+          out.push(shadowRoot);
+          this.findShadowRoots(shadowRoot, out);
         }
         this.findShadowRoots(el.childNodes[i], out);
       }
@@ -494,18 +500,23 @@
    * @see <a href="https://groups.google.com/forum/#!topic/polymer-dev/fDRlCT7nNPU">discussion</a>
    */
   Puppet.prototype.fixShadowRootClicks = function () {
+    var clickHandler = function (event) {
+      if (lastPuppet) {
+        lastPuppet.clickHandler(event);
+      }
+    };
+
     //existing shadow roots
     var shadowRoots = this.findShadowRoots(document.documentElement);
     for (var i = 0, ilen = shadowRoots.length; i < ilen; i++) {
-      (shadowRoots[i].impl || shadowRoots[i]).addEventListener("click", this.clickHandler.bind(this));
+      (shadowRoots[i].impl || shadowRoots[i]).addEventListener("click", clickHandler);
     }
 
     //future shadow roots
     var old = Element.prototype.createShadowRoot;
-    var that = this;
     Element.prototype.createShadowRoot = function () {
       var shadowRoot = old.apply(this, arguments);
-      shadowRoot.addEventListener("click", that.clickHandler.bind(that));
+      shadowRoot.addEventListener("click", clickHandler);
       return shadowRoot;
     }
   };
@@ -520,6 +531,15 @@
       //type string is reported in Polymer / Canary (Web Platform features disabled)
       var parser = document.createElement('A');
       parser.href = elem;
+
+      // @see http://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
+      // IE doesn't populate all link properties when setting .href with a relative URL,
+      // however .href will return an absolute URL which then can be used on itself
+      // to populate these additional fields.
+      if (parser.host == "") {
+        parser.href = parser.href;
+      }
+
       elem = parser;
     }
     return (elem.protocol == window.location.protocol && elem.host == window.location.host);

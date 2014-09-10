@@ -23,7 +23,7 @@ describe("Links", function () {
     a.href = href;
     document.body.appendChild(a);
     document.body.addEventListener('click', clickHandler);
-    a.click();
+    fireEvent(a, 'click');
     document.body.removeEventListener('click', clickHandler);
     document.body.removeChild(a);
   }
@@ -34,10 +34,21 @@ describe("Links", function () {
     a.href = href;
     document.body.appendChild(a);
     document.body.addEventListener('click', clickHandler);
-    a.firstChild.click();
+    fireEvent(a.firstChild, 'click');
 
     document.body.removeEventListener('click', clickHandler);
     document.body.removeChild(a);
+  }
+
+  function fireEvent(fireOnThis, evt) {
+    if (window.MouseEvent) {
+      var event = new MouseEvent(evt, {
+        'view': window,
+        'bubbles': true,
+        'cancelable': true
+      });
+      fireOnThis.dispatchEvent(event);
+    }
   }
 
   function createLinkTestNestedShadowDOM(href) {
@@ -49,7 +60,7 @@ describe("Links", function () {
     a.href = href;
     div.createShadowRoot().appendChild(a);
     document.body.addEventListener('click', clickHandler);
-    a.firstChild.click();
+    fireEvent(a.firstChild, 'click');
 
     document.body.removeEventListener('click', clickHandler);
     document.body.removeChild(div);
@@ -81,23 +92,22 @@ describe("Links", function () {
     });
 
     it("relative path (nested, Shadow DOM)", function (done) {
-      console.log("start");
       setTimeout(function () { //wait for platform.js ready
         var historySpy = spyOn(window.history, 'pushState');
         var href = 'test_c';
         createLinkTestNestedShadowDOM(href);
         expect(historySpy.calls.count()).toBe(1);
         done();
-      }, 1000);
+      }, 100);
     });
-    
+
     it("relative path (nested, Shadow DOM content)", function (done) {
       setTimeout(function () { //wait for platform.js ready
         var historySpy = spyOn(window.history, 'pushState');
         createLinkTestNestedShadowDOMContent();
         expect(historySpy.calls.count()).toBe(1);
         done();
-      }, 1000);
+      }, 100);
     });
 
     it("absolute path", function () {
