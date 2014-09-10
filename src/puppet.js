@@ -40,7 +40,7 @@
     //puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
 
     this.cancelled = false;
-    this.lastXhrPromise = this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this));
+    this.lastRequestPromise = this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this));
 
     /**
      * There is on "onpushstate" event, so PuppetJS needs to wrap history.pushState to know when it is called
@@ -157,6 +157,7 @@
     this._ws.onmessage = function (event) {
       var patches = JSON.parse(event.data);
       that.handleRemoteChange(patches);
+      that.webSocketSendResolve();
     }
   };
 
@@ -273,11 +274,13 @@
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
     }
     if (this.useWebSocket) {
-      this._ws.send(txt);
+      this.lastRequestPromise = this.lastRequestPromise.then(function () {
+        return that.webSocketSend(txt);
+      });
     }
     else {
       //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
-      this.lastXhrPromise = this.lastXhrPromise.then(function () {
+      this.lastRequestPromise = this.lastRequestPromise.then(function () {
         return that.xhr(that.referer || that.remoteUrl, 'application/json-patch+json', txt, function (res) {
           var patches = JSON.parse(res.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
           that.handleRemoteChange(patches);
@@ -325,7 +328,7 @@
 
   Puppet.prototype.changeState = function (href) {
     var that = this;
-    this.lastXhrPromise = this.lastXhrPromise.then(function () {
+    this.lastRequestPromise = this.lastRequestPromise.then(function () {
       return that.xhr(href, 'application/json-patch+json', null, function (res) {
         var patches = JSON.parse(res.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
         that.handleRemoteChange(patches);
@@ -461,6 +464,18 @@
         beforeSend.call(that, req);
       }
       req.send(data);
+    });
+  };
+
+  /**
+   * Internal method to perform WebSocket request that returns a promise which is resolved when the response comes
+   * @param data Data payload
+   */
+  Puppet.prototype.webSocketSend = function (data) {
+    var that = this;
+    return new Promise(function (resolve, reject) {
+      that.webSocketSendResolve = resolve;
+      that._ws.send(data);
     });
   };
 
