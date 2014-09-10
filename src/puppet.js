@@ -340,7 +340,7 @@
     }
 
     if (target.nodeName !== 'A') {
-      var parentA = closestParent(target, 'A');
+      var parentA = closestHrefParent(target, 'A');
       if (parentA) {
         target = parentA;
       }
@@ -563,9 +563,9 @@
   };
 
   //goes up the DOM tree (including given element) until it finds an element that matches the nodeName
-  var closestParent = function (elem, nodeName) {
+  var closestHrefParent = function (elem) {
     while (elem != null) {
-      if (elem.nodeType === 1 && nodeName == elem.nodeName) {
+      if (elem.nodeType === 1 && (elem.href || elem.getAttribute('href'))) {
         return elem;
       }
       elem = elem.parentNode;

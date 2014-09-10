@@ -28,6 +28,37 @@ describe("Links", function () {
     document.body.removeChild(a);
   }
 
+  function createLinkTestNested(href) {
+    var a = document.createElement('A');
+    a.innerHTML = '<strong>Link</strong>';
+    a.href = href;
+    document.body.appendChild(a);
+    document.body.addEventListener('click', clickHandler);
+    a.firstChild.click();
+
+    document.body.removeEventListener('click', clickHandler);
+    document.body.removeChild(a);
+  }
+
+  function createLinkTestNestedShadowDOM(href) {
+    var div = document.createElement('DIV');
+    document.body.appendChild(div);
+
+    var a = document.createElement('A');
+    a.innerHTML = '<strong>Link</strong>';
+    a.href = href;
+    div.createShadowRoot().appendChild(a);
+    document.body.addEventListener('click', clickHandler);
+    a.firstChild.click();
+
+    document.body.removeEventListener('click', clickHandler);
+    document.body.removeChild(div);
+  }
+
+  function createLinkTestNestedShadowDOMContent() {
+    document.querySelector("my-menu-button strong").click();
+  }
+
   function clickHandler(event) {
     event.preventDefault();
   }
@@ -36,10 +67,37 @@ describe("Links", function () {
     it("relative path", function () {
       var historySpy = spyOn(window.history, 'pushState');
 
-      var href = 'test';
+      var href = 'test_a';
       createLinkTest(href);
 
       expect(historySpy.calls.count()).toBe(1);
+    });
+
+    it("relative path (nested)", function () {
+      var historySpy = spyOn(window.history, 'pushState');
+      var href = 'test_b';
+      createLinkTestNested(href);
+      expect(historySpy.calls.count()).toBe(1);
+    });
+
+    it("relative path (nested, Shadow DOM)", function (done) {
+      console.log("start");
+      setTimeout(function () { //wait for platform.js ready
+        var historySpy = spyOn(window.history, 'pushState');
+        var href = 'test_c';
+        createLinkTestNestedShadowDOM(href);
+        expect(historySpy.calls.count()).toBe(1);
+        done();
+      }, 1000);
+    });
+    
+    it("relative path (nested, Shadow DOM content)", function (done) {
+      setTimeout(function () { //wait for platform.js ready
+        var historySpy = spyOn(window.history, 'pushState');
+        createLinkTestNestedShadowDOMContent();
+        expect(historySpy.calls.count()).toBe(1);
+        done();
+      }, 1000);
     });
 
     it("absolute path", function () {
@@ -83,7 +141,7 @@ describe("Links", function () {
     });
   });
 
-  describe("should be accessible via API", function() {
+  describe("should be accessible via API", function () {
     it("should change history state programatically", function () {
       var historySpy = spyOn(window.history, 'pushState');
 
