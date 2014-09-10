@@ -214,7 +214,7 @@
   };
 
   Puppet.prototype.sendLocalChange = function (ev) {
-    if (ev && ev.target === document.body) {
+    if (ev && (ev.target === document.body || ev.target.nodeName === "BODY")) { //Polymer warps ev.target so it is not exactly document.body
       return; //IE triggers blur event on document.body. This is not what we need
     }
     jsonpatch.generate(this.observer);
