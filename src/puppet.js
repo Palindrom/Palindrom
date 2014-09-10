@@ -208,7 +208,10 @@
     }
   };
 
-  Puppet.prototype.sendLocalChange = function () {
+  Puppet.prototype.sendLocalChange = function (ev) {
+    if (ev && ev.target === document.body) {
+      return; //IE triggers blur event on document.body. This is not what we need
+    }
     jsonpatch.generate(this.observer);
     this.flattenPatches(this.localPatchQueue);
     if (this.localPatchQueue.length) {
