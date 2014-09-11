@@ -50,16 +50,37 @@ per input field (given that this field is bound to observed object):
 <input update-on="input"><!-- update server on key stroke -->
 ```
 
-### Ignoring local changes
+### Ignoring local changes (`ignoreAdd`)
 
 If you want to create a property in the observed object that will remain local, there is an `ignoreAdd` property that
 let's you disregard client-side "add" operations in the object using a regular expression. Sample usage:
 
 ```javascript
+var puppet = new Puppet(window.location.href, function (obj) {
+  document.getElementById('test').model = obj;
+});
 puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to server
 puppet.ignoreAdd = /./; //ignore all the "add" operations
 puppet.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
 puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
+```
+
+### Upgrading to WebSocket (`useWebSocket`)
+
+You can upgrade the communication protocol to use WebSocket using `useWebSocket = true` flag right after Puppet initialization.
+
+WebSocket is a replacement for requests that would be sent using `HTTP PATCH` otherwise. The requests sent over `HTTP GET` (such as link clicks) are not affected.
+
+:bulb: Note that this is an experimental implementation in which the WebSocket upgrade request URL is hardcoded (`__default/wsupgrade/<sessionID>`). In future, it will be replaced with a configurable URL.
+
+Sample:
+
+
+```javascript
+var puppet = new Puppet(window.location.href, function (obj) {
+  document.getElementById('test').model = obj;
+});
+puppet.useWebSocket = true;
 ```
 
 ### Dependencies
