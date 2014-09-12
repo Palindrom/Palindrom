@@ -139,8 +139,11 @@
       this.fixShadowRootClicks();
     }
 
+    var that = this;
     if (this.useWebSocket) {
-      this.webSocketUpgrade();
+      this.lastRequestPromise = this.lastRequestPromise.then(function () {
+        return that.webSocketUpgrade();
+      });
     }
   };
 
@@ -154,18 +157,24 @@
     var host = window.location.host;
     var wsPath = this.referer.replace(/__([^\/]*)\//g, "__$1/wsupgrade/");
     var upgradeURL = "ws://" + host + wsPath;
-    this._ws = new WebSocket(upgradeURL);
-    this._ws.onmessage = function (event) {
-      var patches = JSON.parse(event.data);
-      that.handleRemoteChange(patches);
-      that.webSocketSendResolve();
-    };
-    this._ws.onerror = function (event) {
-      that.showError("WebSocket connection could not be made", (event.data || "") + "\nCould not connect to: " + upgradeURL);
-    };
-    this._ws.onclose = function (event) {
-      that.showError("WebSocket connection closed", event.code + " " + event.reason);
-    };
+    return new Promise(function (resolve, reject) {
+      this._ws = new WebSocket(upgradeURL);
+      this._ws.onopen = function (event) {
+        resolve();
+      };
+      this._ws.onmessage = function (event) {
+        var patches = JSON.parse(event.data);
+        that.handleRemoteChange(patches);
+        that.webSocketSendResolve();
+      };
+      this._ws.onerror = function (event) {
+        that.showError("WebSocket connection could not be made", (event.data || "") + "\nCould not connect to: " + upgradeURL);
+        reject();
+      };
+      this._ws.onclose = function (event) {
+        that.showError("WebSocket connection closed", event.code + " " + event.reason);
+      };
+    });
   };
 
   Puppet.prototype.handleResponseHeader = function (xhr) {
