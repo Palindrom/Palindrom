@@ -153,12 +153,19 @@
     var that = this;
     var host = window.location.host;
     var wsPath = this.referer.replace(/__([^\/]*)\//g, "__$1/wsupgrade/");
-    this._ws = new WebSocket("ws://" + host + wsPath);
+    var upgradeURL = "ws://" + host + wsPath;
+    this._ws = new WebSocket(upgradeURL);
     this._ws.onmessage = function (event) {
       var patches = JSON.parse(event.data);
       that.handleRemoteChange(patches);
       that.webSocketSendResolve();
-    }
+    };
+    this._ws.onerror = function (event) {
+      that.showError("WebSocket connection could not be made", (event.data || "") + "\nCould not connect to: " + upgradeURL);
+    };
+    this._ws.onclose = function (event) {
+      that.showError("WebSocket connection closed", event.code + " " + event.reason);
+    };
   };
 
   Puppet.prototype.handleResponseHeader = function (xhr) {
