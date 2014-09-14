@@ -115,7 +115,11 @@
       }
     }
   }
-
+  /**
+   * [bootstrap description]
+   * @param  {[type]} res [description]
+   * @return {Promise || true}     Promise for #webSocketUpgrade or just `true` is websockets disabled.
+   */
   Puppet.prototype.bootstrap = function (res) {
     var tmp = JSON.parse(res.responseText);
     recursiveExtend(this.obj, tmp);
@@ -139,18 +143,14 @@
       this.fixShadowRootClicks();
     }
 
-    var that = this;
-    if (this.useWebSocket) {
-      this.lastRequestPromise = this.lastRequestPromise.then(function () {
-        return that.webSocketUpgrade();
-      });
-    }
+    return this.useWebSocket ? this.webSocketUpgrade() : true ;
   };
 
   /**
    * Send a WebSocket upgrade request to the server.
    * For testing purposes WS upgrade url is hardcoded now in PuppetJS (replace __default/ID with __default/wsupgrade/ID)
    * In future, server should suggest the WebSocket upgrade URL
+   * @returns {Promise} that WS get opened, resolves/rejects with WS event [description]
    */
   Puppet.prototype.webSocketUpgrade = function () {
     var that = this;
@@ -158,20 +158,20 @@
     var wsPath = this.referer.replace(/__([^\/]*)\//g, "__$1/wsupgrade/");
     var upgradeURL = "ws://" + host + wsPath;
     return new Promise(function (resolve, reject) {
-      this._ws = new WebSocket(upgradeURL);
-      this._ws.onopen = function (event) {
-        resolve();
+      that._ws = new WebSocket(upgradeURL);
+      that._ws.onopen = function (event) {
+        resolve( event );
       };
-      this._ws.onmessage = function (event) {
+      that._ws.onmessage = function (event) {
         var patches = JSON.parse(event.data);
         that.handleRemoteChange(patches);
-        that.webSocketSendResolve();
+        that.webSocketSendResolve( event );
       };
-      this._ws.onerror = function (event) {
+      that._ws.onerror = function (event) {
         that.showError("WebSocket connection could not be made", (event.data || "") + "\nCould not connect to: " + upgradeURL);
-        reject();
+        reject( event );
       };
-      this._ws.onclose = function (event) {
+      that._ws.onclose = function (event) {
         that.showError("WebSocket connection closed", event.code + " " + event.reason);
       };
     });
@@ -290,9 +290,7 @@
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
     }
     if (this.useWebSocket) {
-      this.lastRequestPromise = this.lastRequestPromise.then(function () {
-        return that.webSocketSend(txt);
-      });
+      this.lastRequestPromise = this.lastRequestPromise.then( this.webSocketSend.bind(this,txt) );
     }
     else {
       //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
@@ -437,6 +435,7 @@
    * @param data (Optional) Data payload
    * @param callback (Optional) function
    * @param beforeSend (Optional) Function that modifies the XHR object before the request is sent. Added for hackability
+   * @returns {Promise} Promise that XHR will be sent. Resolves with response, or callback's result for response (if callback given)
    */
   Puppet.prototype.xhr = function (url, accept, data, callback, beforeSend) {
     //this.handleResponseCookie();
@@ -458,8 +457,7 @@
           reject();
         }
         else {
-          callback.call(that, res);
-          resolve();
+          resolve( callback && callback.call(that, res) || res);
         }
       };
       url = url || window.location.href;
@@ -486,6 +484,8 @@
   /**
    * Internal method to perform WebSocket request that returns a promise which is resolved when the response comes
    * @param data Data payload
+   * @returns {Promise} that data will be sent to WS, resolves with WS event
+   * @see #webSocketUpgrade
    */
   Puppet.prototype.webSocketSend = function (data) {
     var that = this;
