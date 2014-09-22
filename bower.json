@@ -17,7 +17,7 @@
     "node_modules"
   ],
   "dependencies": {
-    "fast-json-patch": "~0.3.6"
+    "fast-json-patch": "~0.4.0"
   },
   "devDependencies": {
     "polymer": "Polymer/polymer",
