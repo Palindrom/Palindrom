@@ -50,6 +50,14 @@ per input field (given that this field is bound to observed object):
 <input update-on="input"><!-- update server on key stroke -->
 ```
 
+### Browser history
+
+PuppetJs uses the HTML5 history API to update the URL in the browser address bar to reflect the new page. It also listens to a `popstate` event so it could ask the server for new JSON-Patch to morph the page back to previous state. Due to lack of native `pushstate` event you need to either:
+ * call `puppet.changeState(url)` after your `history.pushState(url)`, 
+ * call `puppet.morph(url)` - that will call `pushState` and update puppet's state for you, 
+ * trigger `puppet-redirect-pushstate` with `{url: "/new/url"}` on `window` after your `history.pushState(url)`, 
+ * or use [`<puppet-redirect>`](https://github.com/PuppetJs/puppet-redirect) Custom Element that does it for you.
+
 ### Ignoring local changes (`ignoreAdd`)
 
 If you want to create a property in the observed object that will remain local, there is an `ignoreAdd` property that
