@@ -44,18 +44,6 @@
     this.lastRequestPromise = this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this));
   }
 
-  /**
-   * PuppetJsClickTrigger$ contains Unicode symbols for "NULL" text rendered stylized using Unicode
-   * character "SYMBOL FOR NULL" (2400)
-   *
-   * With PuppetJs, any property having `null` value will be rendered as stylized "NULL" text
-   * to emphasize that it probably should be set as empty string instead.
-   *
-   * The benefit of having this string is that any local change to `null` value (also
-   * from `null` to `null`) can be detected and sent as `null` to the server.
-   */
-  var PuppetJsClickTrigger$ = "\u2400";
-
   function markObjPropertyByPath(obj, path) {
     var keys = path.split('/');
     var len = keys.length;
@@ -69,10 +57,7 @@
 
   function placeMarkers(parent, key) {
     var subject = parent[key];
-    if (subject === null) {
-      parent[key] = PuppetJsClickTrigger$;
-    }
-    else if (typeof subject === 'object' && !subject.hasOwnProperty('$parent')) {
+    if (subject !== null && typeof subject === 'object' && !subject.hasOwnProperty('$parent')) {
       Object.defineProperty(subject, '$parent', {
         enumerable: false,
         get: function () {
@@ -294,16 +279,13 @@
     }
     this.unobserve();
     patches.forEach(function (patch) {
-      if ((patch.op === "add" || patch.op === "replace" || patch.op === "test") && patch.value === null) {
-        patch.value = PuppetJsClickTrigger$;
-        jsonpatch.apply(that.obj, [patch]);
-      }
       markObjPropertyByPath(that.obj, patch.path);
     });
     this.observe();
   };
 
   Puppet.prototype.handleRemoteChange = function (patches) {
+    // Versioning: versionedpatch.rev
     if (!this.observer) {
       return; //ignore remote change if we are not watching anymore
     }

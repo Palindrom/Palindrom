@@ -292,37 +292,6 @@ describe("Puppet", function () {
       }, 1); //promise shim resolves after 1 ms
     });
 
-    it('should send clicks on a button', function (done) {
-      var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
-      var obj;
-      this.puppet = new Puppet('/test', function (myObj) {
-        obj = myObj;
-      });
-
-      var BUTTON = document.createElement('BUTTON');
-      BUTTON.addEventListener('mouseup', function () {
-        obj.hello = null;
-      });
-      document.body.appendChild(BUTTON);
-
-      jasmine.Ajax.requests.mostRecent().response({
-        "status": 200,
-        "contentType": 'application/json',
-        "responseText": '{"hello": null}'
-      });
-
-      triggerMouseup(BUTTON);
-
-      setTimeout(function () { //wait for jsonpatch.generate
-        setTimeout(function () { //wait xhr request promise
-          expect(patchSpy.calls.count()).toBe(2);
-          expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":null}]');
-          BUTTON.parentNode.removeChild(BUTTON);
-          done();
-        }, 1); //promise shim resolves after 1 ms
-      }, 1); //promise shim resolves after 1 ms
-    });
-
     it('should queue up patches until response comes', function (done) {
       var obj;
       this.puppet = new Puppet('/test', function (myObj) {

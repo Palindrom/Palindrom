@@ -1,12 +1,12 @@
 window.addEventListener('polymer-ready', function () { //see https://github.com/pivotal/jasmine-ajax/issues/79
   jasmine.Ajax.install();
 
-  var full = {
+  var full = window.full = {
     user: {
       fullName: "",
       firstName$: "",
       lastName$: "",
-      resetName$: null
+      resetNameClicked$: null
     }
   };
 
@@ -42,7 +42,7 @@ window.addEventListener('polymer-ready', function () { //see https://github.com/
 
       if (this.url != lastUrl) {
         handlePageLoad(this.url);
-        // stub.responseHeaders = [{name: "Location", value: this.url},{name: "X-Referer", value: lastUrl}];
+        stub.responseHeaders = [{name: "Location", value: this.url},{name: "X-Referer", value: lastUrl}];
         lastUrl = this.url;
         outPatches.push({op: 'replace', path: '/user/firstName$', value: full.user.firstName$});
         outPatches.push({op: 'replace', path: '/user/lastName$', value: full.user.lastName$});
@@ -59,7 +59,7 @@ window.addEventListener('polymer-ready', function () { //see https://github.com/
           outPatches.push({op: 'replace', path: '/user/fullName', value: full.user.fullName});
         }
         if (patch.op == "replace" &&
-          (patch.path == "/user/resetName$" && patch.value === null)
+          (patch.path == "/user/resetNameClicked$" && patch.value === true)
           ) {
           full.user.firstName$ = "Isaac";
           full.user.lastName$ = "Newton";
@@ -67,6 +67,7 @@ window.addEventListener('polymer-ready', function () { //see https://github.com/
           outPatches.push({op: 'replace', path: '/user/firstName$', value: full.user.firstName$});
           outPatches.push({op: 'replace', path: '/user/lastName$', value: full.user.lastName$});
           outPatches.push({op: 'replace', path: '/user/fullName', value: full.user.fullName});
+          outPatches.push({op: 'replace', path: '/user/resetNameClicked$', value: false});
         }
       });
 
