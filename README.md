@@ -35,6 +35,10 @@ puppet.onRemoteChange = function (patches) {
 };
 ```
 
+### Demo
+
+[Example with Polymer's Template Binding and Web Components](http://puppetjs.github.io/PuppetJs/lab/polymer/index.html)
+
 ### Sending client changes to server
 
 PuppetJs detects changes to the observed object in real time. However, change patches are
