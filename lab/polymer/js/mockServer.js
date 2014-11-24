@@ -42,6 +42,7 @@ window.addEventListener('polymer-ready', function () { //see https://github.com/
 
       if (this.url != lastUrl) {
         handlePageLoad(this.url);
+        // stub.responseHeaders = [{name: "Location", value: this.url},{name: "X-Referer", value: lastUrl}];
         lastUrl = this.url;
         outPatches.push({op: 'replace', path: '/user/firstName$', value: full.user.firstName$});
         outPatches.push({op: 'replace', path: '/user/lastName$', value: full.user.lastName$});
@@ -75,6 +76,7 @@ window.addEventListener('polymer-ready', function () { //see https://github.com/
       stub.responseText = "Error";
     }
 
+    console.info("Mock Server ",this.url, "\n request", data, "\n response", stub.status, stub.responseText);
     return _old.apply(this, [].slice.call(arguments));
   };
 });
