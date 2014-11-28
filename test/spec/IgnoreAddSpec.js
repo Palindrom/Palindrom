@@ -11,7 +11,6 @@ describe("IgnoreAdd", function () {
   });
 
   it('should not send add patch to an ignored property', function (done) {
-    var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
     var obj;
     this.puppet = new Puppet('/test', function (myObj) {
       obj = myObj;
@@ -24,12 +23,14 @@ describe("IgnoreAdd", function () {
       "responseText": '{"hello": 0}'
     });
 
+    var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
+
     obj.hello = 1;
     obj.publicProp = 1;
     obj.$privateProp = 1;
 
     setTimeout(function () { //wait for xhr
-        expect(patchSpy.calls.count()).toBe(2);
+        expect(patchSpy.calls.count()).toBe(1);
         expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":1},{"op":"add","path":"/publicProp","value":1}]');
         done();
     }, 20);

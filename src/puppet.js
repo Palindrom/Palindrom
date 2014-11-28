@@ -23,8 +23,6 @@
     this.observer = null;
     this.referer = null;
     this.useWebSocket = false; //change to TRUE to enable WebSocket connection
-    //old-q 
-    this.localPatchQueue = [];
     this.handleResponseCookie();
 
 
@@ -108,7 +106,7 @@
     document.body.addEventListener('click', lastClickHandler = this.clickHandler.bind(this));
     window.addEventListener('popstate', lastPopstateHandler = this.historyHandler.bind(this)); //better here than in constructor, because Chrome triggers popstate on page load
     window.addEventListener('puppet-redirect-pushstate', lastPushstateHandler = this.historyHandler.bind(this));
-    document.body.addEventListener('blur', lastBlurHandler = this.sendLocalChange.bind(this), true);
+    document.body.addEventListener('blur', lastBlurHandler = this.clickAndBlurCallback.bind(this), true);
 
     if (!lastPuppet) {
       lastPuppet = this;
@@ -179,80 +177,68 @@
   };
 
   Puppet.prototype.observe = function () {
-    this.cancelled = false;
-    this.observer = jsonpatch.observe(this.obj, this.queueLocalChange.bind(this));
+    this.observer = jsonpatch.observe(this.obj, this.filterChangedCallback.bind(this));
   };
 
   Puppet.prototype.unobserve = function () {
-    this.cancelled = true;
     if (this.observer) { //there is a bug in JSON-Patch when trying to unobserve something that is already unobserved
       jsonpatch.unobserve(this.obj, this.observer);
       this.observer = null;
     }
   };
 
-  Puppet.prototype.queueLocalChange = function (patches) {
-    Array.prototype.push.apply(this.localPatchQueue, patches);
-    if ((document.activeElement.nodeName !== 'INPUT' && document.activeElement.nodeName !== 'TEXTAREA') || document.activeElement.getAttribute('update-on') === 'input') {
-      this.flattenPatches(this.localPatchQueue);
-      if (this.localPatchQueue.length) {
-        this.handleLocalChange(this.localPatchQueue);
-        this.localPatchQueue.length = 0;
+  Puppet.prototype.filterChangedCallback = function (patches) {
+    this.filterIgnoredPatches(patches);
+    // do nothing for empty change
+    if(patches.length){
+      // TODO: Find out nicer solution, as currently `.activeElement` does not necessarily matches changed node (tomalec)
+      if ((document.activeElement.nodeName !== 'INPUT' && document.activeElement.nodeName !== 'TEXTAREA') || document.activeElement.getAttribute('update-on') === 'input') {
+        this.handleLocalChange(patches);
+        // Clear already processed patch sequence, 
+        // as `jsonpatch.generate` may return this object to for example `#clickAndBlurCallback`
+        patches.length = 0; 
       }
     }
   };
 
-  Puppet.prototype.sendLocalChange = function (ev) {
+  Puppet.prototype.clickAndBlurCallback = function (ev) {
     if (ev && (ev.target === document.body || ev.target.nodeName === "BODY")) { //Polymer warps ev.target so it is not exactly document.body
       return; //IE triggers blur event on document.body. This is not what we need
     }
-    jsonpatch.generate(this.observer);
-    this.flattenPatches(this.localPatchQueue);
-    if (this.localPatchQueue.length) {
-      this.handleLocalChange(this.localPatchQueue);
-      this.localPatchQueue.length = 0;
+    var patches = jsonpatch.generate(this.observer); // calls also observe callback -> #filterChangedCallback
+    if(patches.length){
+      this.handleLocalChange(patches);
     }
   };
 
-  Puppet.prototype.isIgnored = function (path, op) {
-    if (this.ignoreAdd) {
-      if (op === 'add' && this.ignoreAdd.test(path)) {
-        this.ignoreCache[path] = true;
-        return true;
-      }
-      var arr = path.split('/');
-      var joined = '';
-      for (var i = 1, ilen = arr.length; i < ilen; i++) {
-        joined += '/' + arr[i];
-        if (this.ignoreCache[joined]) {
-          return true; //once we decided to ignore something that was added, other operations (replace, remove, ...) are ignored as well
-        }
+  function isIgnored(pattern, ignoreCache, path, op) {
+    if (op === 'add' && pattern.test(path)) {
+      ignoreCache[path] = true;
+      return true;
+    }
+    var arr = path.split('/');
+    var joined = '';
+    for (var i = 1, ilen = arr.length; i < ilen; i++) {
+      joined += '/' + arr[i];
+      if (ignoreCache[joined]) {
+        return true; //once we decided to ignore something that was added, other operations (replace, remove, ...) are ignored as well
       }
     }
     return false;
-  };
+  }
 
-  //merges redundant patches and ignores private member changes
-  Puppet.prototype.flattenPatches = function (patches) {
-    var seen = {};
-    for (var i = 0, ilen = patches.length; i < ilen; i++) {
-      if (this.isIgnored(patches[i].path, patches[i].op)) { //if it is ignored, remove patch
-        patches.splice(i, 1); //ignore changes to properties that start with PRIVATE_PREFIX
-        ilen--;
-        i--;
-      }
-      else if (patches[i].op === 'replace') { //if it is already seen in the patches array, replace the previous instance
-        if (seen[patches[i].path] !== undefined) {
-          patches[seen[patches[i].path]] = patches[i];
-          patches.splice(i, 1);
+  //ignores private member changes
+  Puppet.prototype.filterIgnoredPatches = function (patches) {
+    if(this.ignoreAdd){
+      for (var i = 0, ilen = patches.length; i < ilen; i++) {
+        if (isIgnored(this.ignoreAdd, this.ignoreCache, patches[i].path, patches[i].op)) { //if it is ignored, remove patch
+          patches.splice(i, 1); //ignore changes to properties that start with PRIVATE_PREFIX
           ilen--;
           i--;
         }
-        else {
-          seen[patches[i].path] = i;
-        }
       }
     }
+    return patches;
   };
 
   Puppet.prototype.handleLocalChange = function (patches) {
@@ -347,7 +333,7 @@
       event.preventDefault();
     }
     else {
-      this.sendLocalChange(); //needed for checkbox
+      this.clickAndBlurCallback(); //needed for checkbox
     }
   };
 
