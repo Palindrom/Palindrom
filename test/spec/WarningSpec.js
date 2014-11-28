@@ -27,19 +27,17 @@ describe("Warning", function () {
       obj.hello = "galaxy";
       triggerMouseup();
 
-      setTimeout(function () { //wait for jsonpatch.generate
-        setTimeout(function () { //wait xhr request promise
-          jasmine.Ajax.requests.mostRecent().response({
-            "status": 200,
-            "contentType": 'application/json-patch+json',
-            "responseText": '[{"op":"replace","path":"","value":{"hello": "universe"}}]'
-          });
-          expect(obj.hello).toBe("universe");
-          expect(consoleSpy.calls.count()).toBe(1);
-          expect(consoleSpy.calls.argsFor(0)[0]).toBe('PuppetJs warning: Server pushed patch that replaces the object root ([{"op":"replace","path":"","value":{"hello":"universe"}}])');
-          done();
-        }, 1); //promise shim resolves after 1 ms
-      }, 1); //promise shim resolves after 1 ms
+      setTimeout(function () { //wait for xhr
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 200,
+          "contentType": 'application/json-patch+json',
+          "responseText": '[{"op":"replace","path":"","value":{"hello": "universe"}}]'
+        });
+        expect(obj.hello).toBe("universe");
+        expect(consoleSpy.calls.count()).toBe(1);
+        expect(consoleSpy.calls.argsFor(0)[0]).toBe('PuppetJs warning: Server pushed patch that replaces the object root ([{"op":"replace","path":"","value":{"hello":"universe"}}])');
+        done();
+      }, 1);
     });
 
     it("should not show a warning when debug=false", function (done) {
@@ -60,18 +58,16 @@ describe("Warning", function () {
       obj.hello = "galaxy";
       triggerMouseup();
 
-      setTimeout(function () { //wait for jsonpatch.generate
-        setTimeout(function () { //wait xhr request promise
-          jasmine.Ajax.requests.mostRecent().response({
-            "status": 200,
-            "contentType": 'application/json-patch+json',
-            "responseText": '[{"op":"replace","path":"","value":{"hello": "universe"}}]'
-          });
-          expect(obj.hello).toBe("universe");
-          expect(consoleSpy.calls.count()).toBe(0);
-          done();
-        }, 1); //promise shim resolves after 1 ms
-      }, 1); //promise shim resolves after 1 ms
+      setTimeout(function () { //wait for xhr
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 200,
+          "contentType": 'application/json-patch+json',
+          "responseText": '[{"op":"replace","path":"","value":{"hello": "universe"}}]'
+        });
+        expect(obj.hello).toBe("universe");
+        expect(consoleSpy.calls.count()).toBe(0);
+        done();
+      }, 1);
     });
   });
 });

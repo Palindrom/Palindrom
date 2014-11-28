@@ -54,8 +54,7 @@ describe("Buttons", function () {
         });
         triggerMouseup(BUTTON);
 
-      setTimeout(function () { //wait for jsonpatch.generate
-        setTimeout(function () { //wait xhr request promise
+      setTimeout(function () { //wait for xhr
           expect(patchSpy.calls.count()).toBe(2);
           jasmine.Ajax.requests.mostRecent().response({
             "status": 200,
@@ -66,8 +65,7 @@ describe("Buttons", function () {
           expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/SendButton","value":true}]');
           BUTTON.parentNode.removeChild(BUTTON);
           done();
-        }, 1); //promise shim resolves after 1 ms
-      }, 1); //promise shim resolves after 1 ms
+      }, 1);
     });
 
     it("should toggle on (`true`) and off (`false`) boolean value in consecutive patches", function (done) {
@@ -92,34 +90,30 @@ describe("Buttons", function () {
         });
         triggerMouseup(BUTTON);
 
-      setTimeout(function () { //wait for jsonpatch.generate
-        setTimeout(function () { //wait xhr request promise
+      setTimeout(function () { //wait for xhr
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 200,
+          "contentType": 'application/json-patch+json',
+          "responseText": '[]'
+        });
+
+        expect(patchSpy.calls.count()).toBe(1);
+        expect(patchSpy.calls.mostRecent().args[0]).toBe('[{"op":"replace","path":"/SendButton","value":true}]');
+        triggerMouseup(BUTTON);
+
+        setTimeout(function () { //wait xhr
           jasmine.Ajax.requests.mostRecent().response({
             "status": 200,
             "contentType": 'application/json-patch+json',
             "responseText": '[]'
           });
 
-          expect(patchSpy.calls.count()).toBe(1);
-          expect(patchSpy.calls.mostRecent().args[0]).toBe('[{"op":"replace","path":"/SendButton","value":true}]');
-          triggerMouseup(BUTTON);
-
-          setTimeout(function () { //wait for jsonpatch.generate
-            setTimeout(function () { //wait xhr request promise
-            jasmine.Ajax.requests.mostRecent().response({
-              "status": 200,
-              "contentType": 'application/json-patch+json',
-              "responseText": '[]'
-            });
-
-            expect(patchSpy.calls.count()).toBe(2);
-            expect(patchSpy.calls.mostRecent().args[0]).toBe('[{"op":"replace","path":"/SendButton","value":false}]');
-            BUTTON.parentNode.removeChild(BUTTON);
-            done();
-            }, 1); //promise shim resolves after 1 ms
-          }, 1); //promise shim resolves after 1 ms
-        }, 1); //promise shim resolves after 1 ms
-      }, 1); //promise shim resolves after 1 ms
+          expect(patchSpy.calls.count()).toBe(2);
+          expect(patchSpy.calls.mostRecent().args[0]).toBe('[{"op":"replace","path":"/SendButton","value":false}]');
+          BUTTON.parentNode.removeChild(BUTTON);
+          done();
+        }, 1);
+      }, 1);
     });
 
     it("should send incremented numeric value in patch when button is clicked", function (done) {
@@ -143,20 +137,18 @@ describe("Buttons", function () {
         });
         triggerMouseup(BUTTON);
 
-      setTimeout(function () { //wait for jsonpatch.generate
-        setTimeout(function () { //wait xhr request promise
-          expect(patchSpy.calls.count()).toBe(2);
-          jasmine.Ajax.requests.mostRecent().response({
-            "status": 200,
-            "contentType": 'application/json-patch+json',
-            "responseText": '[]'
-          });
+      setTimeout(function () { //wait for xhr
+        expect(patchSpy.calls.count()).toBe(2);
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 200,
+          "contentType": 'application/json-patch+json',
+          "responseText": '[]'
+        });
 
-          expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/Amount","value":1}]');
-          BUTTON.parentNode.removeChild(BUTTON);
-          done();
-        }, 1); //promise shim resolves after 1 ms
-      }, 1); //promise shim resolves after 1 ms
+        expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/Amount","value":1}]');
+        BUTTON.parentNode.removeChild(BUTTON);
+        done();
+      }, 1);
     });
 
     it("should increment numeric value in consecutive patches", function (done) {
@@ -181,34 +173,30 @@ describe("Buttons", function () {
         });
         triggerMouseup(BUTTON);
 
-      setTimeout(function () { //wait for jsonpatch.generate
-        setTimeout(function () { //wait xhr request promise
+      setTimeout(function () { //wait for xhr
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 200,
+          "contentType": 'application/json-patch+json',
+          "responseText": '[]'
+        });
+
+        expect(patchSpy.calls.count()).toBe(1);
+        expect(patchSpy.calls.mostRecent().args[0]).toBe('[{"op":"replace","path":"/Amount","value":1}]');
+        triggerMouseup(BUTTON);
+
+        setTimeout(function () { //wait for xhr
           jasmine.Ajax.requests.mostRecent().response({
             "status": 200,
             "contentType": 'application/json-patch+json',
             "responseText": '[]'
           });
 
-          expect(patchSpy.calls.count()).toBe(1);
-          expect(patchSpy.calls.mostRecent().args[0]).toBe('[{"op":"replace","path":"/Amount","value":1}]');
-          triggerMouseup(BUTTON);
-
-          setTimeout(function () { //wait for jsonpatch.generate
-            setTimeout(function () { //wait xhr request promise
-            jasmine.Ajax.requests.mostRecent().response({
-              "status": 200,
-              "contentType": 'application/json-patch+json',
-              "responseText": '[]'
-            });
-
-            expect(patchSpy.calls.count()).toBe(2);
-            expect(patchSpy.calls.mostRecent().args[0]).toBe('[{"op":"replace","path":"/Amount","value":2}]');
-            BUTTON.parentNode.removeChild(BUTTON);
-            done();
-            }, 1); //promise shim resolves after 1 ms
-          }, 1); //promise shim resolves after 1 ms
-        }, 1); //promise shim resolves after 1 ms
-      }, 1); //promise shim resolves after 1 ms
+          expect(patchSpy.calls.count()).toBe(2);
+          expect(patchSpy.calls.mostRecent().args[0]).toBe('[{"op":"replace","path":"/Amount","value":2}]');
+          BUTTON.parentNode.removeChild(BUTTON);
+          done();
+        }, 1);
+      }, 1);
     });
 
   });

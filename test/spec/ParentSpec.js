@@ -62,13 +62,11 @@ describe("Parent", function () {
       ];
       triggerMouseup();
 
-      setTimeout(function () { //wait for jsonpatch.generate
-        setTimeout(function () { //wait xhr request promise
-          expect(that.puppet.obj.children[0].$parent.$parent.children[1].second).toEqual("2nd");
-          expect(patchSpy.calls.count()).toBe(2); //only children should generate a patch ($parent getter should not)
-          expect(patchSpy).toHaveBeenCalledWith('[{"op":"add","path":"/children","value":[{"first":"1st"},{"second":"2nd"}]}]');
-          done();
-        }, 1); //promise shim resolves after 1 ms
+      setTimeout(function () { //wait for xhr
+        expect(that.puppet.obj.children[0].$parent.$parent.children[1].second).toEqual("2nd");
+        expect(patchSpy.calls.count()).toBe(2); //only children should generate a patch ($parent getter should not)
+        expect(patchSpy).toHaveBeenCalledWith('[{"op":"add","path":"/children","value":[{"first":"1st"},{"second":"2nd"}]}]');
+        done();
       }, 1); //promise shim resolves after 1 ms
     });
 
@@ -91,19 +89,16 @@ describe("Parent", function () {
       ];
       triggerMouseup();
 
-      setTimeout(function () { //wait for jsonpatch.generate
-        setTimeout(function () { //wait xhr request promise
+      setTimeout(function () { //wait for xhr
+        jasmine.Ajax.requests.mostRecent().response({
+          "status": 200,
+          "contentType": 'application/json-patch+json',
+          "responseText": '[{"op":"add","path":"/children/0/remotes","value":[{"first":"1st"},{"second":"2nd"}]}]'
+        });
 
-          jasmine.Ajax.requests.mostRecent().response({
-            "status": 200,
-            "contentType": 'application/json-patch+json',
-            "responseText": '[{"op":"add","path":"/children/0/remotes","value":[{"first":"1st"},{"second":"2nd"}]}]'
-          });
-
-          expect(that.puppet.obj.children[0].remotes.$parent.remotes[1].second).toEqual("2nd");
-          expect(patchSpy.calls.count()).toBe(2);
-          done();
-        }, 1); //promise shim resolves after 1 ms
+        expect(that.puppet.obj.children[0].remotes.$parent.remotes[1].second).toEqual("2nd");
+        expect(patchSpy.calls.count()).toBe(2);
+        done();
       }, 1); //promise shim resolves after 1 ms
     });
   });

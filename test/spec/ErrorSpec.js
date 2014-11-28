@@ -79,31 +79,29 @@ describe("Error", function () {
       obj.hello = "galaxy";
       triggerMouseup();
 
-      setTimeout(function () { //wait for jsonpatch.generate
-        setTimeout(function () { //wait xhr request promise
-          try {
-            jasmine.Ajax.requests.mostRecent().response({
-              "status": 400,
-              "contentType": 'application/json',
-              "responseText": 'Custom msg'
-            });
-          }
-          catch (e) {
-            exceptionRaised = true;
-          }
+      setTimeout(function () { //wait for xhr
+        try {
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 400,
+            "contentType": 'application/json',
+            "responseText": 'Custom msg'
+          });
+        }
+        catch (e) {
+          exceptionRaised = true;
+        }
 
-          var DIV = document.getElementById('puppetjs-error');
+        var DIV = document.getElementById('puppetjs-error');
 
-          expect(exceptionRaised).toBe(true);
-          expect(DIV).toBeTruthy();
-          expect(DIV.innerHTML).toContain('PuppetJs JSON response error');
-          expect(DIV.innerHTML).toContain('400');
-          expect(DIV.innerHTML).toContain('Custom msg');
+        expect(exceptionRaised).toBe(true);
+        expect(DIV).toBeTruthy();
+        expect(DIV.innerHTML).toContain('PuppetJs JSON response error');
+        expect(DIV.innerHTML).toContain('400');
+        expect(DIV.innerHTML).toContain('Custom msg');
 
-          DIV.parentNode.removeChild(DIV);
-          done();
-        }, 1); //promise shim resolves after 1 ms
-      }, 1); //promise shim resolves after 1 ms
+        DIV.parentNode.removeChild(DIV);
+        done();
+      }, 1);
     });
 
     it("should show a message when status code 599 comes from the server (patch)", function (done) {
@@ -123,31 +121,29 @@ describe("Error", function () {
       obj.hello = "galaxy";
       triggerMouseup();
 
-      setTimeout(function () { //wait for jsonpatch.generate
-        setTimeout(function () { //wait xhr request promise
-          try {
-            jasmine.Ajax.requests.mostRecent().response({
-              "status": 599,
-              "contentType": 'application/json',
-              "responseText": 'Custom msg'
-            });
-          }
-          catch (e) {
-            exceptionRaised = true;
-          }
+      setTimeout(function () { //wait for xhr
+        try {
+          jasmine.Ajax.requests.mostRecent().response({
+            "status": 599,
+            "contentType": 'application/json',
+            "responseText": 'Custom msg'
+          });
+        }
+        catch (e) {
+          exceptionRaised = true;
+        }
 
-          var DIV = document.getElementById('puppetjs-error');
+        var DIV = document.getElementById('puppetjs-error');
 
-          expect(exceptionRaised).toBe(true);
-          expect(DIV).toBeTruthy();
-          expect(DIV.innerHTML).toContain('PuppetJs JSON response error');
-          expect(DIV.innerHTML).toContain('599');
-          expect(DIV.innerHTML).toContain('Custom msg');
+        expect(exceptionRaised).toBe(true);
+        expect(DIV).toBeTruthy();
+        expect(DIV.innerHTML).toContain('PuppetJs JSON response error');
+        expect(DIV.innerHTML).toContain('599');
+        expect(DIV.innerHTML).toContain('Custom msg');
 
-          DIV.parentNode.removeChild(DIV);
-          done();
-        }, 1); //promise shim resolves after 1 ms
-      }, 1); //promise shim resolves after 1 ms
+        DIV.parentNode.removeChild(DIV);
+        done();
+      }, 1);
     });
 
     it("should NOT show a message when debug == false", function () {

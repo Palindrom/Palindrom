@@ -13,23 +13,20 @@
   /**
    * Defines a connection to a remote PATCH server, returns callback to a object that is persistent between browser and server
    * @param remoteUrl If undefined, current window.location.href will be used as the PATCH server URL
-   * @param callback Called after initial state object is received from the server
+   * @param {Function} [callback] Called after initial state object is received from the server (NOT necessarily after WS connection was established)
    * @param obj Optional object where the parsed JSON data will be inserted
    */
   function Puppet(remoteUrl, callback, obj) {
-    if (window.Promise === undefined) {
-      throw new Error("Promise API not available. If you are using an outdated browser, make sure to load a Promise/A+ shim, e.g. https://github.com/jakearchibald/es6-promise");
-    }
-
     this.debug = true;
     this.remoteUrl = remoteUrl;
-    this.callback = callback;
     this.obj = obj || {};
     this.observer = null;
     this.referer = null;
     this.useWebSocket = false; //change to TRUE to enable WebSocket connection
+    //old-q 
     this.localPatchQueue = [];
     this.handleResponseCookie();
+
 
     this.ignoreCache = [];
     this.ignoreAdd = null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
@@ -40,8 +37,7 @@
     //puppet.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
     //puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
 
-    this.cancelled = false;
-    this.lastRequestPromise = this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this));
+    this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this, callback) );
   }
 
   function markObjPropertyByPath(obj, path) {
@@ -91,17 +87,17 @@
   }
   /**
    * [bootstrap description]
-   * @param  {[type]} res [description]
-   * @return {Promise || true}     Promise for #webSocketUpgrade or just `true` is websockets disabled.
+   * @param  {XHRResponse} res XHR response
+   * @return {Puppet}     itself
    */
-  Puppet.prototype.bootstrap = function (res) {
+  Puppet.prototype.bootstrap = function (callback, res) {
     var tmp = JSON.parse(res.responseText);
     recursiveExtend(this.obj, tmp);
 
     recursiveMarkObjProperties(this, "obj");
     this.observe();
-    if (this.callback) {
-      this.callback(this.obj);
+    if (callback) {
+      callback.call(this, this.obj);
     }
     if (lastClickHandler) {
       document.body.removeEventListener('click', lastClickHandler);
@@ -119,38 +115,38 @@
       this.fixShadowRootClicks();
     }
 
-    return this.useWebSocket ? this.webSocketUpgrade() : true ;
+    if (this.useWebSocket){
+      this.webSocketUpgrade();
+    }
+    return this;
   };
 
   /**
    * Send a WebSocket upgrade request to the server.
    * For testing purposes WS upgrade url is hardcoded now in PuppetJS (replace __default/ID with __default/wsupgrade/ID)
    * In future, server should suggest the WebSocket upgrade URL
-   * @returns {Promise} that WS get opened, resolves/rejects with WS event [description]
+   * @returns {WebSocket} created WebSocket
    */
-  Puppet.prototype.webSocketUpgrade = function () {
+  Puppet.prototype.webSocketUpgrade = function (callback, response) {
     var that = this;
     var host = window.location.host;
     var wsPath = this.referer.replace(/__([^\/]*)\//g, "__$1/wsupgrade/");
     var upgradeURL = "ws://" + host + wsPath;
-    return new Promise(function (resolve, reject) {
-      that._ws = new WebSocket(upgradeURL);
-      that._ws.onopen = function (event) {
-        resolve( event );
-      };
-      that._ws.onmessage = function (event) {
-        var patches = JSON.parse(event.data);
-        that.handleRemoteChange(patches);
-        that.webSocketSendResolve( event );
-      };
-      that._ws.onerror = function (event) {
-        that.showError("WebSocket connection could not be made", (event.data || "") + "\nCould not connect to: " + upgradeURL);
-        reject( event );
-      };
-      that._ws.onclose = function (event) {
-        that.showError("WebSocket connection closed", event.code + " " + event.reason);
-      };
-    });
+
+    that._ws = new WebSocket(upgradeURL);
+    that._ws.onopen = function (event) {
+      //TODO: trigger on-ready event (tomalec)
+    };
+    that._ws.onmessage = function (event) {
+      var patches = JSON.parse(event.data);
+      that.handleRemoteChange(patches);
+    };
+    that._ws.onerror = function (event) {
+      that.showError("WebSocket connection could not be made", (event.data || "") + "\nCould not connect to: " + upgradeURL);
+    };
+    that._ws.onclose = function (event) {
+      that.showError("WebSocket connection closed", event.code + " " + event.reason);
+    };
   };
 
   Puppet.prototype.handleResponseHeader = function (xhr) {
@@ -266,16 +262,14 @@
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
     }
     if (this.useWebSocket) {
-      this.lastRequestPromise = this.lastRequestPromise.then( this.webSocketSend.bind(this,txt) );
+      this._ws.send(txt);
     }
     else {
       //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
-      this.lastRequestPromise = this.lastRequestPromise.then(function () {
-        return that.xhr(that.referer || that.remoteUrl, 'application/json-patch+json', txt, function (res) {
+      this.xhr(that.referer || that.remoteUrl, 'application/json-patch+json', txt, function (res) {
           var patches = JSON.parse(res.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
           that.handleRemoteChange(patches);
-        })
-      });
+        });
     }
     this.unobserve();
     patches.forEach(function (patch) {
@@ -315,12 +309,10 @@
 
   Puppet.prototype.changeState = function (href) {
     var that = this;
-    this.lastRequestPromise = this.lastRequestPromise.then(function () {
-      return that.xhr(href, 'application/json-patch+json', null, function (res) {
-        var patches = JSON.parse(res.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
-        that.handleRemoteChange(patches);
-      })
-    });
+        return that.xhr(href, 'application/json-patch+json', null, function (res) {
+          var patches = JSON.parse(res.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
+          that.handleRemoteChange(patches);
+        });
   };
 
   Puppet.prototype.clickHandler = function (event) {
@@ -406,66 +398,46 @@
    * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
    * @param accept (Optional) HTTP accept header
    * @param data (Optional) Data payload
-   * @param callback (Optional) function
+   * @param [callback(response)] callback to be called in context of puppet with response as argument
    * @param beforeSend (Optional) Function that modifies the XHR object before the request is sent. Added for hackability
-   * @returns {Promise} Promise that XHR will be sent. Resolves with response, or callback's result for response (if callback given)
+   * @returns {XMLHttpRequest} performed XHR
    */
   Puppet.prototype.xhr = function (url, accept, data, callback, beforeSend) {
     //this.handleResponseCookie();
     cookie.erase('Location'); //more invasive cookie erasing because sometimes the cookie was still visible in the requests
     var that = this;
-    return new Promise(function (resolve, reject) {
-      if (that.cancelled) {
-        console.error("PuppetJs: Promise cancelled on request");
-        reject();
-        return;
-      }
-      var req = new XMLHttpRequest();
-      req.onload = function () {
-        var res = this;
-        that.handleResponseCookie();
-        that.handleResponseHeader(res);
-        if (res.status >= 400 && res.status <= 599) {
-          that.showError('PuppetJs JSON response error', 'Server responded with error ' + res.status + ' ' + res.statusText + '\n\n' + res.responseText);
-          reject();
-        }
-        else {
-          resolve( callback && callback.call(that, res) || res);
-        }
-      };
-      url = url || window.location.href;
-      if (data) {
-        req.open("PATCH", url, true);
-        req.setRequestHeader('Content-Type', 'application/json-patch+json');
+    var req = new XMLHttpRequest();
+    req.onload = function () {
+      var res = this;
+      that.handleResponseCookie();
+      that.handleResponseHeader(res);
+      if (res.status >= 400 && res.status <= 599) {
+        that.showError('PuppetJs JSON response error', 'Server responded with error ' + res.status + ' ' + res.statusText + '\n\n' + res.responseText);
       }
       else {
-        req.open("GET", url, true);
+        callback && callback.call(that, res);
       }
-      if (accept) {
-        req.setRequestHeader('Accept', accept);
-      }
-      if (that.referer) {
-        req.setRequestHeader('X-Referer', that.referer);
-      }
-      if (beforeSend) {
-        beforeSend.call(that, req);
-      }
-      req.send(data);
-    });
-  };
+    };
+    url = url || window.location.href;
+    if (data) {
+      req.open("PATCH", url, true);
+      req.setRequestHeader('Content-Type', 'application/json-patch+json');
+    }
+    else {
+      req.open("GET", url, true);
+    }
+    if (accept) {
+      req.setRequestHeader('Accept', accept);
+    }
+    if (that.referer) {
+      req.setRequestHeader('X-Referer', that.referer);
+    }
+    if (beforeSend) {
+      beforeSend.call(that, req);
+    }
+    req.send(data);
 
-  /**
-   * Internal method to perform WebSocket request that returns a promise which is resolved when the response comes
-   * @param data Data payload
-   * @returns {Promise} that data will be sent to WS, resolves with WS event
-   * @see #webSocketUpgrade
-   */
-  Puppet.prototype.webSocketSend = function (data) {
-    var that = this;
-    return new Promise(function (resolve, reject) {
-      that.webSocketSendResolve = resolve;
-      that._ws.send(data);
-    });
+    return req;
   };
 
   /**
