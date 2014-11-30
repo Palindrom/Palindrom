@@ -314,7 +314,7 @@
     jsonpatch.apply(this.obj, patches);
     var that = this;
     patches.forEach(function (patch) {
-      if (patch.path === "/") {
+      if (patch.path === "") {
         var desc = JSON.stringify(patches);
         if (desc.length > 103) {
           desc = desc.substring(0, 100) + "...";
