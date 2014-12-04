@@ -1,0 +1,22 @@
+<!--
+This component shows how PuppetJS captures link clicks in Shadow DOM
+and transforms them into PATCH request
+-->
+
+<link rel="import" href="../../../../polymer/polymer.html">
+
+<polymer-element name="my-menu-button" noscript attributes="href">
+  <template>
+    <style>
+      a {
+        background: aliceblue;
+        border-radius: 3px;
+        padding: 1px 3px;
+        color: darkblue;
+        font-size: 0.96em;
+        border: 1px solid lightsteelblue;
+      }
+    </style>
+    <a href="{{href}}">ShadowDOM: <content></content></a>
+  </template>
+</polymer-element>

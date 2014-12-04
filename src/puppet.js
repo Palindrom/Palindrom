@@ -14,9 +14,12 @@
    * Defines a connection to a remote PATCH server, returns callback to a object that is persistent between browser and server
    * @param remoteUrl If undefined, current window.location.href will be used as the PATCH server URL
    * @param {Function} [callback] Called after initial state object is received from the server (NOT necessarily after WS connection was established)
-   * @param obj Optional object where the parsed JSON data will be inserted
+   * @param {Object} [obj] object where the parsed JSON data will be inserted
+   * @param {Array<JSONPointer>} [versionPaths] Array of JSON Pointer(-s) [local[, remote]] to be used for JSON Patch Versioning.
+   *                                             just `[local]` will enable versioning, `[local, remote]` will enable double versioning/quiet versioning, in other words OT with noop
+   * @param {Boolean} [ot=false] true to enable OT
    */
-  function Puppet(remoteUrl, callback, obj) {
+  function Puppet(remoteUrl, callback, obj, versionPaths, ot, purity) {
     this.debug = true;
     this.remoteUrl = remoteUrl;
     this.obj = obj || {};
@@ -25,6 +28,11 @@
     this.useWebSocket = false; //change to TRUE to enable WebSocket connection
     this.handleResponseCookie();
 
+    if(versionPaths){
+      this.queue = versionPaths.length == 1 ? 
+        new JSONPatchQueue(versionPaths[0], jsonpatch.apply, purity) : //just versioning
+        new JSONPatchOTAgent(versionPaths, jsonpatch.apply, purity, ot); // full or noop OT
+    }
 
     this.ignoreCache = [];
     this.ignoreAdd = null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
@@ -243,7 +251,8 @@
 
   Puppet.prototype.handleLocalChange = function (patches) {
     var that = this;
-    var txt = JSON.stringify(patches);
+    
+    var txt = JSON.stringify( this.queue? this.queue.send(patches) : patches);
     if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
     }
@@ -273,7 +282,12 @@
       throw new Error("Patches should be an array");
     }
     this.unobserve();
-    jsonpatch.apply(this.obj, patches);
+    if(this.queue){
+      this.queue.receive(this.obj, patches); 
+    }else{
+      jsonpatch.apply(this.obj, patches);      
+    }
+
     var that = this;
     patches.forEach(function (patch) {
       if (patch.path === "") {
