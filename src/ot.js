@@ -14,7 +14,7 @@ var JSONPatchOTAgent = function(versionPaths, apply, purity){
 	 * JSON-Pointer to local version in shared JSON document
 	 * @type {JSONPointer}
 	 */
-	this.versionPath = versionPaths[0];
+	this.localPath = versionPaths[0];
 	/**
 	 * JSON-Pointer to remote version in shared JSON document
 	 * @type {JSONPointer}
@@ -24,7 +24,7 @@ var JSONPatchOTAgent = function(versionPaths, apply, purity){
 	 * Versioned JSON Patch queue
 	 * @type {JSONPatchQueue}
 	 */
-	this.queue = new JSONPatchQueue(this.versionPath, apply, purity);
+	this.queue = new JSONPatchQueue(versionPaths, this.receive.bind(this), purity);
 
 	Object.defineProperty(this, "remoteVersion",{
 		get: function(){
@@ -39,7 +39,7 @@ var JSONPatchOTAgent = function(versionPaths, apply, purity){
 
 };
 /** local version */
-JSONPatchOTAgent.prototype.version = 0;
+JSONPatchOTAgent.prototype.localVersion = 0;
 /** Latest localVersion that we know that was acknowledged by remote */
 JSONPatchOTAgent.prototype.ackVersion = 0;
 /** Latest acknowledged remote version */
@@ -50,13 +50,12 @@ JSONPatchOTAgent.prototype.ackVersion = 0;
 /** needed? OT only? */
 // JSONPatchOTAgent.prototype.pending = [];
 /* applies or adds to queue */
-JSONPatchOTAgent.prototype.receive = function(obj, doubleVersionedJsonPatch){
-	//TODO: transform/reject if needed (tomalec)
-	var versionedJsonPatch = doubleVersionedJsonPatch;
-	// strip local version test operation object / convert Double- to just Versioned JSON Patch;
-		var testRemote = versionedJsonPatch.shift();
-
-	this.queue.receive(obj, versionedJsonPatch);
+JSONPatchOTAgent.prototype.receive = function(obj, patch){
+	// //TODO: transform/reject if needed (tomalec)
+	// var versionedJsonPatch = singleVersionedPatch.slice(1);
+	// // strip remote version
+	// 	var testRemote = versionedJsonPatch.shift();
+	this.apply(obj, patch);
 };
 /**
  * Wraps JSON Patch sequence with version related operation objects
@@ -64,10 +63,5 @@ JSONPatchOTAgent.prototype.receive = function(obj, doubleVersionedJsonPatch){
  * @return {VersionedJSONPatch}          
  */
 JSONPatchOTAgent.prototype.send = function(sequence){
-	sequence.unshift({ // test for OT
-		op: "test",
-		path: this.remotePath,
-		value: this.remoteVersion
-	});
-	return this.queue.send.call(this, sequence);
+	return this.queue.send(sequence);
 };

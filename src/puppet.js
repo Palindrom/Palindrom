@@ -29,9 +29,15 @@
     this.handleResponseCookie();
 
     if(versionPaths){
-      this.queue = versionPaths.length == 1 ? 
-        new JSONPatchQueue(versionPaths[0], jsonpatch.apply, purity) : //just versioning
-        new JSONPatchOTAgent(versionPaths, jsonpatch.apply, purity, ot); // full or noop OT
+      if(versionPaths.length == 1){
+        //just versioning
+        this.queue = new JSONPatchQueueSynchronous(versionPaths[0], jsonpatch.apply, purity);
+      } else {
+        // double versioning or OT
+        this.queue = ot ?
+          new JSONPatchOTAgent(versionPaths, jsonpatch.apply, purity) :
+          new JSONPatchQueue(versionPaths, jsonpatch.apply, purity); // full or noop OT
+      }
     }
 
     this.ignoreCache = [];
