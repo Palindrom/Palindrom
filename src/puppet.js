@@ -27,7 +27,26 @@
     this.obj = obj || {};
     this.observer = null;
     this.referer = null;
-    this.useWebSocket = false; //change to TRUE to enable WebSocket connection
+
+    var useWebSocket = false;
+    var that = this;
+    Object.defineProperty(this, "useWebSocket", {
+      get: function () {
+        return useWebSocket;
+      },
+      set: function (newValue) {
+        if(newValue == false) {
+          if(that._ws) {
+            that._ws.onclose = function() { //overwrites the previous onclose
+              that._ws = null;
+            };
+            that._ws.close();
+          }
+        }
+        return useWebSocket = newValue;
+      }
+    });
+
     this.localPatchQueue = [];
     this.handleResponseCookie();
 
@@ -281,6 +300,9 @@
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
     }
     if (this.useWebSocket) {
+      if(!this._ws) {
+        this.lastRequestPromise = this.lastRequestPromise.then( this.webSocketUpgrade.bind(this) );
+      }
       this.lastRequestPromise = this.lastRequestPromise.then( this.webSocketSend.bind(this,txt) );
     }
     else {
