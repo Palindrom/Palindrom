@@ -81,7 +81,7 @@ describe("Parent", function () {
       jasmine.Ajax.requests.mostRecent().response({
         "status": 200,
         "contentType": 'application/json',
-        "responseText": '{"hello": "world", "child": {}}'
+        "responseText": '{"hello": "world", "children": {}}'
       });
 
       var that = this;

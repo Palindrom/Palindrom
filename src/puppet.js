@@ -132,6 +132,10 @@
     var tmp = JSON.parse(res.responseText);
     recursiveExtend(this.obj, tmp);
 
+    if (this.debug) {
+      this.remoteObj = JSON.parse(JSON.stringify(this.obj));
+    }
+
     recursiveMarkObjProperties(this, "obj");
     this.observe();
     if (this.callback) {
@@ -295,6 +299,16 @@
 
   Puppet.prototype.handleLocalChange = function (patches) {
     var that = this;
+
+    if(this.debug) {
+      var errors = this.validatePatches(patches, this.remoteObj, true);
+      errors.forEach(function(error, index) {
+        if(error) {
+          that.showError("Outgoing patch validation error", error + "\n\nIn patch:\n\n" + JSON.stringify(patches[index]) );
+        }
+      });
+    }
+
     var txt = JSON.stringify(patches);
     if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
@@ -325,16 +339,38 @@
     this.observe();
   };
 
+  /**
+   * Performs patch sequence validation using Fast-JSON-Patch. Only run when the `debug` flag is set to `true`.
+   * Can be overridden/monkey patched to add more validations.
+   * Additional parameter `isOutgoing` allows to make validations depending whether the sequence is incoming or outgoing.
+   * @param sequence
+   * @param tree
+   * @param isOutgoing
+   * @returns {Array}
+   */
+  Puppet.prototype.validatePatches = function (sequence, tree, isOutgoing) {
+    var errors = jsonpatch.validate(sequence, tree);
+    return errors;
+  };
+
   Puppet.prototype.handleRemoteChange = function (patches) {
+    var that = this;
+
     if (!this.observer) {
       return; //ignore remote change if we are not watching anymore
     }
-    if (patches.length === void 0) {
-      throw new Error("Patches should be an array");
+
+    if(this.debug) {
+      var errors = this.validatePatches(patches, this.obj, false);
+      errors.forEach(function(error, index) {
+        if(error) {
+          that.showError("Incoming patch validation error", error + "\n\nIn patch:\n\n" + JSON.stringify(patches[index]));
+        }
+      });
     }
+
     this.unobserve();
     jsonpatch.apply(this.obj, patches);
-    var that = this;
     patches.forEach(function (patch) {
       if (patch.path === "") {
         var desc = JSON.stringify(patches);
@@ -350,6 +386,10 @@
     this.observe();
     if (this.onRemoteChange) {
       this.onRemoteChange(patches);
+    }
+
+    if(this.debug) {
+      this.remoteObj = JSON.parse(JSON.stringify(this.obj));
     }
   };
 
@@ -421,7 +461,7 @@
         DIV.style.border = '1px solid #dFb5b4';
         DIV.style.background = '#fcf2f2';
         DIV.style.padding = '10px 16px';
-        DIV.style.position = 'absolute';
+        DIV.style.position = 'fixed';
         DIV.style.top = '0';
         DIV.style.left = '0';
         DIV.style.zIndex = '999';
