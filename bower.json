@@ -1,13 +1,14 @@
 {
   "name": "PuppetJs",
-  "version": "0.2.4",
+  "version": "0.2.6",
   "homepage": "https://github.com/PuppetJs/PuppetJs",
   "description": "Client side library that binds Web Components or AngularJs to server side view models using JSON-Patch.",
   "main": "src/puppet.js",
   "keywords": [
     "JSON-patch",
     "web components",
-    "angularjs"
+    "angularjs",
+    "websocket"
   ],
   "license": "MIT",
   "ignore": [
@@ -17,7 +18,7 @@
     "node_modules"
   ],
   "dependencies": {
-    "fast-json-patch": "~0.4.0",
+    "fast-json-patch": "master",
     "json-patch-queue": "PuppetJs/JSON-Patch-Queue#gh-pages"
   },
   "devDependencies": {
