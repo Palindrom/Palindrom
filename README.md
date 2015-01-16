@@ -23,21 +23,61 @@ After DOM is ready, initialize with the constructor:
 
 ```javascript
 /**
- * Defines a connection to a remote PATCH server, returns callback to a object that is persistent between browser and server
- * @param remoteUrl If undefined, current window.location.href will be used as the PATCH server URL
- * @param callback Called after initial state object is loaded from the server
+ * Defines a connection to a remote PATCH server, gives an object that is persistent between browser and server
  */
-var puppet = new Puppet(null, function callback (obj) {
-  //called when loaded
-});
-puppet.onRemoteChange = function (patches) {
-  //this is a helper callback triggered each time a patch is obtained from server
-};
+var puppet = new Puppet();
+// ..
+// use puppet.obj
 ```
 
 ### Demo
 
 [Example with Polymer's Template Binding and Web Components](http://puppetjs.github.io/PuppetJs/lab/polymer/index.html)
+
+### Options (Constructor parameters)
+All the parameters are optional.
+```javascript
+var puppet = new Puppet({attribute: value});
+```
+
+Attribute           | Type          | Default                | Description
+---                 | ---           | ---                    | ---
+`remoteUrl`         | *String*      | `window.location.href` | PATCH server URL
+`callback`          | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established)
+`obj`               | *Object*      | `{}`                   | object where the parsed JSON data will be inserted
+`useWebSocket`      | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
+`ignoreAdd`         | *RegExp*      |                        | Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
+`debug`             | *Boolean*     | true                   | Toggle debugging mode
+`onRemoteChange`    | *Function*    |                        | Helper callback triggered each time a patch is obtained from server
+`localVersionPath`  | *JSONPointer* | disabled               | local version path, set it to enable Versioned JSON Patch communication
+`remoteVersionPath` | *JSONPointer* | disabled               | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
+`ot`                | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
+`purity`            | *Boolean*     | `false`                | `true` to enable purist mode of OT
+
+most of them are accessible also in runtime:
+
+#### Properties
+
+```javascript
+puppet.property
+```
+Attribute        | Type       | Default                | Description
+---              | ---        | ---                    | ---
+`remoteUrl`      | *String*   | `window.location.href` | See above
+`obj`            | *Object*   | `{}`                   | See above
+`useWebSocket`   | *Boolean*  | `false`                | See above
+`ignoreAdd`      | *RegExp*   |                        | See above
+`debug`          | *Boolean*  | true                   | See above
+`onRemoteChange` | *Function* |                        | See above
+
+
+### Binding object once is ready (`callback`)
+To bind object to some DOM node once it will be fetched from server you can use define `callback` in constructor:
+```javascript
+var puppet = new Puppet({callback: function (obj) {
+  document.getElementById('test').model = obj;
+}});
+```
 
 ### Sending client changes to server
 
@@ -64,22 +104,24 @@ PuppetJs uses the HTML5 history API to update the URL in the browser address bar
 
 ### Ignoring local changes (`ignoreAdd`)
 
-If you want to create a property in the observed object that will remain local, there is an `ignoreAdd` property that
+If you want to create a property in the observed object that will remain local, there is an `ignoreAdd` option and property that
 let's you disregard client-side "add" operations in the object using a regular expression. Sample usage:
 
 ```javascript
-var puppet = new Puppet(window.location.href, function (obj) {
-  document.getElementById('test').model = obj;
-});
+// in constructor
+var puppet = new Puppet({obj: myObj, ignoreAdd: /\/_.+/});
+// or via property
 puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to server
 puppet.ignoreAdd = /./; //ignore all the "add" operations
 puppet.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
 puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
+// .. later on any
+myObj._somethingNew = 1; // will not be propagated to server
 ```
 
 ### Upgrading to WebSocket (`useWebSocket`)
 
-You can upgrade the communication protocol to use WebSocket using `useWebSocket = true` flag right after Puppet initialization.
+You can upgrade the communication protocol to use WebSocket by setting `useWebSocket: true` option in Puppet constructor or you can switch it at any moment by `puppet.useWebSocket = true`.
 
 WebSocket is a replacement for requests that would be sent using `HTTP PATCH` otherwise. The requests sent over `HTTP GET` (such as link clicks) are not affected.
 
@@ -87,12 +129,11 @@ WebSocket is a replacement for requests that would be sent using `HTTP PATCH` ot
 
 Sample:
 
-
 ```javascript
-var puppet = new Puppet(window.location.href, function (obj) {
-  document.getElementById('test').model = obj;
-});
-puppet.useWebSocket = true;
+// enable it in constructor
+var puppet = new Puppet({useWebSocket: true});
+// change it later via property
+puppet.useWebSocket = false;
 ```
 
 ### Dependencies

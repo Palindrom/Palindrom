@@ -13,7 +13,7 @@ describe("Puppet", function () {
     it("should call callback with an object as single parameter", function (done) {
       var initSpy = jasmine.createSpy();
 
-      this.puppet = new Puppet(window.location.href, initSpy);
+      this.puppet = new Puppet({callback: initSpy});
 
       jasmine.Ajax.requests.mostRecent().response({
         "status": 200,
@@ -30,7 +30,7 @@ describe("Puppet", function () {
     it("should accept a JSON that has an empty string as a key (which is valid)", function (done) {
       var initSpy = jasmine.createSpy();
 
-      this.puppet = new Puppet(window.location.href, initSpy);
+      this.puppet = new Puppet({callback: initSpy});
       var that = this;
 
       jasmine.Ajax.requests.mostRecent().response({
@@ -52,7 +52,7 @@ describe("Puppet", function () {
     it("should make a XHR request on init", function (done) {
       var initSpy = jasmine.createSpy();
 
-      this.puppet = new Puppet('/test', initSpy);
+      this.puppet = new Puppet({remoteUrl: '/test', callback: initSpy});
 
       jasmine.Ajax.requests.mostRecent().response({
         "status": 200,
@@ -70,11 +70,11 @@ describe("Puppet", function () {
       var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
       var obj;
 
-      this.puppet = new Puppet('/test', function (myObj) {
+      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
 
         checkWhenReady();
-      });
+      }});
 
       jasmine.Ajax.requests.mostRecent().response({
         "status": 200,
@@ -110,11 +110,11 @@ describe("Puppet", function () {
       var obj;
       var that = this;
 
-      this.puppet = new Puppet('/test', function (myObj) {
+      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
 
         checkWhenReady();
-      });
+      }});
 
       jasmine.Ajax.requests.mostRecent().response({ //responds immediately
         "status": 200,
@@ -153,11 +153,11 @@ describe("Puppet", function () {
       var obj;
       var that = this;
 
-      this.puppet = new Puppet('/test', function (myObj) {
+      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
 
         checkWhenReady();
-      });
+      }});
 
       jasmine.Ajax.requests.mostRecent().response({
         "status": 200,
@@ -202,9 +202,9 @@ describe("Puppet", function () {
     it('should NOT send key stroke changes until blur event occurs - by default', function (done) {
       var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
       var obj;
-      this.puppet = new Puppet('/test', function (myObj) {
+      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
-      });
+      }});
 
       var INPUT = document.createElement('INPUT');
       INPUT.type = "email";
@@ -239,9 +239,9 @@ describe("Puppet", function () {
     it('should send key stroke changes immediately - with attribute update-on="input"', function (done) {
       var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
       var obj;
-      this.puppet = new Puppet('/test', function (myObj) {
+      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
-      });
+      }});
 
       var INPUT = document.createElement('INPUT');
       INPUT.type = "email";
@@ -290,9 +290,9 @@ describe("Puppet", function () {
 
     it('should queue up patches until response comes', function (done) {
       var obj;
-      this.puppet = new Puppet('/test', function (myObj) {
+      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
-      });
+      }});
 
       jasmine.Ajax.requests.mostRecent().response({
         "status": 200,

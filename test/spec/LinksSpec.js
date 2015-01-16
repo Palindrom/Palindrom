@@ -3,7 +3,7 @@ describe("Links", function () {
 
   beforeEach(function (done) {
     jasmine.Ajax.install();
-    puppet = new Puppet('/');
+    puppet = new Puppet({remoteUrl: '/'});
     jasmine.Ajax.requests.mostRecent().response({
       "status": 200,
       "contentType": 'application/json',

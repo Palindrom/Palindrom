@@ -11,7 +11,7 @@ describe("Error", function () {
   /// init
   describe("on error response", function () {
     it("should show a message when status code 400 comes from the server (bootstrap)", function () {
-      this.puppet = new Puppet('/test');
+      this.puppet = new Puppet({remoteUrl: '/test'});
       var exceptionRaised = false;
 
       try {
@@ -37,7 +37,7 @@ describe("Error", function () {
     });
 
     it("should show a message when status code 599 comes from the server (bootstrap)", function () {
-      this.puppet = new Puppet('/test');
+      this.puppet = new Puppet({remoteUrl: '/test'});
       var exceptionRaised = false;
 
       try {
@@ -66,9 +66,9 @@ describe("Error", function () {
       var exceptionRaised = false;
       var obj;
 
-      this.puppet = new Puppet('/test', function (myObj) {
+      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
-      });
+      }});
 
       jasmine.Ajax.requests.mostRecent().response({
         "status": 200,
@@ -108,9 +108,9 @@ describe("Error", function () {
       var exceptionRaised = false;
       var obj;
 
-      this.puppet = new Puppet('/test', function (myObj) {
+      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
-      });
+      }});
 
       jasmine.Ajax.requests.mostRecent().response({
         "status": 200,
@@ -147,7 +147,7 @@ describe("Error", function () {
     });
 
     it("should NOT show a message when debug == false", function () {
-      this.puppet = new Puppet('/test');
+      this.puppet = new Puppet({remoteUrl: '/test'});
       this.puppet.debug = false;
       var exceptionRaised = false;
 

@@ -14,9 +14,9 @@ describe("Warning", function () {
       var consoleSpy = spyOn(window.console, 'warn');
       var obj;
 
-      this.puppet = new Puppet('/test', function (myObj) {
+      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
-      });
+      }});
 
       jasmine.Ajax.requests.mostRecent().response({
         "status": 200,
@@ -44,9 +44,9 @@ describe("Warning", function () {
       var consoleSpy = spyOn(window.console, 'warn');
       var obj;
 
-      this.puppet = new Puppet('/test', function (myObj) {
+      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
-      });
+      }});
       this.puppet.debug = false;
 
       jasmine.Ajax.requests.mostRecent().response({

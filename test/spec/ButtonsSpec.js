@@ -38,9 +38,9 @@ describe("Buttons", function () {
         , patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough()
         , BUTTON;
 
-      puppet = new Puppet('/test', function (myObj) {
+      puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
-      });
+      }});
 
         expect(patchSpy.calls.count()).toBe(1);
         jasmine.Ajax.requests.mostRecent().response({
@@ -73,9 +73,9 @@ describe("Buttons", function () {
         , patchSpy
         , BUTTON;
 
-      new Puppet('/test', function (myObj) {
+      new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
-      });
+      }});
 
         jasmine.Ajax.requests.mostRecent().response({
           "status": 200,
@@ -121,9 +121,9 @@ describe("Buttons", function () {
         , patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough()
         , BUTTON;
 
-      puppet = new Puppet('/test', function (myObj) {
+      puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
-      });
+      }});
 
         expect(patchSpy.calls.count()).toBe(1);
         jasmine.Ajax.requests.mostRecent().response({
@@ -156,9 +156,9 @@ describe("Buttons", function () {
         , patchSpy
         , BUTTON;
 
-      new Puppet('/test', function (myObj) {
+      new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
-      });
+      }});
 
         jasmine.Ajax.requests.mostRecent().response({
           "status": 200,

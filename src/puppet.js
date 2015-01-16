@@ -12,21 +12,29 @@
 
   /**
    * Defines a connection to a remote PATCH server, returns callback to a object that is persistent between browser and server
-   * @param remoteUrl If undefined, current window.location.href will be used as the PATCH server URL
-   * @param {Function} [callback] Called after initial state object is received from the server (NOT necessarily after WS connection was established)
-   * @param {Object} [obj] object where the parsed JSON data will be inserted
-   * @param {Array<JSONPointer>} [versionPaths] Array of JSON Pointer(-s) [local[, remote]] to be used for JSON Patch Versioning.
-   *                                             just `[local]` will enable versioning, `[local, remote]` will enable double versioning/quiet versioning, in other words OT with noop
-   * @param {Boolean} [ot=false] true to enable OT
+   * @param {Object}             [options]                    map of arguments
+   * @param {String}             [options.remoteUrl]          PATCH server URL
+   * @param {Function}           [options.callback]           Called after initial state object is received from the server (NOT necessarily after WS connection was established)
+   * @param {Object}             [options.obj]                object where the parsed JSON data will be inserted
+   * @param {Boolean}            [options.useWebSocket=false] Set to true to enable WebSocket support
+   * @param {RegExp}             [options.ignoreAdd=null]     Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
+   * @param {Boolean}            [options.debug=false]        Set to true to enable debugging mode
+   * @param {Function}           [options.onRemoteChange]     Helper callback triggered each time a patch is obtained from server
+   * @param {JSONPointer}        [options.localVersionPath]   local version path, set it to enable Versioned JSON Patch communication
+   * @param {JSONPointer}        [options.remoteVersionPath]  remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
+   * @param {Boolean}            [options.ot=false]           true to enable OT
+   * @param {Boolean}            [options.purity=false]       true to enable purist mode of OT
    */
-  function Puppet(remoteUrl, callback, obj, versionPaths, ot, purity) {
-    this.debug = true;
-    this.remoteUrl = remoteUrl;
-    this.obj = obj || {};
+  function Puppet(options) {
+    options || (options={});
+    this.debug = options.debug || true;
+    this.remoteUrl = options.remoteUrl;
+    this.obj = options.obj || {};
     this.observer = null;
     this.referer = null;
-
-    var useWebSocket = false;
+    this.onRemoteChange = options.onRemoteChange;
+    
+    useWebSocket = options.useWebSocket || false;
     var that = this;
     Object.defineProperty(this, "useWebSocket", {
       get: function () {
@@ -47,20 +55,20 @@
 
     this.handleResponseCookie();
 
-    if(versionPaths){
-      if(versionPaths.length == 1){
+    if(options.localVersionPath){
+      if(!options.remoteVersionPath){
         //just versioning
-        this.queue = new JSONPatchQueueSynchronous(versionPaths[0], jsonpatch.apply, purity);
+        this.queue = new JSONPatchQueueSynchronous(options.localVersionPath, jsonpatch.apply, options.purity);
       } else {
         // double versioning or OT
-        this.queue = ot ?
-          new JSONPatchOTAgent(JSONPatchOT.transform, versionPaths, jsonpatch.apply, purity) :
-          new JSONPatchQueue(versionPaths, jsonpatch.apply, purity); // full or noop OT
+        this.queue = options.ot ?
+          new JSONPatchOTAgent(JSONPatchOT.transform, [options.localVersionPath, options.remoteVersionPath], jsonpatch.apply, options.purity) :
+          new JSONPatchQueue([options.localVersionPath, options.remoteVersionPath], jsonpatch.apply, options.purity); // full or noop OT
       }
     }
 
     this.ignoreCache = [];
-    this.ignoreAdd = null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
+    this.ignoreAdd = options.ignoreAdd || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
 
     //usage:
     //puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to server
@@ -68,7 +76,7 @@
     //puppet.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
     //puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
 
-    this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this, callback) );
+    this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this, options.callback) );
   }
 
   function markObjPropertyByPath(obj, path) {
@@ -297,11 +305,11 @@
     if (this.useWebSocket) {
       if(!this._ws) {
         this.webSocketUpgrade(function(){
-			that._ws.send(txt);
-		});
+      that._ws.send(txt);
+    });
       } else {
-		this._ws.send(txt);
-	  }
+    this._ws.send(txt);
+    }
     }
     else {
       //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)

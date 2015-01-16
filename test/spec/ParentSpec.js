@@ -12,7 +12,7 @@ describe("Parent", function () {
     it("should return parent when $parent keyword is used (shallow)", function (done) {
       var initSpy = jasmine.createSpy();
 
-      this.puppet = new Puppet(window.location.href, initSpy);
+      this.puppet = new Puppet({remoteUrl: window.location.href, callback: initSpy});
 
       initSpy.and.callFake(function () {
         expect(this.obj.child.$parent.hello).toEqual("world");
@@ -29,7 +29,7 @@ describe("Parent", function () {
     it("should return parent when $parent keyword is used (deep)", function (done) {
       var initSpy = jasmine.createSpy();
 
-      this.puppet = new Puppet(window.location.href, initSpy);
+      this.puppet = new Puppet({remoteUrl: window.location.href, callback: initSpy});
 
       initSpy.and.callFake(function () {
         expect(this.obj.children[0].$parent.$parent.children[1].second).toEqual("2nd");
@@ -46,8 +46,7 @@ describe("Parent", function () {
     it("should return parent on a locally added property", function (done) {
       var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
 
-      this.puppet = new Puppet(window.location.href, function () {
-      });
+      this.puppet = new Puppet();
 
       jasmine.Ajax.requests.mostRecent().response({
         "status": 200,
@@ -73,8 +72,7 @@ describe("Parent", function () {
     it("should return parent on a remotely added property", function (done) {
       var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
 
-      this.puppet = new Puppet(window.location.href, function () {
-      });
+      this.puppet = new Puppet();
 
       jasmine.Ajax.requests.mostRecent().response({
         "status": 200,

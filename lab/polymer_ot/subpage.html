@@ -86,8 +86,10 @@
 
 <script>
   window.addEventListener('polymer-ready', function () {
-    new Puppet(window.location.href, function (obj) {
-      document.getElementById('test').model = obj;
+    new Puppet({
+      callback: function (obj) {
+        document.getElementById('test').model = obj;
+      }
     });
   });
 </script>
