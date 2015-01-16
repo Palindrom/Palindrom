@@ -54,7 +54,7 @@
       } else {
         // double versioning or OT
         this.queue = ot ?
-          new JSONPatchOTAgent(versionPaths, jsonpatch.apply, purity) :
+          new JSONPatchOTAgent(JSONPatchOT.transform, versionPaths, jsonpatch.apply, purity) :
           new JSONPatchQueue(versionPaths, jsonpatch.apply, purity); // full or noop OT
       }
     }

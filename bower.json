@@ -19,7 +19,9 @@
   ],
   "dependencies": {
     "fast-json-patch": "master",
-    "json-patch-queue": "PuppetJs/JSON-Patch-Queue#gh-pages"
+    "json-patch-queue": "PuppetJs/JSON-Patch-Queue#gh-pages",
+    "json-patch-ot-agent": "PuppetJs/JSON-Patch-OT-agent#gh-pages",
+    "json-patch-ot": "PuppetJs/JSON-Patch-OT#gh-pages"
   },
   "devDependencies": {
     "polymer": "Polymer/polymer",
