@@ -27,7 +27,7 @@
    */
   function Puppet(options) {
     options || (options={});
-    this.debug = options.debug || true;
+    this.debug = options.debug != undefined ? options.debug : true;
     this.remoteUrl = options.remoteUrl;
     this.obj = options.obj || {};
     this.observer = null;
