@@ -168,9 +168,10 @@
    * Send a WebSocket upgrade request to the server.
    * For testing purposes WS upgrade url is hardcoded now in PuppetJS (replace __default/ID with __default/wsupgrade/ID)
    * In future, server should suggest the WebSocket upgrade URL
+   * @param {Function} [callback] Function to be called once connection gets opened.
    * @returns {WebSocket} created WebSocket
    */
-  Puppet.prototype.webSocketUpgrade = function (callback, response) {
+  Puppet.prototype.webSocketUpgrade = function (callback) {
     var that = this;
     var host = window.location.host;
     var wsPath = this.referer.replace(/__([^\/]*)\//g, "__$1/wsupgrade/");
@@ -178,6 +179,7 @@
 
     that._ws = new WebSocket(upgradeURL);
     that._ws.onopen = function (event) {
+      callback && callback(event);
       //TODO: trigger on-ready event (tomalec)
     };
     that._ws.onmessage = function (event) {
@@ -305,11 +307,20 @@
     if (this.useWebSocket) {
       if(!this._ws) {
         this.webSocketUpgrade(function(){
-      that._ws.send(txt);
-    });
-      } else {
-    this._ws.send(txt);
-    }
+          // send message once WS is there
+          that._ws.send(txt);
+        });
+      } else if (this._ws.readyState === 0) {
+        var oldOnOpen = this._ws.onopen;
+        this._ws.onopen = function(){
+          oldOnOpen();
+          // send message once WS is opened
+          that._ws.send(txt);
+        };
+      }
+      else {
+        this._ws.send(txt);
+      }
     }
     else {
       //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
