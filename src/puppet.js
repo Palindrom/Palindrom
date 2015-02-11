@@ -293,7 +293,7 @@
     
     if(this.debug) {
       var errors = this.validatePatches(patches, this.remoteObj, true);
-      errors.forEach(function(error, index) {
+      errors && errors.forEach(function(error, index) {
         if(error) {
           that.showError("Outgoing patch validation error", error + "\n\nIn patch:\n\n" + JSON.stringify(patches[index]) );
         }
@@ -360,7 +360,7 @@
 
     if(this.debug) {
       var errors = this.validatePatches(patches, this.obj, false);
-      errors.forEach(function(error, index) {
+      errors && errors.forEach(function(error, index) {
         if(error) {
           that.showError("Incoming patch validation error", error + "\n\nIn patch:\n\n" + JSON.stringify(patches[index]));
         }
