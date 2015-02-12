@@ -10,31 +10,22 @@
     , lastBlurHandler
     , lastPuppet;
 
-  /**
-   * Defines a connection to a remote PATCH server, returns callback to a object that is persistent between browser and server
-   * @param {Object}             [options]                    map of arguments
-   * @param {String}             [options.remoteUrl]          PATCH server URL
-   * @param {Function}           [options.callback]           Called after initial state object is received from the server (NOT necessarily after WS connection was established)
-   * @param {Object}             [options.obj]                object where the parsed JSON data will be inserted
-   * @param {Boolean}            [options.useWebSocket=false] Set to true to enable WebSocket support
-   * @param {RegExp}             [options.ignoreAdd=null]     Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
-   * @param {Boolean}            [options.debug=false]        Set to true to enable debugging mode
-   * @param {Function}           [options.onRemoteChange]     Helper callback triggered each time a patch is obtained from server
-   * @param {JSONPointer}        [options.localVersionPath]   local version path, set it to enable Versioned JSON Patch communication
-   * @param {JSONPointer}        [options.remoteVersionPath]  remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
-   * @param {Boolean}            [options.ot=false]           true to enable OT
-   * @param {Boolean}            [options.purity=false]       true to enable purist mode of OT
-   */
-  function Puppet(options) {
-    options || (options={});
-    this.debug = options.debug != undefined ? options.debug : true;
-    this.remoteUrl = options.remoteUrl;
-    this.obj = options.obj || {};
-    this.observer = null;
+    // IDEA(tomalec): replace last* magic that is used to workaround multiple Puppet instances, with something like:
+    // function Puppet(){
+    //   if(Puppet.instance){
+    //     return Puppet.instance;
+    //   }
+    //   Puppet.instance = this;
+    // }
+
+  function PuppetNetworkChannel(puppet, useWebSocket, onReceive){
+    // TODO(tomalec): to be removed once we will achieve better separation of concerns
+    this.puppet = puppet;
+    onReceive && (this.onReceive = onReceive);
+
     this.referer = null;
-    this.onRemoteChange = options.onRemoteChange;
-    
-    useWebSocket = options.useWebSocket || false;
+
+    //useWebSocket = useWebSocket || false;
     var that = this;
     Object.defineProperty(this, "useWebSocket", {
       get: function () {
@@ -54,6 +45,219 @@
     });
 
     this.handleResponseCookie();
+  }
+  // TODO: auto-configure here #38 (tomalec)
+  PuppetNetworkChannel.prototype.establish = function(remoteUrl, bootstrap /*, onConnectionReady*/){
+    var network = this;
+    return this.xhr(
+        remoteUrl,
+        'application/json', 
+        null,  
+        function (res) {
+          bootstrap( res.responseText );
+
+          if (network.useWebSocket){
+            network.webSocketUpgrade();
+          }
+          return network;
+        }
+      );
+
+  };
+  /**
+   * Send any text message by currently established channel
+   * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
+   * @param  {String} msg message to be sent
+   * @return {PuppetNetworkChannel}     self
+   */
+  PuppetNetworkChannel.prototype.send = function(msg){
+    var that = this;
+    if (this.useWebSocket) {
+      if(!this._ws) {
+        this.webSocketUpgrade(function(){
+          // send message once WS is there
+          this._ws.send(msg);
+        });
+      } else if (this._ws.readyState === 0) {
+        var oldOnOpen = this._ws.onopen;
+        this._ws.onopen = function(){
+          oldOnOpen();
+          // send message once WS is opened
+          this._ws.send(msg);
+        };
+      }
+      else {
+        this._ws.send(msg);
+      }
+    }
+    else {
+      //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
+      this.xhr(this.referer || this.puppet.remoteUrl, 'application/json-patch+json', msg, function (res) {
+          that.onReceive(res.responseText);
+        });
+    }
+    return this;
+  };
+  /**
+   * Callback function that will be called once message from remote comes.
+   * @param {String} [JSONPatch_sequences] message with Array of JSONPatches that were send by remote.
+   * @return {[type]} [description]
+   */
+  PuppetNetworkChannel.prototype.onReceive = function(/*String_with_JSONPatch_sequences*/){};
+  PuppetNetworkChannel.prototype.upgrade = function(msg){
+  };
+
+  /**
+   * Send a WebSocket upgrade request to the server.
+   * For testing purposes WS upgrade url is hardcoded now in PuppetJS (replace __default/ID with __default/wsupgrade/ID)
+   * In future, server should suggest the WebSocket upgrade URL
+   * @TODO:(tomalec)[cleanup] hide from public API.
+   * @param {Function} [callback] Function to be called once connection gets opened.
+   * @returns {WebSocket} created WebSocket
+   */
+  PuppetNetworkChannel.prototype.webSocketUpgrade = function (callback) {
+    var that = this;
+    var host = window.location.host;
+    var wsPath = this.referer.replace(/__([^\/]*)\//g, "__$1/wsupgrade/");
+    var upgradeURL = "ws://" + host + wsPath;
+
+    that._ws = new WebSocket(upgradeURL);
+    that._ws.onopen = function (event) {
+      callback && callback(event);
+      //TODO: trigger on-ready event (tomalec)
+    };
+    that._ws.onmessage = function (event) {
+      that.onReceive(event.data);
+    };
+    that._ws.onerror = function (event) {
+      that.puppet.showError("WebSocket connection could not be made", (event.data || "") + "\nCould not connect to: " + upgradeURL);
+    };
+    that._ws.onclose = function (event) {
+      that.puppet.showError("WebSocket connection closed", event.code + " " + event.reason);
+    };
+  };
+  PuppetNetworkChannel.prototype.changeState = function (href) {
+    var that = this;
+    return this.xhr(href, 'application/json-patch+json', null, function (res) {
+      that.onReceive(res.responseText);
+    });
+  };
+
+  // TODO:(tomalec)[cleanup] hide from public API.
+  PuppetNetworkChannel.prototype.setReferer = function (referer) {
+    if (this.referer && this.referer !== referer) {
+      this.puppet.showError("Error: Session lost", "Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.referer + "\nNew session ID: " + referer);
+    }
+    this.referer = referer;
+  };
+
+  // TODO:(tomalec)[cleanup] hide from public API.
+  PuppetNetworkChannel.prototype.handleResponseHeader = function (xhr) {
+    var location = xhr.getResponseHeader('X-Location') || xhr.getResponseHeader('Location');
+    if (location) {
+      this.setReferer(location);
+    }
+  };
+
+  /**
+   * PuppetJs does not use cookies because of sessions (you need to take care of it in your application code)
+   * Reason PuppetJs handles cookies is different:
+   * JavaScript cannot read HTTP "Location" header for the main HTML document, but it can read cookies
+   * So if you want to establish session in the main HTML document, send "Location" value as a cookie
+   * The cookie will be erased (replaced with empty value) after reading
+   */
+  PuppetNetworkChannel.prototype.handleResponseCookie = function () {
+    var location = cookie.read('Location');
+    if (location) { //if cookie exists and is not empty
+      this.setReferer(location);
+      cookie.erase('Location');
+    }
+  };
+
+  /**
+   * Internal method to perform XMLHttpRequest
+   * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
+   * @param accept (Optional) HTTP accept header
+   * @param data (Optional) Data payload
+   * @param [callback(response)] callback to be called in context of puppet with response as argument
+   * @param beforeSend (Optional) Function that modifies the XHR object before the request is sent. Added for hackability
+   * @returns {XMLHttpRequest} performed XHR
+   */
+  PuppetNetworkChannel.prototype.xhr = function (url, accept, data, callback, beforeSend) {
+    //this.handleResponseCookie();
+    cookie.erase('Location'); //more invasive cookie erasing because sometimes the cookie was still visible in the requests
+    var that = this;
+    var req = new XMLHttpRequest();
+    req.onload = function () {
+      var res = this;
+      that.handleResponseCookie();
+      that.handleResponseHeader(res);
+      if (res.status >= 400 && res.status <= 599) {
+        that.puppet.showError('PuppetJs JSON response error', 'Server responded with error ' + res.status + ' ' + res.statusText + '\n\n' + res.responseText);
+      }
+      else {
+        callback && callback.call(that.puppet, res);
+      }
+    };
+    url = url || window.location.href;
+    if (data) {
+      req.open("PATCH", url, true);
+      req.setRequestHeader('Content-Type', 'application/json-patch+json');
+    }
+    else {
+      req.open("GET", url, true);
+    }
+    if (accept) {
+      req.setRequestHeader('Accept', accept);
+    }
+    if (that.referer) {
+      req.setRequestHeader('X-Referer', that.referer);
+    }
+    if (beforeSend) {
+      beforeSend.call(that.puppet, req);
+    }
+    req.send(data);
+
+    return req;
+  };
+
+  /**
+   * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
+   * @param {Object}             [options]                    map of arguments
+   * @param {String}             [options.remoteUrl]          PATCH server URL
+   * @param {Function}           [options.callback]        Called after initial state object is received from the remote (NOT necessarily after WS connection was established)
+   * @param {Object}             [options.obj]                object where the parsed JSON data will be inserted
+   * @param {Boolean}            [options.useWebSocket=false] Set to true to enable WebSocket support
+   * @param {RegExp}             [options.ignoreAdd=null]     Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
+   * @param {Boolean}            [options.debug=false]        Set to true to enable debugging mode
+   * @param {Function}           [options.onRemoteChange]     Helper callback triggered each time a patch is obtained from remote
+   * @param {JSONPointer}        [options.localVersionPath]   local version path, set it to enable Versioned JSON Patch communication
+   * @param {JSONPointer}        [options.remoteVersionPath]  remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
+   * @param {Boolean}            [options.ot=false]           true to enable OT
+   * @param {Boolean}            [options.purity=false]       true to enable purist mode of OT
+   */
+  function Puppet(options) {
+    options || (options={});
+    this.debug = options.debug != undefined ? options.debug : true;
+    this.remoteUrl = options.remoteUrl;
+    this.obj = options.obj || {};
+    this.observer = null;
+    this.onRemoteChange = options.onRemoteChange;
+
+    this.network = new PuppetNetworkChannel(
+        this, // puppet instance TODO: to be removed, used for error reporting
+        options.useWebSocket || false, // useWebSocket
+        this.handleRemoteChange.bind(this) //onReceive
+      );
+    
+    Object.defineProperty(this, "useWebSocket", {
+      get: function () {
+        return this.network.useWebSocket;
+      },
+      set: function (newValue) {
+        this.network.useWebSocket = newValue;
+      }
+    });
 
     if(options.localVersionPath){
       if(!options.remoteVersionPath){
@@ -71,12 +275,43 @@
     this.ignoreAdd = options.ignoreAdd || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
 
     //usage:
-    //puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to server
+    //puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to remote
     //puppet.ignoreAdd = /./; //ignore all the "add" operations
     //puppet.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
     //puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
 
-    this.xhr(this.remoteUrl, 'application/json', null, this.bootstrap.bind(this, options.callback) );
+    var onDataReady = options.callback;
+    var puppet = this;
+    this.network.establish(this.remoteUrl, function bootstrap(responseText){
+      var json = JSON.parse(responseText);
+      recursiveExtend(puppet.obj, json);
+
+      if (puppet.debug) {
+        puppet.remoteObj = responseText; // JSON.parse(JSON.stringify(puppet.obj));
+      }
+
+      recursiveMarkObjProperties(puppet, "obj");
+      puppet.observe();
+      if (onDataReady) {
+        onDataReady.call(puppet, puppet.obj);
+      }
+      if (lastClickHandler) {
+        document.body.removeEventListener('click', lastClickHandler);
+        window.removeEventListener('popstate', lastPopstateHandler);
+        window.removeEventListener('puppet-redirect-pushstate', lastPushstateHandler);
+        document.body.removeEventListener('blur', lastBlurHandler, true);
+      }
+      document.body.addEventListener('click', lastClickHandler = puppet.clickHandler.bind(puppet));
+      window.addEventListener('popstate', lastPopstateHandler = puppet.historyHandler.bind(puppet)); //better here than in constructor, because Chrome triggers popstate on page load
+      window.addEventListener('puppet-redirect-pushstate', lastPushstateHandler = puppet.historyHandler.bind(puppet));
+      document.body.addEventListener('blur', lastBlurHandler = puppet.clickAndBlurCallback.bind(puppet), true);
+
+      if (!lastPuppet) {
+        lastPuppet = puppet;
+        puppet.fixShadowRootClicks();
+      }
+
+    });
   }
 
   function markObjPropertyByPath(obj, path) {
@@ -124,104 +359,6 @@
       }
     }
   }
-  /**
-   * [bootstrap description]
-   * @param  {XHRResponse} res XHR response
-   * @return {Puppet}     itself
-   */
-  Puppet.prototype.bootstrap = function (callback, res) {
-    var tmp = JSON.parse(res.responseText);
-    recursiveExtend(this.obj, tmp);
-
-    if (this.debug) {
-      this.remoteObj = JSON.parse(JSON.stringify(this.obj));
-    }
-
-    recursiveMarkObjProperties(this, "obj");
-    this.observe();
-    if (callback) {
-      callback.call(this, this.obj);
-    }
-    if (lastClickHandler) {
-      document.body.removeEventListener('click', lastClickHandler);
-      window.removeEventListener('popstate', lastPopstateHandler);
-      window.removeEventListener('puppet-redirect-pushstate', lastPushstateHandler);
-      document.body.removeEventListener('blur', lastBlurHandler, true);
-    }
-    document.body.addEventListener('click', lastClickHandler = this.clickHandler.bind(this));
-    window.addEventListener('popstate', lastPopstateHandler = this.historyHandler.bind(this)); //better here than in constructor, because Chrome triggers popstate on page load
-    window.addEventListener('puppet-redirect-pushstate', lastPushstateHandler = this.historyHandler.bind(this));
-    document.body.addEventListener('blur', lastBlurHandler = this.clickAndBlurCallback.bind(this), true);
-
-    if (!lastPuppet) {
-      lastPuppet = this;
-      this.fixShadowRootClicks();
-    }
-
-    if (this.useWebSocket){
-      this.webSocketUpgrade();
-    }
-    return this;
-  };
-
-  /**
-   * Send a WebSocket upgrade request to the server.
-   * For testing purposes WS upgrade url is hardcoded now in PuppetJS (replace __default/ID with __default/wsupgrade/ID)
-   * In future, server should suggest the WebSocket upgrade URL
-   * @param {Function} [callback] Function to be called once connection gets opened.
-   * @returns {WebSocket} created WebSocket
-   */
-  Puppet.prototype.webSocketUpgrade = function (callback) {
-    var that = this;
-    var host = window.location.host;
-    var wsPath = this.referer.replace(/__([^\/]*)\//g, "__$1/wsupgrade/");
-    var upgradeURL = "ws://" + host + wsPath;
-
-    that._ws = new WebSocket(upgradeURL);
-    that._ws.onopen = function (event) {
-      callback && callback(event);
-      //TODO: trigger on-ready event (tomalec)
-    };
-    that._ws.onmessage = function (event) {
-      var patches = JSON.parse(event.data);
-      that.handleRemoteChange(patches);
-    };
-    that._ws.onerror = function (event) {
-      that.showError("WebSocket connection could not be made", (event.data || "") + "\nCould not connect to: " + upgradeURL);
-    };
-    that._ws.onclose = function (event) {
-      that.showError("WebSocket connection closed", event.code + " " + event.reason);
-    };
-  };
-
-  Puppet.prototype.handleResponseHeader = function (xhr) {
-    var location = xhr.getResponseHeader('X-Location') || xhr.getResponseHeader('Location');
-    if (location) {
-      this.setReferer(location);
-    }
-  };
-
-  /**
-   * PuppetJs does not use cookies because of sessions (you need to take care of it in your application code)
-   * Reason PuppetJs handles cookies is different:
-   * JavaScript cannot read HTTP "Location" header for the main HTML document, but it can read cookies
-   * So if you want to establish session in the main HTML document, send "Location" value as a cookie
-   * The cookie will be erased (replaced with empty value) after reading
-   */
-  Puppet.prototype.handleResponseCookie = function () {
-    var location = cookie.read('Location');
-    if (location) { //if cookie exists and is not empty
-      this.setReferer(location);
-      cookie.erase('Location');
-    }
-  };
-
-  Puppet.prototype.setReferer = function (referer) {
-    if (this.referer && this.referer !== referer) {
-      this.showError("Error: Session lost", "Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.referer + "\nNew session ID: " + referer);
-    }
-    this.referer = referer;
-  };
 
   Puppet.prototype.observe = function () {
     this.observer = jsonpatch.observe(this.obj, this.filterChangedCallback.bind(this));
@@ -304,31 +441,7 @@
     if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
     }
-    if (this.useWebSocket) {
-      if(!this._ws) {
-        this.webSocketUpgrade(function(){
-          // send message once WS is there
-          that._ws.send(txt);
-        });
-      } else if (this._ws.readyState === 0) {
-        var oldOnOpen = this._ws.onopen;
-        this._ws.onopen = function(){
-          oldOnOpen();
-          // send message once WS is opened
-          that._ws.send(txt);
-        };
-      }
-      else {
-        this._ws.send(txt);
-      }
-    }
-    else {
-      //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
-      this.xhr(that.referer || that.remoteUrl, 'application/json-patch+json', txt, function (res) {
-          var patches = JSON.parse(res.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
-          that.handleRemoteChange(patches);
-        });
-    }
+    this.network.send(txt);
     this.unobserve();
     patches.forEach(function (patch) {
       markObjPropertyByPath(that.obj, patch.path);
@@ -347,11 +460,15 @@
    */
   Puppet.prototype.validatePatches = function (sequence, tree, isOutgoing) {
     var errors = jsonpatch.validate(sequence, tree);
-    return errors;
+    // return errors;
+    if(errors){
+      throw errors;
+    }
+    return undefined;
   };
 
-  Puppet.prototype.handleRemoteChange = function (patches) {
-    // Versioning: versionedpatch.rev
+  Puppet.prototype.handleRemoteChange = function (data) {
+    var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
     var that = this;
 
     if (!this.observer) {
@@ -396,14 +513,6 @@
     }
   };
 
-  Puppet.prototype.changeState = function (href) {
-    var that = this;
-        return that.xhr(href, 'application/json-patch+json', null, function (res) {
-          var patches = JSON.parse(res.responseText || '[]'); //fault tolerance - empty response string should be treated as empty patch array
-          that.handleRemoteChange(patches);
-        });
-  };
-
   Puppet.prototype.clickHandler = function (event) {
     if (event.detail && event.detail.target) {
       //detail is Polymer
@@ -441,7 +550,7 @@
   };
 
   Puppet.prototype.historyHandler = function (/*event*/) {
-    this.changeState(location.href);
+    this.network.changeState(location.href);
   };
 
   Puppet.prototype.showWarning = function (heading, description) {
@@ -483,60 +592,13 @@
   };
 
   /**
-   * Internal method to perform XMLHttpRequest
-   * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
-   * @param accept (Optional) HTTP accept header
-   * @param data (Optional) Data payload
-   * @param [callback(response)] callback to be called in context of puppet with response as argument
-   * @param beforeSend (Optional) Function that modifies the XHR object before the request is sent. Added for hackability
-   * @returns {XMLHttpRequest} performed XHR
-   */
-  Puppet.prototype.xhr = function (url, accept, data, callback, beforeSend) {
-    //this.handleResponseCookie();
-    cookie.erase('Location'); //more invasive cookie erasing because sometimes the cookie was still visible in the requests
-    var that = this;
-    var req = new XMLHttpRequest();
-    req.onload = function () {
-      var res = this;
-      that.handleResponseCookie();
-      that.handleResponseHeader(res);
-      if (res.status >= 400 && res.status <= 599) {
-        that.showError('PuppetJs JSON response error', 'Server responded with error ' + res.status + ' ' + res.statusText + '\n\n' + res.responseText);
-      }
-      else {
-        callback && callback.call(that, res);
-      }
-    };
-    url = url || window.location.href;
-    if (data) {
-      req.open("PATCH", url, true);
-      req.setRequestHeader('Content-Type', 'application/json-patch+json');
-    }
-    else {
-      req.open("GET", url, true);
-    }
-    if (accept) {
-      req.setRequestHeader('Accept', accept);
-    }
-    if (that.referer) {
-      req.setRequestHeader('X-Referer', that.referer);
-    }
-    if (beforeSend) {
-      beforeSend.call(that, req);
-    }
-    req.send(data);
-
-    return req;
-  };
-
-  /**
    * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
-   * so that the URL handlers can be executed on the server
+   * so that the URL handlers can be executed on the remote
    * @param url
    */
   Puppet.prototype.morphUrl = function (url) {
     history.pushState(null, null, url);
-    this.changeState(url);
+    this.network.changeState(url);
   };
 
   /**
