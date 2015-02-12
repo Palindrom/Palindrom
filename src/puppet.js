@@ -180,10 +180,9 @@
    * @param accept (Optional) HTTP accept header
    * @param data (Optional) Data payload
    * @param [callback(response)] callback to be called in context of puppet with response as argument
-   * @param beforeSend (Optional) Function that modifies the XHR object before the request is sent. Added for hackability
    * @returns {XMLHttpRequest} performed XHR
    */
-  PuppetNetworkChannel.prototype.xhr = function (url, accept, data, callback, beforeSend) {
+  PuppetNetworkChannel.prototype.xhr = function (url, accept, data, callback) {
     //this.handleResponseCookie();
     cookie.erase('Location'); //more invasive cookie erasing because sometimes the cookie was still visible in the requests
     var that = this;
@@ -212,9 +211,6 @@
     }
     if (that.referer) {
       req.setRequestHeader('X-Referer', that.referer);
-    }
-    if (beforeSend) {
-      beforeSend.call(that.puppet, req);
     }
     req.send(data);
 
