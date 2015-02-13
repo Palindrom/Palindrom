@@ -63,9 +63,40 @@ getJasmineRequireObj().AjaxFakeRequest = function() {
     return false;
   }
 
+  function wrapProgressEvent(xhr, eventName) {
+    return function() {
+      if (xhr[eventName]) {
+        xhr[eventName]();
+      }
+    };
+  }
+
+  function initializeEvents(xhr) {
+    return {
+      'loadstart': wrapProgressEvent(xhr, 'onloadstart'),
+      'load': wrapProgressEvent(xhr, 'onload'),
+      'loadend': wrapProgressEvent(xhr, 'onloadend'),
+      'progress': wrapProgressEvent(xhr, 'onprogress'),
+      'error': wrapProgressEvent(xhr, 'onerror'),
+      'abort': wrapProgressEvent(xhr, 'onabort'),
+      'timeout': wrapProgressEvent(xhr, 'ontimeout')
+    };
+  }
+
+  function unconvertibleResponseTypeMessage(type) {
+    var msg = [
+      "Can't build XHR.response for XHR.responseType of '",
+      type,
+      "'.",
+      "XHR.response must be explicitly stubbed"
+    ];
+    return msg.join(' ');
+  }
+
   function fakeRequest(global, requestTracker, stubTracker, paramParser) {
     function FakeXMLHttpRequest() {
       requestTracker.track(this);
+      this.events = initializeEvents(this);
       this.requestHeaders = {};
       this.overriddenMimeType = null;
     }
@@ -99,6 +130,28 @@ getJasmineRequireObj().AjaxFakeRequest = function() {
       return headers;
     }
 
+    function parseXml(xmlText, contentType) {
+      if (global.DOMParser) {
+        return (new global.DOMParser()).parseFromString(xmlText, 'text/xml');
+      } else {
+        var xml = new global.ActiveXObject("Microsoft.XMLDOM");
+        xml.async = "false";
+        xml.loadXML(xmlText);
+        return xml;
+      }
+    }
+
+    var xmlParsables = ['text/xml', 'application/xml'];
+
+    function getResponseXml(responseText, contentType) {
+      if (arrayContains(xmlParsables, contentType.toLowerCase())) {
+        return parseXml(responseText, contentType);
+      } else if (contentType.match(/\+xml$/)) {
+        return parseXml(responseText, 'text/xml');
+      }
+      return null;
+    }
+
     var iePropertiesThatCannotBeCopied = ['responseBody', 'responseText', 'responseXML', 'status', 'statusText', 'responseTimeout'];
     extend(FakeXMLHttpRequest.prototype, new global.XMLHttpRequest(), iePropertiesThatCannotBeCopied);
     extend(FakeXMLHttpRequest.prototype, {
@@ -128,14 +181,32 @@ getJasmineRequireObj().AjaxFakeRequest = function() {
         this.status = 0;
         this.statusText = "abort";
         this.onreadystatechange();
+        this.events.progress();
+        this.events.abort();
+        this.events.loadend();
       },
 
       readyState: 0,
 
-      onload: function() {
-      },
+      onloadstart: null,
+      onprogress: null,
+      onabort: null,
+      onerror: null,
+      onload: null,
+      ontimeout: null,
+      onloadend: null,
 
       onreadystatechange: function(isTimeout) {
+      },
+
+      addEventListener: function(event, callback) {
+        var existingCallback = this.events[event],
+            self = this;
+
+        this.events[event] = function() {
+          callback.apply(self);
+          existingCallback();
+        };
       },
 
       status: null,
@@ -143,11 +214,12 @@ getJasmineRequireObj().AjaxFakeRequest = function() {
       send: function(data) {
         this.params = data;
         this.readyState = 2;
+        this.events.loadstart();
         this.onreadystatechange();
 
         var stub = stubTracker.findStub(this.url, data, this.method);
         if (stub) {
-          this.response(stub);
+          this.respondWith(stub);
         }
       },
 
@@ -185,23 +257,56 @@ getJasmineRequireObj().AjaxFakeRequest = function() {
           responseHeaders.push(this.responseHeaders[i].name + ': ' +
             this.responseHeaders[i].value);
         }
-        return responseHeaders.join('\r\n');
+        return responseHeaders.join('\r\n') + '\r\n';
       },
 
       responseText: null,
+      response: null,
+      responseType: null,
 
-      response: function(response) {
+      responseValue: function() {
+        switch(this.responseType) {
+          case null:
+          case "":
+          case "text":
+            return this.readyState >= 3 ? this.responseText : "";
+          case "json":
+            return JSON.parse(this.responseText);
+          case "arraybuffer":
+            throw unconvertibleResponseTypeMessage('arraybuffer');
+          case "blob":
+            throw unconvertibleResponseTypeMessage('blob');
+          case "document":
+            return this.responseXML;
+        }
+      },
+
+
+      respondWith: function(response) {
         if (this.readyState === 4) {
           throw new Error("FakeXMLHttpRequest already completed");
         }
         this.status = response.status;
         this.statusText = response.statusText || "";
         this.responseText = response.responseText || "";
+        this.responseType = response.responseType || "";
         this.readyState = 4;
         this.responseHeaders = normalizeHeaders(response.responseHeaders, response.contentType);
+        this.responseXML = getResponseXml(response.responseText, this.getResponseHeader('content-type') || '');
+        if (this.responseXML) {
+          this.responseType = 'document';
+        }
 
-        this.onload();
+        if ('response' in response) {
+          this.response = response.response;
+        } else {
+          this.response = this.responseValue();
+        }
+
         this.onreadystatechange();
+        this.events.progress();
+        this.events.load();
+        this.events.loadend();
       },
 
       responseTimeout: function() {
@@ -211,6 +316,20 @@ getJasmineRequireObj().AjaxFakeRequest = function() {
         this.readyState = 4;
         jasmine.clock().tick(30000);
         this.onreadystatechange('timeout');
+        this.events.progress();
+        this.events.timeout();
+        this.events.loadend();
+      },
+
+      responseError: function() {
+        if (this.readyState === 4) {
+          throw new Error("FakeXMLHttpRequest already completed");
+        }
+        this.readyState = 4;
+        this.onreadystatechange();
+        this.events.progress();
+        this.events.error();
+        this.events.loadend();
       }
     });
 
@@ -345,6 +464,7 @@ getJasmineRequireObj().AjaxRequestStub = function() {
       this.status = options.status || 200;
 
       this.contentType = options.contentType;
+      this.response = options.response;
       this.responseText = options.responseText;
     };
 

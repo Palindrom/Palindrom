@@ -19,7 +19,7 @@ describe("Parent", function () {
         done();
       });
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world", "child": {}}'
@@ -36,7 +36,7 @@ describe("Parent", function () {
         done();
       });
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world", "children": [{"first": "1st"}, {"second": "2nd"}]}'
@@ -48,7 +48,7 @@ describe("Parent", function () {
 
       this.puppet = new Puppet();
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world", "child": {}}'
@@ -74,7 +74,7 @@ describe("Parent", function () {
 
       this.puppet = new Puppet();
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world", "children": {}}'
@@ -88,7 +88,7 @@ describe("Parent", function () {
       triggerMouseup();
 
       setTimeout(function () { //wait for xhr
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
           "contentType": 'application/json-patch+json',
           "responseText": '[{"op":"add","path":"/children/0/remotes","value":[{"first":"1st"},{"second":"2nd"}]}]'

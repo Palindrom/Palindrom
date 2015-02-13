@@ -15,7 +15,7 @@ describe("Puppet", function () {
 
       this.puppet = new Puppet({callback: initSpy});
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world"}'
@@ -33,7 +33,7 @@ describe("Puppet", function () {
       this.puppet = new Puppet({callback: initSpy});
       var that = this;
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world","": {"hola": "mundo"}}'
@@ -54,7 +54,7 @@ describe("Puppet", function () {
 
       this.puppet = new Puppet({remoteUrl: '/test', callback: initSpy});
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world"}'
@@ -76,7 +76,7 @@ describe("Puppet", function () {
         checkWhenReady();
       }});
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world"}'
@@ -92,7 +92,7 @@ describe("Puppet", function () {
           expect(patchSpy.calls.count()).toBe(2);
           expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"galaxy"}]');
 
-          jasmine.Ajax.requests.mostRecent().response({
+          jasmine.Ajax.requests.mostRecent().respondWith({
             "status": 200,
             "contentType": 'application/json-patch+json',
             "responseText": '[{"op":"replace","path":"/hello","value":"universe"}]'
@@ -116,7 +116,7 @@ describe("Puppet", function () {
         checkWhenReady();
       }});
 
-      jasmine.Ajax.requests.mostRecent().response({ //responds immediately
+      jasmine.Ajax.requests.mostRecent().respondWith({ //responds immediately
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world"}'
@@ -136,7 +136,7 @@ describe("Puppet", function () {
 
           that.puppet.unobserve();
 
-          jasmine.Ajax.requests.mostRecent().response({
+          jasmine.Ajax.requests.mostRecent().respondWith({
             "status": 200,
             "contentType": 'application/json-patch+json',
             "responseText": '[{"op":"replace","path":"/hello","value":"universe"}]'
@@ -159,7 +159,7 @@ describe("Puppet", function () {
         checkWhenReady();
       }});
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world"}'
@@ -177,7 +177,7 @@ describe("Puppet", function () {
 
           that.puppet.unobserve();
 
-          jasmine.Ajax.requests.mostRecent().response({
+          jasmine.Ajax.requests.mostRecent().respondWith({
             "status": 200,
             "contentType": 'application/json-patch+json',
             "responseText": '[{"op":"replace","path":"/hello","value":"universe"}]'
@@ -210,7 +210,7 @@ describe("Puppet", function () {
       INPUT.type = "email";
       document.body.appendChild(INPUT);
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world"}'
@@ -248,7 +248,7 @@ describe("Puppet", function () {
       INPUT.setAttribute('update-on', 'input');
       document.body.appendChild(INPUT);
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world"}'
@@ -261,7 +261,7 @@ describe("Puppet", function () {
       triggerMouseup(INPUT); //trigger patch generation
 
       setTimeout(function () { //wait for xhr
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
           "contentType": 'application/json-patch+json',
           "responseText": '[{"op":"replace","path":"/hello","value":"O"}]'
@@ -273,7 +273,7 @@ describe("Puppet", function () {
         INPUT.blur();
 
         setTimeout(function () { //wait for xhr
-          jasmine.Ajax.requests.mostRecent().response({
+          jasmine.Ajax.requests.mostRecent().respondWith({
             "status": 200,
             "contentType": 'application/json-patch+json',
             "responseText": '[{"op":"replace","path":"/hello","value":"On"}]'
@@ -294,7 +294,7 @@ describe("Puppet", function () {
         obj = myObj;
       }});
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"city": "Gdynia"}'
@@ -310,7 +310,7 @@ describe("Puppet", function () {
         setTimeout(function () { //wait for xhr
           //reply to Sopot
           expect(jasmine.Ajax.requests.at(1).params).toBe('[{"op":"replace","path":"/city","value":"Gdansk"}]');
-          jasmine.Ajax.requests.at(1).response({
+          jasmine.Ajax.requests.at(1).respondWith({
             "status": 200,
             "contentType": 'application/json-patch+json',
             "responseText": '[{"op": "replace", "path": "/city", "value": "Changed to Gdansk"}]'
@@ -319,7 +319,7 @@ describe("Puppet", function () {
           setTimeout(function () {
             //reply to Gdansk
             expect(jasmine.Ajax.requests.at(2).params).toBe('[{"op":"replace","path":"/city","value":"Sopot"}]');
-            jasmine.Ajax.requests.at(2).response({
+            jasmine.Ajax.requests.at(2).respondWith({
               "status": 200,
               "contentType": 'application/json-patch+json',
               "responseText": '[{"op": "replace", "path": "/city", "value": "Changed to Sopot"}]'

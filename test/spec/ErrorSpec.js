@@ -15,7 +15,7 @@ describe("Error", function () {
       var exceptionRaised = false;
 
       try {
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 400,
           "contentType": 'application/json',
           "responseText": 'Custom msg'
@@ -41,7 +41,7 @@ describe("Error", function () {
       var exceptionRaised = false;
 
       try {
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 599,
           "contentType": 'application/json',
           "responseText": 'Custom msg'
@@ -70,7 +70,7 @@ describe("Error", function () {
         obj = myObj;
       }});
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world"}'
@@ -81,7 +81,7 @@ describe("Error", function () {
 
       setTimeout(function () { //wait for xhr
         try {
-          jasmine.Ajax.requests.mostRecent().response({
+          jasmine.Ajax.requests.mostRecent().respondWith({
             "status": 400,
             "contentType": 'application/json',
             "responseText": 'Custom msg'
@@ -112,7 +112,7 @@ describe("Error", function () {
         obj = myObj;
       }});
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world"}'
@@ -123,7 +123,7 @@ describe("Error", function () {
 
       setTimeout(function () { //wait for xhr
         try {
-          jasmine.Ajax.requests.mostRecent().response({
+          jasmine.Ajax.requests.mostRecent().respondWith({
             "status": 599,
             "contentType": 'application/json',
             "responseText": 'Custom msg'
@@ -152,7 +152,7 @@ describe("Error", function () {
       var exceptionRaised = false;
 
       try {
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 599,
           "contentType": 'application/json',
           "responseText": 'Custom msg'

@@ -43,7 +43,7 @@ describe("Buttons", function () {
       }});
 
         expect(patchSpy.calls.count()).toBe(1);
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
           "contentType": 'application/json',
           "responseText": '{"hello": "world", "SendButton": false}'
@@ -56,7 +56,7 @@ describe("Buttons", function () {
 
       setTimeout(function () { //wait for xhr
           expect(patchSpy.calls.count()).toBe(2);
-          jasmine.Ajax.requests.mostRecent().response({
+          jasmine.Ajax.requests.mostRecent().respondWith({
             "status": 200,
             "contentType": 'application/json-patch+json',
             "responseText": '[]'
@@ -77,7 +77,7 @@ describe("Buttons", function () {
         obj = myObj;
       }});
 
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
           "contentType": 'application/json',
           "responseText": '{"hello": "world", "SendButton": false}'
@@ -91,7 +91,7 @@ describe("Buttons", function () {
         triggerMouseup(BUTTON);
 
       setTimeout(function () { //wait for xhr
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
           "contentType": 'application/json-patch+json',
           "responseText": '[]'
@@ -102,7 +102,7 @@ describe("Buttons", function () {
         triggerMouseup(BUTTON);
 
         setTimeout(function () { //wait xhr
-          jasmine.Ajax.requests.mostRecent().response({
+          jasmine.Ajax.requests.mostRecent().respondWith({
             "status": 200,
             "contentType": 'application/json-patch+json',
             "responseText": '[]'
@@ -126,7 +126,7 @@ describe("Buttons", function () {
       }});
 
         expect(patchSpy.calls.count()).toBe(1);
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
           "contentType": 'application/json',
           "responseText": '{"msg": "Show sparkles", "Amount": 0}'
@@ -139,7 +139,7 @@ describe("Buttons", function () {
 
       setTimeout(function () { //wait for xhr
         expect(patchSpy.calls.count()).toBe(2);
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
           "contentType": 'application/json-patch+json',
           "responseText": '[]'
@@ -160,7 +160,7 @@ describe("Buttons", function () {
         obj = myObj;
       }});
 
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
           "contentType": 'application/json',
           "responseText": '{"msg": "Show sparkles", "Amount": 0}'
@@ -174,7 +174,7 @@ describe("Buttons", function () {
         triggerMouseup(BUTTON);
 
       setTimeout(function () { //wait for xhr
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
           "contentType": 'application/json-patch+json',
           "responseText": '[]'
@@ -185,7 +185,7 @@ describe("Buttons", function () {
         triggerMouseup(BUTTON);
 
         setTimeout(function () { //wait for xhr
-          jasmine.Ajax.requests.mostRecent().response({
+          jasmine.Ajax.requests.mostRecent().respondWith({
             "status": 200,
             "contentType": 'application/json-patch+json',
             "responseText": '[]'

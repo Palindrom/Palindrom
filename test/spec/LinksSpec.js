@@ -4,7 +4,7 @@ describe("Links", function () {
   beforeEach(function (done) {
     jasmine.Ajax.install();
     puppet = new Puppet({remoteUrl: '/'});
-    jasmine.Ajax.requests.mostRecent().response({
+    jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
       "contentType": 'application/json',
       "responseText": '{"hello": "world"}'

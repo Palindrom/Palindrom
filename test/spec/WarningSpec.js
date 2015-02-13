@@ -18,7 +18,7 @@ describe("Warning", function () {
         obj = myObj;
       }});
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world"}'
@@ -28,7 +28,7 @@ describe("Warning", function () {
       triggerMouseup();
 
       setTimeout(function () { //wait for xhr
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
           "contentType": 'application/json-patch+json',
           "responseText": '[{"op":"replace","path":"","value":{"hello": "universe"}}]'
@@ -49,7 +49,7 @@ describe("Warning", function () {
       }});
       this.puppet.debug = false;
 
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world"}'
@@ -59,7 +59,7 @@ describe("Warning", function () {
       triggerMouseup();
 
       setTimeout(function () { //wait for xhr
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
           "contentType": 'application/json-patch+json',
           "responseText": '[{"op":"replace","path":"","value":{"hello": "universe"}}]'

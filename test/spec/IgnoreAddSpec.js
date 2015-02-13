@@ -17,7 +17,7 @@ describe("IgnoreAdd", function () {
     }});
     this.puppet.ignoreAdd = /\/\$.+/;
 
-    jasmine.Ajax.requests.mostRecent().response({
+    jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
       "contentType": 'application/json',
       "responseText": '{"hello": 0}'
@@ -44,7 +44,7 @@ describe("IgnoreAdd", function () {
     }});
     this.puppet.ignoreAdd = /\/\$.+/;
 
-    jasmine.Ajax.requests.mostRecent().response({
+    jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
       "contentType": 'application/json',
       "responseText": '{"hello": 0}'
@@ -54,7 +54,7 @@ describe("IgnoreAdd", function () {
     obj.$privateProp = 1;
 
     setTimeout(function () { //wait for xhr
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json-patch+json',
         "responseText": '[]'
@@ -66,7 +66,7 @@ describe("IgnoreAdd", function () {
       obj.$privateProp = 2;
 
       setTimeout(function () { //wait for xhr
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
           "contentType": 'application/json-patch+json',
           "responseText": '[]'
@@ -87,7 +87,7 @@ describe("IgnoreAdd", function () {
     }});
     this.puppet.ignoreAdd = /\/\$.+/;
 
-    jasmine.Ajax.requests.mostRecent().response({
+    jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
       "contentType": 'application/json',
       "responseText": '{"hello": 0}'
@@ -97,7 +97,7 @@ describe("IgnoreAdd", function () {
     obj.$privateProp = ["a", "b", "c"];
 
     setTimeout(function () { //wait for xhr
-      jasmine.Ajax.requests.mostRecent().response({
+      jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json-patch+json',
         "responseText": '[]'
@@ -109,7 +109,7 @@ describe("IgnoreAdd", function () {
       obj.$privateProp[2] = "cc";
 
       setTimeout(function () { //wait for xhr
-        jasmine.Ajax.requests.mostRecent().response({
+        jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
           "contentType": 'application/json-patch+json',
           "responseText": '[]'
@@ -130,7 +130,7 @@ describe("IgnoreAdd", function () {
     }});
     this.puppet.ignoreAdd = /\/\$.+/;
 
-    jasmine.Ajax.requests.mostRecent().response({
+    jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
       "contentType": 'application/json',
       "responseText": '{"hello": 0}'
@@ -153,7 +153,7 @@ describe("IgnoreAdd", function () {
     }});
     this.puppet.ignoreAdd = /\/\$.+/;
 
-    jasmine.Ajax.requests.mostRecent().response({
+    jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
       "contentType": 'application/json',
       "responseText": '{"hello": 0}'
