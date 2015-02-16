@@ -108,7 +108,15 @@ describe("ValidatePatches", function () {
       var error = outgoingJsonpatch.validate(sequence, tree);
       if (error) {
         error.message = "Outgoing patch validation error: " + error.message;
-        var ev = new ErrorEvent("error", {bubbles: true, error: error}); //this needs to be shimmed in IE
+        var ev;
+        if (ErrorEvent.prototype.initErrorEvent) {
+          var ev = document.createEvent("ErrorEvent");
+          ev.initErrorEvent('error', true, true, error.message, "", ""); //IE10+
+          Object.defineProperty(ev, 'error', {value: error}); //ev.error is ignored
+        }
+        else {
+          ev = new ErrorEvent("error", {bubbles: true, cancelable: true, error: error}); //this works everywhere except IE
+        }
         this.dispatchEvent(ev);
       }
     };
