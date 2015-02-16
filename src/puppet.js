@@ -4,6 +4,70 @@
  */
 
 (function (global) {
+  /**
+   * https://github.com/mrdoob/eventdispatcher.js
+   * MIT license
+   * @author mrdoob / http://mrdoob.com/
+   */
+
+  var EventDispatcher = function () {
+  }
+
+  EventDispatcher.prototype = {
+    constructor: EventDispatcher,
+    apply: function (object) {
+      object.addEventListener = EventDispatcher.prototype.addEventListener;
+      object.hasEventListener = EventDispatcher.prototype.hasEventListener;
+      object.removeEventListener = EventDispatcher.prototype.removeEventListener;
+      object.dispatchEvent = EventDispatcher.prototype.dispatchEvent;
+    },
+    addEventListener: function (type, listener) {
+      if (this._listeners === undefined) this._listeners = {};
+      var listeners = this._listeners;
+      if (listeners[type] === undefined) {
+        listeners[type] = [];
+      }
+      if (listeners[type].indexOf(listener) === -1) {
+        listeners[type].push(listener);
+      }
+    },
+    hasEventListener: function (type, listener) {
+      if (this._listeners === undefined) return false;
+      var listeners = this._listeners;
+      if (listeners[type] !== undefined && listeners[type].indexOf(listener) !== -1) {
+        return true;
+      }
+      return false;
+    },
+    removeEventListener: function (type, listener) {
+      if (this._listeners === undefined) return;
+      var listeners = this._listeners;
+      var listenerArray = listeners[type];
+      if (listenerArray !== undefined) {
+        var index = listenerArray.indexOf(listener);
+        if (index !== -1) {
+          listenerArray.splice(index, 1);
+        }
+      }
+    },
+    dispatchEvent: function (event) {
+      if (this._listeners === undefined) return;
+      var listeners = this._listeners;
+      var listenerArray = listeners[event.type];
+      if (listenerArray !== undefined) {
+        event.target = this;
+        var array = [];
+        var length = listenerArray.length;
+        for (var i = 0; i < length; i++) {
+          array[i] = listenerArray[i];
+        }
+        for (var i = 0; i < length; i++) {
+          array[i].call(this, event);
+        }
+      }
+    }
+  };
+
   var lastClickHandler
     , lastPopstateHandler
     , lastPushstateHandler
@@ -258,12 +322,12 @@
     if(options.localVersionPath){
       if(!options.remoteVersionPath){
         //just versioning
-        this.queue = new JSONPatchQueueSynchronous(options.localVersionPath, jsonpatch.apply, options.purity);
+        this.queue = new JSONPatchQueueSynchronous(options.localVersionPath, this.validateAndApplySequence.bind(this), options.purity);
       } else {
         // double versioning or OT
         this.queue = options.ot ?
-          new JSONPatchOTAgent(JSONPatchOT.transform, [options.localVersionPath, options.remoteVersionPath], jsonpatch.apply, options.purity) :
-          new JSONPatchQueue([options.localVersionPath, options.remoteVersionPath], jsonpatch.apply, options.purity); // full or noop OT
+          new JSONPatchOTAgent(JSONPatchOT.transform, [options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity) :
+          new JSONPatchQueue([options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity); // full or noop OT
       }
     }
 
@@ -356,6 +420,8 @@
     }
   }
 
+  Puppet.prototype = Object.create(EventDispatcher.prototype); //inherit EventTarget API from EventDispatcher
+
   Puppet.prototype.observe = function () {
     this.observer = jsonpatch.observe(this.obj, this.filterChangedCallback.bind(this));
   };
@@ -425,12 +491,7 @@
     var that = this;
     
     if(this.debug) {
-      var errors = this.validatePatches(patches, this.remoteObj, true);
-      errors && errors.forEach(function(error, index) {
-        if(error) {
-          that.showError("Outgoing patch validation error", error + "\n\nIn patch:\n\n" + JSON.stringify(patches[index]) );
-        }
-      });
+      this.validateSequence(this.remoteObj, patches);
     }
 
     var txt = JSON.stringify( this.queue? this.queue.send(patches) : patches);
@@ -445,22 +506,29 @@
     this.observe();
   };
 
-  /**
-   * Performs patch sequence validation using Fast-JSON-Patch. Only run when the `debug` flag is set to `true`.
-   * Can be overridden/monkey patched to add more validations.
-   * Additional parameter `isOutgoing` allows to make validations depending whether the sequence is incoming or outgoing.
-   * @param sequence
-   * @param tree
-   * @param isOutgoing
-   * @returns {Array}
-   */
-  Puppet.prototype.validatePatches = function (sequence, tree, isOutgoing) {
-    var errors = jsonpatch.validate(sequence, tree);
-    // return errors;
-    if(errors){
-      throw errors;
+  Puppet.prototype.validateAndApplySequence = function (tree, sequence) {
+    if (this.debug) {
+      try {
+        jsonpatch.apply(tree, sequence, true);
+      }
+      catch (error) {
+        error.message = "Incoming patch validation error: " + error.message;
+        var ev = new ErrorEvent("error", {bubbles: true, error: error}); //this needs to be shimmed in IE
+        this.dispatchEvent(ev);
+      }
     }
-    return undefined;
+    else {
+      jsonpatch.apply(tree, sequence);
+    }
+  };
+
+  Puppet.prototype.validateSequence = function (tree, sequence) {
+    var error = jsonpatch.validate(sequence, tree);
+    if (error) {
+      error.message = "Outgoing patch validation error: " + error.message;
+      var ev = new ErrorEvent("error", {bubbles: true, error: error}); //this needs to be shimmed in IE
+      this.dispatchEvent(ev);
+    }
   };
 
   Puppet.prototype.handleRemoteChange = function (data) {
@@ -471,20 +539,11 @@
       return; //ignore remote change if we are not watching anymore
     }
 
-    if(this.debug) {
-      var errors = this.validatePatches(patches, this.obj, false);
-      errors && errors.forEach(function(error, index) {
-        if(error) {
-          that.showError("Incoming patch validation error", error + "\n\nIn patch:\n\n" + JSON.stringify(patches[index]));
-        }
-      });
-    }
-
     this.unobserve();
     if(this.queue){
       this.queue.receive(this.obj, patches); 
     }else{
-      jsonpatch.apply(this.obj, patches);      
+      this.validateAndApplySequence(this.obj, patches);
     }
 
     patches.forEach(function (patch) {
