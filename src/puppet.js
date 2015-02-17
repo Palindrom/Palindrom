@@ -147,7 +147,7 @@
         this._ws.onopen = function(){
           oldOnOpen();
           // send message once WS is opened
-          this._ws.send(msg);
+          that._ws.send(msg);
         };
       }
       else {
