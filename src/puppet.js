@@ -140,7 +140,7 @@
       if(!this._ws) {
         this.webSocketUpgrade(function(){
           // send message once WS is there
-          this._ws.send(msg);
+          that._ws.send(msg);
         });
       } else if (this._ws.readyState === 0) {
         var oldOnOpen = this._ws.onopen;
