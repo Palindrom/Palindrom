@@ -282,6 +282,22 @@
   };
 
   /**
+   * Non-queuing object that conforms JSON-Patch-Queue API
+   * @param {Function} apply function to apply received patch
+   */
+  function NoQueue(apply){
+    this.apply = apply;
+  }
+  /** just forward message */
+  NoQueue.prototype.send = function(msg){
+    return msg;
+  };
+  /** Apply given JSON Patch sequence immediately */
+  NoQueue.prototype.receive = function(obj, sequence){
+      this.apply(obj, sequence);    
+  };
+
+  /**
    * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
    * @param {Object}             [options]                    map of arguments
    * @param {String}             [options.remoteUrl]          PATCH server URL
@@ -319,6 +335,7 @@
       }
     });
 
+    // choose queuing engine
     if(options.localVersionPath){
       if(!options.remoteVersionPath){
         //just versioning
@@ -329,6 +346,9 @@
           new JSONPatchOTAgent(JSONPatchOT.transform, [options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity) :
           new JSONPatchQueue([options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity); // full or noop OT
       }
+    } else {
+      // no queue - just api
+      this.queue = new NoQueue(this.validateAndApplySequence.bind(this));
     }
 
     this.ignoreCache = [];
@@ -494,7 +514,7 @@
       this.validateSequence(this.remoteObj, patches);
     }
 
-    var txt = JSON.stringify( this.queue? this.queue.send(patches) : patches);
+    var txt = JSON.stringify( this.queue.send(patches) );
     if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
     }
@@ -556,11 +576,7 @@
     }
 
     this.unobserve();
-    if(this.queue){
-      this.queue.receive(this.obj, patches); 
-    }else{
-      this.validateAndApplySequence(this.obj, patches);
-    }
+    this.queue.receive(this.obj, patches);
 
     patches.forEach(function (patch) {
       if (patch.path === "") {
