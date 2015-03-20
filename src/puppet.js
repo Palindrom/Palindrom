@@ -82,10 +82,11 @@
     //   Puppet.instance = this;
     // }
 
-  function PuppetNetworkChannel(puppet, useWebSocket, onReceive){
+  function PuppetNetworkChannel(puppet, useWebSocket, onReceive, onSend){
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.puppet = puppet;
     onReceive && (this.onReceive = onReceive);
+    onSend && (this.onSend = onSend);
 
     this.referer = null;
 
@@ -113,6 +114,8 @@
   // TODO: auto-configure here #38 (tomalec)
   PuppetNetworkChannel.prototype.establish = function(remoteUrl, bootstrap /*, onConnectionReady*/){
     var network = this;
+    var p = { url: remoteUrl, date: new Date() };
+    this.onSend(null, p);
     return this.xhr(
         remoteUrl,
         'application/json', 
@@ -137,10 +140,12 @@
   PuppetNetworkChannel.prototype.send = function(msg){
     var that = this;
     if (this.useWebSocket) {
+      var p = { url: that._ws.url, date: new Date() };
       if(!this._ws) {
         this.webSocketUpgrade(function(){
           // send message once WS is there
           that._ws.send(msg);
+          that.onSend(msg, p);
         });
       } else if (this._ws.readyState === 0) {
         var oldOnOpen = this._ws.onopen;
@@ -148,17 +153,21 @@
           oldOnOpen();
           // send message once WS is opened
           that._ws.send(msg);
+          that.onSend(msg, p);
         };
       }
       else {
         this._ws.send(msg);
+        this.onSend(msg, p);
       }
     }
     else {
+      var p = { url: this.referer || this.puppet.remoteUrl, date: new Date() };
       //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
       this.xhr(this.referer || this.puppet.remoteUrl, 'application/json-patch+json', msg, function (res) {
-          that.onReceive(res.responseText);
-        });
+          that.onReceive(res.responseText, { url: p.url, date: new Date() });
+      });
+      this.onSend(msg, p);
     }
     return this;
   };
@@ -168,6 +177,7 @@
    * @return {[type]} [description]
    */
   PuppetNetworkChannel.prototype.onReceive = function(/*String_with_JSONPatch_sequences*/){};
+  PuppetNetworkChannel.prototype.onSend = function () { };
   PuppetNetworkChannel.prototype.upgrade = function(msg){
   };
 
@@ -191,7 +201,7 @@
       //TODO: trigger on-ready event (tomalec)
     };
     that._ws.onmessage = function (event) {
-      that.onReceive(event.data);
+      that.onReceive(event.data, { url: that._ws.url, date: new Date() });
     };
     that._ws.onerror = function (event) {
       that.puppet.showError("WebSocket connection could not be made", (event.data || "") + "\nCould not connect to: " + upgradeURL);
@@ -202,8 +212,10 @@
   };
   PuppetNetworkChannel.prototype.changeState = function (href) {
     var that = this;
+    var p = { url: href, date: new Date() };
+    this.onSend(null, p);
     return this.xhr(href, 'application/json-patch+json', null, function (res) {
-      that.onReceive(res.responseText);
+      that.onReceive(res.responseText, { url: href, date: new Date() });
     });
   };
 
@@ -277,24 +289,7 @@
       req.setRequestHeader('X-Referer', that.referer);
     }
     req.send(data);
-
     return req;
-  };
-
-  /**
-   * Non-queuing object that conforms JSON-Patch-Queue API
-   * @param {Function} apply function to apply received patch
-   */
-  function NoQueue(apply){
-    this.apply = apply;
-  }
-  /** just forward message */
-  NoQueue.prototype.send = function(msg){
-    return msg;
-  };
-  /** Apply given JSON Patch sequence immediately */
-  NoQueue.prototype.receive = function(obj, sequence){
-      this.apply(obj, sequence);    
   };
 
   /**
@@ -311,6 +306,8 @@
    * @param {JSONPointer}        [options.remoteVersionPath]  remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
    * @param {Boolean}            [options.ot=false]           true to enable OT
    * @param {Boolean}            [options.purity=false]       true to enable purist mode of OT
+   * @param {Function}           [options.onPatchReceived]
+   * @param {Function}           [options.onPatchSent]
    */
   function Puppet(options) {
     options || (options={});
@@ -319,11 +316,14 @@
     this.obj = options.obj || {};
     this.observer = null;
     this.onRemoteChange = options.onRemoteChange;
+    this.onPatchReceived = options.onPatchReceived;
+    this.onPatchSent = options.onPatchSent || function () { };
 
     this.network = new PuppetNetworkChannel(
         this, // puppet instance TODO: to be removed, used for error reporting
         options.useWebSocket || false, // useWebSocket
-        this.handleRemoteChange.bind(this) //onReceive
+        this.handleRemoteChange.bind(this), //onReceive,
+        this.onPatchSent.bind(this) //onSend
       );
     
     Object.defineProperty(this, "useWebSocket", {
@@ -335,7 +335,6 @@
       }
     });
 
-    // choose queuing engine
     if(options.localVersionPath){
       if(!options.remoteVersionPath){
         //just versioning
@@ -346,9 +345,6 @@
           new JSONPatchOTAgent(JSONPatchOT.transform, [options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity) :
           new JSONPatchQueue([options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity); // full or noop OT
       }
-    } else {
-      // no queue - just api
-      this.queue = new NoQueue(this.validateAndApplySequence.bind(this));
     }
 
     this.ignoreCache = [];
@@ -514,7 +510,7 @@
       this.validateSequence(this.remoteObj, patches);
     }
 
-    var txt = JSON.stringify( this.queue.send(patches) );
+    var txt = JSON.stringify( this.queue? this.queue.send(patches) : patches);
     if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
     }
@@ -567,7 +563,7 @@
     }
   };
 
-  Puppet.prototype.handleRemoteChange = function (data) {
+  Puppet.prototype.handleRemoteChange = function (data, params) {
     var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
     var that = this;
 
@@ -576,7 +572,11 @@
     }
 
     this.unobserve();
-    this.queue.receive(this.obj, patches);
+    if(this.queue){
+      this.queue.receive(this.obj, patches); 
+    }else{
+      this.validateAndApplySequence(this.obj, patches);
+    }
 
     patches.forEach(function (patch) {
       if (patch.path === "") {
@@ -597,6 +597,10 @@
 
     if(this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
+    }
+
+    if (this.onPatchReceived) {
+        this.onPatchReceived(data, params);
     }
   };
 
