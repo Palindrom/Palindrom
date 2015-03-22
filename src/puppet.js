@@ -82,10 +82,11 @@
     //   Puppet.instance = this;
     // }
 
-  function PuppetNetworkChannel(puppet, useWebSocket, onReceive){
+  function PuppetNetworkChannel(puppet, useWebSocket, onReceive, onSend){
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.puppet = puppet;
     onReceive && (this.onReceive = onReceive);
+    onSend && (this.onSend = onSend);
 
     this.referer = null;
 
@@ -113,6 +114,7 @@
   // TODO: auto-configure here #38 (tomalec)
   PuppetNetworkChannel.prototype.establish = function(remoteUrl, bootstrap /*, onConnectionReady*/){
     var network = this;
+    this.onSend(null, remoteUrl);
     return this.xhr(
         remoteUrl,
         'application/json', 
@@ -141,6 +143,7 @@
         this.webSocketUpgrade(function(){
           // send message once WS is there
           that._ws.send(msg);
+          that.onSend(msg, that._ws.url);
         });
       } else if (this._ws.readyState === 0) {
         var oldOnOpen = this._ws.onopen;
@@ -148,17 +151,21 @@
           oldOnOpen();
           // send message once WS is opened
           that._ws.send(msg);
+          that.onSend(msg, that._ws.url);
         };
       }
       else {
         this._ws.send(msg);
+        that.onSend(msg, that._ws.url);
       }
     }
     else {
+      var url = this.referer || this.puppet.remoteUrl;
       //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
-      this.xhr(this.referer || this.puppet.remoteUrl, 'application/json-patch+json', msg, function (res) {
-          that.onReceive(res.responseText);
+      this.xhr(url, 'application/json-patch+json', msg, function (res) {
+          that.onReceive(res.responseText, url);
         });
+      this.onSend(msg, url);
     }
     return this;
   };
@@ -168,6 +175,7 @@
    * @return {[type]} [description]
    */
   PuppetNetworkChannel.prototype.onReceive = function(/*String_with_JSONPatch_sequences*/){};
+  PuppetNetworkChannel.prototype.onSend = function () { };
   PuppetNetworkChannel.prototype.upgrade = function(msg){
   };
 
@@ -191,7 +199,7 @@
       //TODO: trigger on-ready event (tomalec)
     };
     that._ws.onmessage = function (event) {
-      that.onReceive(event.data);
+      that.onReceive(event.data, that._ws.url);
     };
     that._ws.onerror = function (event) {
       that.puppet.showError("WebSocket connection could not be made", (event.data || "") + "\nCould not connect to: " + upgradeURL);
@@ -202,8 +210,9 @@
   };
   PuppetNetworkChannel.prototype.changeState = function (href) {
     var that = this;
+    this.onSend(null, href);
     return this.xhr(href, 'application/json-patch+json', null, function (res) {
-      that.onReceive(res.responseText);
+      that.onReceive(res.responseText, href);
     });
   };
 
@@ -311,6 +320,8 @@
    * @param {JSONPointer}        [options.remoteVersionPath]  remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
    * @param {Boolean}            [options.ot=false]           true to enable OT
    * @param {Boolean}            [options.purity=false]       true to enable purist mode of OT
+   * @param {Function}           [options.onPatchReceived]
+   * @param {Function}           [options.onPatchSent]
    */
   function Puppet(options) {
     options || (options={});
@@ -319,11 +330,14 @@
     this.obj = options.obj || {};
     this.observer = null;
     this.onRemoteChange = options.onRemoteChange;
+    this.onPatchReceived = options.onPatchReceived || function () { };
+    this.onPatchSent = options.onPatchSent || function () { };
 
     this.network = new PuppetNetworkChannel(
         this, // puppet instance TODO: to be removed, used for error reporting
         options.useWebSocket || false, // useWebSocket
-        this.handleRemoteChange.bind(this) //onReceive
+        this.handleRemoteChange.bind(this), //onReceive
+        this.onPatchSent.bind(this) //onSend
       );
     
     Object.defineProperty(this, "useWebSocket", {
@@ -567,7 +581,7 @@
     }
   };
 
-  Puppet.prototype.handleRemoteChange = function (data) {
+  Puppet.prototype.handleRemoteChange = function (data, url) {
     var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
     var that = this;
 
@@ -597,6 +611,10 @@
 
     if(this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
+    }
+
+    if (this.onPatchReceived) {
+      this.onPatchReceived(data, url);
     }
   };
 
