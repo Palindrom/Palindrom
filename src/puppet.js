@@ -114,7 +114,6 @@
   // TODO: auto-configure here #38 (tomalec)
   PuppetNetworkChannel.prototype.establish = function(remoteUrl, bootstrap /*, onConnectionReady*/){
     var network = this;
-    this.onSend(null, remoteUrl);
     return this.xhr(
         remoteUrl,
         'application/json', 
@@ -165,7 +164,6 @@
       this.xhr(url, 'application/json-patch+json', msg, function (res) {
           that.onReceive(res.responseText, url);
         });
-      this.onSend(msg, url);
     }
     return this;
   };
@@ -210,7 +208,6 @@
   };
   PuppetNetworkChannel.prototype.changeState = function (href) {
     var that = this;
-    this.onSend(null, href);
     return this.xhr(href, 'application/json-patch+json', null, function (res) {
       that.onReceive(res.responseText, href);
     });
@@ -285,6 +282,7 @@
     if (that.referer) {
       req.setRequestHeader('X-Referer', that.referer);
     }
+    that.onSend(data, url);
     req.send(data);
 
     return req;
