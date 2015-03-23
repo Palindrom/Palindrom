@@ -583,6 +583,10 @@
     var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
     var that = this;
 
+    if (this.onPatchReceived) {
+        this.onPatchReceived(data, url);
+    }
+
     if (!this.observer) {
       return; //ignore remote change if we are not watching anymore
     }
@@ -609,10 +613,6 @@
 
     if(this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
-    }
-
-    if (this.onPatchReceived) {
-      this.onPatchReceived(data, url);
     }
   };
 

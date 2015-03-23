@@ -47,10 +47,12 @@ Attribute           | Type          | Default                | Description
 `obj`               | *Object*      | `{}`                   | object where the parsed JSON data will be inserted
 `useWebSocket`      | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
 `ignoreAdd`         | *RegExp*      |                        | Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
-`debug`             | *Boolean*     | true                   | Toggle debugging mode
-`onRemoteChange`    | *Function*    |                        | Helper callback triggered each time a patch is obtained from server
-`localVersionPath`  | *JSONPointer* | disabled               | local version path, set it to enable Versioned JSON Patch communication
-`remoteVersionPath` | *JSONPointer* | disabled               | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
+`debug`             | *Boolean*     | `true`                 | Toggle debugging mode
+`onRemoteChange`    | *Function*    |                        | Deprecated. Helper callback triggered each time a patch is obtained from server
+`onPatchReceived`   | *Function*    |                        | Helper callback triggered each teme a JSON-patch/HTTP-response received from server, accepts two parameters: (*String* `data`, *String* `url`)
+`onPatchSent`       | *Function*    |                        | Helper callback triggered each teme a JSON-patch/HTTP-request sent to server, accepts two parameters: (*String* `data`, *String* `url`)
+`localVersionPath`  | *JSONPointer* | `disabled`             | local version path, set it to enable Versioned JSON Patch communication
+`remoteVersionPath` | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
 `ot`                | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
 `purity`            | *Boolean*     | `false`                | `true` to enable purist mode of OT
 
@@ -67,8 +69,10 @@ Attribute        | Type       | Default                | Description
 `obj`            | *Object*   | `{}`                   | See above
 `useWebSocket`   | *Boolean*  | `false`                | See above
 `ignoreAdd`      | *RegExp*   |                        | See above
-`debug`          | *Boolean*  | true                   | See above
+`debug`          | *Boolean*  | `true`                 | See above
 `onRemoteChange` | *Function* |                        | See above
+`onPatchReceived`| *Function* |                        | See above
+`onPatchSent`    | *Function* |                        | See above
 
 
 ### Binding object once is ready (`callback`)
