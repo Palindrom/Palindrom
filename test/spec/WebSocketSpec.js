@@ -4,7 +4,6 @@ describe("WebSocket", function () {
     //wsSpy = jasmine.createSpy();
     jasmine.Ajax.install();
     jasmine.WebSocket.install();
-    console.log("installed", XMLHttpRequest);
     // stub initial HTTP request
     jasmine.Ajax.stubRequest(window.location.href).andReturn( TestResponses.defaultInit.success );
   });
@@ -13,7 +12,6 @@ describe("WebSocket", function () {
     this.puppet && this.puppet.unobserve();
     jasmine.Ajax.uninstall();
     jasmine.WebSocket.uninstall();
-    console.log("uninstalled", XMLHttpRequest);
   });
 
   /// init

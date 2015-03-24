@@ -77,7 +77,7 @@ TestResponses = {
     console.log("FakeWebSocket(",url,",", protocols,") created");
     //return  new WebSocket(url, protocols);
     // WebSocket api
-    this.URL            = url;
+    this.url            = url;
     this.binaryType     = "blob";
     this.bufferedAmount = 0;
     this.extensions     = "";

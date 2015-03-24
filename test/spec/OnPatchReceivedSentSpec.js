@@ -1,117 +1,113 @@
-﻿describe("OnPatchReceivedSent", function () {
+﻿describe("OnPatchReceived/Sent", function () {
     beforeEach(function () {
         jasmine.Ajax.install();
-        jasmine.WebSocket.install();
+        // stub initial HTTP request
+        jasmine.Ajax.stubRequest(window.location.href).andReturn( TestResponses.defaultInit.success );
     });
 
     afterEach(function () {
         this.puppet.unobserve();
         jasmine.Ajax.uninstall();
-        jasmine.WebSocket.uninstall();
     });
 
-    describe("init", function () {
-        it("should call callbacks onPatchSent and onPatchReceived for http requests", function (done) {
-            var sendStr = '{"hello": "request"}';
-            var receiveStr = '{"hello": "response"}';
-            var sentData, receivedData;
-            var sentUrl, receivedUrl;
+    it("should call onPatchSent for initial requests", function (done) {
+        var sentSpy = jasmine.createSpy();
 
-            this.puppet = new Puppet({
-                referer: window.location.href,
-                remoteUrl: window.location.href,
-                onPatchSent: function (data, url) {
-                    sentData = data;
-                    sentUrl = url;
-                },
-                onPatchReceived: function (data, url) {
-                    receivedData = data;
-                    receivedUrl = url;
-                }
-            });
-
-            this.puppet.network.send(sendStr);
-
-            jasmine.Ajax.requests.mostRecent().respondWith({
-                "status": 200,
-                "contentType": 'application/json',
-                "responseText": receiveStr,
-                responseHeaders: {
-                    "X-Location": window.location.pathname
-                }
-            });
-
-            setTimeout(function () {
-                expect(sentData).toEqual(sendStr);
-                expect(sentUrl).toEqual(window.location.href);
-
-                expect(receivedData).toEqual(receiveStr);
-                expect(receivedUrl).toEqual(window.location.href);
-
-                done();
-            }, 100);
+        this.puppet = new Puppet({
+            onPatchSent: sentSpy
         });
 
-        it("should call callbacks onPatchSent and onPatchReceived for socket patches", function (done) {
-            //var sendStr = '{"hello": "request"}';
-            var responsePatchStr = '[{"hello": "response"}]';
-            var modelStr = '{"hello": "request"}';
-            var sentData, receivedData;
-            var sentUrl, receivedUrl;
-            var me = this;
+        expect(sentSpy.calls.count()).toEqual(1);
+        expect(sentSpy).toHaveBeenCalledWith(null, window.location.href);
+        done();
+
+    });
+    describe("in HTTP mode", function(){
+        it("should call callbacks onPatchSent and onPatchReceived for outgoing and incoming patches", function (done) {
+            var sentSpy = jasmine.createSpy("onPatchSent");
+            var receivedSpy = jasmine.createSpy("onPatchReceived");
 
             this.puppet = new Puppet({
-                referer: window.location.href,
-                remoteUrl: window.location.href,
-                useWebSocket: true,
-                onPatchSent: function (data, url) {
-                    sentData = data;
-                    sentUrl = url;
-                    console.log("Sent: ", data);
-                },
-                onPatchReceived: function (data, url) {
-                    receivedData = data;
-                    receivedUrl = url;
-                    console.log("Received: ", data);
-                }
+                onPatchSent: sentSpy,
+                onPatchReceived: receivedSpy
             });
 
-            jasmine.Ajax.requests.mostRecent().respondWith({
-                "status": 200,
-                "contentType": 'application/json',
-                "responseText": modelStr,
-                responseHeaders: {
-                    "X-Location": window.location.pathname
-                }
-            });
+            this.puppet.obj.hello = "onPatchSent callback";
 
+
+            // wait for observer and mocked HTTP response
             setTimeout(function () {
-                var socket = jasmine.WebSocket.spy.calls.mostRecent().returnValue;
-
-                //me.puppet.network.send(sendStr);
-                me.puppet.obj.hello = "!!";
-                triggerMouseup();
-                setTimeout(function () {
-                    socket.onmessage({ data: responsePatchStr });
-                });
-            }, 100);
-
-            /*socket.open();
-            socket.onmessage = function (e) {
-                console.log(e);
-                socket.send(receiveStr);
-                socket.close();
-            };*/
-
-            setTimeout(function () {
-                /*expect(sentData).toEqual(sendStr);
-                expect(sentUrl).toEqual(window.location.href);
-
-                expect(receivedData).toEqual(receiveStr);
-                expect(receivedUrl).toEqual(window.location.href);*/
+                expect(sentSpy.calls.mostRecent().args).toEqual(
+                    [
+                    '[{"op":"replace","path":"/hello","value":"onPatchSent callback"}]', 
+                    '/__default/testId001'
+                    ]
+                );
+                // mock also response
+                jasmine.Ajax.requests.mostRecent().respondWith({responseText: '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]'});
+                
+                
+                expect(receivedSpy.calls.count()).toEqual(1);
+                expect(receivedSpy).toHaveBeenCalledWith(
+                    '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]',
+                    '/__default/testId001'
+                );
 
                 done();
-            }, 100);
+            });
+        });
+    });
+
+
+    describe("in WebSockets mode", function(){
+        beforeEach(function () {
+            jasmine.WebSocket.install();
+        });
+        afterEach(function () {
+            jasmine.WebSocket.uninstall();
+        });
+        it("should call onPatchSent callback for outgoing patches", function (done) {
+            var WSSpy = jasmine.WebSocket.spy;
+            var sentSpy = jasmine.createSpy("onPatchSent");
+
+            var puppet = this.puppet = new Puppet({
+                useWebSocket: true,
+                onPatchSent: sentSpy
+            });
+            var websocket = jasmine.WebSocket.spy.calls.mostRecent().returnValue;
+            //open WS for changes
+            websocket.open();
+            this.puppet.obj.hello = "onPatchSent callback";
+
+            // wait for observer and mocked initial HTTP response
+            setTimeout(function () {
+                expect(puppet.obj.hello).toEqual("onPatchSent callback");
+                expect(sentSpy.calls.mostRecent().args[0]).toEqual('[{"op":"replace","path":"/hello","value":"onPatchSent callback"}]');
+                expect(sentSpy.calls.mostRecent().args[1]).toMatch(/ws:\/\/.*__default\/wsupgrade\/testId001/);
+                done();
+            });
+        });
+
+        it("should call onPatchReceived callback for incoming patches", function (done) {
+            var WSSpy = jasmine.WebSocket.spy;
+            var receivedSpy = jasmine.createSpy("onPatchReceived");
+
+            var puppet = this.puppet = new Puppet({
+                useWebSocket: true,
+                onPatchReceived: receivedSpy
+            });
+            var websocket = jasmine.WebSocket.spy.calls.mostRecent().returnValue;
+            //open WS for changes
+            websocket.open();
+            websocket.onmessage({data:'[{"op":"replace","path":"/hello","value":"onPatchReceived callback"}]'});
+
+            // wait for observer and mocked initial HTTP response
+            setTimeout(function () {
+                expect(puppet.obj.hello).toEqual("onPatchReceived callback");
+                expect(receivedSpy.calls.mostRecent().args[0]).toEqual('[{"op":"replace","path":"/hello","value":"onPatchReceived callback"}]');
+                expect(receivedSpy.calls.mostRecent().args[1]).toMatch(/ws:\/\/.*__default\/wsupgrade\/testId001/);
+                done();
+            });
         });
     });
 });
