@@ -49,8 +49,8 @@ Attribute           | Type          | Default                | Description
 `ignoreAdd`         | *RegExp*      |                        | Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
 `debug`             | *Boolean*     | `true`                 | Toggle debugging mode
 `onRemoteChange`    | *Function*    |                        | Deprecated. Helper callback triggered each time a patch is obtained from server
-`onPatchReceived`   | *Function*    |                        | Helper callback triggered each teme a JSON-patch/HTTP-response received from server, accepts two parameters: (*String* `data`, *String* `url`)
-`onPatchSent`       | *Function*    |                        | Helper callback triggered each teme a JSON-patch/HTTP-request sent to server, accepts two parameters: (*String* `data`, *String* `url`)
+`onPatchReceived`   | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts two parameters: (*String* `data`, *String* `url`)
+`onPatchSent`       | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (*String* `data`, *String* `url`)
 `localVersionPath`  | *JSONPointer* | `disabled`             | local version path, set it to enable Versioned JSON Patch communication
 `remoteVersionPath` | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
 `ot`                | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
