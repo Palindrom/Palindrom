@@ -166,6 +166,13 @@ In order to minify it locally you'll need a basic setup.
     $ grunt uglify
     ```
 
+### Releases
+
+To release new version run
+```sh
+grunt uglify bump
+
+```
 
 ### Testing
 
