@@ -1,6 +1,6 @@
 {
   "name": "PuppetJs",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "homepage": "https://github.com/PuppetJs/PuppetJs",
   "description": "Client side library that binds Web Components or AngularJs to server side view models using JSON-Patch.",
   "main": "src/puppet.js",
