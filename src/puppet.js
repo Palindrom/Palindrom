@@ -82,11 +82,12 @@
     //   Puppet.instance = this;
     // }
 
-  function PuppetNetworkChannel(puppet, useWebSocket, onReceive, onSend){
+  function PuppetNetworkChannel(puppet, useWebSocket, onReceive, onSend, onError){
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.puppet = puppet;
     onReceive && (this.onReceive = onReceive);
     onSend && (this.onSend = onSend);
+    onError && (this.onError = onError);
 
     this.referer = null;
 
@@ -262,6 +263,7 @@
       that.handleResponseCookie();
       that.handleResponseHeader(res);
       if (res.status >= 400 && res.status <= 599) {
+        that.onError(JSON.stringify({ statusCode: res.status, statusText: res.statusText, text: res.responseText }), url);
         that.puppet.showError('PuppetJs JSON response error', 'Server responded with error ' + res.status + ' ' + res.statusText + '\n\n' + res.responseText);
       }
       else {
@@ -335,7 +337,8 @@
         this, // puppet instance TODO: to be removed, used for error reporting
         options.useWebSocket || false, // useWebSocket
         this.handleRemoteChange.bind(this), //onReceive
-        this.onPatchSent.bind(this) //onSend
+        this.onPatchSent.bind(this), //onSend,
+        this.handleRemoteError.bind(this) //onError
       );
     
     Object.defineProperty(this, "useWebSocket", {
@@ -577,6 +580,12 @@
       }
       this.dispatchEvent(ev);
     }
+  };
+
+  Puppet.prototype.handleRemoteError = function (data, url) {
+      if (this.onPatchReceived) {
+          this.onPatchReceived(data, url);
+      }
   };
 
   Puppet.prototype.handleRemoteChange = function (data, url) {
