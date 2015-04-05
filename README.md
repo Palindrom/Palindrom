@@ -51,6 +51,7 @@ Attribute           | Type          | Default                | Description
 `onRemoteChange`    | *Function*    |                        | Deprecated. Helper callback triggered each time a patch is obtained from server
 `onPatchReceived`   | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts two parameters: (*String* `data`, *String* `url`)
 `onPatchSent`       | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (*String* `data`, *String* `url`)
+`onSocketStateChanged`| *Function*  |                        | Helper callback triggered when stocket state changes, accepts two parameters: (*String* `data`, *String*, `url`)
 `localVersionPath`  | *JSONPointer* | `disabled`             | local version path, set it to enable Versioned JSON Patch communication
 `remoteVersionPath` | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
 `ot`                | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
@@ -63,16 +64,17 @@ most of them are accessible also in runtime:
 ```javascript
 puppet.property
 ```
-Attribute        | Type       | Default                | Description
----              | ---        | ---                    | ---
-`remoteUrl`      | *String*   | `window.location.href` | See above
-`obj`            | *Object*   | `{}`                   | See above
-`useWebSocket`   | *Boolean*  | `false`                | See above
-`ignoreAdd`      | *RegExp*   |                        | See above
-`debug`          | *Boolean*  | `true`                 | See above
-`onRemoteChange` | *Function* |                        | See above
-`onPatchReceived`| *Function* |                        | See above
-`onPatchSent`    | *Function* |                        | See above
+Attribute             | Type       | Default                | Description
+---                   | ---        | ---                    | ---
+`remoteUrl`           | *String*   | `window.location.href` | See above
+`obj`                 | *Object*   | `{}`                   | See above
+`useWebSocket`        | *Boolean*  | `false`                | See above
+`ignoreAdd`           | *RegExp*   |                        | See above
+`debug`               | *Boolean*  | `true`                 | See above
+`onRemoteChange`      | *Function* |                        | See above
+`onPatchReceived`     | *Function* |                        | See above
+`onSocketStateChanged`| *Function* |                        | See above
+`onPatchSent`         | *Function* |                        | See above
 
 
 ### Binding object once is ready (`callback`)

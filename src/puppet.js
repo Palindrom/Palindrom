@@ -82,12 +82,13 @@
     //   Puppet.instance = this;
     // }
 
-  function PuppetNetworkChannel(puppet, useWebSocket, onReceive, onSend, onError){
+  function PuppetNetworkChannel(puppet, useWebSocket, onReceive, onSend, onError, onStateChange) {
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.puppet = puppet;
     onReceive && (this.onReceive = onReceive);
     onSend && (this.onSend = onSend);
     onError && (this.onError = onError);
+    onStateChange && (this.onStateChange = onStateChange);
 
     this.referer = null;
 
@@ -175,6 +176,7 @@
    */
   PuppetNetworkChannel.prototype.onReceive = function(/*String_with_JSONPatch_sequences*/){};
   PuppetNetworkChannel.prototype.onSend = function () { };
+  PuppetNetworkChannel.prototype.onStateChange = function () { };
   PuppetNetworkChannel.prototype.upgrade = function(msg){
   };
 
@@ -194,6 +196,7 @@
 
     that._ws = new WebSocket(upgradeURL);
     that._ws.onopen = function (event) {
+      that.onStateChange(JSON.stringify({ readyState: that._ws.readyState, state: "open" }), upgradeURL);
       callback && callback(event);
       //TODO: trigger on-ready event (tomalec)
     };
@@ -201,9 +204,11 @@
       that.onReceive(event.data, that._ws.url);
     };
     that._ws.onerror = function (event) {
+      that.onStateChange(JSON.stringify({ readyState: that._ws.readyState, state: "error", data: event.data }), upgradeURL);
       that.puppet.showError("WebSocket connection could not be made", (event.data || "") + "\nCould not connect to: " + upgradeURL);
     };
     that._ws.onclose = function (event) {
+      that.onStateChange(JSON.stringify({ readyState: that._ws.readyState, state: "close", code: event.code, reason: event.reason }), upgradeURL);
       that.puppet.showError("WebSocket connection closed", event.code + " " + event.reason);
     };
   };
@@ -332,13 +337,15 @@
     this.onRemoteChange = options.onRemoteChange;
     this.onPatchReceived = options.onPatchReceived || function () { };
     this.onPatchSent = options.onPatchSent || function () { };
+    this.onSocketStateChanged = options.onSocketStateChanged || function () { };
 
     this.network = new PuppetNetworkChannel(
         this, // puppet instance TODO: to be removed, used for error reporting
         options.useWebSocket || false, // useWebSocket
         this.handleRemoteChange.bind(this), //onReceive
         this.onPatchSent.bind(this), //onSend,
-        this.handleRemoteError.bind(this) //onError
+        this.handleRemoteError.bind(this), //onError,
+        this.onSocketStateChanged.bind(this) //onStateChange
       );
     
     Object.defineProperty(this, "useWebSocket", {
