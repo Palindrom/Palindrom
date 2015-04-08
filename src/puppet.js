@@ -196,7 +196,7 @@
 
     that._ws = new WebSocket(upgradeURL);
     that._ws.onopen = function (event) {
-      that.onStateChange(JSON.stringify({ readyState: that._ws.readyState, state: "open" }), upgradeURL);
+      that.onStateChange(that._ws.readyState, upgradeURL);
       callback && callback(event);
       //TODO: trigger on-ready event (tomalec)
     };
@@ -204,11 +204,11 @@
       that.onReceive(event.data, that._ws.url);
     };
     that._ws.onerror = function (event) {
-      that.onStateChange(JSON.stringify({ readyState: that._ws.readyState, state: "error", data: event.data }), upgradeURL);
+      that.onStateChange(that._ws.readyState, upgradeURL, event.data);
       that.puppet.showError("WebSocket connection could not be made", (event.data || "") + "\nCould not connect to: " + upgradeURL);
     };
     that._ws.onclose = function (event) {
-      that.onStateChange(JSON.stringify({ readyState: that._ws.readyState, state: "close", code: event.code, reason: event.reason }), upgradeURL);
+      that.onStateChange(that._ws.readyState, upgradeURL, null, event.code, event.reason);
       that.puppet.showError("WebSocket connection closed", event.code + " " + event.reason);
     };
   };
