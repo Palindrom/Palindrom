@@ -11,7 +11,7 @@
    */
 
   var EventDispatcher = function () {
-  }
+  };
 
   EventDispatcher.prototype = {
     constructor: EventDispatcher,
@@ -67,20 +67,6 @@
       }
     }
   };
-
-  var lastClickHandler
-    , lastPopstateHandler
-    , lastPushstateHandler
-    , lastBlurHandler
-    , lastPuppet;
-
-    // IDEA(tomalec): replace last* magic that is used to workaround multiple Puppet instances, with something like:
-    // function Puppet(){
-    //   if(Puppet.instance){
-    //     return Puppet.instance;
-    //   }
-    //   Puppet.instance = this;
-    // }
 
   function PuppetNetworkChannel(puppet, useWebSocket, onReceive, onSend, onError, onStateChange) {
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
@@ -327,6 +313,7 @@
    * @param {Boolean}            [options.purity=false]       true to enable purist mode of OT
    * @param {Function}           [options.onPatchReceived]
    * @param {Function}           [options.onPatchSent]
+   * @param {HTMLElement | window} [options.listenTo]         HTMLElement or window to listen to clicks
    */
   function Puppet(options) {
     options || (options={});
@@ -396,21 +383,6 @@
       puppet.observe();
       if (onDataReady) {
         onDataReady.call(puppet, puppet.obj);
-      }
-      if (lastClickHandler) {
-        document.body.removeEventListener('click', lastClickHandler);
-        window.removeEventListener('popstate', lastPopstateHandler);
-        window.removeEventListener('puppet-redirect-pushstate', lastPushstateHandler);
-        document.body.removeEventListener('blur', lastBlurHandler, true);
-      }
-      document.body.addEventListener('click', lastClickHandler = puppet.clickHandler.bind(puppet));
-      window.addEventListener('popstate', lastPopstateHandler = puppet.historyHandler.bind(puppet)); //better here than in constructor, because Chrome triggers popstate on page load
-      window.addEventListener('puppet-redirect-pushstate', lastPushstateHandler = puppet.historyHandler.bind(puppet));
-      document.body.addEventListener('blur', lastBlurHandler = puppet.clickAndBlurCallback.bind(puppet), true);
-
-      if (!lastPuppet) {
-        lastPuppet = puppet;
-        puppet.fixShadowRootClicks();
       }
 
     });
@@ -486,16 +458,6 @@
         // as `jsonpatch.generate` may return this object to for example `#clickAndBlurCallback`
         patches.length = 0; 
       }
-    }
-  };
-
-  Puppet.prototype.clickAndBlurCallback = function (ev) {
-    if (ev && (ev.target === document.body || ev.target.nodeName === "BODY")) { //Polymer warps ev.target so it is not exactly document.body
-      return; //IE triggers blur event on document.body. This is not what we need
-    }
-    var patches = jsonpatch.generate(this.observer); // calls also observe callback -> #filterChangedCallback
-    if(patches.length){
-      this.handleLocalChange(patches);
     }
   };
 
@@ -595,6 +557,15 @@
       }
   };
 
+  Puppet.prototype.showWarning = function (heading, description) {
+    if (this.debug && global.console && console.warn) {
+      if (description) {
+        heading += " (" + description + ")";
+      }
+      console.warn("PuppetJs warning: " + heading);
+    }
+  };
+
   Puppet.prototype.handleRemoteChange = function (data, url) {
     var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
     var that = this;
@@ -631,8 +602,121 @@
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
     }
   };
+  /** PuppetDOM starts here
+  @TODO: consider move to different file */
+  var PuppetDOM;
+  (function(){
+  PuppetDOM = function (options){
+    options || (options={});
+    var onDataReady = options.callback;
+    this.element = options.listenTo || document.body;
+    var old= this.clickHandler;
+    var that =this;
+    var clickHandler = this.clickHandler.bind(this);
+    var historyHandler = this.historyHandler = this.historyHandler.bind(this);
+    var clickAndBlurCallback = this.clickAndBlurCallback = this.clickAndBlurCallback.bind(this);
 
-  Puppet.prototype.clickHandler = function (event) {
+    //TODO: do not change given object
+    //TODO: separate listen
+    options.callback = function addDOMListeners(obj){
+      this.listening = true;
+
+      this.element.addEventListener('click', clickHandler);
+      // window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
+      // this.element.addEventListener('puppet-redirect-pushstate', this.historyHandler);
+      // this.element.addEventListener('blur', this.clickAndBlurCallback, true);
+
+      this.addShadowRootClickListeners(clickHandler);
+      onDataReady && onDataReady.call(this, obj);
+    };
+    this.unlisten = function(){
+      this.listening = false;
+
+      this.element.removeEventListener('click', clickHandler);
+      window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
+      this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandler);
+      this.element.removeEventListener('blur', this.clickAndBlurCallback, true);
+
+      this.removeShadowRootClickListeners(clickHandler);
+    };
+    Puppet.call(this, options);
+  };
+  PuppetDOM.prototype = Object.create(Puppet.prototype);
+
+  /**
+   * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
+   * so that the URL handlers can be executed on the remote
+   * @param url
+   */
+  PuppetDOM.prototype.morphUrl = function (url) {
+    history.pushState(null, null, url);
+    this.network.changeState(url);
+  };
+  /**
+   * Returns array of shadow roots inside of a element (recursive)
+   * @param el
+   * @param out (Optional)
+   */
+  PuppetDOM.prototype.findShadowRoots = function (el, out) {
+    if (!out) {
+      out = [];
+    }
+    for (var i = 0, ilen = el.childNodes.length; i < ilen; i++) {
+      if (el.childNodes[i].nodeType === 1) {
+        var shadowRoot = el.childNodes[i].shadowRoot || el.childNodes[i].polymerShadowRoot_;
+        if (shadowRoot) {
+          out.push(shadowRoot);
+          this.findShadowRoots(shadowRoot, out);
+        }
+        this.findShadowRoots(el.childNodes[i], out);
+      }
+    }
+    return out;
+  };
+  function containsInShadow(root, element){
+    var parent = element;
+    while(parent && root !== parent){
+      parent = parent.parentNode || parent.host;
+    }
+
+    return root === parent;
+  }
+  /**
+   * Catches clicks in Shadow DOM
+   * @see <a href="https://groups.google.com/forum/#!topic/polymer-dev/fDRlCT7nNPU">discussion</a>
+   */
+  PuppetDOM.prototype.addShadowRootClickListeners = function (clickHandler) {
+    //existing shadow roots
+    var shadowRoots = this.findShadowRoots(this.element);
+    for (var i = 0, ilen = shadowRoots.length; i < ilen; i++) {
+      (shadowRoots[i].impl || shadowRoots[i]).addEventListener("click", clickHandler);
+    }
+    var puppet = this;
+    //future shadow roots
+    //TODO: move it outside of listen/unlisten, to overwrite it only once.
+    var old = Element.prototype.createShadowRoot;
+    Element.prototype.createShadowRoot = function () {
+      var shadowRoot = old.apply(this, arguments);
+      if(puppet.listening && containsInShadow(puppet.element, this)){
+        shadowRoot.addEventListener("click", clickHandler);
+      }
+      return shadowRoot;
+    };
+  };
+  /**
+   * Catches clicks in Shadow DOM
+   * @see <a href="https://groups.google.com/forum/#!topic/polymer-dev/fDRlCT7nNPU">discussion</a>
+   */
+  PuppetDOM.prototype.removeShadowRootClickListeners = function (clickHandler) {
+
+    //existing shadow roots
+    var shadowRoots = this.findShadowRoots(this.element);
+    // var shadowRoots = this.findShadowRoots(document.documentElement);
+    for (var i = 0, ilen = shadowRoots.length; i < ilen; i++) {
+      (shadowRoots[i].impl || shadowRoots[i]).removeEventListener("click", clickHandler);
+    }
+  };
+  PuppetDOM.prototype.clickHandler = function (event) {
     if (event.detail && event.detail.target) {
       //detail is Polymer
       event = event.detail;
@@ -655,7 +739,7 @@
     //while target.getAttribute("href") returns desired href (as string)
     var href = target.href || target.getAttribute("href");
 
-    if (href && Puppet.isApplicationLink(href)) {
+    if (href && PuppetDOM.isApplicationLink(href)) {
       event.preventDefault();
       event.stopPropagation();
       this.morphUrl(href);
@@ -668,20 +752,21 @@
     }
   };
 
-  Puppet.prototype.historyHandler = function (/*event*/) {
+  PuppetDOM.prototype.historyHandler = function (/*event*/) {
     this.network.changeState(location.href);
   };
 
-  Puppet.prototype.showWarning = function (heading, description) {
-    if (this.debug && global.console && console.warn) {
-      if (description) {
-        heading += " (" + description + ")";
-      }
-      console.warn("PuppetJs warning: " + heading);
+  PuppetDOM.prototype.clickAndBlurCallback = function (ev) {
+    if (ev && (ev.target === document.body || ev.target.nodeName === "BODY")) { //Polymer warps ev.target so it is not exactly document.body
+      return; //IE triggers blur event on document.body. This is not what we need
+    }
+    var patches = jsonpatch.generate(this.observer); // calls also observe callback -> #filterChangedCallback
+    if(patches.length){
+      this.handleLocalChange(patches);
     }
   };
 
-  Puppet.prototype.showError = function (heading, description) {
+  PuppetDOM.prototype.showError = function (heading, description) {
     if (this.debug) {
       var DIV = document.getElementById('puppetjs-error');
       if (!DIV) {
@@ -711,69 +796,11 @@
   };
 
   /**
-   * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
-   * so that the URL handlers can be executed on the remote
-   * @param url
-   */
-  Puppet.prototype.morphUrl = function (url) {
-    history.pushState(null, null, url);
-    this.network.changeState(url);
-  };
-
-  /**
-   * Returns array of shadow roots inside of a element (recursive)
-   * @param el
-   * @param out (Optional)
-   */
-  Puppet.prototype.findShadowRoots = function (el, out) {
-    if (!out) {
-      out = [];
-    }
-    for (var i = 0, ilen = el.childNodes.length; i < ilen; i++) {
-      if (el.childNodes[i].nodeType === 1) {
-        var shadowRoot = el.childNodes[i].shadowRoot || el.childNodes[i].polymerShadowRoot_;
-        if (shadowRoot) {
-          out.push(shadowRoot);
-          this.findShadowRoots(shadowRoot, out);
-        }
-        this.findShadowRoots(el.childNodes[i], out);
-      }
-    }
-    return out;
-  };
-
-  /**
-   * Catches clicks in Shadow DOM
-   * @see <a href="https://groups.google.com/forum/#!topic/polymer-dev/fDRlCT7nNPU">discussion</a>
-   */
-  Puppet.prototype.fixShadowRootClicks = function () {
-    var clickHandler = function (event) {
-      if (lastPuppet) {
-        lastPuppet.clickHandler(event);
-      }
-    };
-
-    //existing shadow roots
-    var shadowRoots = this.findShadowRoots(document.documentElement);
-    for (var i = 0, ilen = shadowRoots.length; i < ilen; i++) {
-      (shadowRoots[i].impl || shadowRoots[i]).addEventListener("click", clickHandler);
-    }
-
-    //future shadow roots
-    var old = Element.prototype.createShadowRoot;
-    Element.prototype.createShadowRoot = function () {
-      var shadowRoot = old.apply(this, arguments);
-      shadowRoot.addEventListener("click", clickHandler);
-      return shadowRoot;
-    }
-  };
-
-  /**
    * Returns information if a given element is an internal application link that PuppetJS should intercept into a history push
    * @param elem HTMLElement or String
    * @returns {boolean}
    */
-  Puppet.isApplicationLink = function (elem) {
+  PuppetDOM.isApplicationLink = function (elem) {
     if (typeof elem === 'string') {
       //type string is reported in Polymer / Canary (Web Platform features disabled)
       var parser = document.createElement('A');
@@ -792,6 +819,7 @@
     return (elem.protocol == window.location.protocol && elem.host == window.location.host);
   };
 
+  }());
   /**
    * Cookie helper
    * @see Puppet.prototype.handleResponseCookie
@@ -840,5 +868,7 @@
     return null;
   };
 
-  global.Puppet = Puppet;
+  global.PuppetJs = Puppet;
+  global.PuppetDOM = PuppetDOM;
+  global.Puppet = PuppetDOM;
 })(window);

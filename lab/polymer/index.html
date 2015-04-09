@@ -86,11 +86,12 @@
 
 <script>
   window.addEventListener('polymer-ready', function () {
-    new Puppet({
+    puppet = new Puppet({
       callback: function (obj) {
         document.getElementById('test').model = obj;
       },
-      debug: false
+      debug: false,
+      listenTo: document.body
     });
   });
 </script>

@@ -14,6 +14,7 @@ describe("Links", function () {
 
   afterEach(function () {
     puppet.unobserve();
+    puppet.unlisten();
     jasmine.Ajax.uninstall();
   });
 
