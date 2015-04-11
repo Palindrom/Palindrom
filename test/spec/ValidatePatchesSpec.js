@@ -67,8 +67,8 @@ describe("ValidatePatches", function () {
     };
     var sequence = [{op: "replace", path: "/address$", value: ""}];
     var puppetMock = document.createElement('DIV');
-    extend(puppetMock, PuppetJs.prototype);
     extend(puppetMock, Puppet.prototype);
+    extend(puppetMock, PuppetDOM.prototype);
     document.body.appendChild(puppetMock);
     puppetMock.debug = true;
     window.addEventListener('error', function (ev) {

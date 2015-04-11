@@ -5,7 +5,6 @@ describe("Puppet", function () {
 
   afterEach(function () {
     this.puppet.unobserve();
-    this.puppet.unlisten();
     jasmine.Ajax.uninstall();
   });
 

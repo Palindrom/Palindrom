@@ -3,7 +3,7 @@ describe("Links", function () {
 
   beforeEach(function (done) {
     jasmine.Ajax.install();
-    puppet = new Puppet({remoteUrl: '/'});
+    puppet = new PuppetDOM({remoteUrl: '/'});
     jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
       "contentType": 'application/json',
@@ -75,7 +75,7 @@ describe("Links", function () {
     event.preventDefault();
   }
 
-  describe("should intercept Puppet links to use History API", function () {
+  describe("should intercept PuppetDOM links to use History API", function () {
     it("relative path", function () {
       var historySpy = spyOn(window.history, 'pushState');
 

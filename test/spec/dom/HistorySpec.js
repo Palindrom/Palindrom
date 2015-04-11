@@ -3,7 +3,7 @@ describe("History", function () {
   beforeEach(function () {
     //wsSpy = jasmine.createSpy();
     jasmine.Ajax.install();
-    puppet = new Puppet();
+    puppet = new PuppetDOM();
     // stub initial HTTP request
     jasmine.Ajax.stubRequest(window.location.href).andReturn( TestResponses.defaultInit.success );
   });
