@@ -27,14 +27,14 @@ describe("ValidatePatches", function () {
     };
     var sequence = [];
     var errors = [];
-    //var puppetMock = new Puppet();
-    var puppetMock = Object.create(Puppet.prototype);
+    var puppet = new Puppet();
+    // var puppet = Object.create(Puppet.prototype);
 
-    puppetMock.debug = true;
-    puppetMock.addEventListener('error', function (ev) {
+    puppet.debug = true;
+    puppet.addEventListener('error', function (ev) {
       errors.push(ev);
     });
-    puppetMock.validateAndApplySequence(tree, sequence);
+    puppet.validateAndApplySequence(tree, sequence);
     setTimeout(function () {
       expect(errors.length).toBe(0);
       done();
@@ -67,13 +67,16 @@ describe("ValidatePatches", function () {
     };
     var sequence = [{op: "replace", path: "/address$", value: ""}];
     var puppetMock = document.createElement('DIV');
+    extend(puppetMock, PuppetJs.prototype);
     extend(puppetMock, Puppet.prototype);
     document.body.appendChild(puppetMock);
     puppetMock.debug = true;
     window.addEventListener('error', function (ev) {
-      expect(ev.error.name).toEqual('OPERATION_PATH_UNRESOLVABLE');
-      document.body.removeChild(puppetMock);
-      done();
+      if(ev.target === puppetMock ){
+        expect(ev.error.name).toEqual('OPERATION_PATH_UNRESOLVABLE');
+        document.body.removeChild(puppetMock);
+        done();
+      }
     });
     puppetMock.validateAndApplySequence(tree, sequence);
   });

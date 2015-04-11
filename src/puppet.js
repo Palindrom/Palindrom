@@ -191,11 +191,11 @@
     };
     that._ws.onerror = function (event) {
       that.onStateChange(that._ws.readyState, upgradeURL, event.data);
-      that.puppet.showError("WebSocket connection could not be made", (event.data || "") + "\nCould not connect to: " + upgradeURL);
+      throw new Error("WebSocket connection could not be made." + (event.data || "") + "\nCould not connect to: " + upgradeURL);
     };
     that._ws.onclose = function (event) {
       that.onStateChange(that._ws.readyState, upgradeURL, null, event.code, event.reason);
-      that.puppet.showError("WebSocket connection closed", event.code + " " + event.reason);
+      throw new Error("WebSocket connection closed" + event.code + " " + event.reason);
     };
   };
   PuppetNetworkChannel.prototype.changeState = function (href) {
@@ -208,7 +208,7 @@
   // TODO:(tomalec)[cleanup] hide from public API.
   PuppetNetworkChannel.prototype.setReferer = function (referer) {
     if (this.referer && this.referer !== referer) {
-      this.puppet.showError("Error: Session lost", "Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.referer + "\nNew session ID: " + referer);
+      throw new Error("Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.referer + "\nNew session ID: " + referer);
     }
     this.referer = referer;
   };
@@ -255,7 +255,7 @@
       that.handleResponseHeader(res);
       if (res.status >= 400 && res.status <= 599) {
         that.onError(JSON.stringify({ statusCode: res.status, statusText: res.statusText, text: res.responseText }), url);
-        that.puppet.showError('PuppetJs JSON response error', 'Server responded with error ' + res.status + ' ' + res.statusText + '\n\n' + res.responseText);
+        throw new Error('PuppetJs JSON response error. Server responded with error ' + res.status + ' ' + res.statusText + '\n\n' + res.responseText);
       }
       else {
         callback && callback.call(that.puppet, res);
@@ -587,6 +587,7 @@
         if (desc.length > 103) {
           desc = desc.substring(0, 100) + "...";
         }
+        //TODO Error
         that.showWarning("Server pushed patch that replaces the object root", desc);
       }
       if (patch.op === "add" || patch.op === "replace" || patch.op === "test") {
@@ -766,35 +767,6 @@
     }
   };
 
-  PuppetDOM.prototype.showError = function (heading, description) {
-    if (this.debug) {
-      var DIV = document.getElementById('puppetjs-error');
-      if (!DIV) {
-        DIV = document.createElement('DIV');
-        DIV.id = 'puppetjs-error';
-        DIV.style.border = '1px solid #dFb5b4';
-        DIV.style.background = '#fcf2f2';
-        DIV.style.padding = '10px 16px';
-        DIV.style.position = 'fixed';
-        DIV.style.top = '0';
-        DIV.style.left = '0';
-        DIV.style.zIndex = '999';
-        document.body.appendChild(DIV);
-      }
-
-      var H1 = document.createElement('H1');
-      H1.innerHTML = heading;
-
-      var PRE = document.createElement('PRE');
-      PRE.innerHTML = description;
-      PRE.style.whiteSpace = 'pre-wrap';
-
-      DIV.appendChild(H1);
-      DIV.appendChild(PRE);
-    }
-    throw new Error(description);
-  };
-
   /**
    * Returns information if a given element is an internal application link that PuppetJS should intercept into a history push
    * @param elem HTMLElement or String
@@ -868,7 +840,9 @@
     return null;
   };
 
-  global.PuppetJs = Puppet;
   global.PuppetDOM = PuppetDOM;
-  global.Puppet = PuppetDOM;
+  global.Puppet = Puppet;
+  // @deprecated once everybody migrate, it will be removed.
+    global.PuppetJs = Puppet;
+    global.Puppet = PuppetDOM;
 })(window);
