@@ -11,6 +11,7 @@
   <!-- include PuppetJs with dependencies -->
   <script src="../../../fast-json-patch/src/json-patch-duplex.js"></script>
   <script src="../../src/puppet.js"></script>
+  <script src="../../src/puppet-dom.js"></script>
 
   <link rel="stylesheet" type="text/css" href="css/style.css">
 
@@ -86,7 +87,7 @@
 
 <script>
   window.addEventListener('polymer-ready', function () {
-    puppet = new Puppet({
+    puppet = new PuppetDOM({
       callback: function (obj) {
         document.getElementById('test').model = obj;
       },
