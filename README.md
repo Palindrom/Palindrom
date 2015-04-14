@@ -49,8 +49,8 @@ Attribute           | Type          | Default                | Description
 `ignoreAdd`         | *RegExp*      |                        | Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
 `debug`             | *Boolean*     | `true`                 | Toggle debugging mode
 `onRemoteChange`    | *Function*    |                        | Deprecated. Helper callback triggered each time a patch is obtained from server
-`onPatchReceived`   | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts two parameters: (*String* `data`, *String* `url`)
-`onPatchSent`       | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (*String* `data`, *String* `url`)
+`onPatchReceived`   | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts two parameters: (*String* `data`, *String* `url`, *String*, `method`)
+`onPatchSent`       | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (*String* `data`, *String* `url`, *String*, `method`)
 `onSocketStateChanged`| *Function*  |                        | Helper callback triggered when stocket state changes, accepts next parameters: (*int* `state`, *String* `url`, *String* `data`, *int* `code`, *String* `reason`)
 `localVersionPath`  | *JSONPointer* | `disabled`             | local version path, set it to enable Versioned JSON Patch communication
 `remoteVersionPath` | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
