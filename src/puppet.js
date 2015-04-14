@@ -144,7 +144,7 @@
         this.webSocketUpgrade(function(){
           // send message once WS is there
           that._ws.send(msg);
-          that.onSend(msg, that._ws.url);
+          that.onSend(msg, that._ws.url, "WS");
         });
       } else if (this._ws.readyState === 0) {
         var oldOnOpen = this._ws.onopen;
@@ -152,19 +152,19 @@
           oldOnOpen();
           // send message once WS is opened
           that._ws.send(msg);
-          that.onSend(msg, that._ws.url);
+          that.onSend(msg, that._ws.url, "WS");
         };
       }
       else {
         this._ws.send(msg);
-        that.onSend(msg, that._ws.url);
+        that.onSend(msg, that._ws.url, "WS");
       }
     }
     else {
       var url = this.referer || this.puppet.remoteUrl;
       //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
-      this.xhr(url, 'application/json-patch+json', msg, function (res) {
-          that.onReceive(res.responseText, url);
+      this.xhr(url, 'application/json-patch+json', msg, function (res, method) {
+          that.onReceive(res.responseText, url, method);
         });
     }
     return this;
@@ -201,7 +201,7 @@
       //TODO: trigger on-ready event (tomalec)
     };
     that._ws.onmessage = function (event) {
-      that.onReceive(event.data, that._ws.url);
+      that.onReceive(event.data, that._ws.url, "WS");
     };
     that._ws.onerror = function (event) {
       that.onStateChange(that._ws.readyState, upgradeURL, event.data);
@@ -214,8 +214,8 @@
   };
   PuppetNetworkChannel.prototype.changeState = function (href) {
     var that = this;
-    return this.xhr(href, 'application/json-patch+json', null, function (res) {
-      that.onReceive(res.responseText, href);
+    return this.xhr(href, 'application/json-patch+json', null, function (res, method) {
+      that.onReceive(res.responseText, href, method);
     });
   };
 
@@ -263,25 +263,27 @@
     cookie.erase('Location'); //more invasive cookie erasing because sometimes the cookie was still visible in the requests
     var that = this;
     var req = new XMLHttpRequest();
+    var method = "GET";
     req.onload = function () {
       var res = this;
       that.handleResponseCookie();
       that.handleResponseHeader(res);
       if (res.status >= 400 && res.status <= 599) {
-        that.onError(JSON.stringify({ statusCode: res.status, statusText: res.statusText, text: res.responseText }), url);
+        that.onError(JSON.stringify({ statusCode: res.status, statusText: res.statusText, text: res.responseText }), url, method);
         that.puppet.showError('PuppetJs JSON response error', 'Server responded with error ' + res.status + ' ' + res.statusText + '\n\n' + res.responseText);
       }
       else {
-        callback && callback.call(that.puppet, res);
+        callback && callback.call(that.puppet, res, method);
       }
     };
     url = url || window.location.href;
     if (data) {
-      req.open("PATCH", url, true);
+      method = "PATCH";
+      req.open(method, url, true);
       req.setRequestHeader('Content-Type', 'application/json-patch+json');
     }
     else {
-      req.open("GET", url, true);
+      req.open(method, url, true);
     }
     if (accept) {
       req.setRequestHeader('Accept', accept);
@@ -289,7 +291,7 @@
     if (that.referer) {
       req.setRequestHeader('X-Referer', that.referer);
     }
-    that.onSend(data, url);
+    that.onSend(data, url, method);
     req.send(data);
 
     return req;
@@ -589,18 +591,18 @@
     }
   };
 
-  Puppet.prototype.handleRemoteError = function (data, url) {
+  Puppet.prototype.handleRemoteError = function (data, url, method) {
       if (this.onPatchReceived) {
-          this.onPatchReceived(data, url);
+          this.onPatchReceived(data, url, method);
       }
   };
 
-  Puppet.prototype.handleRemoteChange = function (data, url) {
+  Puppet.prototype.handleRemoteChange = function (data, url, method) {
     var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
     var that = this;
 
     if (this.onPatchReceived) {
-        this.onPatchReceived(data, url);
+        this.onPatchReceived(data, url, method);
     }
 
     if (!this.observer) {
