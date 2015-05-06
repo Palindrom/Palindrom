@@ -35,7 +35,7 @@
             this.puppet.obj.hello = "onPatchSent callback";
 
 
-            // wait for observer and mocked HTTP response
+            // wait for observer and mocked initial HTTP response
             setTimeout(function () {
                 expect(sentSpy.calls.mostRecent().args).toEqual(
                     [
@@ -54,7 +54,7 @@
                 );
 
                 done();
-            });
+            }, 100); // for FF
         });
     });
 
@@ -85,7 +85,7 @@
                 expect(sentSpy.calls.mostRecent().args[0]).toEqual('[{"op":"replace","path":"/hello","value":"onPatchSent callback"}]');
                 expect(sentSpy.calls.mostRecent().args[1]).toMatch(/ws:\/\/.*__default\/wsupgrade\/testId001/);
                 done();
-            });
+            }, 100); // for FF
         });
 
         it("should call onPatchReceived callback for incoming patches", function (done) {
@@ -107,7 +107,7 @@
                 expect(receivedSpy.calls.mostRecent().args[0]).toEqual('[{"op":"replace","path":"/hello","value":"onPatchReceived callback"}]');
                 expect(receivedSpy.calls.mostRecent().args[1]).toMatch(/ws:\/\/.*__default\/wsupgrade\/testId001/);
                 done();
-            });
+            }, 100); // for FF
         });
     });
 });
