@@ -67,6 +67,8 @@ describe("ValidatePatches", function () {
     };
     var sequence = [{op: "replace", path: "/address$", value: ""}];
     var puppetMock = document.createElement('DIV');
+    // fixme! EventDispatcher and entire prototype chain is lost.
+    PuppetDOM.apply(puppetMock);
     extend(puppetMock, Puppet.prototype);
     extend(puppetMock, PuppetDOM.prototype);
     document.body.appendChild(puppetMock);
@@ -77,6 +79,7 @@ describe("ValidatePatches", function () {
         document.body.removeChild(puppetMock);
         done();
       }
+      ev.preventDefault();
     });
     puppetMock.validateAndApplySequence(tree, sequence);
   });

@@ -230,7 +230,7 @@ puppet.property
 ```
 Property   | Type          | Default         | Description
 ---         | ---           | ---             | ---
-`element`   | *HTMLElement* | `document.body` | See above
+`element`   | *HTMLElement* | `document.body` | See `listenTo` above
 `listening` | *Boolean*     | `true`          | Is listening on
 
 #### Methods
@@ -241,6 +241,7 @@ puppet.method()
 Attribute   | Type          | Description
 ---         | ---           | ---
 `unlisten`  | *HTMLElement* | Stop listening to DOM events
+`listen`    | *HTMLElement* | Start listening to DOM events
 
 ### Sending client changes to server
 

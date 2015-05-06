@@ -21,8 +21,11 @@
     var clickAndBlurCallback = this.clickAndBlurCallback = this.clickAndBlurCallback.bind(this);
 
     //TODO: do not change given object
-    //TODO: separate listen
     options.callback = function addDOMListeners(obj){
+      this.listen();
+      onDataReady && onDataReady.call(this, obj);
+    };
+    this.listen = function(){      
       this.listening = true;
 
       this.element.addEventListener('click', clickHandler);
@@ -31,7 +34,6 @@
       this.element.addEventListener('blur', this.clickAndBlurCallback, true);
 
       this.addShadowRootClickListeners(clickHandler);
-      onDataReady && onDataReady.call(this, obj);
     };
     this.unlisten = function(){
       this.listening = false;
@@ -101,7 +103,8 @@
     var old = Element.prototype.createShadowRoot;
     Element.prototype.createShadowRoot = function () {
       var shadowRoot = old.apply(this, arguments);
-      if(puppet.listening && containsInShadow(puppet.element, this)){
+      // unwrap in case of WebComponents polyfill
+      if(puppet.listening && containsInShadow(puppet.element, unwrap && unwrap(this) || this)){
         shadowRoot.addEventListener("click", clickHandler);
       }
       return shadowRoot;
