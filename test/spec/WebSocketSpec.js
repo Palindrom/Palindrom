@@ -16,16 +16,40 @@ describe("WebSocket", function () {
 
   /// init
   describe("Puppet constructor", function () {
-    it("should try to open WebSocket connection if `useWebSocket` flag is provided", function (done) {
+      describe("if `useWebSocket` flag is provided", function () {
+        it("should try to open WebSocket connection ", function (done) {
 
-      var WSSpy = jasmine.WebSocket.spy.and.callThroughConstructor();
+          var WSSpy = jasmine.WebSocket.spy.and.callThroughConstructor();
 
-      this.puppet = new Puppet({useWebSocket: true});
-      expect(WSSpy).toHaveBeenCalledWith("ws://" + window.location.host + "/__default/wsupgrade/testId001");
-      expect(WSSpy.calls.mostRecent().returnValue.readyState).toEqual(WebSocket.CONNECTING); // 0
-      done();
+          this.puppet = new Puppet({useWebSocket: true});
+          expect(WSSpy).toHaveBeenCalledWith("ws://" + window.location.host + "/__default/wsupgrade/testId001");
+          expect(WSSpy.calls.mostRecent().returnValue.readyState).toEqual(WebSocket.CONNECTING); // 0
+          done();
 
-    });
+        });
+        it("should use same host, port, username, and password as provided in remoteUrl", function (done) {
+
+          var WSSpy = jasmine.WebSocket.spy.and.callThroughConstructor();
+
+          this.puppet = new Puppet({
+            remoteUrl: "http://junji:ito@house.of.puppets:1234/disregard/path?query=string#andHash",
+            useWebSocket: true});
+          expect(WSSpy).toHaveBeenCalledWith("ws://junji:ito@house.of.puppets:1234/__default/wsupgrade/testId001");
+          done();
+
+        });
+        it("should use `wss://` for `http://` remotes", function (done) {
+
+          var WSSpy = jasmine.WebSocket.spy.and.callThroughConstructor();
+
+          this.puppet = new Puppet({
+            remoteUrl: "https://house.of.puppets/",
+            useWebSocket: true});
+          expect(WSSpy).toHaveBeenCalledWith("wss://house.of.puppets/__default/wsupgrade/testId001");
+          done();
+
+        });
+      });
 
   });
 
