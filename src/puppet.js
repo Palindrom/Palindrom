@@ -81,9 +81,10 @@
     } else {
       url = new URL(window.location);
     }
+    // use exactly same URL, switch only protocols
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
     return Object.defineProperty(obj, 'wsURL', {
-      value: url.toString()
+      value: url
     });
 
   }
@@ -209,7 +210,9 @@
   PuppetNetworkChannel.prototype.webSocketUpgrade = function (callback) {
     var that = this;
     var wsPath = this.referer.replace(/(\/?)__([^\/]*)\//g, "__$2/wsupgrade/");
-    var upgradeURL = this.wsURL + wsPath;
+    // resolve session path given in referrer in the context of remote WS URL
+    var upgradeURL = (new URL(this.referer + "wsupgrade/", this.wsURL)).toString();
+    // ws[s]://[user[:pass]@]remote.host[:port]/__[sessionid]/wsupgrade/
 
     that._ws = new WebSocket(upgradeURL);
     that._ws.onopen = function (event) {
