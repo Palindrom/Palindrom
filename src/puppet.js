@@ -209,9 +209,13 @@
    */
   PuppetNetworkChannel.prototype.webSocketUpgrade = function (callback) {
     var that = this;
-    var wsPath = this.referer.replace(/(\/?)__([^\/]*)\//g, "__$2/wsupgrade/");
     // resolve session path given in referrer in the context of remote WS URL
-    var upgradeURL = (new URL(this.referer + "wsupgrade/", this.wsURL)).toString();
+    var upgradeURL = (
+      new URL(
+        this.referer.replace(/(\/?)__([^\/]*)\//g, "__$2/wsupgrade/"), 
+        this.wsURL
+        )
+      ).toString();
     // ws[s]://[user[:pass]@]remote.host[:port]/__[sessionid]/wsupgrade/
 
     that._ws = new WebSocket(upgradeURL);
