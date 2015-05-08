@@ -68,9 +68,38 @@
     }
   };
 
-  function PuppetNetworkChannel(puppet, useWebSocket, onReceive, onSend, onError, onStateChange) {
+  /**
+   * Defines at given object a WS URL out of given HTTP remoteURL location
+   * @param  {Object} obj       Where to define the wsURL property
+   * @param  {String} remoteUrl HTTP remote address
+   * @return {String}           WS address
+   */
+  function defineWebSocketURL(obj, remoteUrl){
+    var url;
+    if(remoteUrl){
+      url = new URL(remoteUrl, window.location);
+    } else {
+      url = new URL(window.location);
+    }
+    url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+    return Object.defineProperty(obj, 'wsURL', {
+      value: url.toString()
+    });
+
+  }
+
+  function PuppetNetworkChannel(puppet, remoteUrl, useWebSocket, onReceive, onSend, onError, onStateChange) {
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.puppet = puppet;
+    // this.remoteUrl = remoteUrl;
+    Object.defineProperty(this, 'remoteUrl', {
+      value: remoteUrl
+    });
+    // define wsURL if needed
+    if(useWebSocket){
+      defineWebSocketURL(this, remoteUrl);
+    }
+
     onReceive && (this.onReceive = onReceive);
     onSend && (this.onSend = onSend);
     onError && (this.onError = onError);
@@ -92,6 +121,9 @@
             };
             that._ws.close();
           }
+        // define wsURL if needed
+        } else if(!that.wsURL) {
+          defineWebSocketURL(this, remoteUrl);
         }
         return useWebSocket = newValue;
       }
@@ -100,10 +132,10 @@
     this.handleResponseCookie();
   }
   // TODO: auto-configure here #38 (tomalec)
-  PuppetNetworkChannel.prototype.establish = function(remoteUrl, bootstrap /*, onConnectionReady*/){
+  PuppetNetworkChannel.prototype.establish = function(bootstrap /*, onConnectionReady*/){
     var network = this;
     return this.xhr(
-        remoteUrl,
+        this.remoteUrl,
         'application/json', 
         null,  
         function (res) {
@@ -147,7 +179,7 @@
       }
     }
     else {
-      var url = this.referer || this.puppet.remoteUrl;
+      var url = this.referer || this.remoteUrl;
       //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
       this.xhr(url, 'application/json-patch+json', msg, function (res, method) {
           that.onReceive(res.responseText, url, method);
@@ -176,9 +208,8 @@
    */
   PuppetNetworkChannel.prototype.webSocketUpgrade = function (callback) {
     var that = this;
-    var host = window.location.host;
-    var wsPath = this.referer.replace(/__([^\/]*)\//g, "__$1/wsupgrade/");
-    var upgradeURL = "ws://" + host + wsPath;
+    var wsPath = this.referer.replace(/(\/?)__([^\/]*)\//g, "__$2/wsupgrade/");
+    var upgradeURL = this.wsURL + wsPath;
 
     that._ws = new WebSocket(upgradeURL);
     that._ws.onopen = function (event) {
@@ -320,7 +351,6 @@
   function Puppet(options) {
     options || (options={});
     this.debug = options.debug != undefined ? options.debug : true;
-    this.remoteUrl = options.remoteUrl;
     this.obj = options.obj || {};
     this.observer = null;
     this.onRemoteChange = options.onRemoteChange;
@@ -330,6 +360,7 @@
 
     this.network = new PuppetNetworkChannel(
         this, // puppet instance TODO: to be removed, used for error reporting
+        options.remoteUrl,
         options.useWebSocket || false, // useWebSocket
         this.handleRemoteChange.bind(this), //onReceive
         this.onPatchSent.bind(this), //onSend,
@@ -373,7 +404,7 @@
 
     var onDataReady = options.callback;
     var puppet = this;
-    this.network.establish(this.remoteUrl, function bootstrap(responseText){
+    this.network.establish(function bootstrap(responseText){
       var json = JSON.parse(responseText);
       recursiveExtend(puppet.obj, json);
 
