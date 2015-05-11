@@ -212,7 +212,7 @@
     // resolve session path given in referrer in the context of remote WS URL
     var upgradeURL = (
       new URL(
-        this.referer.replace(/(\/?)__([^\/]*)\//g, "__$2/wsupgrade/"), 
+        this.referer.replace(/(\/?)__([^\/]*)\//g, "/__$2/wsupgrade/"), 
         this.wsURL
         )
       ).toString();
