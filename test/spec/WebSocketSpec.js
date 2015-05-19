@@ -30,9 +30,12 @@ describe("WebSocket", function () {
         it("should use same host, port, username, and password as provided in remoteUrl", function (done) {
 
           var WSSpy = jasmine.WebSocket.spy.and.callThroughConstructor();
+          var remoteUrl = "http://junji:ito@house.of.puppets:1234/disregard/path?query=string#andHash";
+          jasmine.Ajax.stubRequest(remoteUrl).andReturn( TestResponses.defaultInit.success );
+
 
           this.puppet = new Puppet({
-            remoteUrl: "http://junji:ito@house.of.puppets:1234/disregard/path?query=string#andHash",
+            remoteUrl: remoteUrl,
             useWebSocket: true});
           expect(WSSpy).toHaveBeenCalledWith("ws://junji:ito@house.of.puppets:1234/__default/wsupgrade/testId001");
           done();
@@ -41,9 +44,11 @@ describe("WebSocket", function () {
         it("should use `wss://` for `http://` remotes", function (done) {
 
           var WSSpy = jasmine.WebSocket.spy.and.callThroughConstructor();
+          var remoteUrl = "https://house.of.puppets/";
+          jasmine.Ajax.stubRequest(remoteUrl).andReturn( TestResponses.defaultInit.success );
 
           this.puppet = new Puppet({
-            remoteUrl: "https://house.of.puppets/",
+            remoteUrl: remoteUrl,
             useWebSocket: true});
           expect(WSSpy).toHaveBeenCalledWith("wss://house.of.puppets/__default/wsupgrade/testId001");
           done();

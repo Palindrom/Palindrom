@@ -24,7 +24,7 @@
     "json-patch-ot": "PuppetJs/JSON-Patch-OT#gh-pages"
   },
   "devDependencies": {
-    "polymer": "Polymer/polymer>=0.6.0",
+    "polymer": "Polymer/polymer#>=0.6.0",
     "model-operations": "Polyjuice/model-operations"
   }
 }

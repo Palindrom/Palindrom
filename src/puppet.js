@@ -79,7 +79,7 @@
     if(remoteUrl){
       url = new URL(remoteUrl, window.location);
     } else {
-      url = new URL(window.location);
+      url = new URL(window.location.href);
     }
     // use exactly same URL, switch only protocols
     url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
@@ -215,7 +215,7 @@
         this.referer.replace(/(\/?)__([^\/]*)\//g, "/__$2/wsupgrade/"), 
         this.wsURL
         )
-      ).toString();
+      ).href;
     // ws[s]://[user[:pass]@]remote.host[:port]/__[sessionid]/wsupgrade/
 
     that._ws = new WebSocket(upgradeURL);

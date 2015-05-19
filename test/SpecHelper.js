@@ -78,13 +78,13 @@ TestResponses = {
     //return  new WebSocket(url, protocols);
     // WebSocket api
     this.url            = url;
-    this.binaryType     = "blob";
+    // this.binaryType     = "blob";
     this.bufferedAmount = 0;
     this.extensions     = "";
-    this.onclose        = null;
-    this.onerror        = null;
-    this.onmessage      = null;
-    this.onopen         = null;
+    // this.onclose        = null;
+    // this.onerror        = null;
+    // this.onmessage      = null;
+    // this.onopen         = null;
     this.protocol       = protocols || "";
     this.readyState     = 0;
 
@@ -92,7 +92,7 @@ TestResponses = {
     this.sendSpy = jasmine.getEnv().spyOn(this, "send").and.callThrough();
     return this;
   }
-  FakeWebSocket.prototype = Object.create( WebSocket.prototype );
+  // FakeWebSocket.prototype = Object.create( WebSocket.prototype );
   FakeWebSocket.prototype.open = function(){
     this.readyState = 1;
     this.onopen && this.onopen();

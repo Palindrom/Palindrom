@@ -134,7 +134,7 @@ puppet.useWebSocket = false;
 
 ### Dependencies
 
-PuppetJs is dependent on [Starcounter-Jack/JSON-Patch](https://github.com/Starcounter-Jack/JSON-Patch) to observe changes in local scope, generate patches to be sent to the server and apply changes received from the server.
+PuppetJs is dependent on [Starcounter-Jack/JSON-Patch](https://github.com/Starcounter-Jack/JSON-Patch) to observe changes in local scope, generate patches to be sent to the server and apply changes received from the server. It also, uses [URL API](http://www.w3.org/TR/url/), if your environment does not support it, you need to use polyfill, for example [Polymer/URL](https://github.com/Polymer/URL).
 
 ### Development
 
