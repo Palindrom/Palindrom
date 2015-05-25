@@ -14,11 +14,11 @@
     options || (options={});
     var onDataReady = options.callback;
     this.element = options.listenTo || document.body;
-    var old= this.clickHandler;
-    var that =this;
+    this.inputPatches = null;
+    this.clickHandler;
     var clickHandler = this.clickHandler.bind(this);
-    var historyHandler = this.historyHandler = this.historyHandler.bind(this);
-    var clickAndBlurCallback = this.clickAndBlurCallback = this.clickAndBlurCallback.bind(this);
+    this.historyHandler = this.historyHandler.bind(this);
+    this.blurHandler = this.blurHandler.bind(this);
 
     //TODO: do not change given object
     options.callback = function addDOMListeners(obj){
@@ -31,7 +31,7 @@
       this.element.addEventListener('click', clickHandler);
       window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
       this.element.addEventListener('puppet-redirect-pushstate', this.historyHandler);
-      this.element.addEventListener('blur', this.clickAndBlurCallback, true);
+      this.element.addEventListener('blur', this.blurHandler, true);
 
       this.addShadowRootClickListeners(clickHandler);
     };
@@ -41,7 +41,7 @@
       this.element.removeEventListener('click', clickHandler);
       window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
       this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandler);
-      this.element.removeEventListener('blur', this.clickAndBlurCallback, true);
+      this.element.removeEventListener('blur', this.blurHandler, true);
 
       this.removeShadowRootClickListeners(clickHandler);
     };
@@ -155,7 +155,7 @@
       event.preventDefault();
     }
     else {
-      this.clickAndBlurCallback(); //needed for checkbox
+      this.sendInputPatches(); //needed for checkbox & radio
     }
   };
 
@@ -163,13 +163,32 @@
     this.network.changeState(location.href);
   };
 
-  PuppetDOM.prototype.clickAndBlurCallback = function (ev) {
-    if (ev && (ev.target === document.body || ev.target.nodeName === "BODY")) { //Polymer warps ev.target so it is not exactly document.body
-      return; //IE triggers blur event on document.body. This is not what we need
-    }
-    var patches = jsonpatch.generate(this.observer); // calls also observe callback -> #filterChangedCallback
-    if(patches.length){
+  var _filterChangedCallback = PuppetDOM.prototype.filterChangedCallback;
+  PuppetDOM.prototype.filterChangedCallback = function (patches) {
+    _filterChangedCallback.call(this, patches);
+    
+    // do nothing for empty change
+    if(patches.length) {
+      var active = document.activeElement; // TODO: Find out nicer solution, as currently `.activeElement` does not necessarily matches changed node (tomalec)
+      //maybe this is better to detect activeElement: http://stackoverflow.com/questions/497094/how-do-i-find-out-which-dom-element-has-the-focus (warpech)
+      if((active.nodeName == 'INPUT' && active.type == 'text') || active.nodeName == 'TEXTAREA') {
+        if(active.getAttribute('update-on') !== 'input') {
+          this.inputPatches = patches;
+          return; //ignore changes while editing a form element, unless it has update-on="input"
+        }
+      }
       this.handleLocalChange(patches);
+    }
+  };
+
+  PuppetDOM.prototype.blurHandler = function () {
+    this.sendInputPatches();
+  };
+
+  PuppetDOM.prototype.sendInputPatches = function () {
+    if(this.inputPatches) {
+      this.handleLocalChange(this.inputPatches);
+      this.inputPatches = null;
     }
   };
 

@@ -489,16 +489,6 @@
 
   Puppet.prototype.filterChangedCallback = function (patches) {
     this.filterIgnoredPatches(patches);
-    // do nothing for empty change
-    if(patches.length){
-      // TODO: Find out nicer solution, as currently `.activeElement` does not necessarily matches changed node (tomalec)
-      if ((document.activeElement.nodeName !== 'INPUT' && document.activeElement.nodeName !== 'TEXTAREA') || document.activeElement.getAttribute('update-on') === 'input') {
-        this.handleLocalChange(patches);
-        // Clear already processed patch sequence, 
-        // as `jsonpatch.generate` may return this object to for example `#clickAndBlurCallback`
-        patches.length = 0; 
-      }
-    }
   };
 
   function isIgnored(pattern, ignoreCache, path, op) {
@@ -533,7 +523,7 @@
 
   Puppet.prototype.handleLocalChange = function (patches) {
     var that = this;
-    
+
     if(this.debug) {
       this.validateSequence(this.remoteObj, patches);
     }
