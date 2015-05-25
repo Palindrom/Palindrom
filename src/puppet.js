@@ -489,6 +489,9 @@
 
   Puppet.prototype.filterChangedCallback = function (patches) {
     this.filterIgnoredPatches(patches);
+    if(patches.length) {
+      this.handleLocalChange(patches);
+    }
   };
 
   function isIgnored(pattern, ignoreCache, path, op) {

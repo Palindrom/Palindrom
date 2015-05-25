@@ -248,21 +248,6 @@ Attribute   | Type          | Description
 `unlisten`  | *HTMLElement* | Stop listening to DOM events
 `listen`    | *HTMLElement* | Start listening to DOM events
 
-### Sending client changes to server
-
-PuppetJs detects changes to the observed object in real time. However, change patches are
-queued and not sent to the server until a `blur` event occurs. It is because normally there is no business need to save
-a partially filled field and in many cases it may be harmful to data integrity. Another benefit is performance
- improvement due to reduced number of requests.
-
-To force sending changes on each key stroke (for example to implement live search), you can configure it
-per input field (given that this field is bound to observed object):
-
-```html
-<input update-on="blur"><!-- default behavior: update server on blur -->
-<input update-on="input"><!-- update server on key stroke -->
-```
-
 ### Browser history
 
 PuppetJs uses the HTML5 history API to update the URL in the browser address bar to reflect the new page. It also listens to a `popstate` event so it could ask the server for new JSON-Patch to morph the page back to previous state. Due to lack of native `pushstate` event you need to either:
