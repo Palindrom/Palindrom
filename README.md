@@ -98,6 +98,16 @@ puppet.obj.some="change";
 ```
 The JSON Patch request will be send to the remote.
 
+### Two-way data binding frameworks
+
+PuppetJs works superbly with with frameworks that allow for two-way data binding, such as Polymer and Angular. These frameworks have the ability to bind an `<input>` element to a JavaScript data model in a way that the object updates after each keystroke. In consequence, PuppetJs sends a patch the server after each keystroke. 
+
+If you want to opt-out from such behavior, you need to force your framework to update the data model after the element is unfocused (`blur` event). Depending on the framework:
+
+- In Polymer 0.5 it is only possible with a Custom Element that extends the native `<input>`, similarly but not exactly how [`core-input`](https://github.com/Polymer/core-input/blob/master/core-input.html) is dome
+- In Polymer 0.9+, use built-in `<input value="{{bindValue::blur}}">`
+- In Angular 1.3+, use built-in `<input type="text" ng-model="name" ng-model-options="{updateOn: 'blur'}" />`
+
 ### Ignoring local changes (`ignoreAdd`)
 
 If you want to create a property in the observed object that will remain local, there is an `ignoreAdd` option and property that
