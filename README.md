@@ -108,6 +108,33 @@ If you want to opt-out from such behavior, you need to force your framework to u
 - In Polymer 0.9+, use built-in `<input value="{{bindValue::blur}}">`
 - In Angular 1.3+, use built-in `<input type="text" ng-model="name" ng-model-options="{updateOn: 'blur'}" />`
 
+### Getting the parent scope
+
+PuppetJS adds an inenumerable `$parent` getter at each level in the data object. You can use it to retrieve parent data from descendant scopes in Angular, Polymer, etc. 
+
+For example, such data object:
+
+```json
+{
+  "Name": "Marcin",
+  "Address": {
+    "City": "Stockholm"
+  }
+}
+```
+
+Can be used as follows:
+
+```html
+<template bind="{{Address}}">
+  {{$parent.Name}} lives in {{City}} <!-- Marcin lives in Stockholm -->
+</template>
+
+<script>
+  puppet.obj.Address.$parent.Name === puppet.obj.Name //true
+</script>
+```
+
 ### Ignoring local changes (`ignoreAdd`)
 
 If you want to create a property in the observed object that will remain local, there is an `ignoreAdd` option and property that
