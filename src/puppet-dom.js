@@ -120,6 +120,11 @@
     }
   };
   PuppetDOM.prototype.clickHandler = function (event) {
+    //Don't morph ctrl + click & middle mouse button
+    if (event.ctrlKey || event.which == 2) {
+      return;
+    }
+
     if (event.detail && event.detail.target) {
       //detail is Polymer
       event = event.detail;
