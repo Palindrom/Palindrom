@@ -120,8 +120,8 @@
     }
   };
   PuppetDOM.prototype.clickHandler = function (event) {
-    //Don't morph ctrl + click & middle mouse button
-    if (event.ctrlKey || event.which == 2) {
+    //Don't morph ctrl/cmd + click & middle mouse button
+    if (event.ctrlKey || event.metaKey || event.which == 2) {
       return;
     }
 
