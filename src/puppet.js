@@ -92,7 +92,10 @@
   function PuppetNetworkChannel(puppet, remoteUrl, useWebSocket, onReceive, onSend, onError, onStateChange) {
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.puppet = puppet;
-    this.remoteUrl = remoteUrl;
+    // this.remoteUrl = remoteUrl;
+    Object.defineProperty(this, 'remoteUrl', {
+      value: remoteUrl
+    });
     // define wsURL if needed
     if(useWebSocket){
       defineWebSocketURL(this, remoteUrl);
@@ -245,9 +248,7 @@
     if (this.referer && this.referer !== referer) {
       throw new Error("Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.referer + "\nNew session ID: " + referer);
     }
-
     this.referer = referer;
-    this.remoteUrl = new URL(this.referer, this.remoteUrl).href;
   };
 
   // TODO:(tomalec)[cleanup] hide from public API.
