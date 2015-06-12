@@ -158,28 +158,11 @@
    */
   PuppetNetworkChannel.prototype.send = function(msg){
     var that = this;
-    if (this.useWebSocket) {
-      if(!this._ws) {
-        this.webSocketUpgrade(function(){
-          // send message once WS is there
-          that._ws.send(msg);
-          that.onSend(msg, that._ws.url, "WS");
-        });
-      } else if (this._ws.readyState === 0) {
-        var oldOnOpen = this._ws.onopen;
-        this._ws.onopen = function(){
-          oldOnOpen();
-          // send message once WS is opened
-          that._ws.send(msg);
-          that.onSend(msg, that._ws.url, "WS");
-        };
-      }
-      else {
+    // send message only if there is a working ws connection
+    if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
         this._ws.send(msg);
         that.onSend(msg, that._ws.url, "WS");
-      }
-    }
-    else {
+    } else {
       var url = this.referer || this.remoteUrl;
       //"referer" should be used as the url when sending JSON Patches (see https://github.com/PuppetJs/PuppetJs/wiki/Server-communication)
       this.xhr(url, 'application/json-patch+json', msg, function (res, method) {
