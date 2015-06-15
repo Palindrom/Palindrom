@@ -275,7 +275,6 @@ describe("PuppetDOM - Links -", function () {
         var historySpy = spyOn(window.history, 'pushState');
 
         var href = 'test_a';
-        debugger
         createLinkTest(href, nodeB);
 
         expect(historySpy.calls.count()).toBe(0);

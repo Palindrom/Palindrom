@@ -18,7 +18,7 @@
         });
 
         expect(sentSpy.calls.count()).toEqual(1);
-        expect(sentSpy).toHaveBeenCalledWith(null, window.location.href);
+        expect(sentSpy).toHaveBeenCalledWith(null, window.location.href, "GET");
         done();
 
     });
@@ -40,7 +40,8 @@
                 expect(sentSpy.calls.mostRecent().args).toEqual(
                     [
                     '[{"op":"replace","path":"/hello","value":"onPatchSent callback"}]', 
-                    '/__default/testId001'
+                    '/__default/testId001',
+                    'PATCH'
                     ]
                 );
                 // mock also response
@@ -50,7 +51,8 @@
                 expect(receivedSpy.calls.count()).toEqual(1);
                 expect(receivedSpy).toHaveBeenCalledWith(
                     '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]',
-                    '/__default/testId001'
+                    '/__default/testId001',
+                    'PATCH'
                 );
 
                 done();

@@ -76,7 +76,7 @@ describe("WebSocket", function () {
 
   });
   describe("once connection is opened", function () {
-    it("should send over WebSocket changes queued after HTTP responded, but before WS was created", function (done) {
+    it("should send patches over HTTP before ws.readyState is OPENED, and over WebSocket after ws.readyState is OPENED", function (done) {
 
       var WSSpy = jasmine.WebSocket.spy;
 
@@ -87,28 +87,48 @@ describe("WebSocket", function () {
           var puppetObj = this.obj;
           puppetObj.hello = "galaxy";
           triggerMouseup();
+
           // change object later
-          setTimeout(function(){
+          setTimeout(function () {
+            //The patch should be send immediately as WS connection is not yet established
+            expect(jasmine.Ajax.requests.mostRecent().params).toEqual(JSON.stringify([{ op: "replace", path: "/hello", value: "galaxy" }]));
+
             puppetObj.foo = "bar";
             triggerMouseup();
-            setTimeout( checkOnceReady, 1); // wait for WS to get created
+
+            setTimeout(function () {
+              //The patch should be send immediately as WS connection is not yet established
+              expect(jasmine.Ajax.requests.mostRecent().params).toEqual(JSON.stringify([{ op: "add", path: "/foo", value: "bar" }]));
+
+              var websocket = WSSpy.calls.mostRecent().returnValue;
+              websocket.open();
+
+              puppetObj.bar = "foo";
+              triggerMouseup();
+
+              setTimeout(function () {
+                //Patches should be send over WS once connection established
+                expect(websocket.sendSpy.calls.argsFor(0)).toEqual([JSON.stringify([{ op: "add", path: "/bar", value: "foo" }])]);
+
+                done();
+              }, 1);
+            }, 1);
           },1);
 
         }
 
-        function checkOnceReady(){
+        /*function checkOnceReady(){
           var websocket = WSSpy.calls.mostRecent().returnValue;
           websocket.open();
-
 
           expect(websocket.readyState).toEqual(WebSocket.OPEN); // 1
           expect(websocket.sendSpy.calls.argsFor(0)).toEqual([JSON.stringify([{op:"replace",path: "/hello", value:"galaxy"}])]);
           expect(websocket.sendSpy.calls.argsFor(1)).toEqual([JSON.stringify([{op:"add",path: "/foo", value:"bar"}])]);
           done();
-        }
+        }*/
 
     });
-    it("should send over WebSocket changes queued after HTTP responded and WS was created, but before WS was opened", function (done) {
+    /*it("should send over WebSocket changes queued after HTTP responded and WS was created, but before WS was opened", function (done) {
 
       var WSSpy = jasmine.WebSocket.spy;
 
@@ -147,7 +167,7 @@ describe("WebSocket", function () {
           done();
         }
 
-    });
+    });*/
 
     it("should send new changes over WebSocket", function (done) {
 
