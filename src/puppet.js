@@ -222,9 +222,10 @@
 
   // TODO:(tomalec)[cleanup] hide from public API.
   PuppetNetworkChannel.prototype.setRemoteUrl = function (remoteUrl) {
-    if (this.remoteUrl && this.remoteUrl != remoteUrl) {
+    if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
         throw new Error("Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.remoteUrl + "\nNew session ID: " + remoteUrl);
     }
+    this.remoteUrlSet = true;
     this.remoteUrl = remoteUrl;
   };
 
