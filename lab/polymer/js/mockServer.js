@@ -40,7 +40,7 @@ window.addEventListener('polymer-ready', function () { //see https://github.com/
       var inPatches = data ? JSON.parse(data) : [];
       var outPatches = [];
 
-      if (this.url != lastUrl) {
+      if (this.url != lastUrl && !inPatches.length) {
         handlePageLoad(this.url);
         stub.responseHeaders = [{name: "Location", value: "/PuppetJs/lab/polymer/index.html"},{name: "X-Referer", value: "/PuppetJs/lab/polymer/index.html"}];
         lastUrl = this.url;
