@@ -42,7 +42,7 @@ window.addEventListener('polymer-ready', function () { //see https://github.com/
 
       if (this.url != lastUrl) {
         handlePageLoad(this.url);
-        stub.responseHeaders = [{name: "Location", value: this.url},{name: "X-Referer", value: lastUrl}];
+        stub.responseHeaders = [{name: "Location", value: "/PuppetJs/lab/polymer/index.html"},{name: "X-Referer", value: "/PuppetJs/lab/polymer/index.html"}];
         lastUrl = this.url;
         outPatches.push({op: 'replace', path: '/user/firstName$', value: full.user.firstName$});
         outPatches.push({op: 'replace', path: '/user/lastName$', value: full.user.lastName$});
