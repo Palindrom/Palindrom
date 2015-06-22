@@ -1,0 +1,173 @@
+<!-- puppet-client version: 0.0.3 | MIT License -->
+
+<!-- include PuppetJs with dependencies -->
+<script src="../../fast-json-patch/src/json-patch-duplex.js"></script>
+<script src="../../json-patch-queue/src/json-patch-queue.js"></script>
+<script src="../../json-patch-ot-agent/src/json-patch-ot-agent.js"></script>
+<script src="../../json-patch-ot/src/json-patch-ot.js"></script>
+<script src="../../PuppetJs/src/puppet.js"></script>
+<script src="../../PuppetJs/src/puppet-dom.js"></script>
+<!-- and Polymer for PolymerExpressions only -->
+<link rel="import" href="../../polymer/polymer.html">
+
+<script>
+(function(window, Puppet) {
+    // Creates an object based in the HTML Element prototype and Puppet
+    var PuppetClientPrototype = extend(Object.create(HTMLElement.prototype), PuppetDOM.prototype);
+
+    // defaults
+    PuppetClientPrototype.debug = false;
+    PuppetClientPrototype.useWebSocket = true;
+    PuppetClientPrototype.ignoreAdd = /.*/;
+    var defaultLocalVersionPath = "/_ver#c$";
+    var defaultRemoteVersionPath = "/_ver#s";
+    PuppetClientPrototype.ot = true;
+    PuppetClientPrototype.purity = false;
+
+    // Fires when an instance of the element is created
+    PuppetClientPrototype.createdCallback = function() {
+        var callback = undefined;
+        var whereToBind = this.getAttribute("ref");
+        var listenTo = this.getAttribute("listen-to");
+        var me = this;
+
+        if(whereToBind){
+            callback = function (obj) {
+                this.bindTo(whereToBind);
+            };
+        }
+        if( listenTo ){
+           listenTo = typeof listenTo == "string" ? document.getElementById( listenTo ) : listenTo;
+        }
+        PuppetDOM.call( this, {
+            // use server URL or window.location.href;
+            remoteUrl:         this.getAttribute("remoteurl") || window.location.href,
+            callback:          callback,
+            listenTo:          listenTo,
+            // obj:            obj,
+            useWebSocket:      parseBoolAttribute(this.getAttribute("usewebsocket"), this.useWebSocket),
+            ignoreAdd:         this.hasAttribute("ignoreadd") && 
+                                    new RegExp( this.getAttribute("ignoreadd") ) ||
+                                this.ignoreAdd,
+            debug:             parseBoolAttribute(this.hasAttribute("debug"), this.debug),
+            // onRemoteChange: ?,
+            onPatchReceived: function (data, url, method) {
+                me.dispatchEvent(
+                    new CustomEvent("patchreceived", {
+                        detail: {
+                            data: data,
+                            url: url,
+                            method: method
+                        }
+                    })
+                );
+            },
+            onPatchSent: function (data, url, method) {
+                me.dispatchEvent(
+                    new CustomEvent("patchsent", {
+                        detail: {
+                            data: data,
+                            url: url,
+                            method: method
+                        }
+                    })
+                );
+            },
+            onSocketStateChanged: function (state, url, data, code, reason) {
+                me.dispatchEvent(
+                    new CustomEvent("socketstatechanged", {
+                        detail: {
+                            state: state,
+                            url: url,
+                            data: data,
+                            statusCode: code,
+                            reason: reason
+                        }
+                    })
+                );
+            },
+            localVersionPath:  this.hasAttribute("localversionpath") ? this.getAttribute("localversionpath") : defaultLocalVersionPath,
+            remoteVersionPath: this.hasAttribute("remoteversionpath") ? this.getAttribute("remoteversionpath") : defaultRemoteVersionPath,
+            ot:                parseBoolAttribute(this.hasAttribute("ot"), this.ot),
+            purity:            parseBoolAttribute(this.hasAttribute("purity"), this.purity)
+        });
+    };
+
+    function parseBoolAttribute(value, defVal){
+        if( value === "false" ){
+            return false;
+        } else {
+            return (value || value==="") || defVal;
+        }
+    }
+
+    // Fires when an instance was inserted into the document
+    // PuppetClientPrototype.attachedCallback = function() {};
+
+    // Fires when an instance was removed from the document
+    // PuppetClientPrototype.detachedCallback = function() {};
+
+    // Fires when an attribute was added, removed, or updated
+    PuppetClientPrototype.attributeChangedCallback = function(attr, oldVal, newVal) {
+        attr = attr.toLowerCase();
+        switch(attr){
+            case "ignoreadd":
+                this.ignoreAdd = newVal && new RegExp( newVal );
+                break;
+            case "usewebsocket":
+                this.useWebSocket = parseBoolAttribute(newVal, this.prototype.useWebSocket);
+                break;
+            case "debug":
+                this.debug = parseBoolAttribute(newVal, this.prototype.debug);
+                break;
+            case "ref":
+                this.bindTo(newVal); // XXX: Migh be called before ready! (tomalec)
+                break;
+            case "listenTo":
+                newVal = typeof newVal == "string" ? document.getElementById( newVal ) : newVal;
+                this.listenTo(newVal);
+                break;
+
+        }
+    };
+
+
+
+    PuppetClientPrototype.bindTo = function(element){
+        // use node id or node itself;
+        element = typeof element == "string" ? document.getElementById( element ) : element;
+        element.model = this.obj;
+        //element.bindingDelegate = new PolymerExpressions(); // Make the "item" bindings work
+    };
+
+    window.PuppetClient = document.registerElement('puppet-client', {
+        prototype: PuppetClientPrototype
+    });
+
+    // Lang helpers
+    // copy own properties from 'api' to 'prototype
+    // function extend(prototype, api) {
+    //     if (prototype && api) {
+    //       // use only own properties of 'api'
+    //       Object.getOwnPropertyNames(api).forEach(function(n) {
+    //         // acquire property descriptor
+    //         var pd = Object.getOwnPropertyDescriptor(api, n);
+    //         if (pd) {
+    //           // clone property via descriptor
+    //           Object.defineProperty(prototype, n, pd);
+    //         }
+    //       });
+    //     }
+    //     return prototype;
+    // }
+    // Rewrite entire prototype chain
+    function extend(destination, source) {
+      for (var k in source) {
+        // if (source.hasOwnProperty(k)) {
+          destination[k] = source[k];
+        // }
+      }
+      return destination; 
+    }
+}(window, Puppet));
+</script>

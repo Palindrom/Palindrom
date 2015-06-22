@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Fleettools</title>
+    <!-- mock server responses -->
+
+    <script src="bower_components/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="bower_components/polymer/polymer.html" />
+    <link rel="import" href="bower_components/puppet-client/src/puppet-client.html" />
+    <link rel="import" href="index-root.html" />
+
+    <script src="../../test/lib/jasmine-2.2.0/jasmine.js"></script>
+    <script>window.jasmine = jasmineRequire.core(jasmineRequire);</script>
+    <script src="../../test/lib/jasmine-ajax-3.0.0/lib/mock-ajax.js"></script>
+    <script src="js/index.js"></script>
+</head>
+<body>
+    <template is="dom-bind" id="root">
+        <index-root model="{{model}}" puppet="{{puppet}}"></index-root>
+    </template>
+    <puppet-client ref="root" usewebsocket="false"></puppet-client>
+    <script>
+    window.addEventListener("WebComponentsReady", function () {
+        var root = document.getElementById("root");
+        var puppet = document.querySelector("puppet-client");
+
+        root.puppet = puppet;
+    });
+    </script>
+
+</body>
+</html>

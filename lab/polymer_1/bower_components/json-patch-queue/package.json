@@ -1,0 +1,33 @@
+{
+  "name": "json-patch-queue",
+  "version": "0.0.0",
+  "description": "Queue for Versioned JSON-Patch - makes sure that your JSON Patches (RFC6902) gets applied in correct order",
+  "main": "src/json-patch-queue.js",
+  "scripts": {
+    "test": "jasmine-node --matchall --config test/spec/coreSpec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PuppetJs/JSON-Patch-queue.git"
+  },
+  "keywords": [
+    "jsonpatch",
+    "json-patch",
+    "versioned-json-patch",
+    "json",
+    "queue"
+  ],
+  "author": "Tomek Wytrebowicz",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/PuppetJs/JSON-Patch-queue/issues"
+  },
+  "homepage": "https://github.com/PuppetJs/JSON-Patch-queue",
+  "engines": {
+    "node": ">= 0.4.0"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.5",
+    "grunt-contrib-uglify": "~0.5.0"
+  }
+}

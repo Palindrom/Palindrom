@@ -1,0 +1,34 @@
+{
+  "name": "json-patch-ot",
+  "version": "0.0.0",
+  "description": "JSON Patch Operational Transformations - resolves outdated JSON Patches (RFC6902) in real-time JSON collaboration",
+  "main": "src/json-patch-ot.js",
+  "scripts": {
+    "test": "jasmine-node --matchall --config test/spec/coreSpec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PuppetJs/JSON-Patch-OT.git"
+  },
+  "keywords": [
+    "jsonpatch",
+    "json-patch",
+    "OT",
+    "versioned-json-patch",
+    "json",
+    "queue"
+  ],
+  "author": "Tomek Wytrebowicz",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/PuppetJs/JSON-Patch-OT/issues"
+  },
+  "homepage": "https://github.com/PuppetJs/JSON-Patch-OT",
+  "engines": {
+    "node": ">= 0.4.0"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.5",
+    "grunt-contrib-uglify": "~0.5.0"
+  }
+}
