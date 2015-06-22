@@ -49,35 +49,6 @@
     history.pushState(null, null, url);
     this.network.changeState(url);
   };
-  /**
-   * Returns array of shadow roots inside of a element (recursive)
-   * @param el
-   * @param out (Optional)
-   */
-  PuppetDOM.prototype.findShadowRoots = function (el, out) {
-    if (!out) {
-      out = [];
-    }
-    for (var i = 0, ilen = el.childNodes.length; i < ilen; i++) {
-      if (el.childNodes[i].nodeType === 1) {
-        var shadowRoot = el.childNodes[i].shadowRoot || el.childNodes[i].polymerShadowRoot_;
-        if (shadowRoot) {
-          out.push(shadowRoot);
-          this.findShadowRoots(shadowRoot, out);
-        }
-        this.findShadowRoots(el.childNodes[i], out);
-      }
-    }
-    return out;
-  };
-  function containsInShadow(root, element){
-    var parent = element;
-    while(parent && root !== parent){
-      parent = parent.parentNode || parent.host;
-    }
-
-    return root === parent;
-  }
 
   PuppetDOM.prototype.clickHandler = function (event) {
     //Don't morph ctrl/cmd + click & middle mouse button
