@@ -210,7 +210,14 @@
     };
     that._ws.onclose = function (event) {
       that.onStateChange(that._ws.readyState, upgradeURL, null, event.code, event.reason);
-      throw new Error("WebSocket connection closed" + event.code + " " + event.reason);
+
+      var m = ["WebSocket connection closed. Status code: ", event.code, "."];
+
+      if (event.reason) {
+          m.push(" Reason: ", event.reason);
+      }
+
+      console.error(m.join(""));
     };
   };
   PuppetNetworkChannel.prototype.changeState = function (href) {
