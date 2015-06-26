@@ -124,8 +124,6 @@
         return useWebSocket = newValue;
       }
     });
-
-    this.handleResponseCookie();
   }
   // TODO: auto-configure here #38 (tomalec)
   PuppetNetworkChannel.prototype.establish = function(bootstrap /*, onConnectionReady*/){
@@ -245,21 +243,6 @@
   };
 
   /**
-   * PuppetJs does not use cookies because of sessions (you need to take care of it in your application code)
-   * Reason PuppetJs handles cookies is different:
-   * JavaScript cannot read HTTP "Location" header for the main HTML document, but it can read cookies
-   * So if you want to establish session in the main HTML document, send "Location" value as a cookie
-   * The cookie will be erased (replaced with empty value) after reading
-   */
-  PuppetNetworkChannel.prototype.handleResponseCookie = function () {
-    var location = cookie.read('Location');
-    if (location) { //if cookie exists and is not empty
-      this.setRemoteUrl(location);
-      cookie.erase('Location');
-    }
-  };
-
-  /**
    * Internal method to perform XMLHttpRequest
    * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
    * @param accept (Optional) HTTP accept header
@@ -268,14 +251,11 @@
    * @returns {XMLHttpRequest} performed XHR
    */
   PuppetNetworkChannel.prototype.xhr = function (url, accept, data, callback) {
-    //this.handleResponseCookie();
-    cookie.erase('Location'); //more invasive cookie erasing because sometimes the cookie was still visible in the requests
     var that = this;
     var req = new XMLHttpRequest();
     var method = "GET";
     req.onload = function () {
       var res = this;
-      that.handleResponseCookie();
       that.handleResponseHeader(res);
       if (res.status >= 400 && res.status <= 599) {
         that.onError(JSON.stringify({ statusCode: res.status, statusText: res.statusText, text: res.responseText }), url, method);
@@ -619,42 +599,6 @@
 
     if(this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
-    }
-  };
-  /**
-   * Cookie helper
-   * @see Puppet.prototype.handleResponseCookie
-   * reference: http://www.quirksmode.org/js/cookies.html
-   * reference: https://github.com/js-coder/cookie.js/blob/gh-pages/cookie.js
-   */
-  var cookie = {
-    create: function createCookie(name, value, days) {
-      var expires = "";
-      if (days) {
-        var date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        expires = "; expires=" + date.toGMTString();
-      }
-      document.cookie = name + "=" + value + expires + '; path=/';
-    },
-
-    readAll: function readCookies() {
-      if (document.cookie === '') return {};
-      var cookies = document.cookie.split('; ')
-        , result = {};
-      for (var i = 0, l = cookies.length; i < l; i++) {
-        var item = cookies[i].split('=');
-        result[decodeURIComponent(item[0])] = decodeURIComponent(item[1]);
-      }
-      return result;
-    },
-
-    read: function readCookie(name) {
-      return cookie.readAll()[name];
-    },
-
-    erase: function eraseCookie(name) {
-      cookie.create(name, "", -1);
     }
   };
 

@@ -4,6 +4,14 @@
  */
 
 (function (global) {
+  function getRemoteUrlFromCookie() {
+      var location = cookie.read('Location');
+
+      cookie.erase('Location');
+
+      return location;
+  }
+
   /**
    * PuppetDOM
    * @extends {Puppet}
@@ -36,6 +44,10 @@
       window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
       this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandler);
     };
+
+    var cookie = getRemoteUrlFromCookie();
+    options.remoteUrl = options.remoteUrl || cookie || window.location.href;
+
     Puppet.call(this, options);
   };
   PuppetDOM.prototype = Object.create(Puppet.prototype);
@@ -113,6 +125,43 @@
       elem = parser;
     }
     return (elem.protocol == window.location.protocol && elem.host == window.location.host);
+  };
+
+  /**
+   * Cookie helper
+   * @see Puppet.prototype.handleResponseCookie
+   * reference: http://www.quirksmode.org/js/cookies.html
+   * reference: https://github.com/js-coder/cookie.js/blob/gh-pages/cookie.js
+   */
+  var cookie = {
+      create: function createCookie(name, value, days) {
+          var expires = "";
+          if (days) {
+              var date = new Date();
+              date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+              expires = "; expires=" + date.toGMTString();
+          }
+          document.cookie = name + "=" + value + expires + '; path=/';
+      },
+
+      readAll: function readCookies() {
+          if (document.cookie === '') return {};
+          var cookies = document.cookie.split('; ')
+            , result = {};
+          for (var i = 0, l = cookies.length; i < l; i++) {
+              var item = cookies[i].split('=');
+              result[decodeURIComponent(item[0])] = decodeURIComponent(item[1]);
+          }
+          return result;
+      },
+
+      read: function readCookie(name) {
+          return cookie.readAll()[name];
+      },
+
+      erase: function eraseCookie(name) {
+          cookie.create(name, "", -1);
+      }
   };
 
   global.PuppetDOM = PuppetDOM;
