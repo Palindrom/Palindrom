@@ -45,8 +45,7 @@
       this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandler);
     };
 
-    var cookie = getRemoteUrlFromCookie();
-    options.remoteUrl = options.remoteUrl || cookie || window.location.href;
+    options.remoteUrl = options.remoteUrl || getRemoteUrlFromCookie() || window.location.href;
 
     Puppet.call(this, options);
   };
