@@ -40,7 +40,7 @@
                 expect(sentSpy.calls.mostRecent().args).toEqual(
                     [
                     '[{"op":"replace","path":"/hello","value":"onPatchSent callback"}]', 
-                    '/__default/testId001',
+                    window.location.origin + '/__default/testId001',
                     'PATCH'
                     ]
                 );
@@ -51,7 +51,7 @@
                 expect(receivedSpy.calls.count()).toEqual(1);
                 expect(receivedSpy).toHaveBeenCalledWith(
                     '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]',
-                    '/__default/testId001',
+                    window.location.origin + '/__default/testId001',
                     'PATCH'
                 );
 

@@ -92,7 +92,15 @@
   function PuppetNetworkChannel(puppet, remoteUrl, useWebSocket, onReceive, onSend, onError, onStateChange) {
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.puppet = puppet;
-    this.remoteUrl = remoteUrl;
+
+    if (remoteUrl instanceof URL) {
+        this.remoteUrl = remoteUrl;
+    } else if (remoteUrl) {
+        this.remoteUrl = new URL(remoteUrl, window.location.href);
+    } else {
+        this.remoteUrl = new URL(window.location.href);
+    }
+    
     // define wsURL if needed
     if(useWebSocket){
       defineWebSocketURL(this, remoteUrl);
@@ -129,7 +137,7 @@
   PuppetNetworkChannel.prototype.establish = function(bootstrap /*, onConnectionReady*/){
     var network = this;
     return this.xhr(
-        this.remoteUrl,
+        this.remoteUrl.href,
         'application/json', 
         null,  
         function (res) {
@@ -156,7 +164,7 @@
         this._ws.send(msg);
         that.onSend(msg, that._ws.url, "WS");
     } else {
-      var url = this.remoteUrl;
+      var url = this.remoteUrl.href;
       this.xhr(url, 'application/json-patch+json', msg, function (res, method) {
           that.onReceive(res.responseText, url, method);
         });
@@ -187,7 +195,7 @@
     // resolve session path given in referrer in the context of remote WS URL
     var upgradeURL = (
       new URL(
-        this.remoteUrl.replace(/(\/?)__([^\/]*)\//g, "/__$2/wsupgrade/"), 
+        this.remoteUrl.pathname.replace(/(\/?)__([^\/]*)\//g, "/__$2/wsupgrade/"),
         this.wsURL
         )
       ).href;
@@ -221,17 +229,17 @@
   PuppetNetworkChannel.prototype.changeState = function (href) {
     var that = this;
     return this.xhr(href, 'application/json-patch+json', null, function (res, method) {
-      that.onReceive(res.responseText, href, method);
+      that.onReceive(res.responseText, href, method, true);
     });
   };
 
   // TODO:(tomalec)[cleanup] hide from public API.
   PuppetNetworkChannel.prototype.setRemoteUrl = function (remoteUrl) {
-    if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
+    if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl.href != remoteUrl) {
         throw new Error("Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.remoteUrl + "\nNew session ID: " + remoteUrl);
     }
     this.remoteUrlSet = true;
-    this.remoteUrl = remoteUrl;
+    this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
   };
 
   // TODO:(tomalec)[cleanup] hide from public API.
@@ -250,7 +258,7 @@
    * @param [callback(response)] callback to be called in context of puppet with response as argument
    * @returns {XMLHttpRequest} performed XHR
    */
-  PuppetNetworkChannel.prototype.xhr = function (url, accept, data, callback) {
+  PuppetNetworkChannel.prototype.xhr = function (url, accept, data, callback, setReferer) {
     var that = this;
     var req = new XMLHttpRequest();
     var method = "GET";
@@ -277,8 +285,8 @@
     if (accept) {
       req.setRequestHeader('Accept', accept);
     }
-    if (that.remoteUrl) {
-      req.setRequestHeader('X-Referer', that.remoteUrl);
+    if (that.remoteUrl && setReferer) {
+      req.setRequestHeader('X-Referer', that.remoteUrl.pathname);
     }
     that.onSend(data, url, method);
     req.send(data);
