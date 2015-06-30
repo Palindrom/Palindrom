@@ -56,6 +56,70 @@ describe("WebSocket", function () {
         });
       });
 
+      it("two puppets should work with different WebSockets", function (done) {
+          var WSSpy = jasmine.WebSocket.spy;
+          var url1 = "http://house1.of.puppets/";
+          var url2 = "http://house2.of.puppets/";
+
+          jasmine.Ajax.stubRequest(url1).andReturn(TestResponses.defaultInit.success);
+          jasmine.Ajax.stubRequest(url2).andReturn(TestResponses.defaultInit.success);
+
+          var puppet1 = new Puppet({
+              remoteUrl: url1,
+              useWebSocket: true,
+              obj: {
+                  value: 1
+              },
+              callback: function () {
+                  setTimeout(function () {
+                      var websocket = WSSpy.calls.mostRecent().returnValue;
+
+                      websocket.open();
+                  }, 1);
+              },
+              onSocketStateChanged: function (state, url) {
+                  if (state == 1) {
+                      puppet1.obj.value = 2;
+                      triggerMouseup();
+                  }
+              },
+              onPatchSent: function (data, url) {
+                  if (data) {
+                      expect(data).toEqual('[{"op":"replace","path":"/value","value":2}]');
+                      expect(url).toEqual("ws://house1.of.puppets/__default/wsupgrade/testId001");
+                  }
+              }
+          });
+
+          var puppet2 = new Puppet({
+              remoteUrl: url2,
+              useWebSocket: true,
+              obj: {
+                  value: 2
+              },
+              callback: function () {
+                  setTimeout(function () {
+                      var websocket = WSSpy.calls.mostRecent().returnValue;
+
+                      websocket.open();
+                  }, 1);
+              },
+              onSocketStateChanged: function (state, url) {
+                  if (state == 1) {
+                      puppet2.obj.value = 3;
+                      triggerMouseup();
+                  }
+              },
+              onPatchSent: function (data, url) {
+                  if (data) {
+                      expect(data).toEqual('[{"op":"replace","path":"/value","value":3}]');
+                      expect(url).toEqual("ws://house2.of.puppets/__default/wsupgrade/testId001");
+
+                      done();
+                  }
+              }
+          });
+      });
   });
 
   describe("before connection is opened", function () {
