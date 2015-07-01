@@ -1,4 +1,4 @@
-describe("IgnorePath", function () {
+describe("IgnoreAdd", function () {
   jsonpatch.intervals = [10];
 
   beforeEach(function () {
@@ -15,7 +15,7 @@ describe("IgnorePath", function () {
     this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
       obj = myObj;
     }});
-    this.puppet.ignorePath = /\/\$.+/;
+    this.puppet.ignoreAdd = /\/\$.+/;
 
     jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
@@ -42,7 +42,7 @@ describe("IgnorePath", function () {
     this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
       obj = myObj;
     }});
-    this.puppet.ignorePath = /\/\$.+/;
+    this.puppet.ignoreAdd = /\/\$.+/;
 
     jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
@@ -85,7 +85,7 @@ describe("IgnorePath", function () {
     this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
       obj = myObj;
     }});
-    this.puppet.ignorePath = /\/\$.+/;
+    this.puppet.ignoreAdd = /\/\$.+/;
 
     jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
@@ -128,7 +128,7 @@ describe("IgnorePath", function () {
     this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
       obj = myObj;
     }});
-    this.puppet.ignorePath = /\/\$.+/;
+    this.puppet.ignoreAdd = /\/\$.+/;
 
     jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
@@ -151,7 +151,7 @@ describe("IgnorePath", function () {
     this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
       obj = myObj;
     }});
-    this.puppet.ignorePath = /\/\$.+/;
+    this.puppet.ignoreAdd = /\/\$.+/;
 
     jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
@@ -182,7 +182,7 @@ describe("IgnorePath", function () {
               obj = myObj;
           }
       });
-      this.puppet.ignorePath = /\/\$.+/;
+      this.puppet.ignoreAdd = /\/\$.+/;
 
       jasmine.Ajax.requests.mostRecent().respondWith({
           "status": 200,
