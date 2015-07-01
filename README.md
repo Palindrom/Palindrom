@@ -138,7 +138,7 @@ Can be used as follows:
 ### Ignoring local changes (`ignoreAdd`)
 
 If you want to create a property in the observed object that will remain local, there is an `ignoreAdd` option and property that
-let's you disregard client-side changes in the object using a regular expression. Sample usage:
+let's you disregard client-side "add" operations in the object using a regular expression. Sample usage:
 
 ```javascript
 // in constructor
