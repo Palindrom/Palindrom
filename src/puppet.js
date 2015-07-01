@@ -467,7 +467,7 @@
     }
   };
 
-  function isIgnored(pattern, ignoreCache, path, op) {
+  /*function isIgnored(pattern, ignoreCache, path, op) {
     if (op === 'add' && pattern.test(path)) {
       ignoreCache[path] = true;
       return true;
@@ -481,11 +481,95 @@
       }
     }
     return false;
+  }*/
+
+  function getPattern(pattern) {
+      var reg = pattern;
+
+      if (!(reg instanceof RegExp)) {
+          reg = new RegExp(reg, "gi");
+      }
+
+      return reg;
+  }
+
+  //http://stackoverflow.com/questions/728360/most-elegant-way-to-clone-a-javascript-object
+  function cloneObject(obj) {
+      var copy;
+
+      // Handle the 3 simple types, and null or undefined
+      if (null == obj || "object" != typeof obj) return obj;
+
+      // Handle Date
+      if (obj instanceof Date) {
+          copy = new Date();
+          copy.setTime(obj.getTime());
+          return copy;
+      }
+
+      // Handle Array
+      if (obj instanceof Array) {
+          copy = [];
+          for (var i = 0, len = obj.length; i < len; i++) {
+              copy[i] = cloneObject(obj[i]);
+          }
+          return copy;
+      }
+
+      // Handle Object
+      if (obj instanceof Object) {
+          copy = {};
+          for (var attr in obj) {
+              if (obj.hasOwnProperty(attr)) copy[attr] = cloneObject(obj[attr]);
+          }
+          return copy;
+      }
+
+      throw new Error("Unable to copy obj! Its type isn't supported.");
+  }
+
+  function isIgnored(pattern, path) {
+      var reg = getPattern(pattern);
+      
+      if (reg.test(path)) {
+          return true;
+      }
+
+      return false;
+  }
+
+  function removeIgnoredProperties(pattern, path, value) {
+      if (typeof value != "object") {
+          return value;
+      }
+
+      var reg = getPattern(pattern);
+      var v = cloneObject(value);
+
+      for (var i in v) {
+          if (isIgnored(pattern, path + "/" + i)) {
+              delete v[i];
+          } else {
+              v[i] = removeIgnoredProperties(pattern, path + "/" + i, v[i]);
+          }
+      }
+
+      return v;
   }
 
   //ignores private member changes
   Puppet.prototype.filterIgnoredPatches = function (patches) {
-    if(this.ignoreAdd){
+      if (this.ignoreAdd) {
+          for (var i = 0; i < patches.length; i++) {
+              if (isIgnored(this.ignoreAdd, patches[i].path)) {
+                  patches.splice(i, 1);
+                  i--;
+              } else {
+                  patches[i].value = removeIgnoredProperties(this.ignoreAdd, patches[i].path, patches[i].value);
+              }
+          }
+      }
+    /*if(this.ignoreAdd){
       for (var i = 0, ilen = patches.length; i < ilen; i++) {
         if (isIgnored(this.ignoreAdd, this.ignoreCache, patches[i].path, patches[i].op)) { //if it is ignored, remove patch
           patches.splice(i, 1); //ignore changes to properties that start with PRIVATE_PREFIX
@@ -493,7 +577,7 @@
           i--;
         }
       }
-    }
+    }*/
     return patches;
   };
 
