@@ -184,7 +184,7 @@
 
   /**
    * Send a WebSocket upgrade request to the server.
-   * For testing purposes WS upgrade url is hardcoded now in PuppetJS (replace __default/ID with __default/wsupgrade/ID)
+   * For testing purposes WS upgrade url is hardcoded now in PuppetJS (replace __default/ID with __default/ID)
    * In future, server should suggest the WebSocket upgrade URL
    * @TODO:(tomalec)[cleanup] hide from public API.
    * @param {Function} [callback] Function to be called once connection gets opened.
@@ -195,11 +195,11 @@
     // resolve session path given in referrer in the context of remote WS URL
     var upgradeURL = (
       new URL(
-        this.remoteUrl.pathname.replace(/(\/?)__([^\/]*)\//g, "/__$2/wsupgrade/"),
+        this.remoteUrl.pathname,
         this.wsURL
         )
       ).href;
-    // ws[s]://[user[:pass]@]remote.host[:port]/__[sessionid]/wsupgrade/
+    // ws[s]://[user[:pass]@]remote.host[:port]/__[sessionid]/
 
     that._ws = new WebSocket(upgradeURL);
     that._ws.onopen = function (event) {
@@ -229,8 +229,8 @@
   PuppetNetworkChannel.prototype.changeState = function (href) {
     var that = this;
     return this.xhr(href, 'application/json-patch+json', null, function (res, method) {
-      that.onReceive(res.responseText, href, method, true);
-    });
+      that.onReceive(res.responseText, href, method);
+    }, true);
   };
 
   // TODO:(tomalec)[cleanup] hide from public API.

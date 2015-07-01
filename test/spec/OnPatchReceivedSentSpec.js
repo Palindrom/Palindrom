@@ -85,7 +85,7 @@
             setTimeout(function () {
                 expect(puppet.obj.hello).toEqual("onPatchSent callback");
                 expect(sentSpy.calls.mostRecent().args[0]).toEqual('[{"op":"replace","path":"/hello","value":"onPatchSent callback"}]');
-                expect(sentSpy.calls.mostRecent().args[1]).toMatch(/ws:\/\/.*__default\/wsupgrade\/testId001/);
+                expect(sentSpy.calls.mostRecent().args[1]).toMatch(/ws:\/\/.*__default\/testId001/);
                 done();
             }, 100); // for FF
         });
@@ -107,7 +107,7 @@
             setTimeout(function () {
                 expect(puppet.obj.hello).toEqual("onPatchReceived callback");
                 expect(receivedSpy.calls.mostRecent().args[0]).toEqual('[{"op":"replace","path":"/hello","value":"onPatchReceived callback"}]');
-                expect(receivedSpy.calls.mostRecent().args[1]).toMatch(/ws:\/\/.*__default\/wsupgrade\/testId001/);
+                expect(receivedSpy.calls.mostRecent().args[1]).toMatch(/ws:\/\/.*__default\/testId001/);
                 done();
             }, 100); // for FF
         });

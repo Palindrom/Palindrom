@@ -22,7 +22,7 @@ describe("WebSocket", function () {
           var WSSpy = jasmine.WebSocket.spy.and.callThroughConstructor();
 
           this.puppet = new Puppet({useWebSocket: true});
-          expect(WSSpy).toHaveBeenCalledWith("ws://" + window.location.host + "/__default/wsupgrade/testId001");
+          expect(WSSpy).toHaveBeenCalledWith("ws://" + window.location.host + "/__default/testId001");
           expect(WSSpy.calls.mostRecent().returnValue.readyState).toEqual(WebSocket.CONNECTING); // 0
           done();
 
@@ -37,7 +37,7 @@ describe("WebSocket", function () {
           this.puppet = new Puppet({
             remoteUrl: remoteUrl,
             useWebSocket: true});
-          expect(WSSpy).toHaveBeenCalledWith("ws://junji:ito@house.of.puppets:1234/__default/wsupgrade/testId001");
+          expect(WSSpy).toHaveBeenCalledWith("ws://junji:ito@house.of.puppets:1234/__default/testId001");
           done();
 
         });
@@ -50,7 +50,7 @@ describe("WebSocket", function () {
           this.puppet = new Puppet({
             remoteUrl: remoteUrl,
             useWebSocket: true});
-          expect(WSSpy).toHaveBeenCalledWith("wss://house.of.puppets/__default/wsupgrade/testId001");
+          expect(WSSpy).toHaveBeenCalledWith("wss://house.of.puppets/__default/testId001");
           done();
 
         });
@@ -86,7 +86,7 @@ describe("WebSocket", function () {
               onPatchSent: function (data, url) {
                   if (data) {
                       expect(data).toEqual('[{"op":"replace","path":"/value","value":2}]');
-                      expect(url).toEqual("ws://house1.of.puppets/__default/wsupgrade/testId001");
+                      expect(url).toEqual("ws://house1.of.puppets/__default/testId001");
                   }
               }
           });
@@ -113,7 +113,7 @@ describe("WebSocket", function () {
               onPatchSent: function (data, url) {
                   if (data) {
                       expect(data).toEqual('[{"op":"replace","path":"/value","value":3}]');
-                      expect(url).toEqual("ws://house2.of.puppets/__default/wsupgrade/testId001");
+                      expect(url).toEqual("ws://house2.of.puppets/__default/testId001");
 
                       done();
                   }
