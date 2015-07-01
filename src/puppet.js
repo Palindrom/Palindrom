@@ -229,8 +229,8 @@
   PuppetNetworkChannel.prototype.changeState = function (href) {
     var that = this;
     return this.xhr(href, 'application/json-patch+json', null, function (res, method) {
-      that.onReceive(res.responseText, href, method, true);
-    });
+      that.onReceive(res.responseText, href, method);
+    }, true);
   };
 
   // TODO:(tomalec)[cleanup] hide from public API.
@@ -317,7 +317,7 @@
    * @param {Function}           [options.callback]        Called after initial state object is received from the remote (NOT necessarily after WS connection was established)
    * @param {Object}             [options.obj]                object where the parsed JSON data will be inserted
    * @param {Boolean}            [options.useWebSocket=false] Set to true to enable WebSocket support
-   * @param {RegExp}             [options.ignoreAdd=null]     Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
+   * @param {RegExp}             [options.ignorePath=null]     Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
    * @param {Boolean}            [options.debug=false]        Set to true to enable debugging mode
    * @param {Function}           [options.onRemoteChange]     Helper callback triggered each time a patch is obtained from remote
    * @param {JSONPointer}        [options.localVersionPath]   local version path, set it to enable Versioned JSON Patch communication
@@ -374,13 +374,17 @@
     }
 
     this.ignoreCache = [];
-    this.ignoreAdd = options.ignoreAdd || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
+    this.ignorePath = options.ignorePath || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
+
+    if (options.ignoreAdd) {
+        throw "ignoreAdd is deprecated and removed, use ignorePath instead";
+    }
 
     //usage:
-    //puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to remote
-    //puppet.ignoreAdd = /./; //ignore all the "add" operations
-    //puppet.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
-    //puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
+    //puppet.ignorePath = null;  //undefined or null means that all properties added on client will be sent to remote
+    //puppet.ignorePath = /./; //ignore all the "add" operations
+    //puppet.ignorePath = /\/\$.+/; //ignore the "add" operations of properties that start with $
+    //puppet.ignorePath = /\/_.+/; //ignore the "add" operations of properties that start with _
 
     var onDataReady = options.callback;
     var puppet = this;
@@ -559,13 +563,13 @@
 
   //ignores private member changes
   Puppet.prototype.filterIgnoredPatches = function (patches) {
-      if (this.ignoreAdd) {
+      if (this.ignorePath) {
           for (var i = 0; i < patches.length; i++) {
-              if (isIgnored(this.ignoreAdd, patches[i].path)) {
+              if (isIgnored(this.ignorePath, patches[i].path)) {
                   patches.splice(i, 1);
                   i--;
               } else {
-                  patches[i].value = removeIgnoredProperties(this.ignoreAdd, patches[i].path, patches[i].value);
+                  patches[i].value = removeIgnoredProperties(this.ignorePath, patches[i].path, patches[i].value);
               }
           }
       }
