@@ -137,4 +137,55 @@ describe("ValidatePatches", function () {
 
     puppetMock.validateSequence(tree, sequence);
   });
+
+  it("undefined value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)", function (done) {
+      var tree = {
+          name: {
+              first$: "Elvis",
+              last$: "Presley"
+          }
+      };
+      var sequence = [{ op: "replace", path: "/name/first$", value: undefined }];
+      var puppetMock = Object.create(Puppet.prototype);
+      puppetMock.debug = true;
+      puppetMock.addEventListener('error', function (ev) {
+          expect(ev.error.name).toEqual('OPERATION_VALUE_REQUIRED');
+          done();
+      });
+      puppetMock.validateAndApplySequence(tree, sequence);
+  });
+
+  it("no value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)", function (done) {
+      var tree = {
+          name: {
+              first$: "Elvis",
+              last$: "Presley"
+          }
+      };
+      var sequence = [{ op: "replace", path: "/name/first$" }];
+      var puppetMock = Object.create(Puppet.prototype);
+      puppetMock.debug = true;
+      puppetMock.addEventListener('error', function (ev) {
+          expect(ev.error.name).toEqual('OPERATION_VALUE_REQUIRED');
+          done();
+      });
+      puppetMock.validateAndApplySequence(tree, sequence);
+  });
+
+  it("object with undefined value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)", function (done) {
+      var tree = {
+          name: {
+              first$: "Elvis",
+              last$: "Presley"
+          }
+      };
+      var sequence = [{ op: "replace", path: "/name", value: { first$: [undefined], last$: "Presley" } }];
+      var puppetMock = Object.create(Puppet.prototype);
+      puppetMock.debug = true;
+      puppetMock.addEventListener('error', function (ev) {
+          expect(ev.error.name).toEqual('OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED');
+          done();
+      });
+      puppetMock.validateAndApplySequence(tree, sequence);
+  });
 });
