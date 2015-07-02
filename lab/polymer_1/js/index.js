@@ -10,10 +10,25 @@ function getCurrentPage() {
     }
 }
 
+function getPages(current) {
+    var pages = ["index.html", "subpage.html"];
+    var result = [];
+
+    for (var i = 0; i < pages.length; i++) {
+        result.push({
+            name: pages[i],
+            selected: pages[i] == current
+        });
+    }
+
+    return result;
+}
+
 var model = window.model = {
     "_ver#c$": 0,
     "_ver#s": 0,
     currentPage: getCurrentPage(),
+    pages: getPages(getCurrentPage()),
     text: "Polymer 1.0 demo",
     message: "There were no clicks so far.",
     click$: 0
@@ -45,6 +60,7 @@ XMLHttpRequest.prototype.send = function (data) {
 
         if (puppet.obj.currentPage != page) {
             outPatches.push({ op: "replace", path: "/currentPage", value: page });
+            outPatches.push({ op: "replace", path: "/pages", value: getPages(page) });
         }
 
         if (outPatches) {

@@ -1,0 +1,88 @@
+﻿<dom-module id="puppet-dom-bind">
+    <script>
+        Polymer({
+            model: { m: "!" },
+            is: 'puppet-dom-bind',
+            extends: 'template',
+            created: function () {
+                Polymer.ImportStatus.whenLoaded(this._readySelf.bind(this));
+            },
+            _registerFeatures: function () {
+                this._prepExtends();
+                this._prepConstructor();
+            },
+            _insertChildren: function () {
+                var parentDom = Polymer.dom(Polymer.dom(this).parentNode);
+                parentDom.insertBefore(this.root, this);
+            },
+            _removeChildren: function () {
+                if (this._children) {
+                    for (var i = 0; i < this._children.length; i++) {
+                        this.root.appendChild(this._children[i]);
+                    }
+                }
+            },
+            _initFeatures: function () {
+            },
+            _scopeElementClass: function (element, selector) {
+                if (this.dataHost) {
+                    return this.dataHost._scopeElementClass(element, selector);
+                } else {
+                    return selector;
+                }
+            },
+            _prepConfigure: function () {
+                var config = {};
+                for (var prop in this._propertyEffects) {
+                    config[prop] = this[prop];
+                }
+                this._setupConfigure = this._setupConfigure.bind(this, config);
+            },
+            attached: function () {
+                if (!this._children) {
+                    this._template = this;
+                    this._prepAnnotations();
+                    this._prepEffects();
+                    this._prepBehaviors();
+                    this._prepConfigure();
+                    this._prepBindings();
+                    Polymer.Base._initFeatures.call(this);
+                    this._children = Array.prototype.slice.call(this.root.childNodes);
+                }
+                this._insertChildren();
+                this.fire('dom-change');
+            },
+            detached: function () {
+                this._removeChildren();
+            },
+
+
+            properties: {
+                model: Object,
+                puppet: {
+                    type: Object,
+                    value: null,
+                    observer: "puppetChanged"
+                }
+            },
+            puppetChanged: function (newValue, oldValue) {
+                var that = this;
+
+                this.model = newValue.obj;
+
+                newValue.addEventListener("patchreceived", function (e) {
+                    //Setting timeout to don't apply changes before puppet applies it.
+                    setTimeout(function () {
+                        var patches = JSON.parse(e.detail.data);
+
+                        for (var i = 0; i < patches.length; i++) {
+                            var path = patches[i].path;
+
+                            that.notifyPath("model" + path.replace(/[/]/gi, "."), patches[i].value);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</dom-module>

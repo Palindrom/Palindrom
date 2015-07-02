@@ -9,7 +9,7 @@
     <script src="bower_components/webcomponentsjs/webcomponents.js"></script>
     <link rel="import" href="bower_components/polymer/polymer.html" />
     <link rel="import" href="bower_components/puppet-client/src/puppet-client.html" />
-    <link rel="import" href="index-root.html" />
+    <link rel="import" href="puppet-dom-bind.html" />
 
     <script src="../../test/lib/jasmine-2.2.0/jasmine.js"></script>
     <script>window.jasmine = jasmineRequire.core(jasmineRequire);</script>
@@ -17,14 +17,34 @@
     <script src="js/index.js"></script>
 </head>
 <body>
-    <template is="dom-bind" id="root">
-        <index-root model="{{model}}" puppet="{{puppet}}"></index-root>
+    <template is="puppet-dom-bind" id="puppet-root">
+        <h1>{{model.text}}</h1>
+        <p>{{model.message}}</p>
+        <p>
+            <template is="dom-repeat" items="{{model.pages}}">
+                <template is="dom-if" if="{{item.selected}}">
+                    <span>{{item.name}}</span>
+                </template>
+                <template is="dom-if" if="{{!item.selected}}">
+                    <a href="{{item.name}}">{{item.name}}</a>
+                </template>
+            </template>
+        </p>
+        <div>
+            <button type="button" on-click="onClick">
+                <span>Click me (<span>{{model.click$}}</span>)!</span>
+            </button>
+        </div>
     </template>
-    <puppet-client ref="root" usewebsocket="false"></puppet-client>
+    <puppet-client usewebsocket="false"></puppet-client>
     <script>
     window.addEventListener("WebComponentsReady", function () {
-        var root = document.getElementById("root");
+        var root = document.getElementById("puppet-root");
         var puppet = document.querySelector("puppet-client");
+
+        root.onClick = function () {
+            root.set("model.click$", root.model.click$ + 1);
+        };
 
         root.puppet = puppet;
     });
