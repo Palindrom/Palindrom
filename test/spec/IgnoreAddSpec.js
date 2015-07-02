@@ -169,39 +169,4 @@ describe("IgnoreAdd", function () {
       done();
     }, 20);
   });
-
-  it('should not send a patch for ignored property of an object inside an array', function (done) {
-      var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
-      var obj;
-      this.puppet = new Puppet({
-          obj: {
-              row: {},
-              rows: [{ v: 1 }]
-          },
-          remoteUrl: '/test', callback: function (myObj) {
-              obj = myObj;
-          }
-      });
-      this.puppet.ignoreAdd = /\/\$.+/;
-
-      jasmine.Ajax.requests.mostRecent().respondWith({
-          "status": 200,
-          "contentType": 'application/json',
-          "responseText": '{"row": {"foo":0}}'
-      });
-
-      expect(patchSpy.calls.count()).toBe(1);
-      obj.row = { foo: 1, $privateProp: 2 };
-      obj.rows[0].v = 10;
-      obj.rows[0].$v = "ignore";
-      obj.rows.push({ v: 2, $v: "ignore" });
-      triggerMouseup();
-
-      setTimeout(function () { //wait for xhr
-          expect(patchSpy).toHaveBeenCalledWith(null);
-          expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/row","value":{"foo":1}},{"op":"replace","path":"/rows/0/v","value":10},{"op":"add","path":"/rows/1","value":{"v":2}}]');
-          expect(patchSpy.calls.count()).toBe(2);
-          done();
-      }, 20);
-  });
 });
