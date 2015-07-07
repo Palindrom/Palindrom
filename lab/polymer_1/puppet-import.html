@@ -23,7 +23,7 @@
                     return;
                 }
 
-                if (this.oldModel == this.model) {
+                if (this.oldModel == this.model && this.template) {
                     return;
                 }
 
@@ -47,6 +47,10 @@
                     type: Object,
                     value: null,
                     observer: "modelChanged"
+                },
+                path: {
+                    type: String,
+                    value: ""
                 }
             },
             modelChanged: function (newValue, oldValue) {

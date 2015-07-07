@@ -90,7 +90,19 @@
                 this.notifyPath(path, value);
 
                 for (var i = 0; i < imports.length; i++) {
-                    imports[i].template.notifyPath(path, value);
+                    var t = imports[i].template;
+                    var p = imports[i].path;
+
+                    if (p) {
+                        var reg = new RegExp("^" + p.replace(/\./gi, "\."), "gi");
+
+                        if (reg.test(path)) {
+                            p = path.replace(reg, "model");
+                            t.notifyPath(p, value);
+                        }
+                    } else {
+                        t.notifyPath(path, value);
+                    }
                 }
             }
         });
