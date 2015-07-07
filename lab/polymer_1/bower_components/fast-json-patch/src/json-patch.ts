@@ -1,6 +1,6 @@
 /*!
  * https://github.com/Starcounter-Jack/JSON-Patch
- * json-patch-duplex.js 0.5.1
+ * json-patch-duplex.js version: 0.5.3
  * (c) 2013 Joachim Wester
  * MIT license
  */
@@ -222,14 +222,14 @@ module jsonpatch {
         key = keys[t];
 
         if (validate) {
-          if (existingPathFragment == undefined) {
-            if (obj[key] == undefined) {
+          if (existingPathFragment === undefined) {
+            if (obj[key] === undefined) {
               existingPathFragment = keys.slice(0, t).join('/');
             }
             else if (t == len - 1) {
               existingPathFragment = patch.path;
             }
-            if (existingPathFragment != undefined) {
+            if (existingPathFragment !== undefined) {
               this.validator(patch, p - 1, tree, existingPathFragment);
             }
           }
@@ -290,6 +290,25 @@ module jsonpatch {
 
   export var Error = JsonPatchError;
 
+    /**
+     * Recursively checks whether an object has any undefined values inside.
+     */
+    export function hasUndefined(obj:any): boolean {
+        if (obj === undefined) {
+            return true;
+        }
+
+        if (typeof obj == "array" || typeof obj == "object") {
+            for (var i in obj) {
+                if (hasUndefined(obj[i])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
   /**
    * Validates a single operation. Called from `jsonpatch.validate`. Throws `JsonPatchError` in case of an error.
    * @param {object} operation - operation object (patch)
@@ -316,6 +335,10 @@ module jsonpatch {
 
     else if ((operation.op === 'add' || operation.op === 'replace' || operation.op === 'test') && operation.value === undefined) {
       throw new JsonPatchError('Operation `value` property is not present (applicable in `add`, `replace` and `test` operations)', 'OPERATION_VALUE_REQUIRED', index, operation, tree);
+    }
+
+    else if ((operation.op === 'add' || operation.op === 'replace' || operation.op === 'test') && hasUndefined(operation.value)) {
+      throw new JsonPatchError('Operation `value` property is not present (applicable in `add`, `replace` and `test` operations)', 'OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED', index, operation, tree);
     }
 
     else if (tree) {
