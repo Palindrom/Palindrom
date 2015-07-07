@@ -1,7 +1,7 @@
 ﻿<dom-module id="puppet-dom-bind">
     <script>
         Polymer({
-            model: { m: "!" },
+            model: null,
             is: 'puppet-dom-bind',
             extends: 'template',
             created: function () {
@@ -78,10 +78,20 @@
                         for (var i = 0; i < patches.length; i++) {
                             var path = patches[i].path;
 
-                            that.notifyPath("model" + path.replace(/[/]/gi, "."), patches[i].value);
+                            //that.notifyPath("model" + path.replace(/[/]/gi, "."), patches[i].value);
+                            that.notifyAll("model" + path.replace(/[/]/gi, "."), patches[i].value);
                         }
                     });
                 });
+            },
+            notifyAll: function (path, value) {
+                var imports = document.querySelectorAll("puppet-import");
+
+                this.notifyPath(path, value);
+
+                for (var i = 0; i < imports.length; i++) {
+                    imports[i].template.notifyPath(path, value);
+                }
             }
         });
     </script>

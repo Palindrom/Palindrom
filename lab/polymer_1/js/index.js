@@ -34,7 +34,7 @@ var model = window.model = {
     click$: 0
 };
 
-var stub = jasmine.Ajax.stubRequest(/(\/lab\/polymer_1\/?$|index\.html$|subpage\.html$)/);
+var stub = jasmine.Ajax.stubRequest(/(\/lab\/polymer_1\/?$|index\.html$|subpage\.html$|import\.html$)/);
 stub.andReturn({
     "responseText": "Error"
 });
@@ -43,7 +43,9 @@ var _old = XMLHttpRequest.prototype.send;
 var puppet = null;
 
 XMLHttpRequest.prototype.send = function (data) {
-    if (data == null && this.requestHeaders["Accept"] == "application/json") {
+    if (/.*import\.html$/gi.test(this.url)) {
+        stub.responseText = "<p>Message inside puppet-import: <span>{{model.message}}</span></p>"
+    } else if (data == null && this.requestHeaders["Accept"] == "application/json") {
         stub.responseText = JSON.stringify(model);
     } else if (this.requestHeaders["Accept"] == "application/json-patch+json") {
         var inPatches = data ? JSON.parse(data) : [];

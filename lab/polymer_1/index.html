@@ -10,6 +10,7 @@
     <link rel="import" href="bower_components/polymer/polymer.html" />
     <link rel="import" href="bower_components/puppet-client/src/puppet-client.html" />
     <link rel="import" href="puppet-dom-bind.html" />
+    <link rel="import" href="puppet-import.html" />
 
     <script src="../../test/lib/jasmine-2.2.0/jasmine.js"></script>
     <script>window.jasmine = jasmineRequire.core(jasmineRequire);</script>
@@ -35,6 +36,7 @@
                 <span>Click me (<span>{{model.click$}}</span>)!</span>
             </button>
         </div>
+        <puppet-import content="import.html" model="{{model}}"></puppet-import>
     </template>
     <puppet-client usewebsocket="false"></puppet-client>
     <script>
