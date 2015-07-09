@@ -71,17 +71,26 @@
                 this.model = newValue.obj;
 
                 newValue.addEventListener("patchreceived", function (e) {
-                    //Setting timeout to don't apply changes before puppet applies it.
-                    setTimeout(function () {
-                        var patches = JSON.parse(e.detail.data);
+                    that.notifyPatches(e);
+                });
 
-                        for (var i = 0; i < patches.length; i++) {
-                            var path = patches[i].path;
+                newValue.addEventListener("patchsent", function (e) {
+                    that.notifyPatches(e);
+                });
+            },
+            notifyPatches: function (e) {
+                var that = this;
 
-                            //that.notifyPath("model" + path.replace(/[/]/gi, "."), patches[i].value);
-                            that.notifyAll("model" + path.replace(/[/]/gi, "."), patches[i].value);
-                        }
-                    });
+                //Setting timeout to don't apply changes before puppet applies it.
+                setTimeout(function () {
+                    var patches = JSON.parse(e.detail.data);
+
+                    for (var i = 0; i < patches.length; i++) {
+                        var path = patches[i].path;
+
+                        //that.notifyPath("model" + path.replace(/[/]/gi, "."), patches[i].value);
+                        that.notifyAll("model" + path.replace(/[/]/gi, "."), patches[i].value);
+                    }
                 });
             },
             notifyAll: function (path, value) {
