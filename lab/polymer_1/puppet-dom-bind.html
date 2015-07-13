@@ -86,17 +86,19 @@
                     var patches = JSON.parse(e.detail.data);
 
                     for (var i = 0; i < patches.length; i++) {
-                        var path = patches[i].path;
+                        var patch = patches[i]; 
+                        var path = patch.path;
 
                         //that.notifyPath("model" + path.replace(/[/]/gi, "."), patches[i].value);
-                        that.notifyAll("model" + path.replace(/[/]/gi, "."), patches[i].value);
+                        that.notifyAll(patch.op, "model" + path.replace(/[/]/gi, "."), patches[i].value);
                     }
                 });
             },
-            notifyAll: function (path, value) {
+            notifyAll: function (operation, path, value) {
                 var imports = document.querySelectorAll("puppet-import");
 
-                this.notifyPath(path, value);
+                //this.notifyPath(path, value);
+                this.notifyPatch(this, operation, path, value);
 
                 for (var i = 0; i < imports.length; i++) {
                     var t = imports[i].template;
@@ -107,12 +109,35 @@
 
                         if (reg.test(path)) {
                             p = path.replace(reg, "model");
-                            t.notifyPath(p, value);
+                            //t.notifyPath(p, value);
+                            this.notifyPatch(t, operation, path, value, p);
                         }
                     } else {
-                        t.notifyPath(path, value);
+                        //t.notifyPath(path, value);
+                        this.notifyPatch(t, operation, path, value);
                     }
                 }
+            },
+            notifyPatch: function (element, operation, fullPath, value, elementPath) {
+                element.notifyPath(elementPath || fullPath, value);
+
+                if (operation == "add") {
+                    var path = fullPath.replace(/[.][^.]+$/gi, "");
+                    var v = this.getModelValue(path);
+
+                    path = (elementPath || fullPath).replace(/[.][^.]+$/gi, "");
+                    element.notifyPath(path, v.slice());
+                }
+            },
+            getModelValue: function (path) {
+                var parts = path.split(".");
+                var v = this.model;
+
+                for (var i = 1; i < parts.length; i++) {
+                    v = v[parts[i]];
+                }
+
+                return v;
             }
         });
     </script>
