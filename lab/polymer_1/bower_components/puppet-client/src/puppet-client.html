@@ -1,4 +1,4 @@
-<!-- puppet-client version: 0.0.3 | MIT License -->
+<!-- puppet-client version: 0.0.4 | MIT License -->
 
 <!-- include PuppetJs with dependencies -->
 <script src="../../fast-json-patch/src/json-patch-duplex.js"></script>
@@ -41,7 +41,7 @@
         }
         PuppetDOM.call( this, {
             // use server URL or window.location.href;
-            remoteUrl:         this.getAttribute("remoteurl") || window.location.href,
+            remoteUrl:         this.getAttribute("remoteurl"),
             callback:          callback,
             listenTo:          listenTo,
             // obj:            obj,
@@ -137,7 +137,7 @@
         // use node id or node itself;
         element = typeof element == "string" ? document.getElementById( element ) : element;
         element.model = this.obj;
-        //element.bindingDelegate = new PolymerExpressions(); // Make the "item" bindings work
+        element.bindingDelegate = new PolymerExpressions(); // Make the "item" bindings work
     };
 
     window.PuppetClient = document.registerElement('puppet-client', {

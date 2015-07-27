@@ -14,7 +14,6 @@
     options || (options={});
     var onDataReady = options.callback;
     this.element = options.listenTo || document.body;
-    this.clickHandler;
     var clickHandler = this.clickHandler.bind(this);
     this.historyHandler = this.historyHandler.bind(this);
 
@@ -29,8 +28,6 @@
       this.element.addEventListener('click', clickHandler);
       window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
       this.element.addEventListener('puppet-redirect-pushstate', this.historyHandler);
-
-      this.addShadowRootClickListeners(clickHandler);
     };
     this.unlisten = function(){
       this.listening = false;
@@ -38,8 +35,6 @@
       this.element.removeEventListener('click', clickHandler);
       window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
       this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandler);
-
-      this.removeShadowRootClickListeners(clickHandler);
     };
     Puppet.call(this, options);
   };
@@ -83,42 +78,7 @@
 
     return root === parent;
   }
-  /**
-   * Catches clicks in Shadow DOM
-   * @see <a href="https://groups.google.com/forum/#!topic/polymer-dev/fDRlCT7nNPU">discussion</a>
-   */
-  PuppetDOM.prototype.addShadowRootClickListeners = function (clickHandler) {
-    //existing shadow roots
-    var shadowRoots = this.findShadowRoots(this.element);
-    for (var i = 0, ilen = shadowRoots.length; i < ilen; i++) {
-      (shadowRoots[i].impl || shadowRoots[i]).addEventListener("click", clickHandler);
-    }
-    var puppet = this;
-    //future shadow roots
-    //TODO: move it outside of listen/unlisten, to overwrite it only once.
-    var old = Element.prototype.createShadowRoot;
-    Element.prototype.createShadowRoot = function () {
-      var shadowRoot = old.apply(this, arguments);
-      // unwrap in case of WebComponents polyfill
-      if(puppet.listening && containsInShadow(puppet.element, unwrap && unwrap(this) || this)){
-        shadowRoot.addEventListener("click", clickHandler);
-      }
-      return shadowRoot;
-    };
-  };
-  /**
-   * Catches clicks in Shadow DOM
-   * @see <a href="https://groups.google.com/forum/#!topic/polymer-dev/fDRlCT7nNPU">discussion</a>
-   */
-  PuppetDOM.prototype.removeShadowRootClickListeners = function (clickHandler) {
 
-    //existing shadow roots
-    var shadowRoots = this.findShadowRoots(this.element);
-    // var shadowRoots = this.findShadowRoots(document.documentElement);
-    for (var i = 0, ilen = shadowRoots.length; i < ilen; i++) {
-      (shadowRoots[i].impl || shadowRoots[i]).removeEventListener("click", clickHandler);
-    }
-  };
   PuppetDOM.prototype.clickHandler = function (event) {
     //Don't morph ctrl/cmd + click & middle mouse button
     if (event.ctrlKey || event.metaKey || event.which == 2) {
@@ -129,17 +89,16 @@
       //detail is Polymer
       event = event.detail;
     }
+
     var target = event.target;
-    if (target.impl) {
-      //impl is Polymer
-      target = target.impl;
-    }
 
     if (target.nodeName !== 'A') {
-      var parentA = closestHrefParent(target, 'A');
-      if (parentA) {
-        target = parentA;
-      }
+        for (var i = 0; i < event.path.length; i++) {
+            if (event.path[i].nodeName == "A") {
+                target = event.path[i];
+                break;
+            }
+        }
     }
 
     //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
@@ -183,16 +142,6 @@
       elem = parser;
     }
     return (elem.protocol == window.location.protocol && elem.host == window.location.host);
-  };
-  //goes up the DOM tree (including given element) until it finds an element that matches the nodeName
-  var closestHrefParent = function (elem) {
-    while (elem != null) {
-      if (elem.nodeType === 1 && (elem.href || elem.getAttribute('href'))) {
-        return elem;
-      }
-      elem = elem.parentNode;
-    }
-    return null;
   };
 
   global.PuppetDOM = PuppetDOM;

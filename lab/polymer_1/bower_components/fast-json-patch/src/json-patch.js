@@ -1,6 +1,6 @@
 /*!
 * https://github.com/Starcounter-Jack/JSON-Patch
-* json-patch-duplex.js version: 0.5.3
+* json-patch-duplex.js version: 0.5.4
 * (c) 2013 Joachim Wester
 * MIT license
 */
@@ -213,7 +213,8 @@ var jsonpatch;
             p++;
 
             // Find the object
-            var keys = patch.path.split('/');
+            var path = patch.path || "";
+            var keys = path.split('/');
             var obj = tree;
             var t = 1;
             var len = keys.length;
