@@ -31,11 +31,9 @@
         var listenTo = this.getAttribute("listen-to");
         var me = this;
 
-        if(whereToBind){
-            callback = function (obj) {
-                this.bindTo(whereToBind);
-            };
-        }
+        callback = function (obj) {
+            this.bindTo(whereToBind || me);
+        };
         if( listenTo ){
            listenTo = typeof listenTo == "string" ? document.getElementById( listenTo ) : listenTo;
         }
@@ -46,7 +44,7 @@
             listenTo:          listenTo,
             // obj:            obj,
             useWebSocket:      parseBoolAttribute(this.getAttribute("usewebsocket"), this.useWebSocket),
-            ignoreAdd:         this.hasAttribute("ignoreadd") && 
+            ignoreAdd:         this.hasAttribute("ignoreadd") &&
                                     new RegExp( this.getAttribute("ignoreadd") ) ||
                                 this.ignoreAdd,
             debug:             parseBoolAttribute(this.hasAttribute("debug"), this.debug),
@@ -137,7 +135,7 @@
         // use node id or node itself;
         element = typeof element == "string" ? document.getElementById( element ) : element;
         element.model = this.obj;
-        element.bindingDelegate = new PolymerExpressions(); // Make the "item" bindings work
+        // element.bindingDelegate = new PolymerExpressions(); // Make the "item" bindings work
     };
 
     window.PuppetClient = document.registerElement('puppet-client', {
@@ -167,7 +165,7 @@
           destination[k] = source[k];
         // }
       }
-      return destination; 
+      return destination;
     }
 }(window, Puppet));
 </script>

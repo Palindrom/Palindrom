@@ -18,7 +18,53 @@
     <script src="js/index.js"></script>
 </head>
 <body>
-    <template is="puppet-dom-bind" id="puppet-root">
+  <puppet-client remoteurl="test.json" ref="r" usewebsocket="false"></puppet-client>
+  <template is="dom-bind" id="r">
+    <code>
+      &lt;puppet-client remoteurl="test.json" obj="{{model}}"&gt;&lt;/puppet-client&gt;
+    </code>
+    <h3>People List</h3>
+    text<span>{{model.text}}</span>
+    text<input value="{{model.text::input}}">
+    <template  is="dom-repeat" items="{{model.people}}">
+        <div>first:<span>{{item.first}}</span><input value="{{item.first::input}}"> last:<span>{{item.last}}</span></div>
+    </template>
+    <h1>{{model.text}}</h1>
+    <p>{{model.message}}</p>
+    <p>
+        <template is="dom-repeat" items="{{model.pages}}">
+            <template is="dom-if" if="{{item.selected}}">
+                <span>{{item.name}}</span>
+            </template>
+            <template is="dom-if" if="{{!item.selected}}">
+                <a href="{{item.name}}">{{item.name}}</a>
+            </template>
+        </template>
+    </p>
+    <p>
+      Checkbox to boolean: <input type="checkbox" checked="{{model.checked$::change}}"><i>{{model.checked$}}</i>
+    </p>
+    <div>
+      Button to incrementing number
+        <button type="button" value="{{model.clickCount$::click}}" onclick="incrementValue(this);">
+            Click me
+        </button>
+        clicked <input type="number" value="{{model.clickCount$::input}}" style="width:3em;"> times
+    </div>
+    <div>
+      Button that toggles boolean value, and disable state
+        <button type="button" disabled="{{model.booleanSwitch$::click}}" onclick="toggle(this);">
+            Start
+        </button>
+        state <i>{{model.booleanSwitch$}}</i>,
+        then server may enable the process again
+        <input type="checkbox" checked="{{model.booleanSwitch$::change}}">
+
+    </div>
+  </template>
+
+    </template>
+    <!-- <template is="puppet-dom-bind" id="puppet-root">
         <h1>{{model.text}}</h1>
         <p>{{model.message}}</p>
         <p>
@@ -50,7 +96,22 @@
 
         root.puppet = puppet;
     });
-    </script>
-
+    </script> -->
+<script>
+    var root = document.getElementById("r");
+    root.increment = increment
+function increment (element) {
+ element++
+  return element;
+};
+function incrementValue (element) {
+  element.value = (parseInt(element.value) || 0)  + 1;
+  return element.value;
+};
+function toggle (element) {
+  element.disabled = !element.disabled;
+  return element;
+};
+</script>
 </body>
 </html>

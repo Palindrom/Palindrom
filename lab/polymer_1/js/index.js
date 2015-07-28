@@ -31,10 +31,17 @@ var model = window.model = {
     pages: getPages(getCurrentPage()),
     text: "Polymer 1.0 demo",
     message: "There were no clicks so far.",
-    click$: 0
+    clickCount$: 0,
+    booleanSwitch$: false,
+    checked$: false,
+
+    people:[{
+      first: "Tomek",
+      last: "Wytrębowicz"
+    }]
 };
 
-var stub = jasmine.Ajax.stubRequest(/(\/lab\/polymer_1\/?$|index\.html$|subpage\.html$|import\.html$)/);
+var stub = jasmine.Ajax.stubRequest(/(\/lab\/polymer_1\/?$|index\.html$|subpage\.html$|import\.html$|test\.json$)/);
 stub.andReturn({
     "responseText": "Error"
 });
