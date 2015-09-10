@@ -1,9 +1,17 @@
-/*! puppet-dom.js version: 1.1.0
+/*! puppet-dom.js version: 1.2.1
  * (c) 2013 Joachim Wester
  * MIT license
  */
 
 (function (global) {
+  function getRemoteUrlFromCookie() {
+      var location = cookie.read('Location');
+
+      cookie.erase('Location');
+
+      return location;
+  }
+
   /**
    * PuppetDOM
    * @extends {Puppet}
@@ -36,6 +44,9 @@
       window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
       this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandler);
     };
+
+    options.remoteUrl = options.remoteUrl || getRemoteUrlFromCookie() || window.location.href;
+
     Puppet.call(this, options);
   };
   PuppetDOM.prototype = Object.create(Puppet.prototype);
@@ -49,35 +60,6 @@
     history.pushState(null, null, url);
     this.network.changeState(url);
   };
-  /**
-   * Returns array of shadow roots inside of a element (recursive)
-   * @param el
-   * @param out (Optional)
-   */
-  PuppetDOM.prototype.findShadowRoots = function (el, out) {
-    if (!out) {
-      out = [];
-    }
-    for (var i = 0, ilen = el.childNodes.length; i < ilen; i++) {
-      if (el.childNodes[i].nodeType === 1) {
-        var shadowRoot = el.childNodes[i].shadowRoot || el.childNodes[i].polymerShadowRoot_;
-        if (shadowRoot) {
-          out.push(shadowRoot);
-          this.findShadowRoots(shadowRoot, out);
-        }
-        this.findShadowRoots(el.childNodes[i], out);
-      }
-    }
-    return out;
-  };
-  function containsInShadow(root, element){
-    var parent = element;
-    while(parent && root !== parent){
-      parent = parent.parentNode || parent.host;
-    }
-
-    return root === parent;
-  }
 
   PuppetDOM.prototype.clickHandler = function (event) {
     //Don't morph ctrl/cmd + click & middle mouse button
@@ -142,6 +124,43 @@
       elem = parser;
     }
     return (elem.protocol == window.location.protocol && elem.host == window.location.host);
+  };
+
+  /**
+   * Cookie helper
+   * @see Puppet.prototype.handleResponseCookie
+   * reference: http://www.quirksmode.org/js/cookies.html
+   * reference: https://github.com/js-coder/cookie.js/blob/gh-pages/cookie.js
+   */
+  var cookie = {
+      create: function createCookie(name, value, days) {
+          var expires = "";
+          if (days) {
+              var date = new Date();
+              date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+              expires = "; expires=" + date.toGMTString();
+          }
+          document.cookie = name + "=" + value + expires + '; path=/';
+      },
+
+      readAll: function readCookies() {
+          if (document.cookie === '') return {};
+          var cookies = document.cookie.split('; ')
+            , result = {};
+          for (var i = 0, l = cookies.length; i < l; i++) {
+              var item = cookies[i].split('=');
+              result[decodeURIComponent(item[0])] = decodeURIComponent(item[1]);
+          }
+          return result;
+      },
+
+      read: function readCookie(name) {
+          return cookie.readAll()[name];
+      },
+
+      erase: function eraseCookie(name) {
+          cookie.create(name, "", -1);
+      }
   };
 
   global.PuppetDOM = PuppetDOM;

@@ -172,7 +172,7 @@ describe("ValidatePatches", function () {
       puppetMock.validateAndApplySequence(tree, sequence);
   });
 
-  it("object with undefined value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)", function (done) {
+  it("object with undefined value should cause OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED (test built into Fast-JSON-Patch)", function (done) {
       var tree = {
           name: {
               first$: "Elvis",
