@@ -5,9 +5,8 @@ and transforms them into PATCH request
 
 <link rel="import" href="../../../../polymer/polymer.html">
 
-<polymer-element name="my-menu-button" noscript attributes="href">
-  <template>
-    <style>
+<dom-module id="my-menu-button">
+  <style>
       a {
         background: aliceblue;
         border-radius: 3px;
@@ -17,6 +16,13 @@ and transforms them into PATCH request
         border: 1px solid lightsteelblue;
       }
     </style>
-    <a href="{{href}}">ShadowDOM: <content></content></a>
+  <template>
+    <a href$="{{href}}">ShadowDOM: <content></content></a>
   </template>
-</polymer-element>
+  <script>
+    Polymer({
+      is: 'my-menu-button',
+      properties: { href: { notify: true } }
+    });
+  </script>
+</dom-module>
