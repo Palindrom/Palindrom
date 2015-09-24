@@ -17,13 +17,14 @@
     "node_modules"
   ],
   "dependencies": {
-    "fast-json-patch": "Starcounter-Jack/JSON-Patch#~0.5.1",
+    "fast-json-patch": "Starcounter-Jack/JSON-Patch#~0.5.4",
     "json-patch-queue": "PuppetJs/JSON-Patch-Queue#gh-pages",
     "json-patch-ot-agent": "PuppetJs/JSON-Patch-OT-agent#gh-pages",
     "json-patch-ot": "PuppetJs/JSON-Patch-OT#gh-pages"
   },
   "devDependencies": {
-    "polymer": "Polymer/polymer#<0.8.0",
-    "model-operations": "Polyjuice/model-operations"
+    "polymer": "*",
+    "puppet-bunny": "PuppetJs/puppet-bunny",
+    "dom-bind-notifier": "*"
   }
 }

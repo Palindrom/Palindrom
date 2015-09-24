@@ -94,7 +94,7 @@
     this.puppet = puppet;
 
     if (remoteUrl instanceof URL) {
-        this.remoteUrl = remoteUrl;
+    this.remoteUrl = remoteUrl;
     } else if (remoteUrl) {
         this.remoteUrl = new URL(remoteUrl, window.location.href);
     } else {
@@ -392,7 +392,7 @@
         puppet.remoteObj = responseText; // JSON.parse(JSON.stringify(puppet.obj));
       }
 
-      recursiveMarkObjProperties(puppet, "obj");
+      recursiveMarkObjProperties(puppet.obj);
       puppet.observe();
       if (onDataReady) {
         onDataReady.call(puppet, puppet.obj);
@@ -404,17 +404,16 @@
   function markObjPropertyByPath(obj, path) {
     var keys = path.split('/');
     var len = keys.length;
-    if (keys.length > 2) {
+    if (len > 2) {
       for (var i = 1; i < len - 1; i++) {
         obj = obj[keys[i]];
       }
     }
-    recursiveMarkObjProperties(obj, keys[len - 1]);
+    recursiveMarkObjProperties(obj[keys[len - 1]], len > 1? obj : undefined);
   }
 
-  function placeMarkers(parent, key) {
-    var subject = parent[key];
-    if (subject !== null && typeof subject === 'object' && !subject.hasOwnProperty('$parent')) {
+  function placeMarker(subject, parent) {
+    if (parent != undefined && !subject.hasOwnProperty('$parent')) {
       Object.defineProperty(subject, '$parent', {
         enumerable: false,
         get: function () {
@@ -424,14 +423,17 @@
     }
   }
 
-  function recursiveMarkObjProperties(parent, key) {
-    placeMarkers(parent, key);
-    parent = parent[key];
-    for (var i in parent) {
-      if (parent.hasOwnProperty(i) && typeof parent[i] === 'object') {
-        recursiveMarkObjProperties(parent, i);
+  function recursiveMarkObjProperties(subject, parent) {
+    var child;
+    if(subject !== null && typeof subject === 'object'){
+      placeMarker(subject, parent);
+      for (var i in subject) {
+        child = subject[i];
+        if (subject.hasOwnProperty(i)) {
+          recursiveMarkObjProperties(child, subject);
       }
     }
+  }
   }
 
   function recursiveExtend(par, obj) {

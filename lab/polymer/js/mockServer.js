@@ -1,4 +1,4 @@
-window.addEventListener('polymer-ready', function () { //see https://github.com/pivotal/jasmine-ajax/issues/79
+// window.addEventListener('polymer-ready', function () { //see https://github.com/pivotal/jasmine-ajax/issues/79
   jasmine.Ajax.install();
 
   var full = window.full = {
@@ -6,7 +6,7 @@ window.addEventListener('polymer-ready', function () { //see https://github.com/
       fullName: "",
       firstName$: "",
       lastName$: "",
-      resetNameClicked$: null
+      resetNameClicked$: false
     }
   };
 
@@ -58,7 +58,7 @@ window.addEventListener('polymer-ready', function () { //see https://github.com/
           outPatches.push({op: 'replace', path: '/user/fullName', value: full.user.fullName});
         }
         if (patch.op == "replace" &&
-          (patch.path == "/user/resetNameClicked$" && patch.value === true)
+          (patch.path == "/user/resetNameClicked$" && (patch.value === "true" || patch.value === true))
           ) {
           full.user.firstName$ = "Isaac";
           full.user.lastName$ = "Newton";
@@ -79,4 +79,4 @@ window.addEventListener('polymer-ready', function () { //see https://github.com/
     console.info("Mock Server ",this.url, "\n request", data, "\n response", stub.status, stub.responseText);
     return _old.apply(this, [].slice.call(arguments));
   };
-});
+// });
