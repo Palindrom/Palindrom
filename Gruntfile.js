@@ -50,4 +50,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-bump');
+
+  grunt.registerTask('release', "Uglify and bump", function(target) {
+    grunt.task.run('uglify', target ? 'bump:' + target : 'bump');
+  });
 };
