@@ -27,6 +27,12 @@
 
     //TODO: do not change given object
     options.callback = function addDOMListeners(obj){
+      var location = getRemoteUrlFromCookie();
+
+      if (location) {
+        this.network.remoteUrl = new URL(location, this.network.remoteUrl);
+      }
+
       this.listen();
       onDataReady && onDataReady.call(this, obj);
     };
