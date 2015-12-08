@@ -375,6 +375,7 @@
 
     this.ignoreCache = [];
     this.ignoreAdd = options.ignoreAdd || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
+    this.sessionTimeout = options.sessionTimeout || false;
 
     //usage:
     //puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to remote
@@ -398,6 +399,7 @@
         onDataReady.call(puppet, puppet.obj);
       }
 
+      puppet.ping();
     });
   }
 
@@ -450,6 +452,22 @@
   }
 
   Puppet.prototype = Object.create(EventDispatcher.prototype); //inherit EventTarget API from EventDispatcher
+
+  Puppet.prototype.ping = function () {
+      if (!this.sessionTimeout) {
+          return;
+      }
+
+      var time = this.sessionTimeout * 60 * 1000 - 30000;
+
+      clearTimeout(this.pingTimeout);
+
+      this.pingTimeout = setTimeout(function () {
+          this.handleLocalChange([]);
+          //console.log(this.obj);
+          this.ping();
+      }.bind(this), time);
+  };
 
   Puppet.prototype.observe = function () {
     this.observer = jsonpatch.observe(this.obj, this.filterChangedCallback.bind(this));
