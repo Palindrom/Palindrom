@@ -82,6 +82,7 @@ Attribute             | Type       | Default                | Description
 `onPatchReceived`     | *Function* |                        | See above
 `onSocketStateChanged`| *Function* |                        | See above
 `onPatchSent`         | *Function* |                        | See above
+`onConnectionError`   | *Function* |                        | See above
 
 
 ### Binding object once is ready (`callback`)
