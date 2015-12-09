@@ -46,22 +46,22 @@ All the parameters are optional.
 var puppet = new Puppet({attribute: value});
 ```
 
-Attribute           | Type          | Default                | Description
----                 | ---           | ---                    | ---
-`remoteUrl`         | *String*      | `window.location.href` | PATCH server URL
-`callback`          | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established)
-`obj`               | *Object*      | `{}`                   | object where the parsed JSON data will be inserted
-`useWebSocket`      | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
-`ignoreAdd`         | *RegExp*      |                        | Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
-`debug`             | *Boolean*     | `true`                 | Toggle debugging mode
-`onRemoteChange`    | *Function*    |                        | Deprecated. Helper callback triggered each time a patch is obtained from server
-`onPatchReceived`   | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts two parameters: (*String* `data`, *String* `url`, *String*, `method`)
-`onPatchSent`       | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (*String* `data`, *String* `url`, *String*, `method`)
-`onSocketStateChanged`| *Function*  |                        | Helper callback triggered when stocket state changes, accepts next parameters: (*int* `state`, *String* `url`, *String* `data`, *int* `code`, *String* `reason`)
-`localVersionPath`  | *JSONPointer* | `disabled`             | local version path, set it to enable Versioned JSON Patch communication
-`remoteVersionPath` | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
-`ot`                | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
-`purity`            | *Boolean*     | `false`                | `true` to enable purist mode of OT
+Attribute              | Type          | Default                | Description
+---                    | ---           | ---                    | ---
+`remoteUrl`            | *String*      | `window.location.href` | PATCH server URL
+`callback`             | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established)
+`obj`                  | *Object*      | `{}`                   | object where the parsed JSON data will be inserted
+`useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
+`ignoreAdd`            | *RegExp*      |                        | Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
+`debug`                | *Boolean*     | `true`                 | Toggle debugging mode
+`onRemoteChange`       | *Function*    |                        | Deprecated. Helper callback triggered each time a patch is obtained from server
+`onPatchReceived`      | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts two parameters: (*String* `data`, *String* `url`, *String*, `method`)
+`onPatchSent`          | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (*String* `data`, *String* `url`, *String*, `method`)
+`onSocketStateChanged` | *Function*  |                        | Helper callback triggered when stocket state changes, accepts next parameters: (*int* `state`, *String* `url`, *String* `data`, *int* `code`, *String* `reason`)
+`localVersionPath`     | *JSONPointer* | `disabled`             | local version path, set it to enable Versioned JSON Patch communication
+`remoteVersionPath`    | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
+`ot`                   | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
+`purity`               | *Boolean*     | `false`                | `true` to enable purist mode of OT
 
 most of them are accessible also in runtime:
 
