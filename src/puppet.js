@@ -212,18 +212,26 @@
     };
     that._ws.onerror = function (event) {
       that.onStateChange(that._ws.readyState, upgradeURL, event.data);
-      throw new Error("WebSocket connection could not be made." + (event.data || "") + "\nCould not connect to: " + upgradeURL);
+
+      var m = {
+          statusText: "WebSocket connection could not be made.",
+          url: upgradeURL
+      };
+
+      that.onError(JSON.stringify(m), upgradeURL, "WS");
     };
     that._ws.onclose = function (event) {
       that.onStateChange(that._ws.readyState, upgradeURL, null, event.code, event.reason);
 
-      var m = ["WebSocket connection closed. Status code: ", event.code, "."];
+      var m = {
+          statusText: "WebSocket connection closed.",
+          readyState: that._ws.readyState,
+          url: upgradeURL,
+          statusCode: event.code,
+          reason: event.reason
+      };
 
-      if (event.reason) {
-          m.push(" Reason: ", event.reason);
-      }
-
-      console.error(m.join(""));
+      that.onError(JSON.stringify(m), upgradeURL, "WS");
     };
   };
   PuppetNetworkChannel.prototype.changeState = function (href) {
@@ -337,6 +345,7 @@
     this.onPatchReceived = options.onPatchReceived || function () { };
     this.onPatchSent = options.onPatchSent || function () { };
     this.onSocketStateChanged = options.onSocketStateChanged || function () { };
+    this.onConnectionError = options.onConnectionError || function () { };
 
     this.network = new PuppetNetworkChannel(
         this, // puppet instance TODO: to be removed, used for error reporting
@@ -578,6 +587,10 @@
   };
 
   Puppet.prototype.handleRemoteError = function (data, url, method) {
+      if (this.onConnectionError) {
+          this.onConnectionError(data, url, method);
+      }
+
       if (this.onPatchReceived) {
           this.onPatchReceived(data, url, method);
       }
