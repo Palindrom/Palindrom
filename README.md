@@ -63,6 +63,7 @@ Attribute              | Type          | Default                | Description
 `remoteVersionPath`    | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
 `ot`                   | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
 `purity`               | *Boolean*     | `false`                | `true` to enable purist mode of OT
+`pingInterval`         | *Number*      | `0`                    | Interval in seconds between ping patches, `0` - disable ping patches
 
 most of them are accessible also in runtime:
 

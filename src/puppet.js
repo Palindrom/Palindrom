@@ -384,7 +384,7 @@
 
     this.ignoreCache = [];
     this.ignoreAdd = options.ignoreAdd || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
-    this.sessionTimeout = options.sessionTimeout || false;
+    this.pingInterval = options.pingInterval || false;
 
     //usage:
     //puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to remote
@@ -463,11 +463,11 @@
   Puppet.prototype = Object.create(EventDispatcher.prototype); //inherit EventTarget API from EventDispatcher
 
   Puppet.prototype.ping = function () {
-      if (!this.sessionTimeout) {
+      if (!this.pingInterval) {
           return;
       }
 
-      var time = this.sessionTimeout * 60 * 1000 - 30000;
+      var time = this.pingInterval * 1000;
 
       clearTimeout(this.pingTimeout);
 
