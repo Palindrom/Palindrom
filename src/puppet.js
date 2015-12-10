@@ -1,4 +1,4 @@
-/*! puppet.js version: 1.3.3
+/*! puppet.js version: 1.3.4
  * (c) 2013 Joachim Wester
  * MIT license
  */
