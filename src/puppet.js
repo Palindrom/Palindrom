@@ -118,6 +118,8 @@
         return useWebSocket;
       },
       set: function (newValue) {
+        useWebSocket = newValue;
+
         if(newValue == false) {
           if(that._ws) {
             that._ws.onclose = function() { //overwrites the previous onclose
@@ -129,7 +131,7 @@
         } else if(!that.wsURL) {
           defineWebSocketURL(this, remoteUrl);
         }
-        return useWebSocket = newValue;
+        return useWebSocket;
       }
     });
   }
@@ -213,8 +215,13 @@
     that._ws.onerror = function (event) {
       that.onStateChange(that._ws.readyState, upgradeURL, event.data);
 
+      if (!that.useWebSocket) {
+          return;
+      }
+
       var m = {
           statusText: "WebSocket connection could not be made.",
+          readyState: that._ws.readyState,
           url: upgradeURL
       };
 
