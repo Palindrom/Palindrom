@@ -100,7 +100,7 @@
     } else {
         this.remoteUrl = new URL(window.location.href);
     }
-    
+
     // define wsURL if needed
     if(useWebSocket){
       defineWebSocketURL(this, remoteUrl);
@@ -140,8 +140,8 @@
     var network = this;
     return this.xhr(
         this.remoteUrl.href,
-        'application/json', 
-        null,  
+        'application/json',
+        null,
         function (res) {
           bootstrap( res.responseText );
 
@@ -322,7 +322,7 @@
   };
   /** Apply given JSON Patch sequence immediately */
   NoQueue.prototype.receive = function(obj, sequence){
-      this.apply(obj, sequence);    
+      this.apply(obj, sequence);
   };
 
   /**
@@ -345,6 +345,7 @@
    */
   function Puppet(options) {
     options || (options={});
+    this.jsonpatch = options.jsonpatch || this.jsonpatch || jsonpatch;
     this.debug = options.debug != undefined ? options.debug : true;
     this.obj = options.obj || {};
     this.observer = null;
@@ -363,7 +364,7 @@
         this.handleRemoteError.bind(this), //onError,
         this.onSocketStateChanged.bind(this) //onStateChange
       );
-    
+
     Object.defineProperty(this, "useWebSocket", {
       get: function () {
         return this.network.useWebSocket;
@@ -486,12 +487,12 @@
   };
 
   Puppet.prototype.observe = function () {
-    this.observer = jsonpatch.observe(this.obj, this.filterChangedCallback.bind(this));
+    this.observer = this.jsonpatch.observe(this.obj, this.filterChangedCallback.bind(this));
   };
 
   Puppet.prototype.unobserve = function () {
     if (this.observer) { //there is a bug in JSON-Patch when trying to unobserve something that is already unobserved
-      jsonpatch.unobserve(this.obj, this.observer);
+      this.jsonpatch.unobserve(this.obj, this.observer);
       this.observer = null;
     }
   };
@@ -555,7 +556,7 @@
   Puppet.prototype.validateAndApplySequence = function (tree, sequence) {
     if (this.debug) {
       try {
-        jsonpatch.apply(tree, sequence, true);
+        this.jsonpatch.apply(tree, sequence, true);
       }
       catch (error) {
         error.message = "Incoming patch validation error: " + error.message;
@@ -572,12 +573,13 @@
       }
     }
     else {
-      jsonpatch.apply(tree, sequence);
+      this.jsonpatch.apply(tree, sequence);
     }
+    this.dispatchEvent(new CustomEvent("patch-applied", {bubbles: true, cancelable: true, detail: sequence}));
   };
 
   Puppet.prototype.validateSequence = function (tree, sequence) {
-    var error = jsonpatch.validate(sequence, tree);
+    var error = this.jsonpatch.validate(sequence, tree);
     if (error) {
       error.message = "Outgoing patch validation error: " + error.message;
       var ev;
