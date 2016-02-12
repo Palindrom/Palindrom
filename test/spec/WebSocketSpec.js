@@ -67,9 +67,6 @@ describe("WebSocket", function () {
           var puppet1 = new Puppet({
               remoteUrl: url1,
               useWebSocket: true,
-              obj: {
-                  value: 1
-              },
               callback: function () {
                   setTimeout(function () {
                       var websocket = WSSpy.calls.mostRecent().returnValue;
@@ -79,14 +76,16 @@ describe("WebSocket", function () {
               },
               onSocketStateChanged: function (state, url) {
                   if (state == 1) {
-                      puppet1.obj.value = 2;
+                      puppet1.obj.hello = "world2";
                       triggerMouseup();
                   }
               },
               onPatchSent: function (data, url) {
                   if (data) {
-                      expect(data).toEqual('[{"op":"replace","path":"/value","value":2}]');
+                      expect(data).toEqual('[{"op":"replace","path":"/hello","value":"world2"}]');
                       expect(url).toEqual("ws://house1.of.puppets/__default/testId001");
+                      expect(url).toEqual(puppet1.network._ws.url);
+                      expect(puppet2.network._ws).not.toEqual(puppet1.network._ws);
                   }
               }
           });
@@ -94,9 +93,6 @@ describe("WebSocket", function () {
           var puppet2 = new Puppet({
               remoteUrl: url2,
               useWebSocket: true,
-              obj: {
-                  value: 2
-              },
               callback: function () {
                   setTimeout(function () {
                       var websocket = WSSpy.calls.mostRecent().returnValue;
@@ -106,14 +102,16 @@ describe("WebSocket", function () {
               },
               onSocketStateChanged: function (state, url) {
                   if (state == 1) {
-                      puppet2.obj.value = 3;
+                      puppet2.obj.hello = "world3";
                       triggerMouseup();
                   }
               },
               onPatchSent: function (data, url) {
                   if (data) {
-                      expect(data).toEqual('[{"op":"replace","path":"/value","value":3}]');
+                      expect(data).toEqual('[{"op":"replace","path":"/hello","value":"world3"}]');
                       expect(url).toEqual("ws://house2.of.puppets/__default/testId001");
+                      expect(url).toEqual(puppet2.network._ws.url);
+                      expect(puppet2.network._ws).not.toEqual(puppet1.network._ws);
 
                       done();
                   }
@@ -246,18 +244,18 @@ describe("WebSocket", function () {
             websocket.open();
             //tested code
               puppetObj.hello = "galaxy";
-              triggerMouseup();  
+              triggerMouseup();
 
               //wait for async trigger(?)
               setTimeout(checkOnceReady);
-            
-          });       
+
+          });
         }
 
         function checkOnceReady(){
           var websocket = WSSpy.calls.mostRecent().returnValue;
           expect(websocket.readyState).toEqual(WebSocket.OPEN); // 1
-          expect(websocket.sendSpy.calls.argsFor(0)).toEqual([JSON.stringify([{op:"replace",path: "/hello", value:"galaxy"}])]); 
+          expect(websocket.sendSpy.calls.argsFor(0)).toEqual([JSON.stringify([{op:"replace",path: "/hello", value:"galaxy"}])]);
           done();
         }
 
