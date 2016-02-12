@@ -414,7 +414,8 @@
     var puppet = this;
     this.network.establish(function bootstrap(responseText){
       var json = JSON.parse(responseText);
-      recursiveExtend(puppet.obj, json);
+      var bigPatch = [{ op: "replace", path: "", value: json }];
+      puppet.validateAndApplySequence(puppet.obj, bigPatch);
 
       if (puppet.debug) {
         puppet.remoteObj = responseText; // JSON.parse(JSON.stringify(puppet.obj));
@@ -463,19 +464,6 @@
       }
     }
   }
-  }
-
-  function recursiveExtend(par, obj) {
-    for (var i in obj) {
-      if (obj.hasOwnProperty(i)) {
-        if (typeof obj[i] === 'object' && par.hasOwnProperty(i)) {
-          recursiveExtend(par[i], obj[i]);
-        }
-        else {
-          par[i] = obj[i];
-        }
-      }
-    }
   }
 
   Puppet.prototype = Object.create(EventDispatcher.prototype); //inherit EventTarget API from EventDispatcher
