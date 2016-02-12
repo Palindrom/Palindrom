@@ -628,6 +628,7 @@
     this.queue.receive(this.obj, patches);
 
     patches.forEach(function (patch) {
+	  //this should be moved to validateAndApplySequence
       if (patch.path === "") {
         var desc = JSON.stringify(patches);
         if (desc.length > 103) {
@@ -640,10 +641,10 @@
         markObjPropertyByPath(that.obj, patch.path);
       }
     });
-    this.observe();
     if (this.onRemoteChange) {
       this.onRemoteChange(patches);
     }
+    this.observe();
 
     if(this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
