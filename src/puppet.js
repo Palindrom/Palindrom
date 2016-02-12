@@ -345,7 +345,7 @@
    */
   function Puppet(options) {
     options || (options={});
-    this.jsonpatch = options.jsonpatch || this.jsonpatch || jsonpatch;
+    this.jsonpatch = options.jsonpatch || this.jsonpatch;
     this.debug = options.debug != undefined ? options.debug : true;
 
     if ("obj" in options) {
@@ -467,6 +467,8 @@
   }
 
   Puppet.prototype = Object.create(EventDispatcher.prototype); //inherit EventTarget API from EventDispatcher
+
+  Puppet.prototype.jsonpatch = jsonpatch;
 
   Puppet.prototype.ping = function () {
       if (!this.pingInterval) {
