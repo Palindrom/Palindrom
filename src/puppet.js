@@ -347,7 +347,17 @@
     options || (options={});
     this.jsonpatch = options.jsonpatch || this.jsonpatch || jsonpatch;
     this.debug = options.debug != undefined ? options.debug : true;
-    this.obj = options.obj || {};
+
+    if ("obj" in options) {
+        if (typeof options.obj != "object") {
+            throw new Error("'options.obj' is not an object");
+        }
+        this.obj = options.obj;
+    }
+    else {
+        this.obj = {};
+    }
+
     this.observer = null;
     this.onRemoteChange = options.onRemoteChange;
     this.onPatchReceived = options.onPatchReceived || function () { };
