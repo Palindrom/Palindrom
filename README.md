@@ -2,7 +2,7 @@ PuppetJs
 ========
 
 Library for two-way data binding between local JSON view models and remote, using JSON-Patch, w/ optional OT, via HTTP or WebSocket.
- 
+
 
 Implements [Server communication](https://github.com/Starcounter-Jack/PuppetJs/wiki/Server-communication).
 
@@ -64,6 +64,7 @@ Attribute              | Type          | Default                | Description
 `ot`                   | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
 `purity`               | *Boolean*     | `false`                | `true` to enable purist mode of OT
 `pingInterval`         | *Number*      | `0`                    | Interval in seconds between ping patches, `0` - disable ping patches
+`jsonpatch`            | *Object*      | window.jsonpatch       | The provider object for jsonpatch apply, validate, observe and unobserve. By default assumes Starcounter-Jack/JSON-Patch library available in global `jsonpatch` variable.
 
 most of them are accessible also in runtime:
 
@@ -104,7 +105,7 @@ The JSON Patch request will be send to the remote.
 
 ### Two-way data binding frameworks
 
-PuppetJs works superbly with with frameworks that allow for two-way data binding, such as Polymer and Angular. These frameworks have the ability to bind an `<input>` element to a JavaScript data model in a way that the object updates after each keystroke. In consequence, PuppetJs sends a patch the server after each keystroke. 
+PuppetJs works superbly with with frameworks that allow for two-way data binding, such as Polymer and Angular. These frameworks have the ability to bind an `<input>` element to a JavaScript data model in a way that the object updates after each keystroke. In consequence, PuppetJs sends a patch the server after each keystroke.
 
 If you want to opt-out from such behavior, you need to force your framework to update the data model after the element is unfocused (`blur` event). Depending on the framework:
 
@@ -114,7 +115,7 @@ If you want to opt-out from such behavior, you need to force your framework to u
 
 ### Getting the parent scope
 
-PuppetJS adds an inenumerable `$parent` getter at each level in the data object. You can use it to retrieve parent data from descendant scopes in Angular, Polymer, etc. 
+PuppetJS adds an inenumerable `$parent` getter at each level in the data object. You can use it to retrieve parent data from descendant scopes in Angular, Polymer, etc.
 
 For example, such data object:
 
@@ -175,7 +176,7 @@ puppet.useWebSocket = false;
 
 ### Dependencies
 
-PuppetJs is dependent on [Starcounter-Jack/JSON-Patch](https://github.com/Starcounter-Jack/JSON-Patch) to observe changes in local scope, generate patches to be sent to the server and apply changes received from the server. 
+PuppetJs is dependent on [Starcounter-Jack/JSON-Patch](https://github.com/Starcounter-Jack/JSON-Patch) to observe changes in local scope, generate patches to be sent to the server and apply changes received from the server.
 
 It also, uses [URL API](http://www.w3.org/TR/url/), if your environment does not support it (IE, Node), you need to use shim, for example [Polymer/URL](https://github.com/Polymer/URL).
 ```shell
@@ -295,9 +296,9 @@ Attribute   | Type          | Description
 ### Browser history
 
 PuppetJs uses the HTML5 history API to update the URL in the browser address bar to reflect the new page. It also listens to a `popstate` event so it could ask the server for new JSON-Patch to morph the page back to previous state. Due to lack of native `pushstate` event you need to either:
- * call `puppet.changeState(url)` after your `history.pushState(url)`, 
- * call `puppet.morph(url)` - that will call `pushState` and update puppet's state for you, 
- * trigger `puppet-redirect-pushstate` with `{url: "/new/url"}` on `window` after your `history.pushState(url)`, 
+ * call `puppet.changeState(url)` after your `history.pushState(url)`,
+ * call `puppet.morph(url)` - that will call `pushState` and update puppet's state for you,
+ * trigger `puppet-redirect-pushstate` with `{url: "/new/url"}` on `window` after your `history.pushState(url)`,
  * or use [`<puppet-redirect>`](https://github.com/PuppetJs/puppet-redirect) Custom Element that does it for you.
 
 ### Development
