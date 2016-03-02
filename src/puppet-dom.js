@@ -1,4 +1,4 @@
-/*! puppet-dom.js version: 1.3.5
+/*! puppet-dom.js version: 1.3.7
  * (c) 2013 Joachim Wester
  * MIT license
  */
@@ -16,7 +16,7 @@
    * PuppetDOM
    * @extends {Puppet}
    * @param {Object} [options] options object as in Puppet
-   * @param {HTMLElement} [options.listenTo=document.body] HTML node to listen events. 
+   * @param {HTMLElement} [options.listenTo=document.body] HTML node to listen events.
    */
   var PuppetDOM = function (options){
     options || (options={});
@@ -36,7 +36,7 @@
       this.listen();
       onDataReady && onDataReady.call(this, obj);
     };
-    this.listen = function(){      
+    this.listen = function(){
       this.listening = true;
 
       this.element.addEventListener('click', clickHandler);
