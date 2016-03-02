@@ -546,8 +546,8 @@
     if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
       throw new Error("PuppetJs did not handle Jasmine test case correctly");
     }
-    this.network.send(txt);
     this.unobserve();
+    this.network.send(txt);
     patches.forEach(function (patch) {
       markObjPropertyByPath(that.obj, patch.path);
     });
