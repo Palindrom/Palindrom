@@ -1,4 +1,4 @@
-/*! puppet.js version: 1.3.5
+/*! puppet.js version: 1.3.6
  * (c) 2013 Joachim Wester
  * MIT license
  */
@@ -334,6 +334,7 @@
    * @param {Boolean}            [options.useWebSocket=false] Set to true to enable WebSocket support
    * @param {RegExp}             [options.ignoreAdd=null]     Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
    * @param {Boolean}            [options.debug=false]        Set to true to enable debugging mode
+   * @param {Function}           [options.onLocalChange]      Helper callback triggered each time a patch is observed on local
    * @param {Function}           [options.onRemoteChange]     Helper callback triggered each time a patch is obtained from remote
    * @param {JSONPointer}        [options.localVersionPath]   local version path, set it to enable Versioned JSON Patch communication
    * @param {JSONPointer}        [options.remoteVersionPath]  remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
@@ -360,6 +361,7 @@
     }
 
     this.observer = null;
+    this.onLocalChange = options.onLocalChange;
     this.onRemoteChange = options.onRemoteChange;
     this.onPatchReceived = options.onPatchReceived || function () { };
     this.onPatchSent = options.onPatchSent || function () { };
@@ -422,7 +424,7 @@
         puppet.remoteObj = responseText; // JSON.parse(JSON.stringify(puppet.obj));
       }
 
-      recursiveMarkObjProperties(puppet.obj);
+      recursiveMarkObjProperties(puppet.obj, undefined, puppet.obj, "");
       puppet.observe();
       if (onDataReady) {
         onDataReady.call(puppet, puppet.obj);
@@ -433,6 +435,7 @@
   }
 
   function markObjPropertyByPath(obj, path) {
+    var root = obj;
     var keys = path.split('/');
     var len = keys.length;
     if (len > 2) {
@@ -440,10 +443,10 @@
         obj = obj[keys[i]];
       }
     }
-    recursiveMarkObjProperties(obj[keys[len - 1]], len > 1? obj : undefined);
+    recursiveMarkObjProperties(obj[keys[len - 1]], len > 1? obj : undefined, root, path);
   }
 
-  function placeMarker(subject, parent) {
+  function placeMarker(subject, parent, root, rootPath) {
     if (parent != undefined && !subject.hasOwnProperty('$parent')) {
       Object.defineProperty(subject, '$parent', {
         enumerable: false,
@@ -452,16 +455,24 @@
         }
       });
     }
+    if (!subject.hasOwnProperty('$rootPath')) {
+        Object.defineProperty(subject, '$rootPath', {
+          enumerable: false,
+          get: function () {
+            return rootPath;
+          }
+        });
+    };
   }
 
-  function recursiveMarkObjProperties(subject, parent) {
+  function recursiveMarkObjProperties(subject, parent, root, rootPath) {
     var child;
     if(subject !== null && typeof subject === 'object'){
-      placeMarker(subject, parent);
+      placeMarker(subject, parent, root, rootPath);
       for (var i in subject) {
         child = subject[i];
         if (subject.hasOwnProperty(i)) {
-          recursiveMarkObjProperties(child, subject);
+          recursiveMarkObjProperties(child, subject, root, rootPath + "/" + i);
       }
     }
   }
@@ -551,10 +562,30 @@
     patches.forEach(function (patch) {
       markObjPropertyByPath(that.obj, patch.path);
     });
+    if (this.onLocalChange) {
+      this.onLocalChange(patches);
+    }
     this.observe();
   };
 
   Puppet.prototype.validateAndApplySequence = function (tree, sequence) {
+
+sequence.forEach(function (patch) {
+      /*if (patch.path === "") {
+        var desc = JSON.stringify(patches);
+        if (desc.length > 103) {
+          desc = desc.substring(0, 100) + "...";
+        }
+        //TODO Error
+        that.showWarning("Server pushed patch that replaces the object root", desc);
+    }*/
+      if(typeof patch.value == "object") {
+          if (patch.op === "add" || patch.op === "replace" || patch.op === "test") {
+            recursiveMarkObjProperties(patch.value, undefined, undefined, patch.path);
+          }
+      }
+  });
+
     if (this.debug) {
       try {
         this.jsonpatch.apply(tree, sequence, true);
@@ -629,21 +660,6 @@
 
     this.unobserve();
     this.queue.receive(this.obj, patches);
-
-    patches.forEach(function (patch) {
-	  //this should be moved to validateAndApplySequence
-      if (patch.path === "") {
-        var desc = JSON.stringify(patches);
-        if (desc.length > 103) {
-          desc = desc.substring(0, 100) + "...";
-        }
-        //TODO Error
-        that.showWarning("Server pushed patch that replaces the object root", desc);
-      }
-      if (patch.op === "add" || patch.op === "replace" || patch.op === "test") {
-        markObjPropertyByPath(that.obj, patch.path);
-      }
-    });
     if (this.onRemoteChange) {
       this.onRemoteChange(patches);
     }
