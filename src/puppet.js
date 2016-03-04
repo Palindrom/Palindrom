@@ -334,6 +334,7 @@
    * @param {Boolean}            [options.useWebSocket=false] Set to true to enable WebSocket support
    * @param {RegExp}             [options.ignoreAdd=null]     Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
    * @param {Boolean}            [options.debug=false]        Set to true to enable debugging mode
+   * @param {Function}           [options.onLocalChange]      Helper callback triggered each time a change is observed locally
    * @param {Function}           [options.onRemoteChange]     Helper callback triggered each time a patch is obtained from remote
    * @param {JSONPointer}        [options.localVersionPath]   local version path, set it to enable Versioned JSON Patch communication
    * @param {JSONPointer}        [options.remoteVersionPath]  remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
@@ -360,6 +361,7 @@
     }
 
     this.observer = null;
+    this.onLocalChange = options.onLocalChange;
     this.onRemoteChange = options.onRemoteChange;
     this.onPatchReceived = options.onPatchReceived || function () { };
     this.onPatchSent = options.onPatchSent || function () { };
@@ -551,6 +553,9 @@
     patches.forEach(function (patch) {
       markObjPropertyByPath(that.obj, patch.path);
     });
+    if (this.onLocalChange) {
+      this.onLocalChange(patches);
+    }
     this.observe();
   };
 

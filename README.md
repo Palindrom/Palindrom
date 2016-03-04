@@ -54,7 +54,8 @@ Attribute              | Type          | Default                | Description
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
 `ignoreAdd`            | *RegExp*      |                        | Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
 `debug`                | *Boolean*     | `true`                 | Toggle debugging mode
-`onRemoteChange`       | *Function*    |                        | Deprecated. Helper callback triggered each time a patch is obtained from server
+`onLocalChange`        | *Function*    |                        | Helper callback triggered each time a change is observed locally
+`onRemoteChange`       | *Function*    |                        | Helper callback triggered each time a patch is obtained from remote
 `onPatchReceived`      | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts two parameters: (*String* `data`, *String* `url`, *String*, `method`)
 `onPatchSent`          | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (*String* `data`, *String* `url`, *String*, `method`)
 `onSocketStateChanged` | *Function*    |                        | Helper callback triggered when socket state changes, accepts next parameters: (*int* `state`, *String* `url`, *String* `data`, *int* `code`, *String* `reason`)
