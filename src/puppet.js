@@ -403,7 +403,7 @@
       this.queue = new NoQueue(this.validateAndApplySequence.bind(this));
     }
 
-    this.ignoreCache = [];
+    this.ignoreCache = {};
     this.ignoreAdd = options.ignoreAdd || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
     this.pingInterval = options.pingInterval || false;
 
