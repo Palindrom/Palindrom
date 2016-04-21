@@ -141,6 +141,26 @@ Can be used as follows:
 </script>
 ```
 
+### Generating patches based on local changes
+
+PuppetJs automatically observes local changes. This is implemented by dirty checking, triggered in event listeners for typical browser events (`mousedown`, `mouseup`, etc). It is done by the JSON-Patch library ([source](https://github.com/Starcounter-Jack/JSON-Patch/blob/master/src/json-patch-duplex.ts#L352-L354)).
+
+To generate patches for changes made in code, you need to either simulate a browser event (recommended):
+
+```js
+var clickEvent = document.createEvent('MouseEvents');
+clickEvent.initEvent("mouseup", true, true);
+window.dispatchEvent(clickEvent);
+```
+
+Or use a low level API exposed by the JSON-Patch library, provided that you have a reference the PuppetJs instance:
+
+```js
+jsonpatch.generate(puppet.observer);
+```
+
+Future versions of PuppetJs may contain a high level API for generating patches. Please follow the issue [#29](https://github.com/PuppetJs/PuppetJs/issues/29) to know more.
+
 ### Ignoring local changes (`ignoreAdd`)
 
 If you want to create a property in the observed object that will remain local, there is an `ignoreAdd` option and property that
