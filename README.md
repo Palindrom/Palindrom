@@ -359,3 +359,7 @@ Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
 ### Changelog
 
 To see the list of recent changes, see [Releases](https://github.com/PuppetJs/PuppetJs/releases).
+
+## License
+
+MIT
