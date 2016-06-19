@@ -18,7 +18,6 @@ describe("OnLocal/RemoteChange", function() {
         jasmine.WebSocket.uninstall();
     });
     it("should call onLocalChange callback for outgoing patches", function(done) {
-        var WSSpy = jasmine.WebSocket.spy;
         var sentSpy = jasmine.createSpy("onLocalChange");
 
         var puppet = this.puppet = new Puppet({
@@ -42,8 +41,7 @@ describe("OnLocal/RemoteChange", function() {
         }, 100); // for FF
     });
 
-    it("should call onRemoteChange callback for incoming patches", function(done) {
-        var WSSpy = jasmine.WebSocket.spy;
+    it("should call onRemoteChange callback for applied patches", function(done) {
         var receivedSpy = jasmine.createSpy("onRemoteChange");
 
         var puppet = this.puppet = new Puppet({
@@ -60,11 +58,40 @@ describe("OnLocal/RemoteChange", function() {
         // wait for observer and mocked initial HTTP response
         setTimeout(function() {
             expect(puppet.obj.hello).toEqual("onRemoteChange callback");
-            expect(receivedSpy.calls.mostRecent().args[0]).toEqual([{
+            var mostRecentCall = receivedSpy.calls.mostRecent();
+            expect(mostRecentCall.args[0]).toEqual([{
                 "op": "replace",
                 "path": "/hello",
                 "value": "onRemoteChange callback"
             }]);
+            expect(mostRecentCall.args[1]).toEqual([{removed: 'world'}]);
+            done();
+        }, 100); // for FF
+    });
+
+    it("should fire patch-applied event for applied patches", function(done) {
+        var receivedSpy = jasmine.createSpy("patch-applied");
+
+        var puppet = this.puppet = new Puppet({
+            useWebSocket: true
+        });
+        puppet.addEventListener('patch-applied', receivedSpy);
+        var websocket = jasmine.WebSocket.spy.calls.mostRecent().returnValue;
+        //open WS for changes
+        websocket.open();
+        websocket.onmessage({
+            data: '[{"op":"replace","path":"/hello","value":"patch-applied"}]'
+        });
+
+        // wait for observer and mocked initial HTTP response
+        setTimeout(function() {
+            var detail = receivedSpy.calls.mostRecent().args[0].detail;
+            expect(detail.patches).toEqual([{
+                "op": "replace",
+                "path": "/hello",
+                "value": "patch-applied"
+            }]);
+            expect(detail.results).toEqual([{removed: 'world'}]);
             done();
         }, 100); // for FF
     });
