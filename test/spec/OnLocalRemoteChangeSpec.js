@@ -64,7 +64,7 @@ describe("OnLocal/RemoteChange", function() {
                 "path": "/hello",
                 "value": "onRemoteChange callback"
             }]);
-            expect(mostRecentCall.args[1]).toEqual([{removed: 'world'}]);
+            expect(mostRecentCall.args[1]).toEqual(['world']);
             done();
         }, 100); // for FF
     });
@@ -91,7 +91,7 @@ describe("OnLocal/RemoteChange", function() {
                 "path": "/hello",
                 "value": "patch-applied"
             }]);
-            expect(detail.results).toEqual([{removed: 'world'}]);
+            expect(detail.results).toEqual(['world']);
             done();
         }, 100); // for FF
     });
