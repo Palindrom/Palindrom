@@ -471,7 +471,7 @@
 
   Puppet.prototype = Object.create(EventDispatcher.prototype); //inherit EventTarget API from EventDispatcher
 
-  Puppet.prototype.dispatchErrorEvent = function(error) {
+  var dispatchErrorEvent = function (puppet, error) {
     var errorEvent;
     if (ErrorEvent.prototype.initErrorEvent) {
       var ev = document.createEvent("ErrorEvent");
@@ -480,7 +480,7 @@
     } else {
       errorEvent = new ErrorEvent("error", {bubbles: true, cancelable: true, error: error}); //this works everywhere except IE
     }
-    this.dispatchEvent(errorEvent);
+    puppet.dispatchEvent(errorEvent);
   };
 
   Puppet.prototype.jsonpatch = global.jsonpatch;
@@ -579,7 +579,7 @@
     } catch (error) {
       if(this.debug) {
         error.message = "Incoming patch validation error: " + error.message;
-        this.dispatchErrorEvent(error);
+        dispatchErrorEvent(this, error);
         return;
       } else {
         throw error;
@@ -617,7 +617,7 @@
     var error = this.jsonpatch.validate(sequence, tree);
     if (error) {
       error.message = "Outgoing patch validation error: " + error.message;
-      this.dispatchErrorEvent(error);
+      dispatchErrorEvent(this, error);
     }
   };
 
@@ -644,16 +644,17 @@
     var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
 
     if (this.onPatchReceived) {
-        this.onPatchReceived(data, url, method);
+      this.onPatchReceived(data, url, method);
     }
 
     // apply only if we're still watching
-    if (this.observer) {
-      this.queue.receive(this.obj, patches);
+    if (!this.observer) {
+      return;
+    }
 
-      if(this.debug) {
-        this.remoteObj = JSON.parse(JSON.stringify(this.obj));
-      }
+    this.queue.receive(this.obj, patches);
+    if (this.debug) {
+      this.remoteObj = JSON.parse(JSON.stringify(this.obj));
     }
   };
 

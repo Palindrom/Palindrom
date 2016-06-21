@@ -95,4 +95,26 @@ describe("OnLocal/RemoteChange", function() {
             done();
         }, 100); // for FF
     });
+
+    it("should NOT fire patch-applied event for patches that were received, but not yet applied", function(done) {
+        var appliedSpy = jasmine.createSpy("patch-applied");
+
+        var puppet = this.puppet = new Puppet({
+            useWebSocket: true
+        });
+        puppet.addEventListener('patch-applied', appliedSpy);
+        puppet.queue.receive = function() {}; // just swallowing queue
+        var websocket = jasmine.WebSocket.spy.calls.mostRecent().returnValue;
+        //open WS for changes
+        websocket.open();
+        websocket.onmessage({
+            data: '[{"op":"replace","path":"/hello","value":"next-patch"}]'
+        });
+
+        // wait for observer and mocked initial HTTP response
+        setTimeout(function() {
+            expect(appliedSpy).not.toHaveBeenCalled();
+            done();
+        }, 100); // for FF
+    });
 });
