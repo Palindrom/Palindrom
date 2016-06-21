@@ -34,8 +34,8 @@ describe("Warning", function () {
           "responseText": '[{"op":"replace","path":"","value":{"hello": "universe"}}]'
         });
         expect(obj.hello).toBe("universe");
-        expect(consoleSpy.calls.count()).toBe(1);
-        expect(consoleSpy.calls.argsFor(0)[0]).toBe('PuppetJs warning: Server pushed patch that replaces the object root ([{"op":"replace","path":"","value":{"hello":"universe"}}])');
+        expect(consoleSpy.calls.count()).toBeGreaterThan(0);
+        expect(consoleSpy.calls.allArgs().map(function(a){return a[0]})).toContain('PuppetJs warning: Server pushed patch that replaces the object root ([{"op":"replace","path":"","value":{"hello":"universe"}}])');
         done();
       }, 1);
     });

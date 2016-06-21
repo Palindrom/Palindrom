@@ -322,7 +322,7 @@
   };
   /** Apply given JSON Patch sequence immediately */
   NoQueue.prototype.receive = function(obj, sequence){
-      this.apply(obj, sequence);
+    this.apply(obj, sequence);
   };
 
   /**
@@ -471,6 +471,18 @@
 
   Puppet.prototype = Object.create(EventDispatcher.prototype); //inherit EventTarget API from EventDispatcher
 
+  var dispatchErrorEvent = function (puppet, error) {
+    var errorEvent;
+    if (ErrorEvent.prototype.initErrorEvent) {
+      var ev = document.createEvent("ErrorEvent");
+      ev.initErrorEvent('error', true, true, error.message, "", ""); //IE10+
+      Object.defineProperty(ev, 'error', {value: error}); //ev.error is ignored
+    } else {
+      errorEvent = new ErrorEvent("error", {bubbles: true, cancelable: true, error: error}); //this works everywhere except IE
+    }
+    puppet.dispatchEvent(errorEvent);
+  };
+
   Puppet.prototype.jsonpatch = global.jsonpatch;
 
   Puppet.prototype.ping = function () {
@@ -560,44 +572,52 @@
   };
 
   Puppet.prototype.validateAndApplySequence = function (tree, sequence) {
-    if (this.debug) {
-      try {
-        this.jsonpatch.apply(tree, sequence, true);
-      }
-      catch (error) {
+    // we don't want this changes to generate patches since they originate from server, not client
+    this.unobserve();
+    try {
+      var results = this.jsonpatch.apply(tree, sequence, this.debug);
+    } catch (error) {
+      if(this.debug) {
         error.message = "Incoming patch validation error: " + error.message;
-        var ev;
-        if (ErrorEvent.prototype.initErrorEvent) {
-          var ev = document.createEvent("ErrorEvent");
-          ev.initErrorEvent('error', true, true, error.message, "", ""); //IE10+
-          Object.defineProperty(ev, 'error', {value: error}); //ev.error is ignored
-        }
-        else {
-          ev = new ErrorEvent("error", {bubbles: true, cancelable: true, error: error}); //this works everywhere except IE
-        }
-        this.dispatchEvent(ev);
+        dispatchErrorEvent(this, error);
+        return;
+      } else {
+        throw error;
       }
     }
-    else {
-      this.jsonpatch.apply(tree, sequence);
+
+    var that = this;
+    sequence.forEach(function (patch) {
+      if (patch.path === "") {
+        var desc = JSON.stringify(sequence);
+        if (desc.length > 103) {
+          desc = desc.substring(0, 100) + "...";
+        }
+        //TODO Error
+        that.showWarning("Server pushed patch that replaces the object root", desc);
+      }
+      if (patch.op === "add" || patch.op === "replace" || patch.op === "test") {
+        markObjPropertyByPath(that.obj, patch.path);
+      }
+    });
+
+    // notifications have to happen only where observe has been re-enabled
+    // otherwise some listener might produce changes that would go unnoticed
+    this.observe();
+
+    // until notifications are converged to single method (events vs. callbacks, #74)
+    if (this.onRemoteChange) {
+      console.warn("PuppetJs.onRemoteChange is deprecated, please use patch-applied event instead.");
+      this.onRemoteChange(sequence, results);
     }
-    this.dispatchEvent(new CustomEvent("patch-applied", {bubbles: true, cancelable: true, detail: sequence}));
+    this.dispatchEvent(new CustomEvent("patch-applied", {bubbles: true, cancelable: true, detail: {patches: sequence, results: results}}));
   };
 
   Puppet.prototype.validateSequence = function (tree, sequence) {
     var error = this.jsonpatch.validate(sequence, tree);
     if (error) {
       error.message = "Outgoing patch validation error: " + error.message;
-      var ev;
-      if (ErrorEvent.prototype.initErrorEvent) {
-        var ev = document.createEvent("ErrorEvent");
-        ev.initErrorEvent('error', true, true, error.message, "", ""); //IE10+
-        Object.defineProperty(ev, 'error', {value: error}); //ev.error is ignored
-      }
-      else {
-        ev = new ErrorEvent("error", {bubbles: true, cancelable: true, error: error}); //this works everywhere except IE
-      }
-      this.dispatchEvent(ev);
+      dispatchErrorEvent(this, error);
     }
   };
 
@@ -622,39 +642,18 @@
 
   Puppet.prototype.handleRemoteChange = function (data, url, method) {
     var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
-    var that = this;
 
     if (this.onPatchReceived) {
-        this.onPatchReceived(data, url, method);
+      this.onPatchReceived(data, url, method);
     }
 
+    // apply only if we're still watching
     if (!this.observer) {
-      return; //ignore remote change if we are not watching anymore
+      return;
     }
 
-    this.unobserve();
     this.queue.receive(this.obj, patches);
-
-    patches.forEach(function (patch) {
-	  //this should be moved to validateAndApplySequence
-      if (patch.path === "") {
-        var desc = JSON.stringify(patches);
-        if (desc.length > 103) {
-          desc = desc.substring(0, 100) + "...";
-        }
-        //TODO Error
-        that.showWarning("Server pushed patch that replaces the object root", desc);
-      }
-      if (patch.op === "add" || patch.op === "replace" || patch.op === "test") {
-        markObjPropertyByPath(that.obj, patch.path);
-      }
-    });
-    if (this.onRemoteChange) {
-      this.onRemoteChange(patches);
-    }
-    this.observe();
-
-    if(this.debug) {
+    if (this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
     }
   };
