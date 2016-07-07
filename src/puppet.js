@@ -89,6 +89,122 @@
 
   }
 
+  /**
+   * @constructor
+     */
+  function Reconnector(reconnectAction) {
+    this._reconnect = reconnectAction;
+    this._reset();
+  }
+
+  Reconnector.prototype._reset = function() {
+    this._intervalMs = 1000;
+    this._timeToCurrentReconnectionMs = 0;
+    this._reconnectionPending = false;
+    clearTimeout(this._reconnection);
+    this._reconnection = null;
+  };
+
+  Reconnector.prototype._step = function() {
+    if(this._timeToCurrentReconnectionMs == 0) {
+      console.log("reconnecting now");
+      this._reconnectionPending = false;
+      this._intervalMs *= 2;
+      this._reconnect();
+    } else {
+      console.log('reconnecting in '+(this._timeToCurrentReconnectionMs / 1000) +'s');
+      this._timeToCurrentReconnectionMs -= 1000;
+      setTimeout(this._step.bind(this), 1000);
+    }
+  };
+
+  /**
+   * Notify Reconnector that connection error occurred and automatic reconnection should be scheduled.
+   */
+  Reconnector.prototype.triggerReconnection = function () {
+    if(this._reconnectionPending) {
+      return;
+    }
+    console.log("reconnecting in  "+(this._intervalMs)/1000+"s...");
+    this._timeToCurrentReconnectionMs = this._intervalMs;
+    this._reconnectionPending = true;
+    this._step();
+  };
+
+  /**
+   * Notify Reconnector that connection has been established and there's no need to do further actions.
+   * Resets state of Reconnector
+   */
+  Reconnector.prototype.notifySuccessfulConnection = function() {
+    this._reset();
+  };
+
+  /**
+   * Guarantees some communication to server and monitors responses for timeouts.
+   * @param sendHeartbeatAction will be called to send a heartbeat
+   * @param onError will be called should a response fail to arrive in `timeoutMs`
+   * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
+   * @param timeoutMs shuold a reponse fail to arrive in this time, `onError` will be called
+   * @constructor
+     */
+  function Heartbeat(sendHeartbeatAction, onError, intervalMs, timeoutMs) {
+    this._send = sendHeartbeatAction;
+    this._onError = onError;
+    this._intervalMs = intervalMs;
+    this._timeoutMs = timeoutMs;
+    this._scheduledSend = null;
+    this._scheduledError = null;
+  }
+
+  /**
+   * Call this function at the beginning of operation and after successful reconnection.
+   */
+  Heartbeat.prototype.start = function() {
+    if(this._scheduledSend) {
+      return;
+    }
+    this._scheduledSend = setTimeout((function () {
+      this.notifySend();
+      this._send();
+    }).bind(this), this._intervalMs);
+  };
+
+  /**
+   * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
+   */
+  Heartbeat.prototype.notifySend = function() {
+    clearTimeout(this._scheduledSend); // sending heartbeat will not be necessary until our response arrives
+    this._scheduledSend = null;
+    if(this._scheduledError) {
+      return;
+    }
+    this._scheduledError = setTimeout((function () {
+      this._scheduledError = null;
+      this._onError(); // timeout has passed and response hasn't arrived
+    }).bind(this), this._timeoutMs);
+  };
+
+  /**
+   * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
+   */
+  Heartbeat.prototype.notifyReceive = function() {
+    clearTimeout(this._scheduledError);
+    this._scheduledError = null;
+    this.start();
+  };
+
+  /**
+   * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
+   */
+  Heartbeat.prototype.stop = function () {
+    clearTimeout(this._scheduledSend);
+    this._scheduledSend = null;
+  };
+
+  function NoHeartbeat() {
+    this.start = this.stop = this.notifySend = this.notifyReceive = function () {};
+  }
+
   function PuppetNetworkChannel(puppet, remoteUrl, useWebSocket, onReceive, onSend, onError, onStateChange) {
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.puppet = puppet;
@@ -288,6 +404,7 @@
         callback && callback.call(that.puppet, res, method);
       }
     };
+    req.onerror = that.onError.bind(that);
     url = url || window.location.href;
     if (data) {
       method = "PATCH";
@@ -324,6 +441,29 @@
   NoQueue.prototype.receive = function(obj, sequence){
     this.apply(obj, sequence);
   };
+
+  function connectToRemote(puppet) {
+    console.log("connecting");
+    puppet.network.establish(function bootstrap(responseText){
+      puppet.reconnector.notifySuccessfulConnection();
+      var json = JSON.parse(responseText);
+      var bigPatch = [{ op: "replace", path: "", value: json }];
+      puppet.validateAndApplySequence(puppet.obj, bigPatch);
+
+      if (puppet.debug) {
+        puppet.remoteObj = responseText; // JSON.parse(JSON.stringify(puppet.obj));
+      }
+
+      recursiveMarkObjProperties(puppet.obj);
+      puppet.observe();
+      console.log("connected");
+      if (puppet.onDataReady) {
+        puppet.onDataReady.call(puppet, puppet.obj);
+      }
+
+      puppet.heartbeat.start();
+    });
+  }
 
   /**
    * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
@@ -368,6 +508,17 @@
     this.onSocketStateChanged = options.onSocketStateChanged || function () { };
     this.onConnectionError = options.onConnectionError || function () { };
 
+    this.reconnector = new Reconnector(function () {
+      connectToRemote(this);
+    }.bind(this));
+
+    if(options.pingInterval) {
+      const intervalMs = options.pingInterval*1000;
+      this.heartbeat = new Heartbeat(this.sendHeartbeat.bind(this), this.handleRemoteError.bind(this), intervalMs, intervalMs);
+    } else {
+      this.heartbeat = new NoHeartbeat();
+    }
+
     this.network = new PuppetNetworkChannel(
         this, // puppet instance TODO: to be removed, used for error reporting
         options.remoteUrl,
@@ -387,25 +538,8 @@
       }
     });
 
-    // choose queuing engine
-    if(options.localVersionPath){
-      if(!options.remoteVersionPath){
-        //just versioning
-        this.queue = new JSONPatchQueueSynchronous(options.localVersionPath, this.validateAndApplySequence.bind(this), options.purity);
-      } else {
-        // double versioning or OT
-        this.queue = options.ot ?
-          new JSONPatchOTAgent(JSONPatchOT.transform, [options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity) :
-          new JSONPatchQueue([options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity); // full or noop OT
-      }
-    } else {
-      // no queue - just api
-      this.queue = new NoQueue(this.validateAndApplySequence.bind(this));
-    }
-
     this.ignoreCache = {};
     this.ignoreAdd = options.ignoreAdd || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
-    this.pingInterval = options.pingInterval || false;
 
     //usage:
     //puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to remote
@@ -413,25 +547,29 @@
     //puppet.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
     //puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
 
-    var onDataReady = options.callback;
-    var puppet = this;
-    this.network.establish(function bootstrap(responseText){
-      var json = JSON.parse(responseText);
-      var bigPatch = [{ op: "replace", path: "", value: json }];
-      puppet.validateAndApplySequence(puppet.obj, bigPatch);
+    this.onDataReady = options.callback;
+    this.network.baseRemoteUrl = this.network.remoteUrl;
 
-      if (puppet.debug) {
-        puppet.remoteObj = responseText; // JSON.parse(JSON.stringify(puppet.obj));
+    this._createQueue = function() {
+      // choose queuing engine
+      if(options.localVersionPath){
+        if(!options.remoteVersionPath){
+          //just versioning
+          this.queue = new JSONPatchQueueSynchronous(options.localVersionPath, this.validateAndApplySequence.bind(this), options.purity);
+        } else {
+          // double versioning or OT
+          this.queue = options.ot ?
+              new JSONPatchOTAgent(JSONPatchOT.transform, [options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity) :
+              new JSONPatchQueue([options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity); // full or noop OT
+        }
+      } else {
+        // no queue - just api
+        this.queue = new NoQueue(this.validateAndApplySequence.bind(this));
       }
+    };
+    this._createQueue();
 
-      recursiveMarkObjProperties(puppet.obj);
-      puppet.observe();
-      if (onDataReady) {
-        onDataReady.call(puppet, puppet.obj);
-      }
-
-      puppet.ping();
-    });
+    connectToRemote(this);
   }
 
   function markObjPropertyByPath(obj, path) {
@@ -485,20 +623,8 @@
 
   Puppet.prototype.jsonpatch = global.jsonpatch;
 
-  Puppet.prototype.ping = function () {
-      if (!this.pingInterval) {
-          return;
-      }
-
-      var time = this.pingInterval * 1000;
-
-      clearTimeout(this.pingTimeout);
-
-      this.pingTimeout = setTimeout(function () {
-          this.handleLocalChange([]);
-          //console.log(this.obj);
-          this.ping();
-      }.bind(this), time);
+  Puppet.prototype.sendHeartbeat = function () {
+    this.handleLocalChange([]); // sends empty message to server
   };
 
   Puppet.prototype.observe = function () {
@@ -549,6 +675,17 @@
     return patches;
   };
 
+  Puppet.prototype._sendPatches = function(patches) {
+    var txt = JSON.stringify(patches);
+    if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
+      throw new Error("PuppetJs did not handle Jasmine test case correctly");
+    }
+    this.unobserve();
+    this.heartbeat.notifySend();
+    this.network.send(txt);
+    this.observe();
+  };
+
   Puppet.prototype.handleLocalChange = function (patches) {
     var that = this;
 
@@ -556,19 +693,13 @@
       this.validateSequence(this.remoteObj, patches);
     }
 
-    var txt = JSON.stringify( this.queue.send(patches) );
-    if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
-      throw new Error("PuppetJs did not handle Jasmine test case correctly");
-    }
-    this.unobserve();
-    this.network.send(txt);
+    this._sendPatches(this.queue.send(patches));
     patches.forEach(function (patch) {
       markObjPropertyByPath(that.obj, patch.path);
     });
     if (this.onLocalChange) {
       this.onLocalChange(patches);
     }
-    this.observe();
   };
 
   Puppet.prototype.validateAndApplySequence = function (tree, sequence) {
@@ -621,14 +752,9 @@
     }
   };
 
-  Puppet.prototype.handleRemoteError = function (data, url, method) {
-      if (this.onConnectionError) {
-          this.onConnectionError(data, url, method);
-      }
-
-      if (this.onPatchReceived) {
-          this.onPatchReceived(data, url, method);
-      }
+  Puppet.prototype.handleRemoteError = function () {
+    this.heartbeat.stop();
+    this.reconnector.triggerReconnection();
   };
 
   Puppet.prototype.showWarning = function (heading, description) {
@@ -641,6 +767,7 @@
   };
 
   Puppet.prototype.handleRemoteChange = function (data, url, method) {
+    this.heartbeat.notifyReceive();
     var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
 
     if (this.onPatchReceived) {
@@ -653,6 +780,11 @@
     }
 
     this.queue.receive(this.obj, patches);
+    if(this.queue.pending && this.queue.pending.length && this.queue.pending.length > 1) {
+      // remote counterpart probably failed to receive one of earlier messages, because it has been receiving
+      // (but not acknowledging messages for some time
+      this.queue.pending.forEach(this._sendPatches.bind(this));
+    }
     if (this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
     }
