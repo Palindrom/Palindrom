@@ -271,23 +271,27 @@
       }
     });
   }
+  PuppetNetworkChannel.prototype.establish = function(bootstrap){
+    this._establish(this.remoteUrl.href, null, bootstrap);
+  };
+  PuppetNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
+    this._establish(this.remoteUrl.href + "/reconnect", JSON.stringify(pending), bootstrap);
+  };
+
   // TODO: auto-configure here #38 (tomalec)
-  PuppetNetworkChannel.prototype.establish = function(bootstrap /*, onConnectionReady*/){
+  PuppetNetworkChannel.prototype._establish = function(url, body, bootstrap){
     var network = this;
     return this.xhr(
-        this.remoteUrl.href,
+        url,
         'application/json',
-        null,
+        body,
         function (res) {
-          bootstrap( res.responseText );
-
+          bootstrap(JSON.parse(res.responseText));
           if (network.useWebSocket){
             network.webSocketUpgrade();
           }
-          return network;
         }
       );
-
   };
   /**
    * Send any text message by currently established channel
@@ -466,13 +470,10 @@
     this.apply(obj, sequence);
   };
 
-  function connectToRemote(puppet) {
-    console.log("connecting");
-    puppet.network.establish(function bootstrap(responseText){
+  function connectToRemote(puppet, reconnectionFn) {
+    reconnectionFn(function bootstrap(json){
       puppet.reconnector.stopReconnecting();
-      var json = JSON.parse(responseText);
-      var bigPatch = [{ op: "replace", path: "", value: json }];
-      puppet.validateAndApplySequence(puppet.obj, bigPatch);
+      puppet.queue.reset(puppet.obj, json);
 
       if (puppet.debug) {
         puppet.remoteObj = responseText; // JSON.parse(JSON.stringify(puppet.obj));
@@ -480,12 +481,21 @@
 
       recursiveMarkObjProperties(puppet.obj);
       puppet.observe();
-      console.log("connected");
       if (puppet.onDataReady) {
         puppet.onDataReady.call(puppet, puppet.obj);
       }
 
       puppet.heartbeat.start();
+    });
+  }
+
+  function makeInitialConnection(puppet) {
+    connectToRemote(puppet, puppet.network.establish.bind(puppet.network));
+  }
+
+  function makeReconnection(puppet) {
+    connectToRemote(puppet, function (bootstrap) {
+      puppet.network.reestablish(puppet.queue.pending, bootstrap);
     });
   }
 
@@ -535,7 +545,7 @@
     this.retransmissionThreshold = options.retransmissionThreshold || 3;
 
     this.reconnector = new Reconnector(this, function () {
-      connectToRemote(this);
+      makeReconnection(this);
     }.bind(this));
 
     if(options.pingInterval) {
@@ -584,7 +594,7 @@
           this.queue = new JSONPatchQueueSynchronous(options.localVersionPath, this.validateAndApplySequence.bind(this), options.purity);
         } else {
           // double versioning or OT
-          this.queue = options.ot ?
+            this.queue = options.ot ?
               new JSONPatchOTAgent(JSONPatchOT.transform, [options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity) :
               new JSONPatchQueue([options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity); // full or noop OT
         }
@@ -595,7 +605,7 @@
     };
     this._createQueue();
 
-    connectToRemote(this);
+    makeInitialConnection(this);
   }
 
   function markObjPropertyByPath(obj, path) {
