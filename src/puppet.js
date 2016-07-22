@@ -92,69 +92,71 @@
   /**
    * @constructor
      */
-  function Reconnector(eventDispatcher, reconnectAction) {
-    this._eventDispatcher = eventDispatcher;
-    this._reconnect = reconnectAction;
-    this._reset();
+  function Reconnector(eventDispatcher, reconnect) {
+    var intervalMs,
+        timeToCurrentReconnectionMs,
+        reconnectionPending,
+        reconnection,
+        defaultIntervalMs = 1000;
+
+    var reset = (function () {
+      intervalMs = defaultIntervalMs;
+      timeToCurrentReconnectionMs = 0;
+      reconnectionPending = false;
+      clearTimeout(reconnection);
+      reconnection = null;
+    });
+
+    var dispatchEvent = function (name, detail) {
+      eventDispatcher.dispatchEvent(new CustomEvent(name, {bubbles: true, cancelable: false, detail: detail}));
+    };
+
+    var step = (function () {
+      if(timeToCurrentReconnectionMs == 0) {
+        dispatchEvent('reconnection-countdown', {seconds: 0});
+        reconnectionPending = false;
+        intervalMs *= 2;
+        reconnect();
+      } else {
+        var timeToReconnectionS = (timeToCurrentReconnectionMs / 1000);
+        dispatchEvent('reconnection-countdown', {seconds: timeToReconnectionS});
+        timeToCurrentReconnectionMs -= 1000;
+        setTimeout(step, 1000);
+      }
+    });
+
+    /**
+     * Notify Reconnector that connection error occurred and automatic reconnection should be scheduled.
+     */
+    this.triggerReconnection = function () {
+      if(reconnectionPending) {
+        return;
+      }
+      timeToCurrentReconnectionMs = intervalMs;
+      reconnectionPending = true;
+      step();
+    };
+
+    /**
+     * Reconnect immediately and reset all reconnection timers.
+     */
+    this.reconnectNow = function () {
+      timeToCurrentReconnectionMs = 0;
+      intervalMs = defaultIntervalMs;
+    };
+
+    /**
+     * Notify Reconnector that there's no need to do further actions (either connection has been established or a fatal error occured).
+     * Resets state of Reconnector
+     */
+    this.stopReconnecting = function() {
+      reset();
+      dispatchEvent('reconnection-end');
+    };
+
+    // remember, we're still in constructor
+    reset();
   }
-
-  Reconnector.prototype._reset = function() {
-    this._intervalMs = 1000;
-    this._timeToCurrentReconnectionMs = 0;
-    this._reconnectionPending = false;
-    clearTimeout(this._reconnection);
-    this._reconnection = null;
-  };
-
-  Reconnector.prototype._step = function() {
-    if(this._timeToCurrentReconnectionMs == 0) {
-      console.log("reconnecting now");
-      this._dispatchEvent('reconnection-countdown', {seconds: 0});
-      this._reconnectionPending = false;
-      this._intervalMs *= 2;
-      this._reconnect();
-    } else {
-      var timeToReconnectionS = (this._timeToCurrentReconnectionMs / 1000);
-      this._dispatchEvent('reconnection-countdown', {seconds: timeToReconnectionS});
-      console.log('reconnecting in '+ timeToReconnectionS +'s');
-      this._timeToCurrentReconnectionMs -= 1000;
-      setTimeout(this._step.bind(this), 1000);
-    }
-  };
-
-  Reconnector.prototype._dispatchEvent = function (name, detail) {
-    this._eventDispatcher.dispatchEvent(new CustomEvent(name, {bubbles: true, cancelable: false, detail: detail}));
-  };
-
-  /**
-   * Notify Reconnector that connection error occurred and automatic reconnection should be scheduled.
-   */
-  Reconnector.prototype.triggerReconnection = function () {
-    if(this._reconnectionPending) {
-      return;
-    }
-    console.log("reconnecting in  "+(this._intervalMs)/1000+"s...");
-    this._timeToCurrentReconnectionMs = this._intervalMs;
-    this._reconnectionPending = true;
-    this._step();
-  };
-
-  /**
-   * Reconnect immediately and reset all reconnection timers.
-   */
-  Reconnector.prototype.reconnectNow = function () {
-    this._timeToCurrentReconnectionMs = 0;
-    this._intervalMs = 1000;
-  };
-
-  /**
-   * Notify Reconnector that there's no need to do further actions (either connection has been established or a fatal error occured).
-   * Resets state of Reconnector
-   */
-  Reconnector.prototype.stopReconnecting = function() {
-    this._reset();
-    this._dispatchEvent('reconnection-end');
-  };
 
   /**
    * Guarantees some communication to server and monitors responses for timeouts.
@@ -165,60 +167,57 @@
    * @constructor
      */
   function Heartbeat(sendHeartbeatAction, onError, intervalMs, timeoutMs) {
-    this._send = sendHeartbeatAction;
-    this._onError = onError;
-    this._intervalMs = intervalMs;
-    this._timeoutMs = timeoutMs;
-    this._scheduledSend = null;
-    this._scheduledError = null;
+    var scheduledSend,
+        scheduledError;
+
+    /**
+     * Call this function at the beginning of operation and after successful reconnection.
+     */
+    this.start = function() {
+      if(scheduledSend) {
+        return;
+      }
+      scheduledSend = setTimeout((function () {
+        this.notifySend();
+        sendHeartbeatAction();
+      }).bind(this), intervalMs);
+    };
+
+    /**
+     * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
+     */
+    this.notifySend = function() {
+      clearTimeout(scheduledSend); // sending heartbeat will not be necessary until our response arrives
+      scheduledSend = null;
+      if(scheduledError) {
+        return;
+      }
+      scheduledError = setTimeout((function () {
+        scheduledError = null;
+        onError(); // timeout has passed and response hasn't arrived
+      }).bind(this), timeoutMs);
+    };
+
+    /**
+     * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
+     */
+    this.notifyReceive = function() {
+      clearTimeout(scheduledError);
+      scheduledError = null;
+      this.start();
+    };
+
+    /**
+     * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
+     */
+    this.stop = function () {
+      clearTimeout(scheduledSend);
+      scheduledSend = null;
+      clearTimeout(scheduledError);
+      scheduledError = null;
+    };
   }
 
-  /**
-   * Call this function at the beginning of operation and after successful reconnection.
-   */
-  Heartbeat.prototype.start = function() {
-    if(this._scheduledSend) {
-      return;
-    }
-    this._scheduledSend = setTimeout((function () {
-      this.notifySend();
-      this._send();
-    }).bind(this), this._intervalMs);
-  };
-
-  /**
-   * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
-   */
-  Heartbeat.prototype.notifySend = function() {
-    clearTimeout(this._scheduledSend); // sending heartbeat will not be necessary until our response arrives
-    this._scheduledSend = null;
-    if(this._scheduledError) {
-      return;
-    }
-    this._scheduledError = setTimeout((function () {
-      this._scheduledError = null;
-      this._onError(); // timeout has passed and response hasn't arrived
-    }).bind(this), this._timeoutMs);
-  };
-
-  /**
-   * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
-   */
-  Heartbeat.prototype.notifyReceive = function() {
-    clearTimeout(this._scheduledError);
-    this._scheduledError = null;
-    this.start();
-  };
-
-  /**
-   * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
-   */
-  Heartbeat.prototype.stop = function () {
-    clearTimeout(this._scheduledSend);
-    this._scheduledSend = null;
-    clearTimeout(this._scheduledError);
-    this._scheduledError = null;
-  };
 
   function NoHeartbeat() {
     this.start = this.stop = this.notifySend = this.notifyReceive = function () {};
@@ -469,6 +468,10 @@
   NoQueue.prototype.receive = function(obj, sequence){
     this.apply(obj, sequence);
   };
+  NoQueue.prototype.reset = function(obj, newState) {
+    var patch = [{ op: "replace", path: "", value: newState }];
+    this.apply(obj, patch);
+  };
 
   function connectToRemote(puppet, reconnectionFn) {
     reconnectionFn(function bootstrap(json){
@@ -586,24 +589,21 @@
 
     this.onDataReady = options.callback;
 
-    this._createQueue = function() {
-      // choose queuing engine
-      if(options.localVersionPath){
-        if(!options.remoteVersionPath){
-          //just versioning
-          this.queue = new JSONPatchQueueSynchronous(options.localVersionPath, this.validateAndApplySequence.bind(this), options.purity);
-        } else {
-          // double versioning or OT
-            this.queue = options.ot ?
-              new JSONPatchOTAgent(JSONPatchOT.transform, [options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity) :
-              new JSONPatchQueue([options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity); // full or noop OT
-        }
+    // choose queuing engine
+    if(options.localVersionPath){
+      if(!options.remoteVersionPath){
+        // just versioning
+        this.queue = new JSONPatchQueueSynchronous(options.localVersionPath, this.validateAndApplySequence.bind(this), options.purity);
       } else {
-        // no queue - just api
-        this.queue = new NoQueue(this.validateAndApplySequence.bind(this));
+        // double versioning or OT
+          this.queue = options.ot ?
+            new JSONPatchOTAgent(JSONPatchOT.transform, [options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity) :
+            new JSONPatchQueue([options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity); // full or noop OT
       }
-    };
-    this._createQueue();
+    } else {
+      // no queue - just api
+      this.queue = new NoQueue(this.validateAndApplySequence.bind(this));
+    }
 
     makeInitialConnection(this);
   }
