@@ -275,15 +275,14 @@
     });
   }
   PuppetNetworkChannel.prototype.establish = function(bootstrap){
-    this._establish(this.remoteUrl.href, null, bootstrap);
+    _establish(this, this.remoteUrl.href, null, bootstrap);
   };
   PuppetNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
-    this._establish(this.remoteUrl.href + "/reconnect", JSON.stringify(pending), bootstrap);
+    _establish(this, this.remoteUrl.href + "/reconnect", JSON.stringify(pending), bootstrap);
   };
 
   // TODO: auto-configure here #38 (tomalec)
-  PuppetNetworkChannel.prototype._establish = function(url, body, bootstrap){
-    var network = this;
+  function _establish(network, url, body, bootstrap){
     return this.xhr(
         url,
         'application/json',
@@ -295,7 +294,7 @@
           }
         }
       );
-  };
+  }
   /**
    * Send any text message by currently established channel
    * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
