@@ -90,9 +90,17 @@
   }
 
   /**
+   * @callback reconnectionCallback called when reconnection attempt is scheduled.
+   * It's called every second until reconnection attempt is made (`seconds` reaches 0)
+   * @param {number} seconds - number of seconds to next reconnection attempt. >= 0
+   */
+  /**
+   * @param {Function} reconnect used to perform reconnection. No arguments
+   * @param {reconnectionCallback} onReconnectionCountdown called to notify that reconnection attempt is scheduled
+   * @param {Function} onReconnectionEnd called to notify that reconnection attempt is not longer scheduled
    * @constructor
-     */
-  function Reconnector(eventDispatcher, reconnect) {
+   */
+  function Reconnector(reconnect, onReconnectionCountdown, onReconnectionEnd) {
     var intervalMs,
         timeToCurrentReconnectionMs,
         reconnectionPending,
@@ -107,19 +115,15 @@
       reconnection = null;
     });
 
-    var dispatchEvent = function (name, detail) {
-      eventDispatcher.dispatchEvent(new CustomEvent(name, {bubbles: true, cancelable: false, detail: detail}));
-    };
-
     var step = (function () {
       if(timeToCurrentReconnectionMs == 0) {
-        dispatchEvent('reconnection-countdown', {seconds: 0});
+        onReconnectionCountdown(0);
         reconnectionPending = false;
         intervalMs *= 2;
         reconnect();
       } else {
         var timeToReconnectionS = (timeToCurrentReconnectionMs / 1000);
-        dispatchEvent('reconnection-countdown', {seconds: timeToReconnectionS});
+        onReconnectionCountdown(timeToReconnectionS);
         timeToCurrentReconnectionMs -= 1000;
         setTimeout(step, 1000);
       }
@@ -151,7 +155,7 @@
      */
     this.stopReconnecting = function() {
       reset();
-      dispatchEvent('reconnection-end');
+      onReconnectionEnd();
     };
 
     // remember, we're still in constructor
@@ -538,18 +542,24 @@
         this.obj = {};
     }
 
+    var noop = function () { };
+
     this.observer = null;
     this.onLocalChange = options.onLocalChange;
     this.onRemoteChange = options.onRemoteChange;
-    this.onPatchReceived = options.onPatchReceived || function () { };
-    this.onPatchSent = options.onPatchSent || function () { };
-    this.onSocketStateChanged = options.onSocketStateChanged || function () { };
-    this.onConnectionError = options.onConnectionError || function () { };
+    this.onPatchReceived = options.onPatchReceived || noop;
+    this.onPatchSent = options.onPatchSent || noop;
+    this.onSocketStateChanged = options.onSocketStateChanged || noop;
+    this.onConnectionError = options.onConnectionError || noop;
     this.retransmissionThreshold = options.retransmissionThreshold || 3;
+    this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
+    this.onReconnectionEnd = options.onReconnectionEnd || noop;
 
-    this.reconnector = new Reconnector(this, function () {
+    this.reconnector = new Reconnector(function () {
       makeReconnection(this);
-    }.bind(this));
+    }.bind(this),
+    this.onReconnectionCountdown,
+    this.onReconnectionEnd);
 
     if(options.pingInterval) {
       const intervalMs = options.pingInterval*1000;
