@@ -283,7 +283,7 @@
 
   // TODO: auto-configure here #38 (tomalec)
   function _establish(network, url, body, bootstrap){
-    return this.xhr(
+    return network.xhr(
         url,
         'application/json',
         body,
