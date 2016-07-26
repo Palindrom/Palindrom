@@ -432,7 +432,6 @@
     if(that._currentXhr) {
       that._currentXhr.abort();
     }
-    closeWsIfNeeded(that);
     var req = new XMLHttpRequest();
     that._currentXhr = req;
     var method = "GET";
