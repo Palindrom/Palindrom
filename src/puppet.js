@@ -325,6 +325,14 @@
   PuppetNetworkChannel.prototype.upgrade = function(msg){
   };
 
+  function closeWsIfNeeded(network) {
+    if(network._ws) {
+      network._ws.onclose = function () {};
+      network._ws.close();
+      network._ws = null;
+    }
+  }
+
   /**
    * Send a WebSocket upgrade request to the server.
    * For testing purposes WS upgrade url is hardcoded now in PuppetJS (replace __default/ID with __default/ID)
@@ -344,6 +352,7 @@
       ).href;
     // ws[s]://[user[:pass]@]remote.host[:port]/__[sessionid]/
 
+    closeWsIfNeeded(that);
     that._ws = new WebSocket(upgradeURL);
     that._ws.onopen = function (event) {
       that.onStateChange(that._ws.readyState, upgradeURL);
@@ -420,7 +429,12 @@
    */
   PuppetNetworkChannel.prototype.xhr = function (url, accept, data, callback, setReferer) {
     var that = this;
+    if(that._currentXhr) {
+      that._currentXhr.abort();
+    }
+    closeWsIfNeeded(that);
     var req = new XMLHttpRequest();
+    that._currentXhr = req;
     var method = "GET";
     req.onload = function () {
       var res = this;
@@ -476,6 +490,8 @@
   };
 
   function connectToRemote(puppet, reconnectionFn) {
+    // if we lose connection at this point, the connection we're trying to establish should trigger onError
+    puppet.heartbeat.stop();
     reconnectionFn(function bootstrap(json){
       puppet.reconnector.stopReconnecting();
       puppet.queue.reset(puppet.obj, json);
