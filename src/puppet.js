@@ -91,8 +91,8 @@
 
   /**
    * @callback reconnectionCallback called when reconnection attempt is scheduled.
-   * It's called every second until reconnection attempt is made (`seconds` reaches 0)
-   * @param {number} seconds - number of seconds to next reconnection attempt. >= 0
+   * It's called every second until reconnection attempt is made (`milliseconds` reaches 0)
+   * @param {number} milliseconds - number of milliseconds to next reconnection attempt. >= 0
    */
   /**
    * @param {Function} reconnect used to perform reconnection. No arguments
@@ -122,8 +122,7 @@
         intervalMs *= 2;
         reconnect();
       } else {
-        var timeToReconnectionS = (timeToCurrentReconnectionMs / 1000);
-        onReconnectionCountdown(timeToReconnectionS);
+        onReconnectionCountdown(timeToCurrentReconnectionMs);
         timeToCurrentReconnectionMs -= 1000;
         setTimeout(step, 1000);
       }
@@ -519,6 +518,7 @@
    * @param {JSONPointer}        [options.localVersionPath]   local version path, set it to enable Versioned JSON Patch communication
    * @param {JSONPointer}        [options.remoteVersionPath]  remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
    * @param {Number}             [options.retransmissionThreshold]  after server reports this number of messages missing, we start retransmission
+   * @param {Number}             [options.pingIntervalS]      heartbeat rate, in seconds
    * @param {Boolean}            [options.ot=false]           true to enable OT
    * @param {Boolean}            [options.purity=false]       true to enable purist mode of OT
    * @param {Function}           [options.onPatchReceived]
@@ -560,8 +560,8 @@
     this.onReconnectionCountdown,
     this.onReconnectionEnd);
 
-    if(options.pingInterval) {
-      const intervalMs = options.pingInterval*1000;
+    if(options.pingIntervalS) {
+      const intervalMs = options.pingIntervalS*1000;
       this.heartbeat = new Heartbeat(this.sendHeartbeat.bind(this), this.handleConnectionError.bind(this), intervalMs, intervalMs);
     } else {
       this.heartbeat = new NoHeartbeat();
