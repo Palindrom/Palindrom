@@ -107,13 +107,13 @@
         reconnection,
         defaultIntervalMs = 1000;
 
-    var reset = (function () {
+    function reset() {
       intervalMs = defaultIntervalMs;
       timeToCurrentReconnectionMs = 0;
       reconnectionPending = false;
       clearTimeout(reconnection);
       reconnection = null;
-    });
+    }
 
     var step = (function () {
       if(timeToCurrentReconnectionMs == 0) {
@@ -274,14 +274,14 @@
     });
   }
   PuppetNetworkChannel.prototype.establish = function(bootstrap){
-    _establish(this, this.remoteUrl.href, null, bootstrap);
+    establish(this, this.remoteUrl.href, null, bootstrap);
   };
   PuppetNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
-    _establish(this, this.remoteUrl.href + "/reconnect", JSON.stringify(pending), bootstrap);
+    establish(this, this.remoteUrl.href + "/reconnect", JSON.stringify(pending), bootstrap);
   };
 
   // TODO: auto-configure here #38 (tomalec)
-  function _establish(network, url, body, bootstrap){
+  function establish(network, url, body, bootstrap){
     return network.xhr(
         url,
         'application/json',
