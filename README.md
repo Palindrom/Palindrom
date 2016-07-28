@@ -64,7 +64,9 @@ Attribute              | Type          | Default                | Description
 `remoteVersionPath`    | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
 `ot`                   | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
 `purity`               | *Boolean*     | `false`                | `true` to enable purist mode of OT
-`pingInterval`         | *Number*      | `0`                    | Interval in seconds between ping patches, `0` - disable ping patches
+`pingIntervalS`        | *Number*      | `0`                    | Puppet will generate heartbeats every `pingIntervalS` seconds if no activity is detected. `0` - disable heartbeat
+`onReconnectionCountdown`| *Function*  |                        | Triggered when puppet detected connection problem and reconnection is scheduled. Accepts number of milliseconds to scheduled reconnection. Called every second until countdown reaches 0 (inclusive)
+`onReconnectionEnd`    | *Function*    |                        | Triggered when puppet successfully reconnected
 `jsonpatch`            | *Object*      | window.jsonpatch       | The provider object for jsonpatch apply, validate, observe and unobserve. By default assumes Starcounter-Jack/JSON-Patch library available in global `jsonpatch` variable.
 
 most of them are accessible also in runtime:
@@ -194,6 +196,19 @@ var puppet = new Puppet({useWebSocket: true});
 // change it later via property
 puppet.useWebSocket = false;
 ```
+
+### Heartbeat and reconnection
+
+Puppet will try to detect connection problems and then reconnect to server. If `pingIntervalS` is set it determines maximal time without network activity. When this time passes and no activity has been detected
+Puppet will issue a heartbeat patch (an empty patch, consisting only of version operations).
+
+When connection problem is detected (e.g. there was no response to heartbeat or websocket has been closed) puppet will schedule reconnection and trigger `onReconnectionCountdown` callback with number of milliseconds
+to scheduled reconnection as argument, it will then trigger it every second. When countdown reaches 0 (callback is still called then) puppet will try to reconnect (using `/reconnect` endpoint) to server. If this reconnection
+fails then new reconnection will be scheduled for twice as many seconds (i.e. first it will occur after a seconds, then two seconds, then four, etc.). If reconnection succeeds, `onReconnectionEnd` callback will be triggered
+and normal operations will continue.
+
+For successful reconnection, puppet sends a list of pending patches (those sent, but unconfirmed by server) to `/reconnect` endpoint and accepts a new state (along with version numbers) as a response. It then resets
+to this new state and resumes its operations.
 
 ### Dependencies
 
