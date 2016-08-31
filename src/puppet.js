@@ -375,7 +375,7 @@
           url: upgradeURL
       };
 
-      that.onError(JSON.stringify(m), upgradeURL, "WS");
+      that.onError(m, upgradeURL, "WS");
     };
     that._ws.onclose = function (event) {
       that.onStateChange(that._ws.readyState, upgradeURL, null, event.code, event.reason);
@@ -389,7 +389,7 @@
       };
 
       if(event.reason) {
-        that.onFatalError(JSON.stringify(m), upgradeURL, "WS");
+        that.onFatalError(m, upgradeURL, "WS");
       } else {
         that.onConnectionError();
       }
@@ -439,7 +439,7 @@
       var res = this;
       that.handleResponseHeader(res);
       if (res.status >= 400 && res.status <= 599) {
-        that.onFatalError(JSON.stringify({ statusCode: res.status, statusText: res.statusText, text: res.responseText }), url, method);
+        that.onFatalError({ statusCode: res.status, statusText: res.statusText, text: res.responseText }, url, method);
         throw new Error('PuppetJs JSON response error. Server responded with error ' + res.status + ' ' + res.statusText + '\n\n' + res.responseText);
       }
       else {
