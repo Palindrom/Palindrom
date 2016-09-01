@@ -375,7 +375,7 @@
           url: upgradeURL
       };
 
-      that.onError(m, upgradeURL, "WS");
+      that.onFatalError(m, upgradeURL, "WS");
     };
     that._ws.onclose = function (event) {
       that.onStateChange(that._ws.readyState, upgradeURL, null, event.code, event.reason);
