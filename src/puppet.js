@@ -439,8 +439,7 @@
       var res = this;
       that.handleResponseHeader(res);
       if (res.status >= 400 && res.status <= 599) {
-        that.onFatalError({ statusCode: res.status, statusText: res.statusText, text: res.responseText }, url, method);
-        throw new Error('PuppetJs JSON response error. Server responded with error ' + res.status + ' ' + res.statusText + '\n\n' + res.responseText);
+        that.onFatalError({ statusCode: res.status, statusText: res.statusText, reason: res.responseText }, url, method);
       }
       else {
         callback && callback.call(that.puppet, res, method);
