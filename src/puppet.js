@@ -781,6 +781,9 @@
   Puppet.prototype.handleRemoteChange = function (data, url, method) {
     this.heartbeat.notifyReceive();
     var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
+    if(patches.length === 0) { // heartbeat message
+      return;
+    }
 
     if (this.onPatchReceived) {
       this.onPatchReceived(data, url, method);
@@ -795,9 +798,7 @@
     if(this.queue.pending && this.queue.pending.length && this.queue.pending.length > this.retransmissionThreshold) {
       // remote counterpart probably failed to receive one of earlier messages, because it has been receiving
       // (but not acknowledging messages for some time
-      this.queue.pending.forEach((function (p) {
-        sendPatches(this, p);
-      }).bind(this));
+      this.queue.pending.forEach(sendPatches.bind(null, this));
     }
     if (this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
