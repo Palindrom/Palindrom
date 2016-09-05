@@ -629,7 +629,7 @@
   Puppet.prototype.jsonpatch = global.jsonpatch;
 
   Puppet.prototype.sendHeartbeat = function () {
-    this._sendPatches([]); // sends empty message to server
+    sendPatches(this, []); // sends empty message to server
   };
 
   Puppet.prototype.observe = function () {
@@ -680,23 +680,20 @@
     return patches;
   };
 
-  Puppet.prototype._sendPatches = function(patches) {
+  function sendPatches(puppet, patches) {
     var txt = JSON.stringify(patches);
-    if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
-      throw new Error("PuppetJs did not handle Jasmine test case correctly");
-    }
-    this.unobserve();
-    this.heartbeat.notifySend();
-    this.network.send(txt);
-    this.observe();
-  };
+    puppet.unobserve();
+    puppet.heartbeat.notifySend();
+    puppet.network.send(txt);
+    puppet.observe();
+  }
 
   Puppet.prototype.handleLocalChange = function (patches) {
     if(this.debug) {
       this.validateSequence(this.remoteObj, patches);
     }
 
-    this._sendPatches(this.queue.send(patches));
+    sendPatches(this, this.queue.send(patches));
     if (this.onLocalChange) {
       this.onLocalChange(patches);
     }
@@ -798,7 +795,9 @@
     if(this.queue.pending && this.queue.pending.length && this.queue.pending.length > this.retransmissionThreshold) {
       // remote counterpart probably failed to receive one of earlier messages, because it has been receiving
       // (but not acknowledging messages for some time
-      this.queue.pending.forEach(this._sendPatches.bind(this));
+      this.queue.pending.forEach((function (p) {
+        sendPatches(this, p);
+      }).bind(this));
     }
     if (this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
