@@ -498,7 +498,6 @@
         puppet.remoteObj = responseText; // JSON.parse(JSON.stringify(puppet.obj));
       }
 
-      recursiveMarkObjProperties(puppet.obj);
       puppet.observe();
       if (puppet.onDataReady) {
         puppet.onDataReady.call(puppet, puppet.obj);
@@ -613,41 +612,6 @@
     makeInitialConnection(this);
   }
 
-  function markObjPropertyByPath(obj, path) {
-    var keys = path.split('/');
-    var len = keys.length;
-    if (len > 2) {
-      for (var i = 1; i < len - 1; i++) {
-        obj = obj[keys[i]];
-      }
-    }
-    recursiveMarkObjProperties(obj[keys[len - 1]], len > 1? obj : undefined);
-  }
-
-  function placeMarker(subject, parent) {
-    if (parent != undefined && !subject.hasOwnProperty('$parent')) {
-      Object.defineProperty(subject, '$parent', {
-        enumerable: false,
-        get: function () {
-          return parent;
-        }
-      });
-    }
-  }
-
-  function recursiveMarkObjProperties(subject, parent) {
-    var child;
-    if(subject !== null && typeof subject === 'object'){
-      placeMarker(subject, parent);
-      for (var i in subject) {
-        child = subject[i];
-        if (subject.hasOwnProperty(i)) {
-          recursiveMarkObjProperties(child, subject);
-      }
-    }
-  }
-  }
-
   Puppet.prototype = Object.create(EventDispatcher.prototype); //inherit EventTarget API from EventDispatcher
 
   var dispatchErrorEvent = function (puppet, error) {
@@ -728,16 +692,11 @@
   };
 
   Puppet.prototype.handleLocalChange = function (patches) {
-    var that = this;
-
     if(this.debug) {
       this.validateSequence(this.remoteObj, patches);
     }
 
     this._sendPatches(this.queue.send(patches));
-    patches.forEach(function (patch) {
-      markObjPropertyByPath(that.obj, patch.path);
-    });
     if (this.onLocalChange) {
       this.onLocalChange(patches);
     }
@@ -767,9 +726,6 @@
         }
         //TODO Error
         that.showWarning("Server pushed patch that replaces the object root", desc);
-      }
-      if (patch.op === "add" || patch.op === "replace" || patch.op === "test") {
-        markObjPropertyByPath(that.obj, patch.path);
       }
     });
 
