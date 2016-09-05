@@ -665,7 +665,7 @@
   Puppet.prototype.jsonpatch = global.jsonpatch;
 
   Puppet.prototype.sendHeartbeat = function () {
-    this.handleLocalChange([]); // sends empty message to server
+    this._sendPatches([]); // sends empty message to server
   };
 
   Puppet.prototype.observe = function () {
