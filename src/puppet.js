@@ -520,25 +520,7 @@
 
   /**
    * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
-   * @param {Object}             [options]                    map of arguments
-   * @param {String}             [options.remoteUrl]          PATCH server URL
-   * @param {Function}           [options.callback]        Called after initial state object is received from the remote (NOT necessarily after WS connection was established)
-   * @param {Object}             [options.obj]                object where the parsed JSON data will be inserted
-   * @param {Boolean}            [options.useWebSocket=false] Set to true to enable WebSocket support
-   * @param {RegExp}             [options.ignoreAdd=null]     Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
-   * @param {Boolean}            [options.debug=false]        Set to true to enable debugging mode
-   * @param {Function}           [options.onLocalChange]      Helper callback triggered each time a change is observed locally
-   * @param {Function}           [options.onRemoteChange]     Helper callback triggered each time a patch is obtained from remote
-   * @param {JSONPointer}        [options.localVersionPath]   local version path, set it to enable Versioned JSON Patch communication
-   * @param {JSONPointer}        [options.remoteVersionPath]  remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
-   * @param {Number}             [options.retransmissionThreshold]  after server reports this number of messages missing, we start retransmission
-   * @param {Number}             [options.pingIntervalS]      heartbeat rate, in seconds
-   * @param {Boolean}            [options.ot=false]           true to enable OT
-   * @param {Boolean}            [options.purity=false]       true to enable purist mode of OT
-   * @param {Function}           [options.onPatchReceived]
-   * @param {Function}           [options.onPatchSent]
-   * @param {Function}           [options.jsonpatch=jsonpatch] jsonpatch provider
-   * @param {HTMLElement | window} [options.listenTo]         HTMLElement or window to listen to clicks
+   * @param {Object} [options] map of arguments. See README.md for description
    */
   function Puppet(options) {
     options || (options={});
