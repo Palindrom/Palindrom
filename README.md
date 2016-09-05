@@ -40,7 +40,7 @@ puppet.obj.someProperty = "new value";
 
 [Example of PuppetJS + PuppetDOM with Polymer's Template Binding and Web Components](http://puppetjs.github.io/PuppetJs/lab/polymer/index.html)
 
-### Options (Constructor parameters)
+### Options (`Puppet()` constructor parameters)
 All the parameters are optional.
 ```javascript
 var puppet = new Puppet({attribute: value});
@@ -59,15 +59,16 @@ Attribute              | Type          | Default                | Description
 `onPatchReceived`      | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts three parameters: (*String* `data`, *String* `url`, *String*, `method`)
 `onPatchSent`          | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (*String* `data`, *String* `url`, *String*, `method`)
 `onSocketStateChanged` | *Function*    |                        | Helper callback triggered when socket state changes, accepts next parameters: (*int* `state`, *String* `url`, *String* `data`, *int* `code`, *String* `reason`)
-`onConnectionError`    | *Function*    |                        | Helper callback triggered when socket connection closed, socket connection failed to establish, http requiest failed. Accepts next parameters: (*String* `data`, *String* `url`, *String*, `method`)
+`onConnectionError`    | *Function*    |                        | Helper callback triggered when socket connection closed, socket connection failed to establish, http requiest failed. Accepts next parameters: (*Object* `data`, *String* `url`, *String*, `method`). The data object contains the following properties: *String* `statusText` (HTTP response status code reason phrase or WebSocket error title), *String* `statusCode` (HTTP response status code or WS error code), *Number* `readyState`, *String* `url`, *String* `reason` (HTTP error response body or WebSocket disconnection reason message)
 `localVersionPath`     | *JSONPointer* | `disabled`             | local version path, set it to enable Versioned JSON Patch communication
 `remoteVersionPath`    | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
 `ot`                   | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
 `purity`               | *Boolean*     | `false`                | `true` to enable purist mode of OT
 `pingIntervalS`        | *Number*      | `0`                    | Puppet will generate heartbeats every `pingIntervalS` seconds if no activity is detected. `0` - disable heartbeat
+`retransmissionThreshold`| *Number*    | `3`                    | After server reports this number of messages missing, we start retransmission
 `onReconnectionCountdown`| *Function*  |                        | Triggered when puppet detected connection problem and reconnection is scheduled. Accepts number of milliseconds to scheduled reconnection. Called every second until countdown reaches 0 (inclusive)
 `onReconnectionEnd`    | *Function*    |                        | Triggered when puppet successfully reconnected
-`jsonpatch`            | *Object*      | window.jsonpatch       | The provider object for jsonpatch apply, validate, observe and unobserve. By default assumes Starcounter-Jack/JSON-Patch library available in global `jsonpatch` variable.
+`jsonpatch`            | *Object*      | `window.jsonpatch`       | The provider object for jsonpatch apply, validate, observe and unobserve. By default assumes Starcounter-Jack/JSON-Patch library available in global `jsonpatch` variable.
 
 most of them are accessible also in runtime:
 
@@ -297,10 +298,12 @@ Now click, blur, pop/pushstate events may trigger a HTTP PATCH request.
 
 [Example with Polymer's Template Binding and Web Components](http://puppetjs.github.io/PuppetJs/lab/polymer/index.html)
 
-### Options (Constructor parameters)
-All the parameters are optional.
+### Options (`PuppetDOM()` constructor parameters)
+
+PuppetDOM accepts the same option attributes as Puppet, plus the ones listed below. All the parameters are optional.
+
 ```javascript
-var puppet = new Puppet({attribute: value});
+var puppet = new PuppetDOM({attribute: value});
 ```
 
 Attribute           | Type          | Default                | Description
