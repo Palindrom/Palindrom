@@ -557,7 +557,7 @@
 
     if(options.pingIntervalS) {
       const intervalMs = options.pingIntervalS*1000;
-      this.heartbeat = new Heartbeat(this.sendHeartbeat.bind(this), this.handleConnectionError.bind(this), intervalMs, intervalMs);
+      this.heartbeat = new Heartbeat(this.ping.bind(this), this.handleConnectionError.bind(this), intervalMs, intervalMs);
     } else {
       this.heartbeat = new NoHeartbeat();
     }
@@ -628,7 +628,7 @@
 
   Puppet.prototype.jsonpatch = global.jsonpatch;
 
-  Puppet.prototype.sendHeartbeat = function () {
+  Puppet.prototype.ping = function () {
     sendPatches(this, []); // sends empty message to server
   };
 
