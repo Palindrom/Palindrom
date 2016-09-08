@@ -498,7 +498,6 @@
         puppet.remoteObj = responseText; // JSON.parse(JSON.stringify(puppet.obj));
       }
 
-      recursiveMarkObjProperties(puppet.obj);
       puppet.observe();
       if (puppet.onDataReady) {
         puppet.onDataReady.call(puppet, puppet.obj);
@@ -558,7 +557,7 @@
 
     if(options.pingIntervalS) {
       const intervalMs = options.pingIntervalS*1000;
-      this.heartbeat = new Heartbeat(this.sendHeartbeat.bind(this), this.handleConnectionError.bind(this), intervalMs, intervalMs);
+      this.heartbeat = new Heartbeat(this.ping.bind(this), this.handleConnectionError.bind(this), intervalMs, intervalMs);
     } else {
       this.heartbeat = new NoHeartbeat();
     }
@@ -613,41 +612,6 @@
     makeInitialConnection(this);
   }
 
-  function markObjPropertyByPath(obj, path) {
-    var keys = path.split('/');
-    var len = keys.length;
-    if (len > 2) {
-      for (var i = 1; i < len - 1; i++) {
-        obj = obj[keys[i]];
-      }
-    }
-    recursiveMarkObjProperties(obj[keys[len - 1]], len > 1? obj : undefined);
-  }
-
-  function placeMarker(subject, parent) {
-    if (parent != undefined && !subject.hasOwnProperty('$parent')) {
-      Object.defineProperty(subject, '$parent', {
-        enumerable: false,
-        get: function () {
-          return parent;
-        }
-      });
-    }
-  }
-
-  function recursiveMarkObjProperties(subject, parent) {
-    var child;
-    if(subject !== null && typeof subject === 'object'){
-      placeMarker(subject, parent);
-      for (var i in subject) {
-        child = subject[i];
-        if (subject.hasOwnProperty(i)) {
-          recursiveMarkObjProperties(child, subject);
-      }
-    }
-  }
-  }
-
   Puppet.prototype = Object.create(EventDispatcher.prototype); //inherit EventTarget API from EventDispatcher
 
   var dispatchErrorEvent = function (puppet, error) {
@@ -664,8 +628,8 @@
 
   Puppet.prototype.jsonpatch = global.jsonpatch;
 
-  Puppet.prototype.sendHeartbeat = function () {
-    this.handleLocalChange([]); // sends empty message to server
+  Puppet.prototype.ping = function () {
+    sendPatches(this, []); // sends empty message to server
   };
 
   Puppet.prototype.observe = function () {
@@ -716,28 +680,20 @@
     return patches;
   };
 
-  Puppet.prototype._sendPatches = function(patches) {
+  function sendPatches(puppet, patches) {
     var txt = JSON.stringify(patches);
-    if (txt.indexOf('__Jasmine_been_here_before__') > -1) {
-      throw new Error("PuppetJs did not handle Jasmine test case correctly");
-    }
-    this.unobserve();
-    this.heartbeat.notifySend();
-    this.network.send(txt);
-    this.observe();
-  };
+    puppet.unobserve();
+    puppet.heartbeat.notifySend();
+    puppet.network.send(txt);
+    puppet.observe();
+  }
 
   Puppet.prototype.handleLocalChange = function (patches) {
-    var that = this;
-
     if(this.debug) {
       this.validateSequence(this.remoteObj, patches);
     }
 
-    this._sendPatches(this.queue.send(patches));
-    patches.forEach(function (patch) {
-      markObjPropertyByPath(that.obj, patch.path);
-    });
+    sendPatches(this, this.queue.send(patches));
     if (this.onLocalChange) {
       this.onLocalChange(patches);
     }
@@ -767,9 +723,6 @@
         }
         //TODO Error
         that.showWarning("Server pushed patch that replaces the object root", desc);
-      }
-      if (patch.op === "add" || patch.op === "replace" || patch.op === "test") {
-        markObjPropertyByPath(that.obj, patch.path);
       }
     });
 
@@ -828,6 +781,9 @@
   Puppet.prototype.handleRemoteChange = function (data, url, method) {
     this.heartbeat.notifyReceive();
     var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
+    if(patches.length === 0) { // ping message
+      return;
+    }
 
     if (this.onPatchReceived) {
       this.onPatchReceived(data, url, method);
@@ -842,7 +798,7 @@
     if(this.queue.pending && this.queue.pending.length && this.queue.pending.length > this.retransmissionThreshold) {
       // remote counterpart probably failed to receive one of earlier messages, because it has been receiving
       // (but not acknowledging messages for some time
-      this.queue.pending.forEach(this._sendPatches.bind(this));
+      this.queue.pending.forEach(sendPatches.bind(null, this));
     }
     if (this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
