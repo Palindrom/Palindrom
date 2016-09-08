@@ -781,7 +781,7 @@
   Puppet.prototype.handleRemoteChange = function (data, url, method) {
     this.heartbeat.notifyReceive();
     var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
-    if(patches.length === 0) { // heartbeat message
+    if(patches.length === 0) { // ping message
       return;
     }
 
