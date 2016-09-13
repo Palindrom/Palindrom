@@ -17,7 +17,7 @@
     "node_modules"
   ],
   "dependencies": {
-    "fast-json-patch": "Starcounter-Jack/JSON-Patch#~1.0.0",
+    "fast-json-patch": ">=1.1.0",
     "json-patch-queue": "PuppetJs/JSON-Patch-Queue#gh-pages",
     "json-patch-ot-agent": "PuppetJs/JSON-Patch-OT-agent#gh-pages",
     "json-patch-ot": "PuppetJs/JSON-Patch-OT#gh-pages"
