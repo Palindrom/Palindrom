@@ -287,7 +287,7 @@
         'application/json',
         body,
         function (res) {
-          bootstrap(JSON.parse(res.responseText));
+          bootstrap(res.responseText);
           if (network.useWebSocket){
             network.webSocketUpgrade();
           }
@@ -490,7 +490,8 @@
   function connectToRemote(puppet, reconnectionFn) {
     // if we lose connection at this point, the connection we're trying to establish should trigger onError
     puppet.heartbeat.stop();
-    reconnectionFn(function bootstrap(json){
+    reconnectionFn(function bootstrap(responseText){
+      var json = JSON.parse(responseText);
       puppet.reconnector.stopReconnecting();
       puppet.queue.reset(puppet.obj, json);
 
