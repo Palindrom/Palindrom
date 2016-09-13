@@ -117,33 +117,6 @@ If you want to opt-out from such behavior, you need to force your framework to u
 - In Polymer 0.9+, use built-in `<input value="{{bindValue::blur}}">`
 - In Angular 1.3+, use built-in `<input type="text" ng-model="name" ng-model-options="{updateOn: 'blur'}" />`
 
-### Getting the parent scope
-
-PuppetJS adds an inenumerable `$parent` getter at each level in the data object. You can use it to retrieve parent data from descendant scopes in Angular, Polymer, etc.
-
-For example, such data object:
-
-```json
-{
-  "Name": "Marcin",
-  "Address": {
-    "City": "Stockholm"
-  }
-}
-```
-
-Can be used as follows:
-
-```html
-<template bind="{{Address}}">
-  {{$parent.Name}} lives in {{City}} <!-- Marcin lives in Stockholm -->
-</template>
-
-<script>
-  puppet.obj.Address.$parent.Name === puppet.obj.Name //true
-</script>
-```
-
 ### Generating patches based on local changes
 
 PuppetJs automatically observes local changes. This is implemented by dirty checking, triggered in event listeners for typical browser events (`mousedown`, `mouseup`, etc). It is done by the JSON-Patch library ([source](https://github.com/Starcounter-Jack/JSON-Patch/blob/master/src/json-patch-duplex.ts#L352-L354)).
