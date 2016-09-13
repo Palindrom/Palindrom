@@ -11,31 +11,32 @@ describe("Error", function () {
   /// init
   describe("on error response", function () {
     it("should throw an error when status code 400 comes from the server (bootstrap)", function () {
-      this.puppet = new Puppet({remoteUrl: '/test'});
-      
-      function respondWith400(){
-        jasmine.Ajax.requests.mostRecent().respondWith({
-          "status": 400,
-          "contentType": 'application/json',
-          "responseText": 'Custom msg'
-        });
+
+      jasmine.Ajax.stubRequest(/.*\/test/).andReturn({
+        "status": 400,
+        "contentType": 'application/json',
+        "responseText": 'Custom msg'
+      });
+      function establishPuppet400() {
+          this.puppet = new Puppet({remoteUrl: '/test'});
       }
 
-      expect(respondWith400).toThrowError(/PuppetJs JSON response error.*400[\s\S]*Custom msg/);
+      expect(establishPuppet400).toThrowError(/PuppetJs JSON response error.*400[\s\S]*Custom msg/);
     });
 
     it("should throw an error when status code 599 comes from the server (bootstrap)", function () {
-      this.puppet = new Puppet({remoteUrl: '/test'});
-      
-      function respondWith599(){
-        jasmine.Ajax.requests.mostRecent().respondWith({
-          "status": 599,
-          "contentType": 'application/json',
-          "responseText": 'Custom msg'
-        });
+
+      jasmine.Ajax.stubRequest(/.*\/test/).andReturn({
+        "status": 599,
+        "contentType": 'application/json',
+        "responseText": 'Custom msg'
+      });
+
+      function establishPuppet599(){
+        this.puppet = new Puppet({remoteUrl: '/test'});
       }
 
-      expect(respondWith599).toThrowError(/PuppetJs JSON response error.*599[\s\S]*Custom msg/);
+      expect(establishPuppet599).toThrowError(/PuppetJs JSON response error.*599[\s\S]*Custom msg/);
     });
 
     it("should throw an error when status code 400 comes from the server (patch)", function (done) {

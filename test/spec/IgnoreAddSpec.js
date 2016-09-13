@@ -29,6 +29,8 @@ describe("IgnoreAdd", function () {
     obj.publicProp = 1;
     obj.$privateProp = 1;
 
+    // bump JSON Patch observer
+    triggerMouseup();
     setTimeout(function () { //wait for xhr
         expect(patchSpy.calls.count()).toBe(1);
         expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":1},{"op":"add","path":"/publicProp","value":1}]');
@@ -53,25 +55,33 @@ describe("IgnoreAdd", function () {
     obj.publicProp = 1;
     obj.$privateProp = 1;
 
-    setTimeout(function () { //wait for xhr
-      jasmine.Ajax.requests.mostRecent().respondWith({
+
+    jasmine.Ajax.stubRequest('/test').andReturn({
         "status": 200,
         "contentType": 'application/json-patch+json',
         "responseText": '[]'
-      });
+    });
+
+    // bump JSON Patch observer
+    triggerMouseup();
+
+    setTimeout(function () { //wait for xhr
 
       expect(patchSpy.calls.count()).toBe(2);
       expect(patchSpy).toHaveBeenCalledWith('[{"op":"add","path":"/publicProp","value":1}]');
       obj.publicProp = 2;
       obj.$privateProp = 2;
 
-      setTimeout(function () { //wait for xhr
-        jasmine.Ajax.requests.mostRecent().respondWith({
+      jasmine.Ajax.stubRequest('/test').andReturn({
           "status": 200,
           "contentType": 'application/json-patch+json',
           "responseText": '[]'
-        });
+      });
 
+      // bump JSON Patch observer
+      triggerMouseup();
+
+      setTimeout(function () { //wait for xhr
         expect(patchSpy.calls.count()).toBe(3);
         expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/publicProp","value":2}]');
         done();
@@ -96,25 +106,29 @@ describe("IgnoreAdd", function () {
     obj.publicProp = ["a", "b", "c"];
     obj.$privateProp = ["a", "b", "c"];
 
-    setTimeout(function () { //wait for xhr
-      jasmine.Ajax.requests.mostRecent().respondWith({
+    jasmine.Ajax.stubRequest('/test').andReturn({
         "status": 200,
         "contentType": 'application/json-patch+json',
         "responseText": '[]'
-      });
+    });
+    // bump JSON Patch observer
+    triggerMouseup();
 
+    setTimeout(function () { //wait for xhr
       expect(patchSpy.calls.count()).toBe(2);
       expect(patchSpy).toHaveBeenCalledWith('[{"op":"add","path":"/publicProp","value":["a","b","c"]}]');
       obj.publicProp[2] = "cc";
       obj.$privateProp[2] = "cc";
 
-      setTimeout(function () { //wait for xhr
-        jasmine.Ajax.requests.mostRecent().respondWith({
+      jasmine.Ajax.stubRequest('/test').andReturn({
           "status": 200,
           "contentType": 'application/json-patch+json',
           "responseText": '[]'
-        });
+      });
+      // bump JSON Patch observer
+      triggerMouseup();
 
+      setTimeout(function () { //wait for xhr
         expect(patchSpy.calls.count()).toBe(3);
         expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/publicProp/2","value":"cc"}]');
         done();
@@ -139,6 +153,9 @@ describe("IgnoreAdd", function () {
     expect(patchSpy.calls.count()).toBe(1);
     obj.$privateProp = 1;
 
+    // bump JSON Patch observer
+    triggerMouseup();
+
     setTimeout(function () { //wait for xhr
       expect(patchSpy.calls.count()).toBe(1);
       done();
@@ -162,6 +179,7 @@ describe("IgnoreAdd", function () {
     expect(patchSpy.calls.count()).toBe(1);
     obj.$privateProp = 1;
     obj.$privateProp = 2;
+    // bump JSON Patch observer
     triggerMouseup();
 
     setTimeout(function () { //wait for xhr
