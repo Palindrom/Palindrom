@@ -277,7 +277,13 @@
     establish(this, this.remoteUrl.href, null, bootstrap);
   };
   PuppetNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
-    establish(this, this.remoteUrl.href + "/reconnect", JSON.stringify(pending), bootstrap);
+    var reconnectURL = (
+          new URL(
+            this.remoteUrl.pathname,
+            this.wsURL
+            )
+          ).href + "/reconnect" + this.wsURL.search;
+    establish(this, reconnectURL, JSON.stringify(pending), bootstrap);
   };
 
   // TODO: auto-configure here #38 (tomalec)
