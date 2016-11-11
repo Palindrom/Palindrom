@@ -349,7 +349,7 @@
         this.remoteUrl.pathname,
         this.wsURL
         )
-      ).href;
+      ).href + this.wsURL.search;
     // ws[s]://[user[:pass]@]remote.host[:port]/__[sessionid]/
 
     closeWsIfNeeded(that);
