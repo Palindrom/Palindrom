@@ -17,7 +17,8 @@ describe("OnLocal/RemoteChange", function() {
     afterEach(function() {
         jasmine.WebSocket.uninstall();
     });
-    it("should call onLocalChange callback for outgoing patches", function(done) {
+    console.log('To be updated as https://github.com/PuppetJs/PuppetJs/issues/103');
+    xit("should call onLocalChange callback for outgoing patches", function(done) {
         var sentSpy = jasmine.createSpy("onLocalChange");
 
         var puppet = this.puppet = new Puppet({
