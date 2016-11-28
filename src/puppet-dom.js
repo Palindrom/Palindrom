@@ -4,14 +4,6 @@
  */
 
 (function (global) {
-  function getRemoteUrlFromCookie() {
-      var location = cookie.read('Location');
-
-      cookie.erase('Location');
-
-      return location;
-  }
-
   /**
    * PuppetDOM
    * @extends {Puppet}
@@ -24,14 +16,7 @@
     var clickHandler = this.clickHandler.bind(this);
     this.historyHandler = this.historyHandler.bind(this);
 
-    //TODO: do not change given object
     options.callback = function addDOMListeners(obj){
-      var location = getRemoteUrlFromCookie();
-
-      if (location) {
-        this.network.remoteUrl = new URL(location, this.network.remoteUrl);
-      }
-
       this.listen();
       onDataReady && onDataReady.call(this, obj);
     };
@@ -50,7 +35,7 @@
       this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandler);
     };
 
-    options.remoteUrl = options.remoteUrl || getRemoteUrlFromCookie() || window.location.href;
+    options.remoteUrl = options.remoteUrl || window.location.href;
 
     Puppet.call(this, options);
   };
@@ -130,42 +115,6 @@
     }
     return (elem.protocol == window.location.protocol && elem.host == window.location.host);
   };
-
-  /**
-   * Cookie helper
-   * @see Puppet.prototype.handleResponseCookie
-   * reference: http://www.quirksmode.org/js/cookies.html
-   * reference: https://github.com/js-coder/cookie.js/blob/gh-pages/cookie.js
-   */
-  var cookie = {
-      create: function createCookie(name, value, days) {
-          var expires = "";
-          if (days) {
-              var date = new Date();
-              date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-              expires = "; expires=" + date.toGMTString();
-          }
-          document.cookie = name + "=" + value + expires + '; path=/';
-      },
-
-      readAll: function readCookies() {
-          if (document.cookie === '') return {};
-          var cookies = document.cookie.split('; ')
-            , result = {};
-          for (var i = 0, l = cookies.length; i < l; i++) {
-              var item = cookies[i].split('=');
-              result[decodeURIComponent(item[0])] = decodeURIComponent(item[1]);
-          }
-          return result;
-      },
-
-      read: function readCookie(name) {
-          return cookie.readAll()[name];
-      },
-
-      erase: function eraseCookie(name) {
-          cookie.create(name, "", -1);
-      }
   };
 
   global.PuppetDOM = PuppetDOM;
