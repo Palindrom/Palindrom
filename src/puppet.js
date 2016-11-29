@@ -429,11 +429,7 @@
    */
   PuppetNetworkChannel.prototype.xhr = function (url, accept, data, callback, setReferer) {
     var that = this;
-    if(that._currentXhr) {
-      that._currentXhr.abort();
-    }
     var req = new XMLHttpRequest();
-    that._currentXhr = req;
     var method = "GET";
     req.onload = function () {
       var res = this;
