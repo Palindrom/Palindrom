@@ -35,7 +35,7 @@
       this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandler);
     };
 
-    options.remoteUrl = options.remoteUrl || window.location.href;
+    //TODO move fallback to window.location.href from PuppetNetworkChannel to here (PuppetDOM)
 
     Puppet.call(this, options);
   };
