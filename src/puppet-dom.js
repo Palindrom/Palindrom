@@ -115,7 +115,6 @@
     }
     return (elem.protocol == window.location.protocol && elem.host == window.location.host);
   };
-  };
 
   global.PuppetDOM = PuppetDOM;
 })(window);
