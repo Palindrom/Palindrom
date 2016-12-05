@@ -198,6 +198,20 @@ bower install Polymer/URL
 
 ### Development
 
+#### Local installation of dependencies
+
+In order to develop PuppetJs locally we suggest to use [polyserve](https://npmjs.com/polyserve) tool to handle bower paths gently.
+
+1. Install the global NPM modules [bower](http://bower.io/) & [polyserve](https://npmjs.com/polyserve): `npm install -g bower polyserve`
+2. Make a local clone of this repo: `git clone git@github.com:PuppetJs/PuppetJs.git`
+3. Go to the directory: `cd PuppetJs`
+4. Install the local dependencies: `bower install`
+5. Start the development server: `polyserve -p 8000`
+6. Open the demo: [http://localhost:8000/components/PuppetJs/lab/polymer/index.html](http://localhost:8000/components/PuppetJs/lab/polymer/index.html)
+7. Open the test suite: [http://localhost:8000/components/PuppetJs/test/SpecRunner.html](http://localhost:8000/components/PuppetJs/test/SpecRunner.html)
+
+#### Minifying
+
 In order to minify it locally you'll need a basic setup.
 
 * Install [Grunt](http://gruntjs.com/):
