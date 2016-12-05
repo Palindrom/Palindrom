@@ -1,3 +1,11 @@
+// load dom for node tests
+if (typeof window === 'undefined') {
+    var jsdom = require("jsdom").jsdom;
+    var doc = jsdom(undefined, undefined);
+    GLOBAL.window = doc.defaultView;
+    GLOBAL.document = doc.defaultView.document;
+}
+
 function triggerMouseup(elem) {
   fireEvent((elem || document.body), 'mouseup')
 }
@@ -40,7 +48,7 @@ TestResponses = {
     install: function(){
       this.spy = spyOn(global, "WebSocket").and.callFake(function(url,protocols){
         return new FakeWebSocket(url, protocols);
-      }); 
+      });
       this.spy.and.callThroughConstructor = function(){
         return this.callFake(function(url,protocols){
           return new oryginalWebSocket(url,protocols);
@@ -50,7 +58,7 @@ TestResponses = {
 
     uninstall: function(){
       this.spy = null;
-      global.WebSocket = oryginalWebSocket; 
+      global.WebSocket = oryginalWebSocket;
     },
     stubConnection: function(urlPattern){
       var stub = new ConnectionStub(urlPattern);
@@ -58,7 +66,7 @@ TestResponses = {
       return stub;
     }
 
-  }; 
+  };
 
   function ConnectionStub(urlPattern){
     this.urlPattern = urlPattern;

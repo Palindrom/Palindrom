@@ -23,7 +23,8 @@
 
     });
     describe("in HTTP mode", function(){
-        it("should call callbacks onPatchSent and onPatchReceived for outgoing and incoming patches", function (done) {
+        console.log('To be updated as https://github.com/PuppetJs/PuppetJs/issues/103');
+        xit("should call callbacks onPatchSent and onPatchReceived for outgoing and incoming patches", function (done) {
             var sentSpy = jasmine.createSpy("onPatchSent");
             var receivedSpy = jasmine.createSpy("onPatchReceived");
 
@@ -39,15 +40,15 @@
             setTimeout(function () {
                 expect(sentSpy.calls.mostRecent().args).toEqual(
                     [
-                    '[{"op":"replace","path":"/hello","value":"onPatchSent callback"}]', 
+                    '[{"op":"replace","path":"/hello","value":"onPatchSent callback"}]',
                     window.location.origin + '/__default/testId001',
                     'PATCH'
                     ]
                 );
                 // mock also response
                 jasmine.Ajax.requests.mostRecent().respondWith({responseText: '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]'});
-                
-                
+
+
                 expect(receivedSpy.calls.count()).toEqual(1);
                 expect(receivedSpy).toHaveBeenCalledWith(
                     '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]',
@@ -68,7 +69,8 @@
         afterEach(function () {
             jasmine.WebSocket.uninstall();
         });
-        it("should call onPatchSent callback for outgoing patches", function (done) {
+        console.log('To be updated as https://github.com/PuppetJs/PuppetJs/issues/103');
+        xit("should call onPatchSent callback for outgoing patches", function (done) {
             var WSSpy = jasmine.WebSocket.spy;
             var sentSpy = jasmine.createSpy("onPatchSent");
 
