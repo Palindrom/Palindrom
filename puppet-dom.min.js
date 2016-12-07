@@ -1,4 +1,4 @@
-/*! puppet-dom.js version: 2.3.0
+/*! puppet-dom.js version: 2.4.0
  * (c) 2013 Joachim Wester
  * MIT license
  */
