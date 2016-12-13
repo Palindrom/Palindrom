@@ -31,10 +31,10 @@ module.exports = function(grunt) {
     },
     bump: {
       options: {
-        files: ['package.json', 'src/puppet.js', 'src/puppet-dom.js'],
+        files: ['package.json', 'src/puppet.js', 'src/puppet-dom.js', 'puppet-dom.min.js', 'puppet.min.js'],
         commit: true,
         commitMessage: '%VERSION%',
-        commitFiles: ['package.json', 'src/puppet.js', 'src/puppet-dom.js'],
+        commitFiles: ['package.json', 'src/puppet.js', 'src/puppet-dom.js', 'puppet-dom.min.js', 'puppet.min.js'],
         createTag: true,
         tagName: '%VERSION%',
         tagMessage: 'Version %VERSION%',
