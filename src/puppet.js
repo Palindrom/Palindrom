@@ -492,7 +492,7 @@
       puppet.queue.reset(puppet.obj, json);
 
       if (puppet.debug) {
-        puppet.remoteObj = responseText; // JSON.parse(JSON.stringify(puppet.obj));
+        puppet.remoteObj = json;
       }
 
       puppet.observe();
