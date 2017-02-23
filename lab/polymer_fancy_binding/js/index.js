@@ -32,7 +32,7 @@ var _old = XMLHttpRequest.prototype.send;
 
 XMLHttpRequest.prototype.send = function (data) {
     if (/.*import\.html$/gi.test(this.url)) {
-        stub.responseText = "<p>Message inside puppet-import: <span>{{model.message}}</span></p>"
+        stub.responseText = "<p>Message inside palindrom-import: <span>{{model.message}}</span></p>"
     } else if (data == null && this.requestHeaders["Accept"] == "application/json") {
         stub.responseText = JSON.stringify(model);
     } else if (this.requestHeaders["Accept"] == "application/json-patch+json") {

@@ -3,20 +3,20 @@
 
 <head>
   <meta charset="utf-8">
-  <title>PuppetJs with Polymer demo</title>
+  <title>Palindrom with Polymer demo</title>
   <!-- include web components polyfill -->
   <script src="../../../webcomponentsjs/webcomponents.js"></script>
 
-  <!-- include PuppetJs with dependencies -->
+  <!-- include Palindrom with dependencies -->
   <script src="../../../fast-json-patch/src/json-patch-duplex.js"></script>
-  <script src="../../src/puppet.js"></script>
-  <script src="../../src/puppet-dom.js"></script>
+  <script src="../../src/palindrom.js"></script>
+  <script src="../../src/palindrom-dom.js"></script>
 
   <!-- include components for demo -->
   <link rel="import" href="../../../polymer/polymer.html">
   <link rel="import" href="../../../dom-bind-notifier/dom-bind-notifier.html">
   <link rel="import" href="../polymer/components/my-menu-button.html">
-  <link rel="import" href="../../../puppet-bunny/puppet-bunny.html">
+  <link rel="import" href="../../../palindrom-bunny/palindrom-bunny.html">
 
   <link rel="stylesheet" type="text/css" href="../polymer/css/style.css">
 
@@ -31,7 +31,7 @@
 
 <body>
 
-  <h1>PuppetJs + Polymer</h1>
+  <h1>Palindrom + Polymer</h1>
 
   <p>This demo shows usage with Polymer's TemplateBinding outside and inside of Polymer Element</p>
 
@@ -92,7 +92,7 @@
 
   <script>
     // it's global just for debugging
-    var puppet = new PuppetDOM({
+    var palindrom = new PalindromDOM({
       callback: function(obj) {
         document.getElementById('test').model = obj;
       },
@@ -102,9 +102,9 @@
     });
   </script>
 
-  <puppet-bunny></puppet-bunny>
+  <palindrom-bunny></palindrom-bunny>
 
-  <footer>Puppet photo credit: <a href="https://www.flickr.com/photos/mujitra/4422575066">MIKI Yoshihito</a> (CC BY 2.0)
+  <footer>Palindrom photo credit: <a href="https://www.flickr.com/photos/mujitra/4422575066">MIKI Yoshihito</a> (CC BY 2.0)
   </footer>
 
 </body>

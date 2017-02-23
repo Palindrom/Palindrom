@@ -8,16 +8,16 @@
     <script src="../../../webcomponentsjs/webcomponents.js"></script>
 
 
-    <!-- include PuppetJs with dependencies -->
+    <!-- include Palindrom with dependencies -->
     <script src="../../../fast-json-patch/src/json-patch-duplex.js"></script>
-    <script src="../../src/puppet.js"></script>
-    <script src="../../src/puppet-dom.js"></script>
+    <script src="../../src/palindrom.js"></script>
+    <script src="../../src/palindrom-dom.js"></script>
 
     <!-- include components for demo -->
     <link rel="import" href="../../../polymer/polymer.html">
     <link rel="import" href="../../../dom-bind-notifier/dom-bind-notifier.html">
     <link rel="import" href="../polymer/components/my-menu-button.html">
-    <link rel="import" href="../../../puppet-bunny/puppet-bunny.html">
+    <link rel="import" href="../../../palindrom-bunny/palindrom-bunny.html">
 
 
     <link rel="stylesheet" type="text/css" href="../polymer/css/style.css">
@@ -35,7 +35,7 @@
   <template is="dom-bind" id="r">
     <!-- TODO: try
     <code>
-      &lt;puppet-client remoteurl="test.json" obj="{{model}}"&gt;&lt;/puppet-client&gt;
+      &lt;palindrom-client remoteurl="test.json" obj="{{model}}"&gt;&lt;/palindrom-client&gt;
     </code>
     -->
     <h3>Shallow input</h3>
@@ -69,7 +69,7 @@
   <script>
     var domBind = document.getElementById("r");
     // it's global just for debugging
-    var puppet = wtf =  new PuppetDOM({
+    var palindrom = wtf =  new PalindromDOM({
       callback: function(obj) {
         domBind.model = obj;
       },

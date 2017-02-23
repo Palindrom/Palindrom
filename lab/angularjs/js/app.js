@@ -6,8 +6,8 @@ var app = angular.module('MyApp', ['ngPartial', 'animateMeModule', 'xBtnModule',
 function AppController($scope) {
     $scope.mainFile = window.location.pathname;
 
-    var puppet = new PuppetDOM({
-        remoteUrl: "/PuppetJs/lab/angularjs/index.html",
+    var palindrom = new PalindromDOM({
+        remoteUrl: "/Palindrom/lab/angularjs/index.html",
         callback: function (obj) {
             for (var i in obj) {
                 if (obj.hasOwnProperty(i)) {
@@ -18,7 +18,7 @@ function AppController($scope) {
         }
     });
 
-    puppet.onRemoteChange = function (patches) {
+    palindrom.onRemoteChange = function (patches) {
         jsonpatch.apply($scope, patches);
         $scope.$apply();
     };
