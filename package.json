@@ -1,8 +1,8 @@
 {
-  "name": "puppetjs",
+  "name": "palindrom",
   "version": "2.4.0",
   "description": "",
-  "homepage": "https://github.com/PuppetJs/PuppetJs",
+  "homepage": "https://github.com/palindrom/Palindrom",
   "keywords": [
     "json",
     "patch",
@@ -11,10 +11,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/PuppetJs/PuppetJs.git"
+    "url": "git://github.com/Palindrom/Palindrom.git"
   },
   "bugs": {
-    "url": "https://github.com/PuppetJs/PuppetJs/issues"
+    "url": "https://github.com/Palindrom/Palindrom/issues"
   },
   "author": {
     "name": "Joachim Wester",
@@ -27,7 +27,7 @@
       "url": "http://www.opensource.org/licenses/MIT"
     }
   ],
-  "main": "./src/puppet.js",
+  "main": "./src/palindrom.js",
   "dependencies": {},
   "devDependencies": {
     "grunt": "~0.4.5",

@@ -6,16 +6,16 @@ describe("IgnoreAdd", function () {
   });
 
   afterEach(function () {
-    this.puppet.unobserve();
+    this.palindrom.unobserve();
     jasmine.Ajax.uninstall();
   });
 
   it('should not send add patch to an ignored property', function (done) {
     var obj;
-    this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
+    this.palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
       obj = myObj;
     }});
-    this.puppet.ignoreAdd = /\/\$.+/;
+    this.palindrom.ignoreAdd = /\/\$.+/;
 
     jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
@@ -41,10 +41,10 @@ describe("IgnoreAdd", function () {
   it('should not send replace patch to an ignored property', function (done) {
     var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
     var obj;
-    this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
+    this.palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
       obj = myObj;
     }});
-    this.puppet.ignoreAdd = /\/\$.+/;
+    this.palindrom.ignoreAdd = /\/\$.+/;
 
     jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
@@ -92,10 +92,10 @@ describe("IgnoreAdd", function () {
   it('should not send replace patch to an ignored deep object', function (done) {
     var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
     var obj;
-    this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
+    this.palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
       obj = myObj;
     }});
-    this.puppet.ignoreAdd = /\/\$.+/;
+    this.palindrom.ignoreAdd = /\/\$.+/;
 
     jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
@@ -139,10 +139,10 @@ describe("IgnoreAdd", function () {
   it('should not send any patch if all changes were ignored', function (done) {
     var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
     var obj;
-    this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
+    this.palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
       obj = myObj;
     }});
-    this.puppet.ignoreAdd = /\/\$.+/;
+    this.palindrom.ignoreAdd = /\/\$.+/;
 
     jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,
@@ -165,10 +165,10 @@ describe("IgnoreAdd", function () {
   it('should not send a patch when added property is replaced', function (done) {
     var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
     var obj;
-    this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
+    this.palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
       obj = myObj;
     }});
-    this.puppet.ignoreAdd = /\/\$.+/;
+    this.palindrom.ignoreAdd = /\/\$.+/;
 
     jasmine.Ajax.requests.mostRecent().respondWith({
       "status": 200,

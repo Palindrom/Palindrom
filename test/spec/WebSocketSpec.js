@@ -9,19 +9,19 @@ describe("WebSocket", function () {
   });
 
   afterEach(function () {
-    this.puppet && this.puppet.unobserve();
+    this.palindrom && this.palindrom.unobserve();
     jasmine.Ajax.uninstall();
     jasmine.WebSocket.uninstall();
   });
 
   /// init
-  describe("Puppet constructor", function () {
+  describe("Palindrom constructor", function () {
       describe("if `useWebSocket` flag is provided", function () {
         it("should try to open WebSocket connection ", function (done) {
 
           var WSSpy = jasmine.WebSocket.spy.and.callThroughConstructor();
 
-          this.puppet = new Puppet({useWebSocket: true});
+          this.palindrom = new Palindrom({useWebSocket: true});
           expect(WSSpy).toHaveBeenCalledWith("ws://" + window.location.host + "/__default/testId001");
           expect(WSSpy.calls.mostRecent().returnValue.readyState).toEqual(WebSocket.CONNECTING); // 0
           done();
@@ -30,41 +30,41 @@ describe("WebSocket", function () {
         it("should use same host, port, username, and password as provided in remoteUrl", function (done) {
 
           var WSSpy = jasmine.WebSocket.spy.and.callThroughConstructor();
-          var remoteUrl = "http://junji:ito@house.of.puppets:1234/disregard/path?query=string#andHash";
+          var remoteUrl = "http://junji:ito@house.of.palindroms:1234/disregard/path?query=string#andHash";
           jasmine.Ajax.stubRequest(remoteUrl).andReturn( TestResponses.defaultInit.success );
 
 
-          this.puppet = new Puppet({
+          this.palindrom = new Palindrom({
             remoteUrl: remoteUrl,
             useWebSocket: true});
-          expect(WSSpy).toHaveBeenCalledWith("ws://junji:ito@house.of.puppets:1234/__default/testId001");
+          expect(WSSpy).toHaveBeenCalledWith("ws://junji:ito@house.of.palindroms:1234/__default/testId001");
           done();
 
         });
         it("should use `wss://` for `http://` remotes", function (done) {
 
           var WSSpy = jasmine.WebSocket.spy.and.callThroughConstructor();
-          var remoteUrl = "https://house.of.puppets/";
+          var remoteUrl = "https://house.of.palindroms/";
           jasmine.Ajax.stubRequest(remoteUrl).andReturn( TestResponses.defaultInit.success );
 
-          this.puppet = new Puppet({
+          this.palindrom = new Palindrom({
             remoteUrl: remoteUrl,
             useWebSocket: true});
-          expect(WSSpy).toHaveBeenCalledWith("wss://house.of.puppets/__default/testId001");
+          expect(WSSpy).toHaveBeenCalledWith("wss://house.of.palindroms/__default/testId001");
           done();
 
         });
       });
 
-      it("two puppets should work with different WebSockets", function (done) {
+      it("two palindroms should work with different WebSockets", function (done) {
           var WSSpy = jasmine.WebSocket.spy;
-          var url1 = "http://house1.of.puppets/";
-          var url2 = "http://house2.of.puppets/";
+          var url1 = "http://house1.of.palindroms/";
+          var url2 = "http://house2.of.palindroms/";
 
           jasmine.Ajax.stubRequest(url1).andReturn(TestResponses.defaultInit.success);
           jasmine.Ajax.stubRequest(url2).andReturn(TestResponses.defaultInit.success);
 
-          var puppet1 = new Puppet({
+          var palindrom1 = new Palindrom({
               remoteUrl: url1,
               useWebSocket: true,
               callback: function () {
@@ -76,21 +76,21 @@ describe("WebSocket", function () {
               },
               onSocketStateChanged: function (state, url) {
                   if (state == 1) {
-                      puppet1.obj.hello = "world2";
+                      palindrom1.obj.hello = "world2";
                       triggerMouseup();
                   }
               },
               onPatchSent: function (data, url) {
                   if (data) {
                       expect(data).toEqual('[{"op":"replace","path":"/hello","value":"world2"}]');
-                      expect(url).toEqual("ws://house1.of.puppets/__default/testId001");
-                      expect(url).toEqual(puppet1.network._ws.url);
-                      expect(puppet2.network._ws).not.toEqual(puppet1.network._ws);
+                      expect(url).toEqual("ws://house1.of.palindroms/__default/testId001");
+                      expect(url).toEqual(palindrom1.network._ws.url);
+                      expect(palindrom2.network._ws).not.toEqual(palindrom1.network._ws);
                   }
               }
           });
 
-          var puppet2 = new Puppet({
+          var palindrom2 = new Palindrom({
               remoteUrl: url2,
               useWebSocket: true,
               callback: function () {
@@ -102,16 +102,16 @@ describe("WebSocket", function () {
               },
               onSocketStateChanged: function (state, url) {
                   if (state == 1) {
-                      puppet2.obj.hello = "world3";
+                      palindrom2.obj.hello = "world3";
                       triggerMouseup();
                   }
               },
               onPatchSent: function (data, url) {
                   if (data) {
                       expect(data).toEqual('[{"op":"replace","path":"/hello","value":"world3"}]');
-                      expect(url).toEqual("ws://house2.of.puppets/__default/testId001");
-                      expect(url).toEqual(puppet2.network._ws.url);
-                      expect(puppet2.network._ws).not.toEqual(puppet1.network._ws);
+                      expect(url).toEqual("ws://house2.of.palindroms/__default/testId001");
+                      expect(url).toEqual(palindrom2.network._ws.url);
+                      expect(palindrom2.network._ws).not.toEqual(palindrom1.network._ws);
 
                       done();
                   }
@@ -126,8 +126,8 @@ describe("WebSocket", function () {
       var WSSpy = jasmine.WebSocket.spy.and.callThroughConstructor();
       var sendSpy = spyOn( jasmine.WebSocket.oryginalWebSocket.prototype, "send").and.callThrough();
 
-        this.puppet = new Puppet({useWebSocket: true});
-        this.puppet.obj.hello = "galaxy";
+        this.palindrom = new Palindrom({useWebSocket: true});
+        this.palindrom.obj.hello = "galaxy";
         triggerMouseup();
 
       expect(WSSpy.calls.mostRecent().returnValue.readyState).toEqual(WebSocket.CONNECTING); // 0
@@ -142,12 +142,12 @@ describe("WebSocket", function () {
 
       var WSSpy = jasmine.WebSocket.spy;
 
-        this.puppet = new Puppet({useWebSocket: true, callback: onDataReady});
+        this.palindrom = new Palindrom({useWebSocket: true, callback: onDataReady});
         function onDataReady(){
           // tested code
           // // change the data once it was fetched but before WS instance was even created
-          var puppetObj = this.obj;
-          puppetObj.hello = "galaxy";
+          var palindromObj = this.obj;
+          palindromObj.hello = "galaxy";
           triggerMouseup();
 
           // change object later
@@ -155,7 +155,7 @@ describe("WebSocket", function () {
             //The patch should be send immediately as WS connection is not yet established
             expect(jasmine.Ajax.requests.mostRecent().params).toEqual(JSON.stringify([{ op: "replace", path: "/hello", value: "galaxy" }]));
 
-            puppetObj.foo = "bar";
+            palindromObj.foo = "bar";
             triggerMouseup();
 
             setTimeout(function () {
@@ -165,7 +165,7 @@ describe("WebSocket", function () {
               var websocket = WSSpy.calls.mostRecent().returnValue;
               websocket.open();
 
-              puppetObj.bar = "foo";
+              palindromObj.bar = "foo";
               triggerMouseup();
 
               setTimeout(function () {
@@ -194,8 +194,8 @@ describe("WebSocket", function () {
 
       var WSSpy = jasmine.WebSocket.spy;
 
-        this.puppet = new Puppet({useWebSocket: true, callback: onDataReady});
-        function onDataReady(puppetObj){
+        this.palindrom = new Palindrom({useWebSocket: true, callback: onDataReady});
+        function onDataReady(palindromObj){
           // tested code
           // // change the data once it was fetched but before WS instance was even created
           // wait for WebSocket to get created
@@ -203,12 +203,12 @@ describe("WebSocket", function () {
 
             var websocket = WSSpy.calls.mostRecent().returnValue;
             expect(websocket.readyState).toEqual(WebSocket.CONNECTING); // 0
-            puppetObj.hello = "galaxy";
+            palindromObj.hello = "galaxy";
             triggerMouseup();
 
             // another change a bit later
             setTimeout(function(){
-              puppetObj.foo = "bar";
+              palindromObj.foo = "bar";
               triggerMouseup();
 
               //wait for async trigger(?)
@@ -235,15 +235,15 @@ describe("WebSocket", function () {
 
       var WSSpy = jasmine.WebSocket.spy;
 
-        this.puppet = new Puppet({useWebSocket: true, callback: onDataReady});
-        function onDataReady(puppetObj){
+        this.palindrom = new Palindrom({useWebSocket: true, callback: onDataReady});
+        function onDataReady(palindromObj){
           // wait for WS to get created
           setTimeout(function(){
             var websocket = WSSpy.calls.mostRecent().returnValue;
             // open websocket
             websocket.open();
             //tested code
-              puppetObj.hello = "galaxy";
+              palindromObj.hello = "galaxy";
               triggerMouseup();
 
               //wait for async trigger(?)
