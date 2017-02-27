@@ -1,8 +1,8 @@
 {
-  "name": "PuppetJs",
-  "homepage": "https://github.com/PuppetJs/PuppetJs",
+  "name": "Palindrom",
+  "homepage": "https://github.com/Palindrom/Palindrom",
   "description": "Client side library that binds Web Components or AngularJs to server side view models using JSON-Patch.",
-  "main": "src/puppet.js",
+  "main": "src/palindrom.js",
   "keywords": [
     "JSON-patch",
     "web components",
@@ -18,13 +18,13 @@
   ],
   "dependencies": {
     "fast-json-patch": ">=1.1.0",
-    "json-patch-queue": "PuppetJs/JSON-Patch-Queue#master",
-    "json-patch-ot-agent": "PuppetJs/JSON-Patch-OT-agent#master",
-    "json-patch-ot": "PuppetJs/JSON-Patch-OT#master"
+    "json-patch-queue": "Palindrom/JSON-Patch-Queue#master",
+    "json-patch-ot-agent": "Palindrom/JSON-Patch-OT-agent#master",
+    "json-patch-ot": "Palindrom/JSON-Patch-OT#master"
   },
   "devDependencies": {
     "polymer": "*",
-    "puppet-bunny": "PuppetJs/puppet-bunny",
+    "palindrom-bunny": "Palindrom/palindrom-bunny",
     "dom-bind-notifier": "*"
   }
 }

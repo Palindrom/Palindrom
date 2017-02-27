@@ -6,14 +6,14 @@
     });
 
     afterEach(function () {
-        this.puppet.unobserve();
+        this.palindrom.unobserve();
         jasmine.Ajax.uninstall();
     });
 
     it("should call onPatchSent for initial requests", function (done) {
         var sentSpy = jasmine.createSpy();
 
-        this.puppet = new Puppet({
+        this.palindrom = new Palindrom({
             onPatchSent: sentSpy
         });
 
@@ -23,17 +23,17 @@
 
     });
     describe("in HTTP mode", function(){
-        console.log('To be updated as https://github.com/PuppetJs/PuppetJs/issues/103');
+        console.log('To be updated as https://github.com/Palindrom/Palindrom/issues/103');
         xit("should call callbacks onPatchSent and onPatchReceived for outgoing and incoming patches", function (done) {
             var sentSpy = jasmine.createSpy("onPatchSent");
             var receivedSpy = jasmine.createSpy("onPatchReceived");
 
-            this.puppet = new Puppet({
+            this.palindrom = new Palindrom({
                 onPatchSent: sentSpy,
                 onPatchReceived: receivedSpy
             });
 
-            this.puppet.obj.hello = "onPatchSent callback";
+            this.palindrom.obj.hello = "onPatchSent callback";
 
 
             // wait for observer and mocked initial HTTP response
@@ -69,23 +69,23 @@
         afterEach(function () {
             jasmine.WebSocket.uninstall();
         });
-        console.log('To be updated as https://github.com/PuppetJs/PuppetJs/issues/103');
+        console.log('To be updated as https://github.com/Palindrom/Palindrom/issues/103');
         xit("should call onPatchSent callback for outgoing patches", function (done) {
             var WSSpy = jasmine.WebSocket.spy;
             var sentSpy = jasmine.createSpy("onPatchSent");
 
-            var puppet = this.puppet = new Puppet({
+            var palindrom = this.palindrom = new Palindrom({
                 useWebSocket: true,
                 onPatchSent: sentSpy
             });
             var websocket = jasmine.WebSocket.spy.calls.mostRecent().returnValue;
             //open WS for changes
             websocket.open();
-            this.puppet.obj.hello = "onPatchSent callback";
+            this.palindrom.obj.hello = "onPatchSent callback";
 
             // wait for observer and mocked initial HTTP response
             setTimeout(function () {
-                expect(puppet.obj.hello).toEqual("onPatchSent callback");
+                expect(palindrom.obj.hello).toEqual("onPatchSent callback");
                 expect(sentSpy.calls.mostRecent().args[0]).toEqual('[{"op":"replace","path":"/hello","value":"onPatchSent callback"}]');
                 expect(sentSpy.calls.mostRecent().args[1]).toMatch(/ws:\/\/.*__default\/testId001/);
                 done();
@@ -96,7 +96,7 @@
             var WSSpy = jasmine.WebSocket.spy;
             var receivedSpy = jasmine.createSpy("onPatchReceived");
 
-            var puppet = this.puppet = new Puppet({
+            var palindrom = this.palindrom = new Palindrom({
                 useWebSocket: true,
                 onPatchReceived: receivedSpy
             });
@@ -107,7 +107,7 @@
 
             // wait for observer and mocked initial HTTP response
             setTimeout(function () {
-                expect(puppet.obj.hello).toEqual("onPatchReceived callback");
+                expect(palindrom.obj.hello).toEqual("onPatchReceived callback");
                 expect(receivedSpy.calls.mostRecent().args[0]).toEqual('[{"op":"replace","path":"/hello","value":"onPatchReceived callback"}]');
                 expect(receivedSpy.calls.mostRecent().args[1]).toMatch(/ws:\/\/.*__default\/testId001/);
                 done();

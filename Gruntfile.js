@@ -9,8 +9,8 @@ module.exports = function(grunt) {
       },
       default: {
         files: {
-          'puppet.min.js': 'src/puppet.js',
-          'puppet-dom.min.js': 'src/puppet-dom.js'
+          'palindrom.min.js': 'src/palindrom.js',
+          'palindrom-dom.min.js': 'src/palindrom-dom.js'
         }
       }
 
@@ -31,10 +31,10 @@ module.exports = function(grunt) {
     },
     bump: {
       options: {
-        files: ['package.json', 'src/puppet.js', 'src/puppet-dom.js', 'puppet-dom.min.js', 'puppet.min.js'],
+        files: ['package.json', 'src/palindrom.js', 'src/palindrom-dom.js', 'palindrom-dom.min.js', 'palindrom.min.js'],
         commit: true,
         commitMessage: '%VERSION%',
-        commitFiles: ['package.json', 'src/puppet.js', 'src/puppet-dom.js', 'puppet-dom.min.js', 'puppet.min.js'],
+        commitFiles: ['package.json', 'src/palindrom.js', 'src/palindrom-dom.js', 'palindrom-dom.min.js', 'palindrom.min.js'],
         createTag: true,
         tagName: '%VERSION%',
         tagMessage: 'Version %VERSION%',

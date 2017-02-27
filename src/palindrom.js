@@ -1,4 +1,4 @@
-/*! puppet.js version: 2.4.0
+/*! palindrom.js version: 2.4.0
  * (c) 2013 Joachim Wester
  * MIT license
  */
@@ -226,9 +226,9 @@
     this.start = this.stop = this.notifySend = this.notifyReceive = function () {};
   }
 
-  function PuppetNetworkChannel(puppet, remoteUrl, useWebSocket, onReceive, onSend, onConnectionError, onFatalError, onStateChange) {
+  function PalindromNetworkChannel(palindrom, remoteUrl, useWebSocket, onReceive, onSend, onConnectionError, onFatalError, onStateChange) {
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
-    this.puppet = puppet;
+    this.palindrom = palindrom;
 
     if (remoteUrl instanceof URL) {
     this.remoteUrl = remoteUrl;
@@ -273,10 +273,10 @@
       }
     });
   }
-  PuppetNetworkChannel.prototype.establish = function(bootstrap){
+  PalindromNetworkChannel.prototype.establish = function(bootstrap){
     establish(this, this.remoteUrl.href, null, bootstrap);
   };
-  PuppetNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
+  PalindromNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
     establish(this, this.remoteUrl.href + "/reconnect", JSON.stringify(pending), bootstrap);
   };
 
@@ -298,9 +298,9 @@
    * Send any text message by currently established channel
    * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
    * @param  {String} msg message to be sent
-   * @return {PuppetNetworkChannel}     self
+   * @return {PalindromNetworkChannel}     self
    */
-  PuppetNetworkChannel.prototype.send = function(msg){
+  PalindromNetworkChannel.prototype.send = function(msg){
     var that = this;
     // send message only if there is a working ws connection
     if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
@@ -319,10 +319,10 @@
    * @param {String} [JSONPatch_sequences] message with Array of JSONPatches that were send by remote.
    * @return {[type]} [description]
    */
-  PuppetNetworkChannel.prototype.onReceive = function(/*String_with_JSONPatch_sequences*/){};
-  PuppetNetworkChannel.prototype.onSend = function () { };
-  PuppetNetworkChannel.prototype.onStateChange = function () { };
-  PuppetNetworkChannel.prototype.upgrade = function(msg){
+  PalindromNetworkChannel.prototype.onReceive = function(/*String_with_JSONPatch_sequences*/){};
+  PalindromNetworkChannel.prototype.onSend = function () { };
+  PalindromNetworkChannel.prototype.onStateChange = function () { };
+  PalindromNetworkChannel.prototype.upgrade = function(msg){
   };
 
   function closeWsIfNeeded(network) {
@@ -335,13 +335,13 @@
 
   /**
    * Send a WebSocket upgrade request to the server.
-   * For testing purposes WS upgrade url is hardcoded now in PuppetJS (replace __default/ID with __default/ID)
+   * For testing purposes WS upgrade url is hardcoded now in Palindrom (replace __default/ID with __default/ID)
    * In future, server should suggest the WebSocket upgrade URL
    * @TODO:(tomalec)[cleanup] hide from public API.
    * @param {Function} [callback] Function to be called once connection gets opened.
    * @returns {WebSocket} created WebSocket
    */
-  PuppetNetworkChannel.prototype.webSocketUpgrade = function (callback) {
+  PalindromNetworkChannel.prototype.webSocketUpgrade = function (callback) {
     var that = this;
     // resolve session path given in referrer in the context of remote WS URL
     var upgradeURL = (
@@ -395,7 +395,7 @@
       }
     };
   };
-  PuppetNetworkChannel.prototype.changeState = function (href) {
+  PalindromNetworkChannel.prototype.changeState = function (href) {
     var that = this;
     return this.xhr(href, 'application/json-patch+json', null, function (res, method) {
       that.onReceive(res.responseText, href, method);
@@ -403,7 +403,7 @@
   };
 
   // TODO:(tomalec)[cleanup] hide from public API.
-  PuppetNetworkChannel.prototype.setRemoteUrl = function (remoteUrl) {
+  PalindromNetworkChannel.prototype.setRemoteUrl = function (remoteUrl) {
     if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl.href != remoteUrl) {
         throw new Error("Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.remoteUrl + "\nNew session ID: " + remoteUrl);
     }
@@ -412,7 +412,7 @@
   };
 
   // TODO:(tomalec)[cleanup] hide from public API.
-  PuppetNetworkChannel.prototype.handleResponseHeader = function (xhr) {
+  PalindromNetworkChannel.prototype.handleResponseHeader = function (xhr) {
     var location = xhr.getResponseHeader('X-Location') || xhr.getResponseHeader('Location');
     if (location) {
       this.setRemoteUrl(location);
@@ -424,10 +424,10 @@
    * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
    * @param accept (Optional) HTTP accept header
    * @param data (Optional) Data payload
-   * @param [callback(response)] callback to be called in context of puppet with response as argument
+   * @param [callback(response)] callback to be called in context of palindrom with response as argument
    * @returns {XMLHttpRequest} performed XHR
    */
-  PuppetNetworkChannel.prototype.xhr = function (url, accept, data, callback, setReferer) {
+  PalindromNetworkChannel.prototype.xhr = function (url, accept, data, callback, setReferer) {
     var that = this;
     var req = new XMLHttpRequest();
     var method = "GET";
@@ -438,7 +438,7 @@
         that.onFatalError({ statusCode: res.status, statusText: res.statusText, reason: res.responseText }, url, method);
       }
       else {
-        callback && callback.call(that.puppet, res, method);
+        callback && callback.call(that.palindrom, res, method);
       }
     };
     req.onerror = that.onConnectionError.bind(that);
@@ -483,34 +483,34 @@
     this.apply(obj, patch);
   };
 
-  function connectToRemote(puppet, reconnectionFn) {
+  function connectToRemote(palindrom, reconnectionFn) {
     // if we lose connection at this point, the connection we're trying to establish should trigger onError
-    puppet.heartbeat.stop();
+    palindrom.heartbeat.stop();
     reconnectionFn(function bootstrap(responseText){
       var json = JSON.parse(responseText);
-      puppet.reconnector.stopReconnecting();
-      puppet.queue.reset(puppet.obj, json);
+      palindrom.reconnector.stopReconnecting();
+      palindrom.queue.reset(palindrom.obj, json);
 
-      if (puppet.debug) {
-        puppet.remoteObj = responseText; // JSON.parse(JSON.stringify(puppet.obj));
+      if (palindrom.debug) {
+        palindrom.remoteObj = responseText; // JSON.parse(JSON.stringify(palindrom.obj));
       }
 
-      puppet.observe();
-      if (puppet.onDataReady) {
-        puppet.onDataReady.call(puppet, puppet.obj);
+      palindrom.observe();
+      if (palindrom.onDataReady) {
+        palindrom.onDataReady.call(palindrom, palindrom.obj);
       }
 
-      puppet.heartbeat.start();
+      palindrom.heartbeat.start();
     });
   }
 
-  function makeInitialConnection(puppet) {
-    connectToRemote(puppet, puppet.network.establish.bind(puppet.network));
+  function makeInitialConnection(palindrom) {
+    connectToRemote(palindrom, palindrom.network.establish.bind(palindrom.network));
   }
 
-  function makeReconnection(puppet) {
-    connectToRemote(puppet, function (bootstrap) {
-      puppet.network.reestablish(puppet.queue.pending, bootstrap);
+  function makeReconnection(palindrom) {
+    connectToRemote(palindrom, function (bootstrap) {
+      palindrom.network.reestablish(palindrom.queue.pending, bootstrap);
     });
   }
 
@@ -518,7 +518,7 @@
    * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
    * @param {Object} [options] map of arguments. See README.md for description
    */
-  function Puppet(options) {
+  function Palindrom(options) {
     options || (options={});
     this.jsonpatch = options.jsonpatch || this.jsonpatch;
     this.debug = options.debug != undefined ? options.debug : true;
@@ -559,8 +559,8 @@
       this.heartbeat = new NoHeartbeat();
     }
 
-    this.network = new PuppetNetworkChannel(
-        this, // puppet instance TODO: to be removed, used for error reporting
+    this.network = new PalindromNetworkChannel(
+        this, // palindrom instance TODO: to be removed, used for error reporting
         options.remoteUrl,
         options.useWebSocket || false, // useWebSocket
         this.handleRemoteChange.bind(this), //onReceive
@@ -583,10 +583,10 @@
     this.ignoreAdd = options.ignoreAdd || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
 
     //usage:
-    //puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to remote
-    //puppet.ignoreAdd = /./; //ignore all the "add" operations
-    //puppet.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
-    //puppet.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
+    //palindrom.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to remote
+    //palindrom.ignoreAdd = /./; //ignore all the "add" operations
+    //palindrom.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
+    //palindrom.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
 
     this.onDataReady = options.callback;
 
@@ -609,9 +609,9 @@
     makeInitialConnection(this);
   }
 
-  Puppet.prototype = Object.create(EventDispatcher.prototype); //inherit EventTarget API from EventDispatcher
+  Palindrom.prototype = Object.create(EventDispatcher.prototype); //inherit EventTarget API from EventDispatcher
 
-  var dispatchErrorEvent = function (puppet, error) {
+  var dispatchErrorEvent = function (palindrom, error) {
     var errorEvent;
     if (ErrorEvent.prototype.initErrorEvent) {
       var ev = document.createEvent("ErrorEvent");
@@ -620,27 +620,27 @@
     } else {
       errorEvent = new ErrorEvent("error", {bubbles: true, cancelable: true, error: error}); //this works everywhere except IE
     }
-    puppet.dispatchEvent(errorEvent);
+    palindrom.dispatchEvent(errorEvent);
   };
 
-  Puppet.prototype.jsonpatch = global.jsonpatch;
+  Palindrom.prototype.jsonpatch = global.jsonpatch;
 
-  Puppet.prototype.ping = function () {
+  Palindrom.prototype.ping = function () {
     sendPatches(this, []); // sends empty message to server
   };
 
-  Puppet.prototype.observe = function () {
+  Palindrom.prototype.observe = function () {
     this.observer = this.jsonpatch.observe(this.obj, this.filterChangedCallback.bind(this));
   };
 
-  Puppet.prototype.unobserve = function () {
+  Palindrom.prototype.unobserve = function () {
     if (this.observer) { //there is a bug in JSON-Patch when trying to unobserve something that is already unobserved
       this.jsonpatch.unobserve(this.obj, this.observer);
       this.observer = null;
     }
   };
 
-  Puppet.prototype.filterChangedCallback = function (patches) {
+  Palindrom.prototype.filterChangedCallback = function (patches) {
     this.filterIgnoredPatches(patches);
     if(patches.length) {
       this.handleLocalChange(patches);
@@ -664,7 +664,7 @@
   }
 
   //ignores private member changes
-  Puppet.prototype.filterIgnoredPatches = function (patches) {
+  Palindrom.prototype.filterIgnoredPatches = function (patches) {
     if(this.ignoreAdd){
       for (var i = 0, ilen = patches.length; i < ilen; i++) {
         if (isIgnored(this.ignoreAdd, this.ignoreCache, patches[i].path, patches[i].op)) { //if it is ignored, remove patch
@@ -677,15 +677,15 @@
     return patches;
   };
 
-  function sendPatches(puppet, patches) {
+  function sendPatches(palindrom, patches) {
     var txt = JSON.stringify(patches);
-    puppet.unobserve();
-    puppet.heartbeat.notifySend();
-    puppet.network.send(txt);
-    puppet.observe();
+    palindrom.unobserve();
+    palindrom.heartbeat.notifySend();
+    palindrom.network.send(txt);
+    palindrom.observe();
   }
 
-  Puppet.prototype.handleLocalChange = function (patches) {
+  Palindrom.prototype.handleLocalChange = function (patches) {
     if(this.debug) {
       this.validateSequence(this.remoteObj, patches);
     }
@@ -696,7 +696,7 @@
     }
   };
 
-  Puppet.prototype.validateAndApplySequence = function (tree, sequence) {
+  Palindrom.prototype.validateAndApplySequence = function (tree, sequence) {
     // we don't want this changes to generate patches since they originate from server, not client
     this.unobserve();
     try {
@@ -729,13 +729,13 @@
 
     // until notifications are converged to single method (events vs. callbacks, #74)
     if (this.onRemoteChange) {
-      console.warn("PuppetJs.onRemoteChange is deprecated, please use patch-applied event instead.");
+      console.warn("Palindrom.onRemoteChange is deprecated, please use patch-applied event instead.");
       this.onRemoteChange(sequence, results);
     }
     this.dispatchEvent(new CustomEvent("patch-applied", {bubbles: true, cancelable: true, detail: {patches: sequence, results: results}}));
   };
 
-  Puppet.prototype.validateSequence = function (tree, sequence) {
+  Palindrom.prototype.validateSequence = function (tree, sequence) {
     var error = this.jsonpatch.validate(sequence, tree);
     if (error) {
       error.message = "Outgoing patch validation error: " + error.message;
@@ -746,7 +746,7 @@
   /**
    * Handle an error which is probably caused by random disconnection
    */
-  Puppet.prototype.handleConnectionError = function () {
+  Palindrom.prototype.handleConnectionError = function () {
     this.heartbeat.stop();
     this.reconnector.triggerReconnection();
   };
@@ -754,7 +754,7 @@
   /**
    * Handle an error which probably won't go away on itself (basically forward upstream)
    */
-  Puppet.prototype.handleFatalError = function (data, url, method) {
+  Palindrom.prototype.handleFatalError = function (data, url, method) {
     this.heartbeat.stop();
     this.reconnector.stopReconnecting();
     if (this.onConnectionError) {
@@ -762,20 +762,20 @@
     }
   };
 
-  Puppet.prototype.reconnectNow = function () {
+  Palindrom.prototype.reconnectNow = function () {
     this.reconnector.reconnectNow();
   };
 
-  Puppet.prototype.showWarning = function (heading, description) {
+  Palindrom.prototype.showWarning = function (heading, description) {
     if (this.debug && global.console && console.warn) {
       if (description) {
         heading += " (" + description + ")";
       }
-      console.warn("PuppetJs warning: " + heading);
+      console.warn("Palindrom warning: " + heading);
     }
   };
 
-  Puppet.prototype.handleRemoteChange = function (data, url, method) {
+  Palindrom.prototype.handleRemoteChange = function (data, url, method) {
     this.heartbeat.notifyReceive();
     var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
     if(patches.length === 0) { // ping message
@@ -802,5 +802,5 @@
     }
   };
 
-  global.Puppet = Puppet;
+  global.Palindrom = Palindrom;
 })(window);

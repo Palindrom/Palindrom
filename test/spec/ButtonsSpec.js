@@ -1,12 +1,12 @@
 describe("Buttons", function () {
-  var puppet;
+  var palindrom;
   beforeEach(function () {
     jasmine.Ajax.install();
   });
 
   afterEach(function () {
-    if(puppet) {
-      puppet.unobserve();
+    if(palindrom) {
+      palindrom.unobserve();
     }
     jasmine.Ajax.uninstall();
   });
@@ -38,7 +38,7 @@ describe("Buttons", function () {
         , patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough()
         , BUTTON;
 
-      puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
+      palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
       }});
 
@@ -73,7 +73,7 @@ describe("Buttons", function () {
         , patchSpy
         , BUTTON;
 
-      new Puppet({remoteUrl: '/test', callback: function (myObj) {
+      new Palindrom({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
       }});
 
@@ -121,7 +121,7 @@ describe("Buttons", function () {
         , patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough()
         , BUTTON;
 
-      puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
+      palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
       }});
 
@@ -156,7 +156,7 @@ describe("Buttons", function () {
         , patchSpy
         , BUTTON;
 
-      new Puppet({remoteUrl: '/test', callback: function (myObj) {
+      new Palindrom({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
       }});
 
