@@ -1,5 +1,9 @@
-Palindrom
-========
+# Palindrom
+<p align="center">
+  <img alt="Palindrom Logo" src="https://cloud.githubusercontent.com/assets/17054134/23406359/e2690c08-fdbe-11e6-8880-c23dc771f899.png">
+</p> 
+
+---
 
 Library for two-way data binding between local JSON view models and remote, using JSON-Patch, w/ optional OT, via HTTP or WebSocket.
 
