@@ -1,24 +1,23 @@
-/*! palindrom-dom.js version: 2.4.0
+/*! puppet-dom.js version: 2.4.0
  * (c) 2013 Joachim Wester
  * MIT license
  */
 
 (function (global) {
+
+console.warn("`puppet-dom.js is deprecated and will be removed soon, please use `palindrom-dom.js` instead");
+
   /**
-   * PalindromDOM
-   * @extends {Palindrom}
+   * PuppetDOM
+   * @extends {Puppet}
    * @param {Object} [options] map of arguments. See README.md for description
    */
-  var PalindromDOM = function (options){
+  var PuppetDOM = function (options){
     options || (options={});
     var onDataReady = options.callback;
     this.element = options.listenTo || document.body;
     var clickHandler = this.clickHandler.bind(this);
     this.historyHandler = this.historyHandler.bind(this);
-    this.historyHandlerDeprecatedMessage = function () {
-      console.warn("`puppet-redirect-pushstate` event is deprecated, please use `palindrom-redirect-pushstate`, if you're using `puppet-redirect`, please upgrade to `palindrom-redirect`");
-      this.historyHandler.bind(this)();
-    };
 
     options.callback = function addDOMListeners(obj){
       this.listen();
@@ -26,41 +25,36 @@
     };
     this.listen = function(){
       this.listening = true;
+
       this.element.addEventListener('click', clickHandler);
       window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
-      this.element.addEventListener('palindrom-redirect-pushstate', this.historyHandler.bind(this));
-      
-      /* backward compatibility: for people using old puppet-redirect */
-      this.element.addEventListener('puppet-redirect-pushstate', this.historyHandlerDeprecatedMessage.bind(this));
+      this.element.addEventListener('puppet-redirect-pushstate', this.historyHandler);
     };
     this.unlisten = function(){
       this.listening = false;
 
       this.element.removeEventListener('click', clickHandler);
       window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
-      this.element.removeEventListener('palindrom-redirect-pushstate', this.historyHandler);
-      
-      /* backward compatibility: for people using old puppet-redirect */
-      this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandlerDeprecatedMessage);
+      this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandler);
     };
 
-    //TODO move fallback to window.location.href from PalindromNetworkChannel to here (PalindromDOM)
+    //TODO move fallback to window.location.href from PuppetNetworkChannel to here (PuppetDOM)
 
-    Palindrom.call(this, options);
+    Puppet.call(this, options);
   };
-  PalindromDOM.prototype = Object.create(Palindrom.prototype);
+  PuppetDOM.prototype = Object.create(Puppet.prototype);
 
   /**
    * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
    * so that the URL handlers can be executed on the remote
    * @param url
    */
-  PalindromDOM.prototype.morphUrl = function (url) {
+  PuppetDOM.prototype.morphUrl = function (url) {
     history.pushState(null, null, url);
     this.network.changeState(url);
   };
 
-  PalindromDOM.prototype.clickHandler = function (event) {
+  PuppetDOM.prototype.clickHandler = function (event) {
     //Don't morph ctrl/cmd + click & middle mouse button
     if (event.ctrlKey || event.metaKey || event.which == 2) {
       return;
@@ -87,7 +81,7 @@
     //while target.getAttribute("href") returns desired href (as string)
     var href = target.href || target.getAttribute("href");
 
-    if (href && PalindromDOM.isApplicationLink(href)) {
+    if (href && PuppetDOM.isApplicationLink(href)) {
       event.preventDefault();
       event.stopPropagation();
       this.morphUrl(href);
@@ -97,16 +91,16 @@
     }
   };
 
-  PalindromDOM.prototype.historyHandler = function (/*event*/) {
+  PuppetDOM.prototype.historyHandler = function (/*event*/) {
     this.network.changeState(location.href);
   };
 
   /**
-   * Returns information if a given element is an internal application link that Palindrom should intercept into a history push
+   * Returns information if a given element is an internal application link that PuppetJS should intercept into a history push
    * @param elem HTMLElement or String
    * @returns {boolean}
    */
-  PalindromDOM.isApplicationLink = function (elem) {
+  PuppetDOM.isApplicationLink = function (elem) {
     if (typeof elem === 'string') {
       //type string is reported in Polymer / Canary (Web Platform features disabled)
       var parser = document.createElement('A');
@@ -124,8 +118,6 @@
     }
     return (elem.protocol == window.location.protocol && elem.host == window.location.host);
   };
-  /* backward compatibility */
-  global.PuppetDOM = PalindromDOM;  
 
-  global.PalindromDOM = PalindromDOM;
+  global.PuppetDOM = PuppetDOM;
 })(window);

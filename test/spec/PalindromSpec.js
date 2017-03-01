@@ -8,6 +8,74 @@ describe("Palindrom", function () {
     jasmine.Ajax.uninstall();
   });
 
+  describe("backward compatibility", function () {
+    it("should work if PuppetJs constructor is used", function (done) {
+      var initSpy = jasmine.createSpy();
+
+      this.palindrom = new PuppetJs({callback: initSpy});
+
+      jasmine.Ajax.requests.mostRecent().respondWith({
+        "status": 200,
+        "contentType": 'application/json',
+        "responseText": '{"hello": "world"}'
+      });
+
+      setTimeout(function () {
+        expect(initSpy).toHaveBeenCalledWith(jasmine.any(Object));
+        done();
+      }, 1); //promise shim resolves after 1 ms
+    });
+
+    it("should patch changes after observe() was called, USING PuppetJs constructor", function (done) {
+      var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
+      var obj;
+      var that = this;
+
+      this.palindrom = new PuppetJs({remoteUrl: '/test', callback: function (myObj) {
+        obj = myObj;
+
+        checkWhenReady();
+      }});
+
+      jasmine.Ajax.requests.mostRecent().respondWith({
+        "status": 200,
+        "contentType": 'application/json',
+        "responseText": '{"hello": "world"}'
+      });
+
+      function checkWhenReady(){
+        expect(obj.hello).toEqual("world");
+
+        obj.hello = "galaxy";
+        triggerMouseup();
+
+        setTimeout(function () { //wait for xhr
+          expect(patchSpy.calls.count()).toBe(2);
+          expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"galaxy"}]');
+
+          that.palindrom.unobserve();
+
+          jasmine.Ajax.requests.mostRecent().respondWith({
+            "status": 200,
+            "contentType": 'application/json-patch+json',
+            "responseText": '[{"op":"replace","path":"/hello","value":"universe"}]'
+          });
+
+          that.palindrom.observe();
+          obj.hello = "cosmos";
+          triggerMouseup();
+
+          setTimeout(function () { //wait for xhr
+            expect(patchSpy.calls.count()).toBe(3);
+            expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"cosmos"}]');
+
+            done();
+          }, 1);
+        }, 1);
+      }
+    });
+  });
+
   /// init
   describe("init", function () {
     it("should call callback with an object as single parameter", function (done) {

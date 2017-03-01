@@ -10,7 +10,9 @@ module.exports = function(grunt) {
       default: {
         files: {
           'palindrom.min.js': 'src/palindrom.js',
-          'palindrom-dom.min.js': 'src/palindrom-dom.js'
+          'palindrom-dom.min.js': 'src/palindrom-dom.js',
+          'puppet.min.js': 'src/puppet.js',
+          'puppet-dom.min.js': 'src/puppet-dom.js',
         }
       }
 
