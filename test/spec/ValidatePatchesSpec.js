@@ -27,14 +27,14 @@ describe("ValidatePatches", function () {
     };
     var sequence = [];
     var errors = [];
-    var puppet = new Puppet();
-    // var puppet = Object.create(Puppet.prototype);
+    var palindrom = new Palindrom();
+    // var palindrom = Object.create(Palindrom.prototype);
 
-    puppet.debug = true;
-    puppet.addEventListener('error', function (ev) {
+    palindrom.debug = true;
+    palindrom.addEventListener('error', function (ev) {
       errors.push(ev);
     });
-    puppet.validateAndApplySequence(tree, sequence);
+    palindrom.validateAndApplySequence(tree, sequence);
     setTimeout(function () {
       expect(errors.length).toBe(0);
       done();
@@ -49,16 +49,16 @@ describe("ValidatePatches", function () {
       }
     };
     var sequence = [{op: "replace", path: "/address$", value: ""}];
-    var puppetMock = Object.create(Puppet.prototype);
-    puppetMock.debug = true;
-    puppetMock.addEventListener('error', function (ev) {
+    var palindromMock = Object.create(Palindrom.prototype);
+    palindromMock.debug = true;
+    palindromMock.addEventListener('error', function (ev) {
       expect(ev.error.name).toEqual('OPERATION_PATH_UNRESOLVABLE');
       done();
     });
-    puppetMock.validateAndApplySequence(tree, sequence);
+    palindromMock.validateAndApplySequence(tree, sequence);
   });
 
-  it("should trigger window-observable error event if Puppet is attached to DOM", function (done) {
+  it("should trigger window-observable error event if Palindrom is attached to DOM", function (done) {
     var tree = {
       name: {
         first$: "Elvis",
@@ -66,23 +66,23 @@ describe("ValidatePatches", function () {
       }
     };
     var sequence = [{op: "replace", path: "/address$", value: ""}];
-    var puppetMock = document.createElement('DIV');
+    var palindromMock = document.createElement('DIV');
     // fixme! EventDispatcher and entire prototype chain is lost.
-    //PuppetDOM.apply(puppetMock);
-    new PuppetDOM(puppetMock);
-    extend(puppetMock, Puppet.prototype);
-    extend(puppetMock, PuppetDOM.prototype);
-    document.body.appendChild(puppetMock);
-    puppetMock.debug = true;
+    //PalindromDOM.apply(palindromMock);
+    new PalindromDOM(palindromMock);
+    extend(palindromMock, Palindrom.prototype);
+    extend(palindromMock, PalindromDOM.prototype);
+    document.body.appendChild(palindromMock);
+    palindromMock.debug = true;
     window.addEventListener('error', function (ev) {
-      if(ev.target === puppetMock ){
+      if(ev.target === palindromMock ){
         expect(ev.error.name).toEqual('OPERATION_PATH_UNRESOLVABLE');
-        document.body.removeChild(puppetMock);
+        document.body.removeChild(palindromMock);
         done();
       }
       ev.preventDefault();
     });
-    puppetMock.validateAndApplySequence(tree, sequence);
+    palindromMock.validateAndApplySequence(tree, sequence);
   });
 
   it("should be possible to override validatePatches to add custom validation", function (done) {
@@ -102,16 +102,16 @@ describe("ValidatePatches", function () {
 
       if (operation.op === "replace") {
         if (operation.path.substr(operation.path.length - 1, 1) !== "$") {
-          throw new outgoingJsonpatch.JsonPatchError('Cannot replace a property which name finishes with $ character', 'PUPPET_CANNOT_REPLACE_READONLY', index, operation, tree);
+          throw new outgoingJsonpatch.JsonPatchError('Cannot replace a property which name finishes with $ character', 'Palindrom_CANNOT_REPLACE_READONLY', index, operation, tree);
         }
       }
     };
 
-    var customPuppetJs = function () {
-      Puppet.apply(this, arguments);
+    var customPalindrom = function () {
+      Palindrom.apply(this, arguments);
     };
-    customPuppetJs.prototype = Object.create(Puppet.prototype);
-    customPuppetJs.prototype.validateSequence = function (tree, sequence) {
+    customPalindrom.prototype = Object.create(Palindrom.prototype);
+    customPalindrom.prototype.validateSequence = function (tree, sequence) {
       var error = outgoingJsonpatch.validate(sequence, tree);
       if (error) {
         error.message = "Outgoing patch validation error: " + error.message;
@@ -128,14 +128,14 @@ describe("ValidatePatches", function () {
       }
     };
 
-    var puppetMock = Object.create(customPuppetJs.prototype);
-    puppetMock.debug = true;
-    puppetMock.addEventListener('error', function (ev) {
-      expect(ev.error.name).toEqual('PUPPET_CANNOT_REPLACE_READONLY');
+    var palindromMock = Object.create(customPalindrom.prototype);
+    palindromMock.debug = true;
+    palindromMock.addEventListener('error', function (ev) {
+      expect(ev.error.name).toEqual('Palindrom_CANNOT_REPLACE_READONLY');
       done();
     });
 
-    puppetMock.validateSequence(tree, sequence);
+    palindromMock.validateSequence(tree, sequence);
   });
 
   it("undefined value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)", function (done) {
@@ -146,13 +146,13 @@ describe("ValidatePatches", function () {
           }
       };
       var sequence = [{ op: "replace", path: "/name/first$", value: undefined }];
-      var puppetMock = Object.create(Puppet.prototype);
-      puppetMock.debug = true;
-      puppetMock.addEventListener('error', function (ev) {
+      var palindromMock = Object.create(Palindrom.prototype);
+      palindromMock.debug = true;
+      palindromMock.addEventListener('error', function (ev) {
           expect(ev.error.name).toEqual('OPERATION_VALUE_REQUIRED');
           done();
       });
-      puppetMock.validateAndApplySequence(tree, sequence);
+      palindromMock.validateAndApplySequence(tree, sequence);
   });
 
   it("no value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)", function (done) {
@@ -163,13 +163,13 @@ describe("ValidatePatches", function () {
           }
       };
       var sequence = [{ op: "replace", path: "/name/first$" }];
-      var puppetMock = Object.create(Puppet.prototype);
-      puppetMock.debug = true;
-      puppetMock.addEventListener('error', function (ev) {
+      var palindromMock = Object.create(Palindrom.prototype);
+      palindromMock.debug = true;
+      palindromMock.addEventListener('error', function (ev) {
           expect(ev.error.name).toEqual('OPERATION_VALUE_REQUIRED');
           done();
       });
-      puppetMock.validateAndApplySequence(tree, sequence);
+      palindromMock.validateAndApplySequence(tree, sequence);
   });
 
   it("object with undefined value should cause OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED (test built into Fast-JSON-Patch)", function (done) {
@@ -180,12 +180,12 @@ describe("ValidatePatches", function () {
           }
       };
       var sequence = [{ op: "replace", path: "/name", value: { first$: [undefined], last$: "Presley" } }];
-      var puppetMock = Object.create(Puppet.prototype);
-      puppetMock.debug = true;
-      puppetMock.addEventListener('error', function (ev) {
+      var palindromMock = Object.create(Palindrom.prototype);
+      palindromMock.debug = true;
+      palindromMock.addEventListener('error', function (ev) {
           expect(ev.error.name).toEqual('OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED');
           done();
       });
-      puppetMock.validateAndApplySequence(tree, sequence);
+      palindromMock.validateAndApplySequence(tree, sequence);
   });
 });

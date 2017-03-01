@@ -7,7 +7,7 @@ describe("OnLocal/RemoteChange", function() {
     });
 
     afterEach(function() {
-        this.puppet.unobserve();
+        this.palindrom.unobserve();
         jasmine.Ajax.uninstall();
     });
 
@@ -17,22 +17,22 @@ describe("OnLocal/RemoteChange", function() {
     afterEach(function() {
         jasmine.WebSocket.uninstall();
     });
-    console.log('To be updated as https://github.com/PuppetJs/PuppetJs/issues/103');
+    console.log('To be updated as https://github.com/Palindrom/Palindrom/issues/103');
     xit("should call onLocalChange callback for outgoing patches", function(done) {
         var sentSpy = jasmine.createSpy("onLocalChange");
 
-        var puppet = this.puppet = new Puppet({
+        var palindrom = this.palindrom = new Palindrom({
             useWebSocket: true,
             onLocalChange: sentSpy
         });
         var websocket = jasmine.WebSocket.spy.calls.mostRecent().returnValue;
         //open WS for changes
         websocket.open();
-        this.puppet.obj.hello = "onLocalChange callback";
+        this.palindrom.obj.hello = "onLocalChange callback";
 
         // wait for observer and mocked initial HTTP response
         setTimeout(function() {
-            expect(puppet.obj.hello).toEqual("onLocalChange callback");
+            expect(palindrom.obj.hello).toEqual("onLocalChange callback");
             expect(sentSpy.calls.mostRecent().args[0]).toEqual([{
                 "op": "replace",
                 "path": "/hello",
@@ -45,7 +45,7 @@ describe("OnLocal/RemoteChange", function() {
     it("should call onRemoteChange callback for applied patches", function(done) {
         var receivedSpy = jasmine.createSpy("onRemoteChange");
 
-        var puppet = this.puppet = new Puppet({
+        var palindrom = this.palindrom = new Palindrom({
             useWebSocket: true,
             onRemoteChange: receivedSpy
         });
@@ -58,7 +58,7 @@ describe("OnLocal/RemoteChange", function() {
 
         // wait for observer and mocked initial HTTP response
         setTimeout(function() {
-            expect(puppet.obj.hello).toEqual("onRemoteChange callback");
+            expect(palindrom.obj.hello).toEqual("onRemoteChange callback");
             var mostRecentCall = receivedSpy.calls.mostRecent();
             expect(mostRecentCall.args[0]).toEqual([{
                 "op": "replace",
@@ -73,10 +73,10 @@ describe("OnLocal/RemoteChange", function() {
     it("should fire patch-applied event for applied patches", function(done) {
         var receivedSpy = jasmine.createSpy("patch-applied");
 
-        var puppet = this.puppet = new Puppet({
+        var palindrom = this.palindrom = new Palindrom({
             useWebSocket: true
         });
-        puppet.addEventListener('patch-applied', receivedSpy);
+        palindrom.addEventListener('patch-applied', receivedSpy);
         var websocket = jasmine.WebSocket.spy.calls.mostRecent().returnValue;
         //open WS for changes
         websocket.open();
@@ -100,11 +100,11 @@ describe("OnLocal/RemoteChange", function() {
     it("should NOT fire patch-applied event for patches that were received, but not yet applied", function(done) {
         var appliedSpy = jasmine.createSpy("patch-applied");
 
-        var puppet = this.puppet = new Puppet({
+        var palindrom = this.palindrom = new Palindrom({
             useWebSocket: true
         });
-        puppet.addEventListener('patch-applied', appliedSpy);
-        puppet.queue.receive = function() {}; // just swallowing queue
+        palindrom.addEventListener('patch-applied', appliedSpy);
+        palindrom.queue.receive = function() {}; // just swallowing queue
         var websocket = jasmine.WebSocket.spy.calls.mostRecent().returnValue;
         //open WS for changes
         websocket.open();

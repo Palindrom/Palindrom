@@ -1,4 +1,4 @@
-describe("PuppetDOM - Links -", function () {
+describe("PalindromDOM - Links -", function () {
  
   function createLinkTest(href, parent) {
     parent = parent || document.body;
@@ -61,11 +61,11 @@ describe("PuppetDOM - Links -", function () {
   }
 
   describe('when attached to default node - `document.body`', function() {
-    var puppet;
+    var palindrom;
 
     beforeEach(function (done) {
       jasmine.Ajax.install();
-      puppet = new PuppetDOM({remoteUrl: '/'});
+      palindrom = new PalindromDOM({remoteUrl: '/'});
       jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
@@ -75,12 +75,12 @@ describe("PuppetDOM - Links -", function () {
     });
 
     afterEach(function () {
-      puppet.unobserve();
-      puppet.unlisten();
+      palindrom.unobserve();
+      palindrom.unlisten();
       jasmine.Ajax.uninstall();
     });
     it("its `.element` should point to `document.body`", function(){
-      expect(puppet.element).toEqual(document.body);
+      expect(palindrom.element).toEqual(document.body);
     });
     describe("should intercept links to use History API", function () {
       it("relative path", function () {
@@ -165,7 +165,7 @@ describe("PuppetDOM - Links -", function () {
       it("should change history state programatically", function () {
         var historySpy = spyOn(window.history, 'pushState');
 
-        puppet.morphUrl("/page2");
+        palindrom.morphUrl("/page2");
 
         expect(historySpy.calls.count()).toBe(1);
       });
@@ -174,8 +174,8 @@ describe("PuppetDOM - Links -", function () {
     it("should stop listening to DOM changes after `.unlisten()` was called", function(){
       var historySpy = spyOn(window.history, 'pushState');
 
-      puppet.unlisten();
-      createLinkTest('#will_not_get_caught_by_puppet');
+      palindrom.unlisten();
+      createLinkTest('#will_not_get_caught_by_palindrom');
 
       expect(historySpy.calls.count()).toBe(0);
     });
@@ -183,9 +183,9 @@ describe("PuppetDOM - Links -", function () {
     it("should start listening to DOM changes after `.listen()` was called", function(){
       var historySpy = spyOn(window.history, 'pushState');
 
-      puppet.unlisten();
-      puppet.listen();
-      createLinkTest('#will_not_get_caught_by_puppet');
+      palindrom.unlisten();
+      palindrom.listen();
+      createLinkTest('#will_not_get_caught_by_palindrom');
 
       expect(historySpy.calls.count()).toBe(1);
     });
@@ -194,21 +194,21 @@ describe("PuppetDOM - Links -", function () {
 
 
   describe('when attached to specific node', function() {
-    var puppet, puppetB, puppetNode, nodeB;
+    var palindrom, palindromB, palindromNode, nodeB;
 
     beforeEach(function (done) {
       jasmine.Ajax.install();
-      puppetNode = document.createElement("DIV");
-      document.body.appendChild(puppetNode);
+      palindromNode = document.createElement("DIV");
+      document.body.appendChild(palindromNode);
       nodeB = document.createElement("DIV");
       document.body.appendChild(nodeB);
-      puppet = new PuppetDOM({remoteUrl: '/', listenTo: puppetNode});
+      palindrom = new PalindromDOM({remoteUrl: '/', listenTo: palindromNode});
       jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
         "contentType": 'application/json',
         "responseText": '{"hello": "world"}'
       });
-      // puppetB = new PuppetDOM({remoteUrl: '/', listenTo: nodeB});
+      // palindromB = new PalindromDOM({remoteUrl: '/', listenTo: nodeB});
       // jasmine.Ajax.requests.mostRecent().respondWith({
       //   "status": 200,
       //   "contentType": 'application/json',
@@ -218,8 +218,8 @@ describe("PuppetDOM - Links -", function () {
     });
 
     afterEach(function () {
-      puppet.unobserve();
-      puppet.unlisten();
+      palindrom.unobserve();
+      palindrom.unlisten();
       jasmine.Ajax.uninstall();
     });
     describe("should intercept child links to use History API", function () {
@@ -227,7 +227,7 @@ describe("PuppetDOM - Links -", function () {
         var historySpy = spyOn(window.history, 'pushState');
 
         var href = 'test_a';
-        createLinkTest(href, puppetNode);
+        createLinkTest(href, palindromNode);
 
         expect(historySpy.calls.count()).toBe(1);
       });
@@ -235,7 +235,7 @@ describe("PuppetDOM - Links -", function () {
       it("relative path (nested)", function () {
         var historySpy = spyOn(window.history, 'pushState');
         var href = 'test_b';
-        createLinkTestNested(href, puppetNode);
+        createLinkTestNested(href, palindromNode);
         expect(historySpy.calls.count()).toBe(1);
       });
 
@@ -243,7 +243,7 @@ describe("PuppetDOM - Links -", function () {
         setTimeout(function () { //wait for platform.js ready
           var historySpy = spyOn(window.history, 'pushState');
           var href = 'test_c';
-          createLinkTestNestedShadowDOM(href, puppetNode);
+          createLinkTestNestedShadowDOM(href, palindromNode);
           setTimeout(function(){
             expect(historySpy.calls.count()).toBe(1);
             done();
@@ -255,7 +255,7 @@ describe("PuppetDOM - Links -", function () {
         var historySpy = spyOn(window.history, 'pushState');
 
         var href = '/test';
-        createLinkTest(href, puppetNode);
+        createLinkTest(href, palindromNode);
 
         expect(historySpy.calls.count()).toBe(1);
       });
@@ -264,7 +264,7 @@ describe("PuppetDOM - Links -", function () {
         var historySpy = spyOn(window.history, 'pushState');
 
         var href = window.location.protocol + '//' + window.location.host + '/test'; //http://localhost:8888/test
-        createLinkTest(href, puppetNode);
+        createLinkTest(href, palindromNode);
 
         expect(historySpy.calls.count()).toBe(1);
       });
@@ -324,7 +324,7 @@ describe("PuppetDOM - Links -", function () {
 
         var port = window.location.port === '80' || window.location.port === '' ? '8080' : '80';
         var href = window.location.protocol + '//' + window.location.hostname + ':' + port + '/test'; //http://localhost:88881/test
-        createLinkTest(href, puppetNode);
+        createLinkTest(href, palindromNode);
 
         expect(historySpy.calls.count()).toBe(0);
       });
@@ -334,7 +334,7 @@ describe("PuppetDOM - Links -", function () {
 
         var protocol = window.location.protocol === 'http:' ? 'https:' : 'http:';
         var href = protocol + '//' + window.location.host + '/test'; //https://localhost:8888/test
-        createLinkTest(href, puppetNode);
+        createLinkTest(href, palindromNode);
 
         expect(historySpy.calls.count()).toBe(0);
       });
@@ -344,7 +344,7 @@ describe("PuppetDOM - Links -", function () {
       it("should change history state programatically", function () {
         var historySpy = spyOn(window.history, 'pushState');
 
-        puppet.morphUrl("/page2");
+        palindrom.morphUrl("/page2");
 
         expect(historySpy.calls.count()).toBe(1);
       });
@@ -353,8 +353,8 @@ describe("PuppetDOM - Links -", function () {
     it("should stop listening to DOM changes after `.unlisten()` was called", function(){
       var historySpy = spyOn(window.history, 'pushState');
 
-      puppet.unlisten();
-      createLinkTest('#will_not_get_caught_by_puppet', puppetNode);
+      palindrom.unlisten();
+      createLinkTest('#will_not_get_caught_by_palindrom', palindromNode);
 
       expect(historySpy.calls.count()).toBe(0);
     });
@@ -362,9 +362,9 @@ describe("PuppetDOM - Links -", function () {
     it("should start listening to DOM changes after `.listen()` was called", function(){
       var historySpy = spyOn(window.history, 'pushState');
 
-      puppet.unlisten();
-      puppet.listen();
-      createLinkTest('#will_not_get_caught_by_puppet', puppetNode);
+      palindrom.unlisten();
+      palindrom.listen();
+      createLinkTest('#will_not_get_caught_by_palindrom', palindromNode);
 
       expect(historySpy.calls.count()).toBe(1);
     });

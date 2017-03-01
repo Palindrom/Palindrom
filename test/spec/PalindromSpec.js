@@ -1,10 +1,10 @@
-describe("Puppet", function () {
+describe("Palindrom", function () {
   beforeEach(function () {
     jasmine.Ajax.install();
   });
 
   afterEach(function () {
-    this.puppet.unobserve();
+    this.palindrom.unobserve();
     jasmine.Ajax.uninstall();
   });
 
@@ -13,7 +13,7 @@ describe("Puppet", function () {
     it("should call callback with an object as single parameter", function (done) {
       var initSpy = jasmine.createSpy();
 
-      this.puppet = new Puppet({callback: initSpy});
+      this.palindrom = new Palindrom({callback: initSpy});
 
       jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
@@ -30,7 +30,7 @@ describe("Puppet", function () {
     it("should accept a JSON that has an empty string as a key (which is valid)", function (done) {
       var initSpy = jasmine.createSpy();
 
-      this.puppet = new Puppet({callback: initSpy});
+      this.palindrom = new Palindrom({callback: initSpy});
       var that = this;
 
       jasmine.Ajax.requests.mostRecent().respondWith({
@@ -41,7 +41,7 @@ describe("Puppet", function () {
 
       setTimeout(function () {
         expect(initSpy).toHaveBeenCalledWith(jasmine.any(Object));
-        expect(that.puppet.obj[""].hola).toBe("mundo");
+        expect(that.palindrom.obj[""].hola).toBe("mundo");
         done();
       }, 1); //promise shim resolves after 1 ms
     });
@@ -52,7 +52,7 @@ describe("Puppet", function () {
     it("should make a XHR request on init", function (done) {
       var initSpy = jasmine.createSpy();
 
-      this.puppet = new Puppet({remoteUrl: '/test', callback: initSpy});
+      this.palindrom = new Palindrom({remoteUrl: '/test', callback: initSpy});
 
       jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
@@ -70,7 +70,7 @@ describe("Puppet", function () {
       var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
       var obj;
 
-      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
+      this.palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
 
         checkWhenReady();
@@ -110,7 +110,7 @@ describe("Puppet", function () {
       var obj;
       var that = this;
 
-      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
+      this.palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
 
         checkWhenReady();
@@ -134,7 +134,7 @@ describe("Puppet", function () {
           expect(patchSpy.calls.count()).toBe(2);
           expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"galaxy"}]');
 
-          that.puppet.unobserve();
+          that.palindrom.unobserve();
 
           jasmine.Ajax.requests.mostRecent().respondWith({
             "status": 200,
@@ -153,7 +153,7 @@ describe("Puppet", function () {
       var obj;
       var that = this;
 
-      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
+      this.palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
 
         checkWhenReady();
@@ -175,7 +175,7 @@ describe("Puppet", function () {
           expect(patchSpy.calls.count()).toBe(2);
           expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"galaxy"}]');
 
-          that.puppet.unobserve();
+          that.palindrom.unobserve();
 
           jasmine.Ajax.requests.mostRecent().respondWith({
             "status": 200,
@@ -183,7 +183,7 @@ describe("Puppet", function () {
             "responseText": '[{"op":"replace","path":"/hello","value":"universe"}]'
           });
 
-          that.puppet.observe();
+          that.palindrom.observe();
           obj.hello = "cosmos";
           triggerMouseup();
 

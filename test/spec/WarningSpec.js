@@ -4,7 +4,7 @@ describe("Warning", function () {
   });
 
   afterEach(function () {
-    this.puppet.unobserve();
+    this.palindrom.unobserve();
     jasmine.Ajax.uninstall();
   });
 
@@ -14,7 +14,7 @@ describe("Warning", function () {
       var consoleSpy = spyOn(window.console, 'warn');
       var obj;
 
-      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
+      this.palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
       }});
 
@@ -35,7 +35,7 @@ describe("Warning", function () {
         });
         expect(obj.hello).toBe("universe");
         expect(consoleSpy.calls.count()).toBeGreaterThan(0);
-        expect(consoleSpy.calls.allArgs().map(function(a){return a[0]})).toContain('PuppetJs warning: Server pushed patch that replaces the object root ([{"op":"replace","path":"","value":{"hello":"universe"}}])');
+        expect(consoleSpy.calls.allArgs().map(function(a){return a[0]})).toContain('Palindrom warning: Server pushed patch that replaces the object root ([{"op":"replace","path":"","value":{"hello":"universe"}}])');
         done();
       }, 1);
     });
@@ -44,10 +44,10 @@ describe("Warning", function () {
       var consoleSpy = spyOn(window.console, 'warn');
       var obj;
 
-      this.puppet = new Puppet({remoteUrl: '/test', callback: function (myObj) {
+      this.palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
       }});
-      this.puppet.debug = false;
+      this.palindrom.debug = false;
 
       jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
