@@ -519,8 +519,13 @@
    * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
    * @param {Object} [options] map of arguments. See README.md for description
    */
-  function Palindrom(options) {
-    options || (options={});
+  function Palindrom(options) {    
+    if (typeof options !== "object") {
+            throw new Error("'options' is not an object");
+      }
+    if (!options.remoteUrl) {
+          throw new Error('remoteUrl is required');
+    }
     this.jsonpatch = options.jsonpatch || this.jsonpatch;
     this.debug = options.debug != undefined ? options.debug : true;
 

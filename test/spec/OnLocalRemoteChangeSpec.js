@@ -45,7 +45,7 @@ describe("OnLocal/RemoteChange", function() {
     it("should call onRemoteChange callback for applied patches", function(done) {
         var receivedSpy = jasmine.createSpy("onRemoteChange");
 
-        var palindrom = this.palindrom = new Palindrom({
+        var palindrom = this.palindrom = new Palindrom({remoteUrl: window.location.href, 
             useWebSocket: true,
             onRemoteChange: receivedSpy
         });
@@ -73,7 +73,7 @@ describe("OnLocal/RemoteChange", function() {
     it("should fire patch-applied event for applied patches", function(done) {
         var receivedSpy = jasmine.createSpy("patch-applied");
 
-        var palindrom = this.palindrom = new Palindrom({
+        var palindrom = this.palindrom = new Palindrom({remoteUrl: window.location.href, 
             useWebSocket: true
         });
         palindrom.addEventListener('patch-applied', receivedSpy);
@@ -100,7 +100,7 @@ describe("OnLocal/RemoteChange", function() {
     it("should NOT fire patch-applied event for patches that were received, but not yet applied", function(done) {
         var appliedSpy = jasmine.createSpy("patch-applied");
 
-        var palindrom = this.palindrom = new Palindrom({
+        var palindrom = this.palindrom = new Palindrom({remoteUrl: window.location.href, 
             useWebSocket: true
         });
         palindrom.addEventListener('patch-applied', appliedSpy);

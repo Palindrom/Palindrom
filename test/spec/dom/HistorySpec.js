@@ -3,7 +3,7 @@ describe("History", function () {
   beforeEach(function () {
     //wsSpy = jasmine.createSpy();
     jasmine.Ajax.install();
-    palindrom = new PalindromDOM();
+    palindrom = new PalindromDOM({remoteUrl: window.location.href});
     // stub initial HTTP request
     jasmine.Ajax.stubRequest(window.location.href).andReturn( TestResponses.defaultInit.success );
   });
@@ -35,7 +35,7 @@ describe("Backward compatibility, History with PuppetDOM constructor", function 
   beforeEach(function () {
     //wsSpy = jasmine.createSpy();
     jasmine.Ajax.install();
-    palindrom = new PuppetDOM();
+    palindrom = new PuppetDOM({remoteUrl: window.location.href});
     // stub initial HTTP request
     jasmine.Ajax.stubRequest(window.location.href).andReturn( TestResponses.defaultInit.success );
   });

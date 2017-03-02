@@ -12,7 +12,7 @@ describe("Palindrom", function () {
     it("should work if PuppetJs constructor is used", function (done) {
       var initSpy = jasmine.createSpy();
 
-      this.palindrom = new PuppetJs({callback: initSpy});
+      this.palindrom = new PuppetJs({remoteUrl: window.location.href, callback: initSpy});
 
       jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
@@ -81,7 +81,7 @@ describe("Palindrom", function () {
     it("should call callback with an object as single parameter", function (done) {
       var initSpy = jasmine.createSpy();
 
-      this.palindrom = new Palindrom({callback: initSpy});
+      this.palindrom = new Palindrom({remoteUrl: window.location.href, callback: initSpy});
 
       jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
@@ -98,7 +98,7 @@ describe("Palindrom", function () {
     it("should accept a JSON that has an empty string as a key (which is valid)", function (done) {
       var initSpy = jasmine.createSpy();
 
-      this.palindrom = new Palindrom({callback: initSpy});
+      this.palindrom = new Palindrom({remoteUrl: window.location.href, callback: initSpy});
       var that = this;
 
       jasmine.Ajax.requests.mostRecent().respondWith({

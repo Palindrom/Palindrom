@@ -13,7 +13,7 @@
     it("should call onPatchSent for initial requests", function (done) {
         var sentSpy = jasmine.createSpy();
 
-        this.palindrom = new Palindrom({
+        this.palindrom = new Palindrom({remoteUrl: window.location.href, 
             onPatchSent: sentSpy
         });
 
@@ -96,7 +96,7 @@
             var WSSpy = jasmine.WebSocket.spy;
             var receivedSpy = jasmine.createSpy("onPatchReceived");
 
-            var palindrom = this.palindrom = new Palindrom({
+            var palindrom = this.palindrom = new Palindrom({remoteUrl: window.location.href, 
                 useWebSocket: true,
                 onPatchReceived: receivedSpy
             });

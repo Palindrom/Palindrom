@@ -27,7 +27,7 @@ describe("ValidatePatches", function () {
     };
     var sequence = [];
     var errors = [];
-    var palindrom = new Palindrom();
+    var palindrom = new Palindrom({remoteUrl: window.location.href});
     // var palindrom = Object.create(Palindrom.prototype);
 
     palindrom.debug = true;
@@ -69,7 +69,7 @@ describe("ValidatePatches", function () {
     var palindromMock = document.createElement('DIV');
     // fixme! EventDispatcher and entire prototype chain is lost.
     //PalindromDOM.apply(palindromMock);
-    new PalindromDOM(palindromMock);
+    new PalindromDOM({remoteUrl: window.location.href, listenTo: palindromMock});
     extend(palindromMock, Palindrom.prototype);
     extend(palindromMock, PalindromDOM.prototype);
     document.body.appendChild(palindromMock);

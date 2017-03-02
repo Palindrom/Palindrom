@@ -21,7 +21,7 @@ describe("WebSocket", function () {
 
           var WSSpy = jasmine.WebSocket.spy.and.callThroughConstructor();
 
-          this.palindrom = new Palindrom({useWebSocket: true});
+          this.palindrom = new Palindrom({remoteUrl: window.location.href, useWebSocket: true});
           expect(WSSpy).toHaveBeenCalledWith("ws://" + window.location.host + "/__default/testId001");
           expect(WSSpy.calls.mostRecent().returnValue.readyState).toEqual(WebSocket.CONNECTING); // 0
           done();
@@ -126,7 +126,7 @@ describe("WebSocket", function () {
       var WSSpy = jasmine.WebSocket.spy.and.callThroughConstructor();
       var sendSpy = spyOn( jasmine.WebSocket.oryginalWebSocket.prototype, "send").and.callThrough();
 
-        this.palindrom = new Palindrom({useWebSocket: true});
+        this.palindrom = new Palindrom({remoteUrl: window.location.href, useWebSocket: true});
         this.palindrom.obj.hello = "galaxy";
         triggerMouseup();
 
@@ -142,7 +142,7 @@ describe("WebSocket", function () {
 
       var WSSpy = jasmine.WebSocket.spy;
 
-        this.palindrom = new Palindrom({useWebSocket: true, callback: onDataReady});
+        this.palindrom = new Palindrom({remoteUrl: window.location.href, useWebSocket: true, callback: onDataReady});
         function onDataReady(){
           // tested code
           // // change the data once it was fetched but before WS instance was even created
@@ -235,7 +235,7 @@ describe("WebSocket", function () {
 
       var WSSpy = jasmine.WebSocket.spy;
 
-        this.palindrom = new Palindrom({useWebSocket: true, callback: onDataReady});
+        this.palindrom = new Palindrom({remoteUrl: window.location.href, useWebSocket: true, callback: onDataReady});
         function onDataReady(palindromObj){
           // wait for WS to get created
           setTimeout(function(){

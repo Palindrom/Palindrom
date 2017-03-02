@@ -10,7 +10,12 @@
    * @param {Object} [options] map of arguments. See README.md for description
    */
   var PalindromDOM = function (options){
-    options || (options={});
+    if (typeof options !== "object") {
+            throw new Error("'options' is not an object");
+      }
+    if (!options.remoteUrl) {
+          throw new Error('remoteUrl is required');
+    }
     var onDataReady = options.callback;
     this.element = options.listenTo || document.body;
     var clickHandler = this.clickHandler.bind(this);
