@@ -24,8 +24,8 @@
       this.listening = true;
 
       this.element.addEventListener('click', clickHandler);
-      window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
-      this.element.addEventListener('puppet-redirect-pushstate', this.historyHandler);
+      window.addEventListener('popstate', this.historyHandler.bind(this)); //better here than in constructor, because Chrome triggers popstate on page load
+      this.element.addEventListener('puppet-redirect-pushstate', this.historyHandler.bind(this));
     };
     this.unlisten = function(){
       this.listening = false;

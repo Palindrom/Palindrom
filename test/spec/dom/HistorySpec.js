@@ -28,5 +28,36 @@ describe("History", function () {
     });
 
   });
+  /// init
+  describe("should send JSON Patch HTTP request once history state get changed", function () {
+    it("by dispatching `puppet-redirect-pushstate` event", function (done) {
+      var currLoc = window.location.href;
+
+      history.pushState(null, null, '/newUrl-puppet');
+      
+      document.body.dispatchEvent(
+                    new CustomEvent(
+                        'puppet-redirect-pushstate',
+                        {
+                            "detail": {"url" : '/newUrl-puppet'},
+                            "bubbles": true
+                        }
+                    )
+                );
+
+      setTimeout(function () {
+        var request = jasmine.Ajax.requests.mostRecent();
+        expect(new URL(request.url).pathname).toEqual("/newUrl-puppet");
+        expect(window.location.pathname).toEqual("/newUrl-puppet");
+        
+        //to restore the original working URL
+        history.pushState(null, null, currLoc);
+        done();
+        
+      }, 1);
+    });
+
+  });
 
 });
+
