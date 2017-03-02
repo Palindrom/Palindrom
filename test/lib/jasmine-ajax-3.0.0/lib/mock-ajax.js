@@ -219,7 +219,13 @@ getJasmineRequireObj().AjaxFakeRequest = function() {
 
         var stub = stubTracker.findStub(this.url, data, this.method);
         if (stub) {
-          this.respondWith(stub);
+          /* apparently, Jasmine is returning synchronously. And because Palindrom
+          calls `unobserve` when sending patches, the response from Jasmine is going
+          unnoticed, here is a little delay that fixes the issue */
+          var that = this;
+          setTimeout(function() {
+              that.respondWith(stub);
+          }, 10);
         }
       },
 
