@@ -14,7 +14,7 @@
     var onDataReady = options.callback;
     this.element = options.listenTo || document.body;
     var clickHandler = this.clickHandler.bind(this);
-    this.historyHandler = this.historyHandler.bind(this);
+    var historyHandler = this.historyHandler.bind(this);
 
     options.callback = function addDOMListeners(obj){
       this.listen();
@@ -24,8 +24,8 @@
       this.listening = true;
 
       this.element.addEventListener('click', clickHandler);
-      window.addEventListener('popstate', this.historyHandler.bind(this)); //better here than in constructor, because Chrome triggers popstate on page load
-      this.element.addEventListener('puppet-redirect-pushstate', this.historyHandler.bind(this));
+      window.addEventListener('popstate', historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
+      this.element.addEventListener('puppet-redirect-pushstate', historyHandler);
     };
     this.unlisten = function(){
       this.listening = false;
