@@ -14,7 +14,10 @@
     var onDataReady = options.callback;
     this.element = options.listenTo || document.body;
     var clickHandler = this.clickHandler.bind(this);
-    var historyHandler = this.historyHandler.bind(this);
+    this.historyHandler = this.historyHandler.bind(this);
+
+    /* no need to wait for data to be ready to handle callback */
+    this.element.addEventListener('puppet-redirect-pushstate', this.historyHandler);
 
     options.callback = function addDOMListeners(obj){
       this.listen();
@@ -24,8 +27,7 @@
       this.listening = true;
 
       this.element.addEventListener('click', clickHandler);
-      window.addEventListener('popstate', historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
-      this.element.addEventListener('puppet-redirect-pushstate', historyHandler);
+      window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
     };
     this.unlisten = function(){
       this.listening = false;
@@ -34,9 +36,7 @@
       window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
       this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandler);
     };
-
     //TODO move fallback to window.location.href from PuppetNetworkChannel to here (PuppetDOM)
-
     Puppet.call(this, options);
   };
   PuppetDOM.prototype = Object.create(Puppet.prototype);
