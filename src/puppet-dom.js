@@ -16,7 +16,7 @@
     var clickHandler = this.clickHandler.bind(this);
     this.historyHandler = this.historyHandler.bind(this);
 
-    /* no need to wait for data to be ready to handle callback */
+    /* no need to wait for data to be ready to handle the event */
     this.element.addEventListener('puppet-redirect-pushstate', this.historyHandler);
 
     options.callback = function addDOMListeners(obj){
