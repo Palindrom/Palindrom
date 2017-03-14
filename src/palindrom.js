@@ -70,23 +70,16 @@
 
   /**
    * Defines at given object a WS URL out of given HTTP remoteURL location
-   * @param  {Object} obj       Where to define the wsURL property
+   * @param  {Object} obj       Where to define the wsUrl property
    * @param  {String} remoteUrl HTTP remote address
    * @return {String}           WS address
    */
   function defineWebSocketURL(obj, remoteUrl){
-    var url;
-    if(remoteUrl){
-      url = new URL(remoteUrl, window.location);
-    } else {
-      url = new URL(window.location.href);
-    }
-    // use exactly same URL, switch only protocols
-    url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-    return Object.defineProperty(obj, 'wsURL', {
-      value: url
-    });
 
+    /* replace 'http' strictly in the beginning of the string,
+    this covers http and https */
+    var url = remoteUrl.replace(/^http/i, 'ws');
+    obj.wsUrl = url;
   }
 
   /**
@@ -232,7 +225,7 @@
 
     this.remoteUrl = remoteUrl;
 
-    // define wsURL if needed
+    // define wsUrl if needed
     if(useWebSocket){
       defineWebSocketURL(this, remoteUrl);
     }
@@ -259,8 +252,8 @@
             };
             that._ws.close();
           }
-        // define wsURL if needed
-        } else if(!that.wsURL) {
+        // define wsUrl if needed
+        } else if(!that.wsUrl) {
           defineWebSocketURL(this, remoteUrl);
         }
         return useWebSocket;
@@ -337,11 +330,12 @@
    */
   PalindromNetworkChannel.prototype.webSocketUpgrade = function (callback) {
     var that = this;
+    
     // resolve session path given in referrer in the context of remote WS URL
     var upgradeURL = (
       new URL(
         this.remoteUrl.pathname,
-        this.wsURL
+        this.wsUrl
         )
       ).href;
     // ws[s]://[user[:pass]@]remote.host[:port]/__[sessionid]/
@@ -436,7 +430,6 @@
       }
     };
     req.onerror = that.onConnectionError.bind(that);
-    url = url || window.location.href;
     if (data) {
       method = "PATCH";
       req.open(method, url, true);
