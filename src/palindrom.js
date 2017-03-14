@@ -230,13 +230,7 @@
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.palindrom = palindrom;
 
-    if (remoteUrl instanceof URL) {
     this.remoteUrl = remoteUrl;
-    } else if (remoteUrl) {
-        this.remoteUrl = new URL(remoteUrl, window.location.href);
-    } else {
-        this.remoteUrl = new URL(window.location.href);
-    }
 
     // define wsURL if needed
     if(useWebSocket){
@@ -274,10 +268,10 @@
     });
   }
   PalindromNetworkChannel.prototype.establish = function(bootstrap){
-    establish(this, this.remoteUrl.href, null, bootstrap);
+    establish(this, this.remoteUrl, null, bootstrap);
   };
   PalindromNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
-    establish(this, this.remoteUrl.href + "/reconnect", JSON.stringify(pending), bootstrap);
+    establish(this, this.remoteUrl + "/reconnect", JSON.stringify(pending), bootstrap);
   };
 
   // TODO: auto-configure here #38 (tomalec)
@@ -307,7 +301,7 @@
         this._ws.send(msg);
         that.onSend(msg, that._ws.url, "WS");
     } else {
-      var url = this.remoteUrl.href;
+      var url = this.remoteUrl;
       this.xhr(url, 'application/json-patch+json', msg, function (res, method) {
           that.onReceive(res.responseText, url, method);
         });
@@ -404,11 +398,11 @@
 
   // TODO:(tomalec)[cleanup] hide from public API.
   PalindromNetworkChannel.prototype.setRemoteUrl = function (remoteUrl) {
-    if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl.href != remoteUrl) {
+    if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
         throw new Error("Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.remoteUrl + "\nNew session ID: " + remoteUrl);
     }
     this.remoteUrlSet = true;
-    this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
+    this.remoteUrl = new URL(remoteUrl, this.remoteUrl);
   };
 
   // TODO:(tomalec)[cleanup] hide from public API.
@@ -520,9 +514,9 @@
    * @param {Object} [options] map of arguments. See README.md for description
    */
   function Palindrom(options) {    
-    if (typeof options !== "object") {
-            throw new Error("'options' is not an object");
-      }
+    if(typeof options !== "object") {
+      throw new Error('Palindrom constructor requires an object argument.');
+    }
     if (!options.remoteUrl) {
           throw new Error('remoteUrl is required');
     }
