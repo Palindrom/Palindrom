@@ -26,8 +26,7 @@
       this.historyHandler();
     }.bind(this);
 
-    /* in some cases, people emit redirect requests before `listen` is called */
-    
+    /* in some cases, people emit redirect requests before `listen` is called */    
     this.element.addEventListener('palindrom-redirect-pushstate', this.historyHandler);      
     /* backward compatibility: for people using old puppet-redirect */
     this.element.addEventListener('puppet-redirect-pushstate', this.historyHandlerDeprecated);
@@ -36,6 +35,7 @@
       this.listen();
       onDataReady && onDataReady.call(this, obj);
     };
+    
     this.listen = function(){
       this.listening = true;
       this.element.addEventListener('click', clickHandler);
