@@ -75,7 +75,6 @@
    * @return {String}           WS address
    */
   function defineWebSocketURL(obj, remoteUrl){
-
     /* replace 'http' strictly in the beginning of the string,
     this covers http and https */
     var url = remoteUrl.replace(/^http/i, 'ws');
@@ -223,11 +222,11 @@
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.palindrom = palindrom;
 
-    this.remoteUrl = remoteUrl;
+    this.remoteUrl = new URL(remoteUrl, window.location.href);
 
     // define wsUrl if needed
     if(useWebSocket){
-      defineWebSocketURL(this, remoteUrl);
+      defineWebSocketURL(this, this.remoteUrl.href);
     }
 
     onReceive && (this.onReceive = onReceive);
@@ -254,17 +253,17 @@
           }
         // define wsUrl if needed
         } else if(!that.wsUrl) {
-          defineWebSocketURL(this, remoteUrl);
+          defineWebSocketURL(this, newValue);
         }
         return useWebSocket;
       }
     });
   }
   PalindromNetworkChannel.prototype.establish = function(bootstrap){
-    establish(this, this.remoteUrl, null, bootstrap);
+    establish(this, this.remoteUrl.href, null, bootstrap);
   };
   PalindromNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
-    establish(this, this.remoteUrl + "/reconnect", JSON.stringify(pending), bootstrap);
+    establish(this, this.remoteUrl.href + "/reconnect", JSON.stringify(pending), bootstrap);
   };
 
   // TODO: auto-configure here #38 (tomalec)
@@ -294,7 +293,7 @@
         this._ws.send(msg);
         that.onSend(msg, that._ws.url, "WS");
     } else {
-      var url = this.remoteUrl;
+      var url = this.remoteUrl.href;
       this.xhr(url, 'application/json-patch+json', msg, function (res, method) {
           that.onReceive(res.responseText, url, method);
         });
