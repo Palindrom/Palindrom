@@ -70,23 +70,16 @@
 
   /**
    * Defines at given object a WS URL out of given HTTP remoteURL location
-   * @param  {Object} obj       Where to define the wsURL property
+   * @param  {Object} obj       Where to define the wsUrl property
    * @param  {String} remoteUrl HTTP remote address
    * @return {String}           WS address
    */
   function defineWebSocketURL(obj, remoteUrl){
-    var url;
-    if(remoteUrl){
-      url = new URL(remoteUrl, window.location);
-    } else {
-      url = new URL(window.location.href);
-    }
-    // use exactly same URL, switch only protocols
-    url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-    return Object.defineProperty(obj, 'wsURL', {
-      value: url
-    });
 
+    /* replace 'http' strictly in the beginning of the string,
+    this covers http and https */
+    var url = remoteUrl.replace(/^http/i, 'ws');
+    obj.wsUrl = url;
   }
 
   /**
@@ -230,15 +223,9 @@
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.palindrom = palindrom;
 
-    if (remoteUrl instanceof URL) {
     this.remoteUrl = remoteUrl;
-    } else if (remoteUrl) {
-        this.remoteUrl = new URL(remoteUrl, window.location.href);
-    } else {
-        this.remoteUrl = new URL(window.location.href);
-    }
 
-    // define wsURL if needed
+    // define wsUrl if needed
     if(useWebSocket){
       defineWebSocketURL(this, remoteUrl);
     }
@@ -265,8 +252,8 @@
             };
             that._ws.close();
           }
-        // define wsURL if needed
-        } else if(!that.wsURL) {
+        // define wsUrl if needed
+        } else if(!that.wsUrl) {
           defineWebSocketURL(this, remoteUrl);
         }
         return useWebSocket;
@@ -274,10 +261,10 @@
     });
   }
   PalindromNetworkChannel.prototype.establish = function(bootstrap){
-    establish(this, this.remoteUrl.href, null, bootstrap);
+    establish(this, this.remoteUrl, null, bootstrap);
   };
   PalindromNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
-    establish(this, this.remoteUrl.href + "/reconnect", JSON.stringify(pending), bootstrap);
+    establish(this, this.remoteUrl + "/reconnect", JSON.stringify(pending), bootstrap);
   };
 
   // TODO: auto-configure here #38 (tomalec)
@@ -307,7 +294,7 @@
         this._ws.send(msg);
         that.onSend(msg, that._ws.url, "WS");
     } else {
-      var url = this.remoteUrl.href;
+      var url = this.remoteUrl;
       this.xhr(url, 'application/json-patch+json', msg, function (res, method) {
           that.onReceive(res.responseText, url, method);
         });
@@ -343,11 +330,12 @@
    */
   PalindromNetworkChannel.prototype.webSocketUpgrade = function (callback) {
     var that = this;
+    
     // resolve session path given in referrer in the context of remote WS URL
     var upgradeURL = (
       new URL(
         this.remoteUrl.pathname,
-        this.wsURL
+        this.wsUrl
         )
       ).href;
     // ws[s]://[user[:pass]@]remote.host[:port]/__[sessionid]/
@@ -404,11 +392,11 @@
 
   // TODO:(tomalec)[cleanup] hide from public API.
   PalindromNetworkChannel.prototype.setRemoteUrl = function (remoteUrl) {
-    if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl.href != remoteUrl) {
+    if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
         throw new Error("Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.remoteUrl + "\nNew session ID: " + remoteUrl);
     }
     this.remoteUrlSet = true;
-    this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
+    this.remoteUrl = new URL(remoteUrl, this.remoteUrl);
   };
 
   // TODO:(tomalec)[cleanup] hide from public API.
@@ -442,7 +430,6 @@
       }
     };
     req.onerror = that.onConnectionError.bind(that);
-    url = url || window.location.href;
     if (data) {
       method = "PATCH";
       req.open(method, url, true);
@@ -514,12 +501,18 @@
     });
   }
 
+
   /**
    * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
    * @param {Object} [options] map of arguments. See README.md for description
    */
-  function Palindrom(options) {
-    options || (options={});
+  function Palindrom(options) {    
+    if(typeof options !== "object") {
+      throw new Error('Palindrom constructor requires an object argument.');
+    }
+    if (!options.remoteUrl) {
+          throw new Error('remoteUrl is required');
+    }
     this.jsonpatch = options.jsonpatch || this.jsonpatch;
     this.debug = options.debug != undefined ? options.debug : true;
 
@@ -802,5 +795,8 @@
     }
   };
 
-  global.Palindrom = Palindrom;
+  global.Palindrom = Palindrom;  
+  /* backward compatibility */
+  global.PuppetJs = Palindrom;
+
 })(window);

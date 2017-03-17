@@ -10,22 +10,41 @@
    * @param {Object} [options] map of arguments. See README.md for description
    */
   var PalindromDOM = function (options){
-    options || (options={});
+    if(typeof options !== "object") {
+      throw new Error('PalindromDOM constructor requires an object argument.');
+    }
+    if (!options.remoteUrl) {
+          throw new Error('remoteUrl is required');
+    }
     var onDataReady = options.callback;
     this.element = options.listenTo || document.body;
     var clickHandler = this.clickHandler.bind(this);
     this.historyHandler = this.historyHandler.bind(this);
 
+    this.historyHandlerDeprecated = function () {
+      console.warn("`puppet-redirect-pushstate` event is deprecated, please use `palindrom-redirect-pushstate`, if you're using `puppet-redirect`, please upgrade to `palindrom-redirect`");
+      this.historyHandler();
+    }.bind(this);
+
+    /* in some cases, people emit redirect requests before `listen` is called */    
+    this.element.addEventListener('palindrom-redirect-pushstate', this.historyHandler);      
+    /* backward compatibility: for people using old puppet-redirect */
+    this.element.addEventListener('puppet-redirect-pushstate', this.historyHandlerDeprecated);
+
     options.callback = function addDOMListeners(obj){
       this.listen();
       onDataReady && onDataReady.call(this, obj);
     };
+    
     this.listen = function(){
       this.listening = true;
-
       this.element.addEventListener('click', clickHandler);
       window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
+
       this.element.addEventListener('palindrom-redirect-pushstate', this.historyHandler);
+        
+      /* backward compatibility: for people using old puppet-redirect */
+      this.element.addEventListener('puppet-redirect-pushstate', this.historyHandlerDeprecated);
     };
     this.unlisten = function(){
       this.listening = false;
@@ -33,6 +52,9 @@
       this.element.removeEventListener('click', clickHandler);
       window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
       this.element.removeEventListener('palindrom-redirect-pushstate', this.historyHandler);
+      
+      /* backward compatibility: for people using old puppet-redirect */
+      this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandlerDeprecated);
     };
 
     //TODO move fallback to window.location.href from PalindromNetworkChannel to here (PalindromDOM)
@@ -115,6 +137,8 @@
     }
     return (elem.protocol == window.location.protocol && elem.host == window.location.host);
   };
+  /* backward compatibility */
+  global.PuppetDOM = PalindromDOM;  
 
   global.PalindromDOM = PalindromDOM;
 })(window);
