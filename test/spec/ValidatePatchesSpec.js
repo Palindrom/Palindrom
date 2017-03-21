@@ -95,7 +95,7 @@ describe("ValidatePatches", function () {
     var sequence = [
       {op: "replace", path: "/name/first", value: "Albert"}
     ];
-
+    var jsonpatch = new PalindromDOM({remoteUrl: window.location.href}).jsonpatch;
     var outgoingJsonpatch = Object.create(jsonpatch);
     outgoingJsonpatch.validator = function polyjuicePatchValidator(operation, index, tree, existingPathFragment) {
       jsonpatch.validator.call(outgoingJsonpatch, operation, index, tree, existingPathFragment);

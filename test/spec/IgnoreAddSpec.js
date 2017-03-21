@@ -1,6 +1,5 @@
 describe("IgnoreAdd", function () {
-  jsonpatch.intervals = [10];
-
+  
   beforeEach(function () {
     jasmine.Ajax.install();
   });
@@ -15,6 +14,7 @@ describe("IgnoreAdd", function () {
     this.palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
       obj = myObj;
     }});
+    this.palindrom.jsonpatch.intervals = [10];
     this.palindrom.ignoreAdd = /\/\$.+/;
 
     jasmine.Ajax.requests.mostRecent().respondWith({

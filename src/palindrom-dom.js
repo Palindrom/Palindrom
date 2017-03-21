@@ -2,8 +2,11 @@
  * (c) 2013 Joachim Wester
  * MIT license
  */
+if(typeof require !== 'undefined') {
+  var Palindrom = require('./palindrom');
+}
 
-(function (global) {
+var PalindromDOM = (function () {
   /**
    * PalindromDOM
    * @extends {Palindrom}
@@ -26,8 +29,8 @@
       this.historyHandler();
     }.bind(this);
 
-    /* in some cases, people emit redirect requests before `listen` is called */    
-    this.element.addEventListener('palindrom-redirect-pushstate', this.historyHandler);      
+    /* in some cases, people emit redirect requests before `listen` is called */
+    this.element.addEventListener('palindrom-redirect-pushstate', this.historyHandler);
     /* backward compatibility: for people using old puppet-redirect */
     this.element.addEventListener('puppet-redirect-pushstate', this.historyHandlerDeprecated);
 
@@ -35,14 +38,14 @@
       this.listen();
       onDataReady && onDataReady.call(this, obj);
     };
-    
+
     this.listen = function(){
       this.listening = true;
       this.element.addEventListener('click', clickHandler);
       window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
 
       this.element.addEventListener('palindrom-redirect-pushstate', this.historyHandler);
-        
+
       /* backward compatibility: for people using old puppet-redirect */
       this.element.addEventListener('puppet-redirect-pushstate', this.historyHandlerDeprecated);
     };
@@ -52,7 +55,7 @@
       this.element.removeEventListener('click', clickHandler);
       window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
       this.element.removeEventListener('palindrom-redirect-pushstate', this.historyHandler);
-      
+
       /* backward compatibility: for people using old puppet-redirect */
       this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandlerDeprecated);
     };
@@ -137,8 +140,21 @@
     }
     return (elem.protocol == window.location.protocol && elem.host == window.location.host);
   };
-  /* backward compatibility */
-  global.PuppetDOM = PalindromDOM;  
 
-  global.PalindromDOM = PalindromDOM;
-})(window);
+  /* backward compatibility, not sure if this is good practice */
+  if(typeof global === 'undefined') { var global = window };
+  global.PuppetDOM = PalindromDOM;
+  
+  /* Since we have Palindrom bundled,
+  let's expose it in case anyone needs it */
+  global.Puppet = Palindrom;
+  global.Palindrom = Palindrom;  
+
+  return PalindromDOM;
+})();
+
+if(typeof module !== 'undefined') {
+  module.exports = PalindromDOM;
+  module.exports.default = PalindromDOM;
+  module.exports.__esModule = true;
+}

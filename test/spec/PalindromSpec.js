@@ -9,10 +9,10 @@ describe("Palindrom", function () {
   });
 
   describe("backward compatibility", function () {
-    it("should work if PuppetJs constructor is used", function (done) {
+    it("should work if Puppet constructor is used", function (done) {
       var initSpy = jasmine.createSpy();
 
-      this.palindrom = new PuppetJs({remoteUrl: window.location.href, callback: initSpy});
+      this.palindrom = new Puppet({remoteUrl: window.location.href, callback: initSpy});
 
       jasmine.Ajax.requests.mostRecent().respondWith({
         "status": 200,
@@ -26,12 +26,12 @@ describe("Palindrom", function () {
       }, 1); //promise shim resolves after 1 ms
     });
 
-    it("should patch changes after observe() was called, USING PuppetJs constructor", function (done) {
+    it("should patch changes after observe() was called, USING Puppet constructor", function (done) {
       var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
       var obj;
       var that = this;
 
-      this.palindrom = new PuppetJs({remoteUrl: '/test', callback: function (myObj) {
+      this.palindrom = new Puppet({remoteUrl: '/test', callback: function (myObj) {
         obj = myObj;
 
         checkWhenReady();

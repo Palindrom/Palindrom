@@ -3,7 +3,15 @@
  * MIT license
  */
 
-(function (global) {
+if(typeof require !== 'undefined') {
+  var jsonpatch = require('fast-json-patch');
+  var JSONPatchQueueSynchronous = require('json-patch-queue').JSONPatchQueueSynchronous;
+  var JSONPatchQueue = require('json-patch-queue').JSONPatchQueue;
+  var JSONPatchOT = require('json-patch-ot');
+  var JSONPatchOTAgent = require('json-patch-ot-agent');
+}
+var Palindrom = (function () {
+
   /**
    * https://github.com/mrdoob/eventdispatcher.js
    * MIT license
@@ -329,7 +337,7 @@
    */
   PalindromNetworkChannel.prototype.webSocketUpgrade = function (callback) {
     var that = this;
-    
+
     // resolve session path given in referrer in the context of remote WS URL
     var upgradeURL = (
       new URL(
@@ -505,7 +513,7 @@
    * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
    * @param {Object} [options] map of arguments. See README.md for description
    */
-  function Palindrom(options) {    
+  function Palindrom(options) {
     if(typeof options !== "object") {
       throw new Error('Palindrom constructor requires an object argument.');
     }
@@ -615,7 +623,7 @@
     palindrom.dispatchEvent(errorEvent);
   };
 
-  Palindrom.prototype.jsonpatch = global.jsonpatch;
+  Palindrom.prototype.jsonpatch = jsonpatch;
 
   Palindrom.prototype.ping = function () {
     sendPatches(this, []); // sends empty message to server
@@ -759,7 +767,7 @@
   };
 
   Palindrom.prototype.showWarning = function (heading, description) {
-    if (this.debug && global.console && console.warn) {
+    if (this.debug && console && console.warn) {
       if (description) {
         heading += " (" + description + ")";
       }
@@ -793,9 +801,15 @@
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
     }
   };
+  /* backward compatibility, not sure if this is good practice */
+  if(typeof global === 'undefined') { var global = window };
+  global.Puppet = Palindrom;
 
-  global.Palindrom = Palindrom;  
-  /* backward compatibility */
-  global.PuppetJs = Palindrom;
+  return Palindrom;
+})();
 
-})(window);
+if(typeof module !== 'undefined') {
+  module.exports = Palindrom;
+  module.exports.default = Palindrom;
+  module.exports.__esModule = true;
+}
