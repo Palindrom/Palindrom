@@ -125,6 +125,8 @@ if(true) {
 }
 var Palindrom = (function () {
 
+  if(typeof global === 'undefined') { var global = window };
+
   /**
    * https://github.com/mrdoob/eventdispatcher.js
    * MIT license
@@ -880,7 +882,7 @@ var Palindrom = (function () {
   };
 
   Palindrom.prototype.showWarning = function (heading, description) {
-    if (this.debug && console && console.warn) {
+    if (this.debug && global.console && console.warn) {
       if (description) {
         heading += " (" + description + ")";
       }
@@ -914,8 +916,8 @@ var Palindrom = (function () {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
     }
   };
-  /* backward compatibility, not sure if this is good practice */
-  if(typeof global === 'undefined') { var global = window };
+  
+  /* backward compatibility */
   global.Puppet = Palindrom;
 
   return Palindrom;
