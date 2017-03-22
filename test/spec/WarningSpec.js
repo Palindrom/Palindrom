@@ -25,7 +25,7 @@ describe("Warning", function () {
       });
 
       obj.hello = "galaxy";
-      triggerMouseup();
+
 
       setTimeout(function () { //wait for xhr
         jasmine.Ajax.requests.mostRecent().respondWith({
@@ -56,7 +56,7 @@ describe("Warning", function () {
       });
 
       obj.hello = "galaxy";
-      triggerMouseup();
+
 
       setTimeout(function () { //wait for xhr
         jasmine.Ajax.requests.mostRecent().respondWith({

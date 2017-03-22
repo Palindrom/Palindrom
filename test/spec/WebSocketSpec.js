@@ -77,7 +77,7 @@ describe("WebSocket", function () {
               onSocketStateChanged: function (state, url) {
                   if (state == 1) {
                       palindrom1.obj.hello = "world2";
-                      triggerMouseup();
+
                   }
               },
               onPatchSent: function (data, url) {
@@ -103,7 +103,7 @@ describe("WebSocket", function () {
               onSocketStateChanged: function (state, url) {
                   if (state == 1) {
                       palindrom2.obj.hello = "world3";
-                      triggerMouseup();
+
                   }
               },
               onPatchSent: function (data, url) {
@@ -128,7 +128,7 @@ describe("WebSocket", function () {
 
         this.palindrom = new Palindrom({remoteUrl: window.location.href, useWebSocket: true});
         this.palindrom.obj.hello = "galaxy";
-        triggerMouseup();
+
 
       expect(WSSpy.calls.mostRecent().returnValue.readyState).toEqual(WebSocket.CONNECTING); // 0
       expect(sendSpy).not.toHaveBeenCalled();
@@ -148,7 +148,7 @@ describe("WebSocket", function () {
           // // change the data once it was fetched but before WS instance was even created
           var palindromObj = this.obj;
           palindromObj.hello = "galaxy";
-          triggerMouseup();
+
 
           // change object later
           setTimeout(function () {
@@ -156,7 +156,7 @@ describe("WebSocket", function () {
             expect(jasmine.Ajax.requests.mostRecent().params).toEqual(JSON.stringify([{ op: "replace", path: "/hello", value: "galaxy" }]));
 
             palindromObj.foo = "bar";
-            triggerMouseup();
+
 
             setTimeout(function () {
               //The patch should be send immediately as WS connection is not yet established
@@ -166,7 +166,7 @@ describe("WebSocket", function () {
               websocket.open();
 
               palindromObj.bar = "foo";
-              triggerMouseup();
+
 
               setTimeout(function () {
                 //Patches should be send over WS once connection established
@@ -204,12 +204,12 @@ describe("WebSocket", function () {
             var websocket = WSSpy.calls.mostRecent().returnValue;
             expect(websocket.readyState).toEqual(WebSocket.CONNECTING); // 0
             palindromObj.hello = "galaxy";
-            triggerMouseup();
+
 
             // another change a bit later
             setTimeout(function(){
               palindromObj.foo = "bar";
-              triggerMouseup();
+
 
               //wait for async trigger(?)
               setTimeout(checkOnceReady);
@@ -244,7 +244,7 @@ describe("WebSocket", function () {
             websocket.open();
             //tested code
               palindromObj.hello = "galaxy";
-              triggerMouseup();
+
 
               //wait for async trigger(?)
               setTimeout(checkOnceReady);

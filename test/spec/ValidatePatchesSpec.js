@@ -1,6 +1,4 @@
 describe("ValidatePatches", function () {
-
-
   // Lang helpers
   // copy own properties from 'api' to 'prototype
   function extend(prototype, api) {

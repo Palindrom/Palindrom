@@ -47,7 +47,6 @@ describe("Palindrom", function () {
         expect(obj.hello).toEqual("world");
 
         obj.hello = "galaxy";
-        triggerMouseup();
 
         setTimeout(function () { //wait for xhr
           expect(patchSpy.calls.count()).toBe(2);
@@ -63,8 +62,7 @@ describe("Palindrom", function () {
 
           that.palindrom.observe();
           obj.hello = "cosmos";
-          triggerMouseup();
-
+  
           setTimeout(function () { //wait for xhr
             expect(patchSpy.calls.count()).toBe(3);
             expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"cosmos"}]');
@@ -154,7 +152,6 @@ describe("Palindrom", function () {
         expect(obj.hello).toEqual("world");
 
         obj.hello = "galaxy";
-        triggerMouseup();
 
         setTimeout(function () { //wait for xhr
           expect(patchSpy.calls.count()).toBe(2);
@@ -196,7 +193,6 @@ describe("Palindrom", function () {
         expect(patchSpy.calls.count()).toBe(1);
         obj.hello = "galaxy";
 
-        triggerMouseup();
 
         setTimeout(function () { //wait for xhr
           expect(patchSpy.calls.count()).toBe(2);
@@ -237,7 +233,6 @@ describe("Palindrom", function () {
         expect(obj.hello).toEqual("world");
 
         obj.hello = "galaxy";
-        triggerMouseup();
 
         setTimeout(function () { //wait for xhr
           expect(patchSpy.calls.count()).toBe(2);
@@ -253,8 +248,7 @@ describe("Palindrom", function () {
 
           that.palindrom.observe();
           obj.hello = "cosmos";
-          triggerMouseup();
-
+  
           setTimeout(function () { //wait for xhr
             expect(patchSpy.calls.count()).toBe(3);
             expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":"cosmos"}]');

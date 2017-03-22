@@ -14,7 +14,6 @@ describe("IgnoreAdd", function () {
     this.palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
       obj = myObj;
     }});
-    this.palindrom.jsonpatch.intervals = [10];
     this.palindrom.ignoreAdd = /\/\$.+/;
 
     jasmine.Ajax.requests.mostRecent().respondWith({
@@ -25,17 +24,18 @@ describe("IgnoreAdd", function () {
 
     var patchSpy = spyOn(XMLHttpRequest.prototype, 'send').and.callThrough();
 
-    obj.hello = 1;
-    obj.publicProp = 1;
-    obj.$privateProp = 1;
+    obj.hello = 1; // change 1
+    expect(patchSpy.calls.count()).toBe(1);
+    expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":1}]');
 
-    // bump JSON Patch observer
-    triggerMouseup();
-    setTimeout(function () { //wait for xhr
-        expect(patchSpy.calls.count()).toBe(1);
-        expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/hello","value":1},{"op":"add","path":"/publicProp","value":1}]');
-        done();
-    }, 20);
+    obj.publicProp = 1; // change 2
+    expect(patchSpy.calls.count()).toBe(2);
+    expect(patchSpy).toHaveBeenCalledWith('[{"op":"add","path":"/publicProp","value":1}]');    
+    obj.$privateProp = 1;  // ignored change
+
+    expect(patchSpy.calls.count()).toBe(2); // still two!
+    done();
+
   });
 
   it('should not send replace patch to an ignored property', function (done) {
@@ -63,7 +63,7 @@ describe("IgnoreAdd", function () {
     });
 
     // bump JSON Patch observer
-    triggerMouseup();
+
 
     setTimeout(function () { //wait for xhr
 
@@ -79,7 +79,7 @@ describe("IgnoreAdd", function () {
       });
 
       // bump JSON Patch observer
-      triggerMouseup();
+  
 
       setTimeout(function () { //wait for xhr
         expect(patchSpy.calls.count()).toBe(3);
@@ -112,7 +112,7 @@ describe("IgnoreAdd", function () {
         "responseText": '[]'
     });
     // bump JSON Patch observer
-    triggerMouseup();
+
 
     setTimeout(function () { //wait for xhr
       expect(patchSpy.calls.count()).toBe(2);
@@ -126,7 +126,7 @@ describe("IgnoreAdd", function () {
           "responseText": '[]'
       });
       // bump JSON Patch observer
-      triggerMouseup();
+  
 
       setTimeout(function () { //wait for xhr
         expect(patchSpy.calls.count()).toBe(3);
@@ -154,7 +154,7 @@ describe("IgnoreAdd", function () {
     obj.$privateProp = 1;
 
     // bump JSON Patch observer
-    triggerMouseup();
+
 
     setTimeout(function () { //wait for xhr
       expect(patchSpy.calls.count()).toBe(1);
@@ -180,7 +180,7 @@ describe("IgnoreAdd", function () {
     obj.$privateProp = 1;
     obj.$privateProp = 2;
     // bump JSON Patch observer
-    triggerMouseup();
+
 
     setTimeout(function () { //wait for xhr
       expect(patchSpy.calls.count()).toBe(1);

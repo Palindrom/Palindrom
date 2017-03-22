@@ -32,7 +32,8 @@
     "fast-json-patch": "^1.1.8",
     "json-patch-ot": "^1.0.1",
     "json-patch-ot-agent": "^1.1.2",
-    "json-patch-queue": "^2.0.1"
+    "json-patch-queue": "^2.0.1",
+    "jsonpatcherproxy": "0.0.1"
   },
   "devDependencies": {
     "grunt": "~0.4.5",

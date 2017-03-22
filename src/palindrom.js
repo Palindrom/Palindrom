@@ -5,6 +5,7 @@
 
 if(typeof require !== 'undefined') {
   var jsonpatch = require('fast-json-patch');
+  var JSONPatcherProxy = require('jsonpatcherproxy');
   var JSONPatchQueueSynchronous = require('json-patch-queue').JSONPatchQueueSynchronous;
   var JSONPatchQueue = require('json-patch-queue').JSONPatchQueue;
   var JSONPatchOT = require('json-patch-ot');
@@ -12,7 +13,12 @@ if(typeof require !== 'undefined') {
 }
 var Palindrom = (function () {
 
-  if(typeof global === 'undefined') { var global = window };
+  if(typeof global === 'undefined') {
+    if(typeof window !== 'undefined') { /* incase neither window nor global existed, e.g React Native */
+      var global = window;
+    }
+    else { var global = {}; }
+  }
 
   /**
    * https://github.com/mrdoob/eventdispatcher.js
@@ -534,10 +540,13 @@ var Palindrom = (function () {
     else {
         this.obj = {};
     }
+    /* wrap the given object with a proxy observer */
+    this.jsonPatcherProxy = new JSONPatcherProxy(this.obj);
 
     var noop = function () { };
 
-    this.observer = null;
+    this.isObjectProxified = false;
+    this.isObserving = false;
     this.onLocalChange = options.onLocalChange;
     this.onRemoteChange = options.onRemoteChange;
     this.onPatchReceived = options.onPatchReceived || noop;
@@ -632,17 +641,31 @@ var Palindrom = (function () {
   };
 
   Palindrom.prototype.observe = function () {
-    this.observer = this.jsonpatch.observe(this.obj, this.filterChangedCallback.bind(this));
-  };
-
-  Palindrom.prototype.unobserve = function () {
-    if (this.observer) { //there is a bug in JSON-Patch when trying to unobserve something that is already unobserved
-      this.jsonpatch.unobserve(this.obj, this.observer);
-      this.observer = null;
+    /* if we haven't ever proxified our object,
+    this means it's the first observe call,
+    let's proxify it then! */
+    if (!this.isObjectProxified) {
+        this.obj = this.jsonPatcherProxy.observe(true, this.filterChangedCallback.bind(this));
+        this.isObjectProxified = true;
     }
+    /* we are already observing, just disable event emitting. */
+    else {
+        this.jsonPatcherProxy.switchObserverOn();
+    }
+    this.isObserving = true;
+  };
+  Palindrom.prototype.unobserve = function () {
+        this.jsonPatcherProxy && this.jsonPatcherProxy.switchObserverOff();
+        this.isObserving = false;
   };
 
-  Palindrom.prototype.filterChangedCallback = function (patches) {
+  Palindrom.prototype.filterChangedCallback = function (patch) {
+    /* because JSONPatcherProxy is synchronous,
+    it passes a single patch to the callback,
+    to make the review process easier, I'll convert it to an array
+    to keep the change minimal, once approved, I can enhance this,
+    or we can keep it in case we decided to introduce batching/delaying */
+    var patches = [patch];
     this.filterIgnoredPatches(patches);
     if(patches.length) {
       this.handleLocalChange(patches);
@@ -688,6 +711,7 @@ var Palindrom = (function () {
   }
 
   Palindrom.prototype.handleLocalChange = function (patches) {
+
     if(this.debug) {
       this.validateSequence(this.remoteObj, patches);
     }
@@ -789,21 +813,23 @@ var Palindrom = (function () {
     }
 
     // apply only if we're still watching
-    if (!this.observer) {
+    if (!this.isObserving) {
       return;
     }
 
     this.queue.receive(this.obj, patches);
+
     if(this.queue.pending && this.queue.pending.length && this.queue.pending.length > this.retransmissionThreshold) {
       // remote counterpart probably failed to receive one of earlier messages, because it has been receiving
       // (but not acknowledging messages for some time
       this.queue.pending.forEach(sendPatches.bind(null, this));
     }
+
     if (this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
     }
   };
-  
+
   /* backward compatibility */
   global.Puppet = Palindrom;
 
