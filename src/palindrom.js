@@ -648,7 +648,7 @@ var Palindrom = (function () {
         this.obj = this.jsonPatcherProxy.observe(true, this.filterChangedCallback.bind(this));
         this.isObjectProxified = true;
     }
-    /* we are already observing, just disable event emitting. */
+    /* we are already observing, just enable event emitting. */
     else {
         this.jsonPatcherProxy.switchObserverOn();
     }
@@ -660,11 +660,15 @@ var Palindrom = (function () {
   };
 
   Palindrom.prototype.filterChangedCallback = function (patch) {
-    /* because JSONPatcherProxy is synchronous,
-    it passes a single patch to the callback,
-    to make the review process easier, I'll convert it to an array
-    to keep the change minimal, once approved, I can enhance this,
-    or we can keep it in case we decided to introduce batching/delaying */
+    /*
+    because JSONPatcherProxy is synchronous,
+    it passes a single patch to the callback instantly after the change,
+    to make this review process easier, I'll convert this single patch
+    to an array to keep the logic change minimal,
+    once approved, I can enhance this.
+    Or we can also keep it, in case we decided to introduce batching/delaying 
+    at one point.
+    */
     var patches = [patch];
     this.filterIgnoredPatches(patches);
     if(patches.length) {

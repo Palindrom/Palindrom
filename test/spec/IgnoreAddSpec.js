@@ -62,9 +62,6 @@ describe("IgnoreAdd", function () {
         "responseText": '[]'
     });
 
-    // bump JSON Patch observer
-
-
     setTimeout(function () { //wait for xhr
 
       expect(patchSpy.calls.count()).toBe(2);
@@ -77,9 +74,6 @@ describe("IgnoreAdd", function () {
           "contentType": 'application/json-patch+json',
           "responseText": '[]'
       });
-
-      // bump JSON Patch observer
-  
 
       setTimeout(function () { //wait for xhr
         expect(patchSpy.calls.count()).toBe(3);
@@ -111,9 +105,7 @@ describe("IgnoreAdd", function () {
         "contentType": 'application/json-patch+json',
         "responseText": '[]'
     });
-    // bump JSON Patch observer
-
-
+    
     setTimeout(function () { //wait for xhr
       expect(patchSpy.calls.count()).toBe(2);
       expect(patchSpy).toHaveBeenCalledWith('[{"op":"add","path":"/publicProp","value":["a","b","c"]}]');
@@ -125,9 +117,7 @@ describe("IgnoreAdd", function () {
           "contentType": 'application/json-patch+json',
           "responseText": '[]'
       });
-      // bump JSON Patch observer
-  
-
+      
       setTimeout(function () { //wait for xhr
         expect(patchSpy.calls.count()).toBe(3);
         expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/publicProp/2","value":"cc"}]');
@@ -153,9 +143,6 @@ describe("IgnoreAdd", function () {
     expect(patchSpy.calls.count()).toBe(1);
     obj.$privateProp = 1;
 
-    // bump JSON Patch observer
-
-
     setTimeout(function () { //wait for xhr
       expect(patchSpy.calls.count()).toBe(1);
       done();
@@ -179,9 +166,7 @@ describe("IgnoreAdd", function () {
     expect(patchSpy.calls.count()).toBe(1);
     obj.$privateProp = 1;
     obj.$privateProp = 2;
-    // bump JSON Patch observer
-
-
+    
     setTimeout(function () { //wait for xhr
       expect(patchSpy.calls.count()).toBe(1);
       done();
