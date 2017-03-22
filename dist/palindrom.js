@@ -251,224 +251,6 @@ var jsonpatch;
             this.value = obj;
         }
     };
-    function escapePathComponent(str) {
-        if (str.indexOf('/') === -1 && str.indexOf('~') === -1)
-            return str;
-        return str.replace(/~/g, '~0').replace(/\//g, '~1');
-    }
-    function _getPathRecursive(root, obj) {
-        var found;
-        for (var key in root) {
-            if (root.hasOwnProperty(key)) {
-                if (root[key] === obj) {
-                    return escapePathComponent(key) + '/';
-                }
-                else if (typeof root[key] === 'object') {
-                    found = _getPathRecursive(root[key], obj);
-                    if (found != '') {
-                        return escapePathComponent(key) + '/' + found;
-                    }
-                }
-            }
-        }
-        return '';
-    }
-    function getPath(root, obj) {
-        if (root === obj) {
-            return '/';
-        }
-        var path = _getPathRecursive(root, obj);
-        if (path === '') {
-            throw new Error("Object not found in root");
-        }
-        return '/' + path;
-    }
-    var beforeDict = [];
-    var Mirror = (function () {
-        function Mirror(obj) {
-            this.observers = [];
-            this.obj = obj;
-        }
-        return Mirror;
-    }());
-    var ObserverInfo = (function () {
-        function ObserverInfo(callback, observer) {
-            this.callback = callback;
-            this.observer = observer;
-        }
-        return ObserverInfo;
-    }());
-    function getMirror(obj) {
-        for (var i = 0, ilen = beforeDict.length; i < ilen; i++) {
-            if (beforeDict[i].obj === obj) {
-                return beforeDict[i];
-            }
-        }
-    }
-    function getObserverFromMirror(mirror, callback) {
-        for (var j = 0, jlen = mirror.observers.length; j < jlen; j++) {
-            if (mirror.observers[j].callback === callback) {
-                return mirror.observers[j].observer;
-            }
-        }
-    }
-    function removeObserverFromMirror(mirror, observer) {
-        for (var j = 0, jlen = mirror.observers.length; j < jlen; j++) {
-            if (mirror.observers[j].observer === observer) {
-                mirror.observers.splice(j, 1);
-                return;
-            }
-        }
-    }
-    function unobserve(root, observer) {
-        observer.unobserve();
-    }
-    jsonpatch.unobserve = unobserve;
-    function deepClone(obj) {
-        switch (typeof obj) {
-            case "object":
-                return JSON.parse(JSON.stringify(obj)); //Faster than ES5 clone - http://jsperf.com/deep-cloning-of-objects/5
-            case "undefined":
-                return null; //this is how JSON.stringify behaves for array items
-            default:
-                return obj; //no need to clone primitives
-        }
-    }
-    function observe(obj, callback) {
-        var patches = [];
-        var root = obj;
-        var observer;
-        var mirror = getMirror(obj);
-        if (!mirror) {
-            mirror = new Mirror(obj);
-            beforeDict.push(mirror);
-        }
-        else {
-            observer = getObserverFromMirror(mirror, callback);
-        }
-        if (observer) {
-            return observer;
-        }
-        observer = {};
-        mirror.value = deepClone(obj);
-        if (callback) {
-            observer.callback = callback;
-            observer.next = null;
-            var dirtyCheck = function () {
-                generate(observer);
-            };
-            var fastCheck = function () {
-                clearTimeout(observer.next);
-                observer.next = setTimeout(dirtyCheck);
-            };
-            if (typeof window !== 'undefined') {
-                if (window.addEventListener) {
-                    window.addEventListener('mouseup', fastCheck);
-                    window.addEventListener('keyup', fastCheck);
-                    window.addEventListener('mousedown', fastCheck);
-                    window.addEventListener('keydown', fastCheck);
-                    window.addEventListener('change', fastCheck);
-                }
-                else {
-                    document.documentElement.attachEvent('onmouseup', fastCheck);
-                    document.documentElement.attachEvent('onkeyup', fastCheck);
-                    document.documentElement.attachEvent('onmousedown', fastCheck);
-                    document.documentElement.attachEvent('onkeydown', fastCheck);
-                    document.documentElement.attachEvent('onchange', fastCheck);
-                }
-            }
-        }
-        observer.patches = patches;
-        observer.object = obj;
-        observer.unobserve = function () {
-            generate(observer);
-            clearTimeout(observer.next);
-            removeObserverFromMirror(mirror, observer);
-            if (typeof window !== 'undefined') {
-                if (window.removeEventListener) {
-                    window.removeEventListener('mouseup', fastCheck);
-                    window.removeEventListener('keyup', fastCheck);
-                    window.removeEventListener('mousedown', fastCheck);
-                    window.removeEventListener('keydown', fastCheck);
-                }
-                else {
-                    document.documentElement.detachEvent('onmouseup', fastCheck);
-                    document.documentElement.detachEvent('onkeyup', fastCheck);
-                    document.documentElement.detachEvent('onmousedown', fastCheck);
-                    document.documentElement.detachEvent('onkeydown', fastCheck);
-                }
-            }
-        };
-        mirror.observers.push(new ObserverInfo(callback, observer));
-        return observer;
-    }
-    jsonpatch.observe = observe;
-    function generate(observer) {
-        var mirror;
-        for (var i = 0, ilen = beforeDict.length; i < ilen; i++) {
-            if (beforeDict[i].obj === observer.object) {
-                mirror = beforeDict[i];
-                break;
-            }
-        }
-        _generate(mirror.value, observer.object, observer.patches, "");
-        if (observer.patches.length) {
-            apply(mirror.value, observer.patches);
-        }
-        var temp = observer.patches;
-        if (temp.length > 0) {
-            observer.patches = [];
-            if (observer.callback) {
-                observer.callback(temp);
-            }
-        }
-        return temp;
-    }
-    jsonpatch.generate = generate;
-    // Dirty check if obj is different from mirror, generate patches and update mirror
-    function _generate(mirror, obj, patches, path) {
-        if (obj === mirror) {
-            return;
-        }
-
-        if (typeof obj.toJSON === "function") {
-            obj = obj.toJSON();
-        }
-        var newKeys = _objectKeys(obj);
-        var oldKeys = _objectKeys(mirror);
-        var changed = false;
-        var deleted = false;
-        //if ever "move" operation is implemented here, make sure this test runs OK: "should not generate the same patch twice (move)"
-        for (var t = oldKeys.length - 1; t >= 0; t--) {
-            var key = oldKeys[t];
-            var oldVal = mirror[key];
-            if (obj.hasOwnProperty(key) && !(obj[key] === undefined && oldVal !== undefined && _isArray(obj) === false)) {
-                var newVal = obj[key];
-                if (typeof oldVal == "object" && oldVal != null && typeof newVal == "object" && newVal != null) {
-                    _generate(oldVal, newVal, patches, path + "/" + escapePathComponent(key));
-                }
-                else {
-                    if (oldVal !== newVal) {
-                        changed = true;
-                        patches.push({ op: "replace", path: path + "/" + escapePathComponent(key), value: deepClone(newVal) });
-                    }
-                }
-            }
-            else {
-                patches.push({ op: "remove", path: path + "/" + escapePathComponent(key) });
-                deleted = true; // property has been deleted
-            }
-        }
-        if (!deleted && newKeys.length == oldKeys.length) {
-            return;
-        }
-        for (var t = 0; t < newKeys.length; t++) {
-            var key = newKeys[t];
-            if (!mirror.hasOwnProperty(key) && obj[key] !== undefined) {
-                patches.push({ op: "add", path: path + "/" + escapePathComponent(key), value: deepClone(obj[key]) });
-            }
-        }
-    }
     var _isArray;
     if (Array.isArray) {
         _isArray = Array.isArray;
@@ -501,7 +283,7 @@ var jsonpatch;
      * or just be undefined
      */
     function apply(tree, patches, validate) {
-        var results = [], p = 0, plen = patches.length, patch, key;
+        var results = new Array(patches.length), p = 0, plen = patches.length, patch, key;
         while (p < plen) {
             patch = patches[p];
             p++;
@@ -530,7 +312,7 @@ var jsonpatch;
                 t++;
                 if (key === undefined) {
                     if (t >= len) {
-                        results.push(rootOps[patch.op].call(patch, obj, key, tree)); // Apply patch
+                        results[p - 1] = rootOps[patch.op].call(patch, obj, key, tree); // Apply patch
                         break;
                     }
                 }
@@ -548,7 +330,7 @@ var jsonpatch;
                         if (validate && patch.op === "add" && key > obj.length) {
                             throw new JsonPatchError("The specified index MUST NOT be greater than the number of elements in the array", "OPERATION_VALUE_OUT_OF_BOUNDS", p - 1, patch.path, patch);
                         }
-                        results.push(arrOps[patch.op].call(patch, obj, key, tree)); // Apply patch
+                        results[p - 1] = arrOps[patch.op].call(patch, obj, key, tree); // Apply patch
                         break;
                     }
                 }
@@ -556,7 +338,7 @@ var jsonpatch;
                     if (key && key.indexOf('~') != -1)
                         key = key.replace(/~1/g, '/').replace(/~0/g, '~'); // escape chars
                     if (t >= len) {
-                        results.push(objOps[patch.op].call(patch, obj, key, tree)); // Apply patch
+                        results[p - 1] = objOps[patch.op].call(patch, obj, key, tree); // Apply patch
                         break;
                     }
                 }
@@ -566,12 +348,6 @@ var jsonpatch;
         return results;
     }
     jsonpatch.apply = apply;
-    function compare(tree1, tree2) {
-        var patches = [];
-        _generate(tree1, tree2, patches, '');
-        return patches;
-    }
-    jsonpatch.compare = compare;
     // provide scoped __extends for TypeScript's `extend` keyword so it will not provide global one during compilation
     function __extends(d, b) {
         for (var p in b)
@@ -697,10 +473,6 @@ var jsonpatch;
 })(jsonpatch || (jsonpatch = {}));
 if (true) {
     exports.apply = jsonpatch.apply;
-    exports.observe = jsonpatch.observe;
-    exports.unobserve = jsonpatch.unobserve;
-    exports.generate = jsonpatch.generate;
-    exports.compare = jsonpatch.compare;
     exports.validate = jsonpatch.validate;
     exports.validator = jsonpatch.validator;
     exports.JsonPatchError = jsonpatch.JsonPatchError;
@@ -1615,7 +1387,7 @@ if(true) {
  */
 
 if(true) {
-  var jsonpatch = __webpack_require__(1);
+  var jsonpatch = __webpack_require__(1); /* include only apply and validate */
   var JSONPatcherProxy = __webpack_require__(4);
   var JSONPatchQueueSynchronous = __webpack_require__(0).JSONPatchQueueSynchronous;
   var JSONPatchQueue = __webpack_require__(0).JSONPatchQueue;
@@ -2259,7 +2031,7 @@ var Palindrom = (function () {
         this.obj = this.jsonPatcherProxy.observe(true, this.filterChangedCallback.bind(this));
         this.isObjectProxified = true;
     }
-    /* we are already observing, just disable event emitting. */
+    /* we are already observing, just enable event emitting. */
     else {
         this.jsonPatcherProxy.switchObserverOn();
     }
@@ -2271,11 +2043,15 @@ var Palindrom = (function () {
   };
 
   Palindrom.prototype.filterChangedCallback = function (patch) {
-    /* because JSONPatcherProxy is synchronous,
-    it passes a single patch to the callback,
-    to make the review process easier, I'll convert it to an array
-    to keep the change minimal, once approved, I can enhance this,
-    or we can keep it in case we decided to introduce batching/delaying */
+    /*
+    because JSONPatcherProxy is synchronous,
+    it passes a single patch to the callback instantly after the change,
+    to make this review process easier, I'll convert this single patch
+    to an array to keep the logic change minimal,
+    once approved, I can enhance this.
+    Or we can also keep it, in case we decided to introduce batching/delaying 
+    at one point.
+    */
     var patches = [patch];
     this.filterIgnoredPatches(patches);
     if(patches.length) {

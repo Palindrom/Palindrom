@@ -16,12 +16,6 @@
     "Gruntfile.js",
     "node_modules"
   ],
-  "dependencies": {
-    "fast-json-patch": ">=1.1.0",
-    "json-patch-queue": "Palindrom/JSON-Patch-Queue#master",
-    "json-patch-ot-agent": "Palindrom/JSON-Patch-OT-agent#master",
-    "json-patch-ot": "Palindrom/JSON-Patch-OT#master"
-  },
   "devDependencies": {
     "polymer": "*",
     "palindrom-bunny": "Palindrom/palindrom-bunny",

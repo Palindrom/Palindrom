@@ -4,7 +4,7 @@
  */
 
 if(typeof require !== 'undefined') {
-  var jsonpatch = require('fast-json-patch');
+  var jsonpatch = require('fast-json-patch/src/json-patch'); /* include only apply and validate */
   var JSONPatcherProxy = require('jsonpatcherproxy');
   var JSONPatchQueueSynchronous = require('json-patch-queue').JSONPatchQueueSynchronous;
   var JSONPatchQueue = require('json-patch-queue').JSONPatchQueue;
