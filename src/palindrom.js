@@ -278,8 +278,14 @@ var Palindrom = (function () {
   PalindromNetworkChannel.prototype.establish = function(bootstrap){
     establish(this, this.remoteUrl.href, null, bootstrap);
   };
-  PalindromNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
-    establish(this, this.remoteUrl.href + "/reconnect", JSON.stringify(pending), bootstrap);
+    PalindromNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
+        var reconnectURL = (
+                  new URL(
+                    this.remoteUrl.pathname,
+                    this.wsURL
+                    )
+                  ).href + "/reconnect" + this.wsURL.search;
+    establish(this, reconnectURL, JSON.stringify(pending), bootstrap);
   };
 
   // TODO: auto-configure here #38 (tomalec)
@@ -352,7 +358,7 @@ var Palindrom = (function () {
         this.remoteUrl.pathname,
         this.wsUrl
         )
-      ).href;
+      ).href + this.wsURL.search;
     // ws[s]://[user[:pass]@]remote.host[:port]/__[sessionid]/
 
     closeWsIfNeeded(that);
