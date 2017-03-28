@@ -33,7 +33,8 @@
     "json-patch-ot": "^1.0.1",
     "json-patch-ot-agent": "^1.1.2",
     "json-patch-queue": "^2.0.1",
-    "jsonpatcherproxy": "^0.0.3"
+    "jsonpatcherproxy": "^0.0.3",
+    "url": "^0.11.0"
   },
   "devDependencies": {
     "grunt": "~0.4.5",
