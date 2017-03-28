@@ -10,6 +10,7 @@ if(typeof require !== 'undefined') {
   var JSONPatchQueue = require('json-patch-queue').JSONPatchQueue;
   var JSONPatchOT = require('json-patch-ot');
   var JSONPatchOTAgent = require('json-patch-ot-agent');
+  var URL = require('./URL');
 }
 var Palindrom = (function () {
 
@@ -85,16 +86,14 @@ var Palindrom = (function () {
   };
 
   /**
-   * Defines at given object a WS URL out of given HTTP remoteURL location
-   * @param  {Object} obj       Where to define the wsUrl property
+   * Replaces http and https to ws and wss in a URL and returns it as a string.
    * @param  {String} remoteUrl HTTP remote address
    * @return {String}           WS address
    */
-  function defineWebSocketURL(obj, remoteUrl){
+  function toWebSocketURL(remoteUrl){
     /* replace 'http' strictly in the beginning of the string,
     this covers http and https */
-    var url = remoteUrl.replace(/^http/i, 'ws');
-    obj.wsUrl = url;
+    return remoteUrl.replace(/^http/i, 'ws');
   }
 
   /**
@@ -229,7 +228,6 @@ var Palindrom = (function () {
     };
   }
 
-
   function NoHeartbeat() {
     this.start = this.stop = this.notifySend = this.notifyReceive = function () {};
   }
@@ -239,12 +237,7 @@ var Palindrom = (function () {
     this.palindrom = palindrom;
 
     this.remoteUrl = new URL(remoteUrl, window.location.href);
-
-    // define wsUrl if needed
-    if(useWebSocket){
-      defineWebSocketURL(this, this.remoteUrl.href);
-    }
-
+    
     onReceive && (this.onReceive = onReceive);
     onSend && (this.onSend = onSend);
     onConnectionError && (this.onConnectionError = onConnectionError);
@@ -269,7 +262,7 @@ var Palindrom = (function () {
           }
         // define wsUrl if needed
         } else if(!that.wsUrl) {
-          defineWebSocketURL(this, newValue);
+          that.wsUrl = toWebSocketURL(that.remoteUrl.href);
         }
         return useWebSocket;
       }
@@ -345,15 +338,9 @@ var Palindrom = (function () {
    */
   PalindromNetworkChannel.prototype.webSocketUpgrade = function (callback) {
     var that = this;
-
-    // resolve session path given in referrer in the context of remote WS URL
-    var upgradeURL = (
-      new URL(
-        this.remoteUrl.pathname,
-        this.wsUrl
-        )
-      ).href;
-    // ws[s]://[user[:pass]@]remote.host[:port]/__[sessionid]/
+  
+    this.wsUrl = toWebSocketURL(this.remoteUrl.href);
+    var upgradeURL = this.wsUrl;
 
     closeWsIfNeeded(that);
     that._ws = new WebSocket(upgradeURL);
@@ -411,7 +398,7 @@ var Palindrom = (function () {
         throw new Error("Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.remoteUrl + "\nNew session ID: " + remoteUrl);
     }
     this.remoteUrlSet = true;
-    this.remoteUrl = new URL(remoteUrl, this.remoteUrl);
+    this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
   };
 
   // TODO:(tomalec)[cleanup] hide from public API.

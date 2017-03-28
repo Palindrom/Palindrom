@@ -88,25 +88,16 @@ describe("IgnoreAdd", function () {
     var obj;
     this.palindrom = new Palindrom({remoteUrl: '/test', callback: function (myObj) {
       obj = myObj;
-    }});
-    this.palindrom.ignoreAdd = /\/\$.+/;
 
-    jasmine.Ajax.requests.mostRecent().respondWith({
-      "status": 200,
-      "contentType": 'application/json',
-      "responseText": '{"hello": 0}'
-    });
+      obj.publicProp = ["a", "b", "c"];
+      obj.$privateProp = ["a", "b", "c"];
 
-    obj.publicProp = ["a", "b", "c"];
-    obj.$privateProp = ["a", "b", "c"];
-
-    jasmine.Ajax.stubRequest('/test').andReturn({
+      jasmine.Ajax.stubRequest('/test').andReturn({
         "status": 200,
         "contentType": 'application/json-patch+json',
         "responseText": '[]'
-    });
-    
-    setTimeout(function () { //wait for xhr
+      });
+
       expect(patchSpy.calls.count()).toBe(2);
       expect(patchSpy).toHaveBeenCalledWith('[{"op":"add","path":"/publicProp","value":["a","b","c"]}]');
       obj.publicProp[2] = "cc";
@@ -117,13 +108,21 @@ describe("IgnoreAdd", function () {
           "contentType": 'application/json-patch+json',
           "responseText": '[]'
       });
-      
+
       setTimeout(function () { //wait for xhr
         expect(patchSpy.calls.count()).toBe(3);
         expect(patchSpy).toHaveBeenCalledWith('[{"op":"replace","path":"/publicProp/2","value":"cc"}]');
         done();
       }, 20);
-    }, 20);
+
+    }});
+    this.palindrom.ignoreAdd = /\/\$.+/;
+
+    jasmine.Ajax.requests.mostRecent().respondWith({
+      "status": 200,
+      "contentType": 'application/json',
+      "responseText": '{"hello": 0}'
+    });
   });
 
   it('should not send any patch if all changes were ignored', function (done) {

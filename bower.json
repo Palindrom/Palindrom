@@ -19,6 +19,7 @@
   "devDependencies": {
     "polymer": "*",
     "palindrom-bunny": "Palindrom/palindrom-bunny",
-    "dom-bind-notifier": "*"
+    "dom-bind-notifier": "*",
+    "fast-json-patch": ">=1.1.0"
   }
 }
