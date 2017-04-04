@@ -53,7 +53,7 @@ var palindrom = new Palindrom({attribute: value});
 
 Attribute              | Type          | Default                | Description
 ---                    | ---           | ---                    | ---
-`remoteUrl` **Required**            | *String*      | `window.location.href` | PATCH server URL
+`remoteUrl` **Required**            | *String*      |  | PATCH server URL
 `callback`             | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established)
 `obj`                  | *Object*      | `{}`                   | object where the parsed JSON data will be inserted
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
