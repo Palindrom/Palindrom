@@ -1,0 +1,51 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Mocha Tests</title>
+    <script type="text/javascript" src="lib/webcomponents.js"></script>
+    <link href="lib/mocha.css" rel="stylesheet" />
+    <link rel="import" href="../lab/polymer/components/my-menu-button.html">
+</head>
+
+<body>
+    <my-menu-button style="position: absolute; top: 0; right: 0" href="subpage.html">Distributed <strong>Content</strong></my-menu-button>
+    <div id="brand">
+        <img src="tests-logo.png" style="max-width: 100%; margin: 20px 0px 0px 20px" />
+    </div>
+    <div id="mocha"></div>
+
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/expect.js"></script>
+    <script src="lib/mocha.js"></script>
+
+    <script>
+        mocha.setup('bdd');
+    </script>
+    <script src="runner-browser.js"></script>
+    <script>
+        /* wait for button component to load */
+        setTimeout(() => {
+            const runner = mocha.run();
+            const tempResults = [];
+
+            runner.on('pass', function (spec) {
+                let smallerSpec = { title: spec.title, state: 'passed' };
+                tempResults.push(smallerSpec);
+            });
+            runner.on('fail', function (spec) {
+                let smallerSpec = { title: spec.title, state: 'failed', err: spec.err };
+                tempResults.push(smallerSpec);
+            })
+            runner.on('pending', function (spec) {
+                let smallerSpec = { title: spec.title, state: 'pending' };
+                tempResults.push(smallerSpec);
+            });
+            runner.on('end', function () {
+                window.testResults = tempResults;
+            });
+        }, 2000);
+    </script>
+</body>
+
+</html>
