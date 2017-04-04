@@ -58,5 +58,17 @@ module.exports = [
         }
       })
     ]
-  }
+  },
+  /* bundle tests for browser */
+  {
+    entry: './test/runner.js',
+    output: {
+      filename: 'test/runner-browser.js',
+      library: 'Tests',
+      libraryTarget: 'var'
+    },
+    resolve: {
+      extensions: ['.js']
+    }
+  },
 ];
