@@ -1,16 +1,11 @@
 language: node_js
-sudo: required
 dist: trusty
 before_script:
   - npm install
-  - 'export PATH=$PWD/node_modules/.bin:$PATH'
-node_js: 4
+  - polyserve -p 8000 &
+  - sleep 5 # give polyserve some time to start
+node_js: 6
 addons:
-  firefox: latest
-  apt:
-    sources:
-      - google-chrome
-    packages:
-      - google-chrome-stable
+  sauce_connect: true
 script:
-  - xvfb-run npm test
+  - npm test
