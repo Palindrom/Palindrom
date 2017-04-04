@@ -29,23 +29,38 @@
   ],
   "main": "./src/palindrom.js",
   "dependencies": {
+    "axios": "^0.15.3",
+    "events": "^1.1.1",
     "fast-json-patch": "^1.1.8",
     "json-patch-ot": "^1.0.1",
     "json-patch-ot-agent": "^1.1.2",
     "json-patch-queue": "^2.0.1",
     "jsonpatcherproxy": "^0.0.3",
-    "url": "^0.11.0"
+    "url": "^0.11.0",
+    "websocket": "^1.0.24"
   },
   "devDependencies": {
+    "chai": "^3.5.0",
+    "colors": "^1.1.2",
     "grunt": "~0.4.5",
     "grunt-bump": "~0.3.0",
     "grunt-contrib-uglify": "~0.5.0",
     "grunt-contrib-watch": "~0.6.1",
+    "is-ci": "^1.0.10",
     "jasmine": "^2.4.0",
     "jsdom": "^9.5.0",
+    "json-loader": "^0.5.4",
+    "mocha": "^3.2.0",
+    "mock-socket": "^6.0.4",
+    "moxios": "^0.3.0",
+    "polyserve": "^0.16.0",
+    "saucelabs": "^1.4.0",
+    "selenium-webdriver": "^3.3.0",
+    "sinon": "^2.1.0",
     "webpack": "^2.2.1"
   },
   "scripts": {
-    "test": "jasmine JASMINE_CONFIG_PATH=test/jasmine.json"
+    "test": "node test/Sauce/Runner.js",
+    "test-cli": "mocha test/runner.js"    
   }
 }
