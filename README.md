@@ -359,10 +359,30 @@ To release new version run
 grunt uglify bump
 
 ```
-
 ### Testing
 
-Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
+
+#### Local testing with your browser
+
+Start a web server:
+```sh
+polyserve -p 8000
+```
+Open `http://127.0.0.1:8000/components/Palindrom/test/MochaSpecRunner.html` in your web browser to run Mocha test suite.
+
+### Testing with CLI and SauceLabs
+
+- Install [Sauce Connect](https://wiki.saucelabs.com/display/DOCS/Sauce+Connect+Proxy).
+
+- Add your `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables to your machine.
+
+- Connect to SauceLabs using the command
+ ```sc /u YOUR_SAUCE_USER /k YOUR_SAUCE_ACCESSKEY```
+
+- Start a web server `polyserve -p 8000`
+
+- In project's root folder, run `npm test`
+
 
 ### Changelog
 
