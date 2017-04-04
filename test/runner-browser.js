@@ -6029,8 +6029,10 @@ var Palindrom = (function () {
    */
   PalindromNetworkChannel.prototype.xhr = function (url, accept, data, callback, setReferer) {
 
-        var method = data ? 'PATCH' : 'GET';
-        var headers = {};
+        const method = data ? 'PATCH' : 'GET';
+        const headers = {};
+        const that = this;
+        var requestPromise;
 
         if (data) {
             headers['Content-Type'] = 'application/json-patch+json';
@@ -6041,23 +6043,23 @@ var Palindrom = (function () {
         if (this.remoteUrl && setReferer) {
             headers['X-Referer'] = this.remoteUrl.pathname;
         }
-        var successHandler = function (res) {
-            this.handleResponseHeader(res);
-            callback && callback.call(this.palindrom, res, method);
-        }.bind(this);
-        var failureHandler = function (res) {
-            this.onFatalError({ statusCode: res.status, statusText: res.statusText, reason: res.data }, url, method);
-        }.bind(this);
         if (method === "GET") {
-            axios.get(url, {
-                headers: headers
-            }).then(successHandler).catch(failureHandler);
+            requestPromise = axios.get(url, {
+              headers: headers
+            })
         }
         else {
-            axios.patch(url, data, {
+            requestPromise = axios.patch(url, data, {
                 headers: headers
-            }).then(successHandler).catch(failureHandler);
+            })
         }
+        requestPromise.then(function (res) {
+            that.handleResponseHeader(res);
+            callback && callback.call(that.palindrom, res, method);
+        }).catch(function (res) {
+            that.onFatalError({ statusCode: res.status, statusText: res.statusText, reason: res.data }, url, method);
+        });
+
         this.onSend(data, url, method);
     };
 
@@ -6220,10 +6222,6 @@ var Palindrom = (function () {
     makeInitialConnection(this);
   }
 
-  var dispatchErrorEvent = function (palindrom, error) {
-    palindrom.onGenericError(error);
-  };
-
   Palindrom.prototype.jsonpatch = jsonpatch;
 
   Palindrom.prototype.ping = function () {
@@ -6324,7 +6322,7 @@ var Palindrom = (function () {
     } catch (error) {
       if(this.debug) {
         error.message = "Incoming patch validation error: " + error.message;
-        dispatchErrorEvent(this, error);
+        this.onGenericError(error);
         return;
       } else {
         throw error;
@@ -6357,7 +6355,7 @@ var Palindrom = (function () {
     var error = this.jsonpatch.validate(sequence, tree);
     if (error) {
       error.message = "Outgoing patch validation error: " + error.message;
-      dispatchErrorEvent(this, error);
+      this.onGenericError(error);
     }
   };
 
@@ -12154,7 +12152,6 @@ if (typeof window !== "undefined") {
             const href = "test_b";
 
             createLinkTestNested(href);
-            console.log("omar", historySpy.callCount);
             expect(historySpy.callCount).to.equal(1);
           });
 

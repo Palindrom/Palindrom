@@ -33,11 +33,13 @@ After DOM is ready, initialize with the constructor:
 /**
  * Defines a connection to a remote PATCH server, gives an object that is persistent between browser and server
  */
-var palindrom = new Palindrom();
+var palindrom = new Palindrom({remoteUrl: window.location.href});
+
 // ..
 // use palindrom.obj
 palindrom.obj.someProperty = "new value";
 ```
+*Please make sure you pass the correct PATCH server URL.*
 
 ### Demo
 
@@ -63,6 +65,8 @@ Attribute              | Type          | Default                | Description
 `onPatchSent`          | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (*String* `data`, *String* `url`, *String*, `method`)
 `onSocketStateChanged` | *Function*    |                        | Helper callback triggered when socket state changes, accepts next parameters: (*int* `state`, *String* `url`, *String* `data`, *int* `code`, *String* `reason`)
 `onConnectionError`    | *Function*    |                        | Helper callback triggered when socket connection closed, socket connection failed to establish, http requiest failed. Accepts next parameters: (*Object* `data`, *String* `url`, *String*, `method`). The data object contains the following properties: *String* `statusText` (HTTP response status code reason phrase or WebSocket error title), *String* `statusCode` (HTTP response status code or WS error code), *Number* `readyState`, *String* `url`, *String* `reason` (HTTP error response body or WebSocket disconnection reason message)
+`onGenericError`    | *Function*    |                        | Helper callback triggered when a wrong patch is recieved or generated locally. It accepts one `Error` parameter.
+
 `localVersionPath`     | *JSONPointer* | `disabled`             | local version path, set it to enable Versioned JSON Patch communication
 `remoteVersionPath`    | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
 `ot`                   | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
@@ -280,7 +284,9 @@ After DOM is ready, initialize with the constructor:
 /**
  * Defines a connection to a remote PATCH server, gives an object that is persistent between browser and server
  */
-var palindrom = new PalindromDOM();
+var palindrom = new PalindromDOM({remoteUrl: window.location.href});
+
+_Make sure to use the correct remoteUrl_
 ```
 Now click, blur, pop/pushstate events may trigger a HTTP PATCH request.
 
@@ -331,14 +337,7 @@ Palindrom uses the HTML5 history API to update the URL in the browser address ba
  * or use [`<palindrom-redirect>`](https://github.com/Palindrom/palindrom-redirect) Custom Element that does it for you.
 
 ### Development
-
-In order to minify it locally you'll need a basic setup.
-
-* Install [Grunt](http://gruntjs.com/):
-
-    ```sh
-    $ [sudo] npm install -g grunt-cli
-    ```
+```
 
 * Install local dependencies:
 
@@ -349,7 +348,7 @@ In order to minify it locally you'll need a basic setup.
 * To minify project.
 
     ```sh
-    $ grunt uglify
+    $ webpack
     ```
 
 ### Releases

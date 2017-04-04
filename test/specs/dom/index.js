@@ -123,7 +123,6 @@ if (typeof window !== "undefined") {
             const href = "test_b";
 
             createLinkTestNested(href);
-            console.log("omar", historySpy.callCount);
             expect(historySpy.callCount).to.equal(1);
           });
 
