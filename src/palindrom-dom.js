@@ -142,7 +142,12 @@ var PalindromDOM = (function () {
   };
 
   /* backward compatibility, not sure if this is good practice */
-  if(typeof global === 'undefined') { var global = window };
+  if(typeof global === 'undefined') {
+    if(typeof window !== 'undefined') { /* incase neither window nor global existed, e.g React Native */
+      var global = window;
+    }
+    else { var global = {}; }
+  }
   global.PuppetDOM = PalindromDOM;
   
   /* Since we have Palindrom bundled,

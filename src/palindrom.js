@@ -11,79 +11,26 @@ if(typeof require !== 'undefined') {
   var JSONPatchOT = require('json-patch-ot');
   var JSONPatchOTAgent = require('json-patch-ot-agent');
   var URL = require('./URL');
+  var axios = require('axios');
+
+  var NodeWebSocket = require('websocket').w3cwebsocket;
+
+  /* this allows us to stub WebSockets */
+  if(!global.WebSocket) { /* we are in production env */
+    var WebSocket = NodeWebSocket;
+  }
+  else { /* we are in testing env */
+    var WebSocket = global.WebSocket;
+  }
 }
 var Palindrom = (function () {
-
+  
   if(typeof global === 'undefined') {
     if(typeof window !== 'undefined') { /* incase neither window nor global existed, e.g React Native */
       var global = window;
     }
     else { var global = {}; }
   }
-
-  /**
-   * https://github.com/mrdoob/eventdispatcher.js
-   * MIT license
-   * @author mrdoob / http://mrdoob.com/
-   */
-
-  var EventDispatcher = function () {
-  };
-
-  EventDispatcher.prototype = {
-    constructor: EventDispatcher,
-    apply: function (object) {
-      object.addEventListener = EventDispatcher.prototype.addEventListener;
-      object.hasEventListener = EventDispatcher.prototype.hasEventListener;
-      object.removeEventListener = EventDispatcher.prototype.removeEventListener;
-      object.dispatchEvent = EventDispatcher.prototype.dispatchEvent;
-    },
-    addEventListener: function (type, listener) {
-      if (this._listeners === undefined) this._listeners = {};
-      var listeners = this._listeners;
-      if (listeners[type] === undefined) {
-        listeners[type] = [];
-      }
-      if (listeners[type].indexOf(listener) === -1) {
-        listeners[type].push(listener);
-      }
-    },
-    hasEventListener: function (type, listener) {
-      if (this._listeners === undefined) return false;
-      var listeners = this._listeners;
-      if (listeners[type] !== undefined && listeners[type].indexOf(listener) !== -1) {
-        return true;
-      }
-      return false;
-    },
-    removeEventListener: function (type, listener) {
-      if (this._listeners === undefined) return;
-      var listeners = this._listeners;
-      var listenerArray = listeners[type];
-      if (listenerArray !== undefined) {
-        var index = listenerArray.indexOf(listener);
-        if (index !== -1) {
-          listenerArray.splice(index, 1);
-        }
-      }
-    },
-    dispatchEvent: function (event) {
-      if (this._listeners === undefined) return;
-      var listeners = this._listeners;
-      var listenerArray = listeners[event.type];
-      if (listenerArray !== undefined) {
-        event.target = this;
-        var array = [];
-        var length = listenerArray.length;
-        for (var i = 0; i < length; i++) {
-          array[i] = listenerArray[i];
-        }
-        for (var i = 0; i < length; i++) {
-          array[i].call(this, event);
-        }
-      }
-    }
-  };
 
   /**
    * Replaces http and https to ws and wss in a URL and returns it as a string.
@@ -236,7 +183,13 @@ var Palindrom = (function () {
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.palindrom = palindrom;
 
-    this.remoteUrl = new URL(remoteUrl, window.location.href);
+    if(typeof window !== 'undefined' && window.location) {
+        this.remoteUrl = new URL(remoteUrl, window.location.href);
+    }
+    else { // in Node, URL is absolute
+        this.remoteUrl = new URL(remoteUrl);
+    }
+
     
     onReceive && (this.onReceive = onReceive);
     onSend && (this.onSend = onSend);
@@ -282,7 +235,7 @@ var Palindrom = (function () {
         'application/json',
         body,
         function (res) {
-          bootstrap(res.responseText);
+          bootstrap(res.data);
           if (network.useWebSocket){
             network.webSocketUpgrade();
           }
@@ -304,7 +257,7 @@ var Palindrom = (function () {
     } else {
       var url = this.remoteUrl.href;
       this.xhr(url, 'application/json-patch+json', msg, function (res, method) {
-          that.onReceive(res.responseText, url, method);
+          that.onReceive(res.data, url, method);
         });
     }
     return this;
@@ -350,7 +303,7 @@ var Palindrom = (function () {
       //TODO: trigger on-ready event (tomalec)
     };
     that._ws.onmessage = function (event) {
-      that.onReceive(event.data, that._ws.url, "WS");
+      that.onReceive(JSON.parse(event.data), that._ws.url, "WS");
     };
     that._ws.onerror = function (event) {
       that.onStateChange(that._ws.readyState, upgradeURL, event.data);
@@ -388,7 +341,7 @@ var Palindrom = (function () {
   PalindromNetworkChannel.prototype.changeState = function (href) {
     var that = this;
     return this.xhr(href, 'application/json-patch+json', null, function (res, method) {
-      that.onReceive(res.responseText, href, method);
+      that.onReceive(res.data, href, method);
     }, true);
   };
 
@@ -401,12 +354,12 @@ var Palindrom = (function () {
     this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
   };
 
-  // TODO:(tomalec)[cleanup] hide from public API.
-  PalindromNetworkChannel.prototype.handleResponseHeader = function (xhr) {
-    var location = xhr.getResponseHeader('X-Location') || xhr.getResponseHeader('Location');
-    if (location) {
-      this.setRemoteUrl(location);
-    }
+  PalindromNetworkChannel.prototype.handleResponseHeader = function (res) {
+        /* Axios always returns lowercase headers */
+        var location = res.headers['x-location'] || res.headers['location'];
+        if (location) {
+            this.setRemoteUrl(location);
+        }
   };
 
   /**
@@ -418,39 +371,38 @@ var Palindrom = (function () {
    * @returns {XMLHttpRequest} performed XHR
    */
   PalindromNetworkChannel.prototype.xhr = function (url, accept, data, callback, setReferer) {
-    var that = this;
-    var req = new XMLHttpRequest();
-    var method = "GET";
-    req.onload = function () {
-      var res = this;
-      that.handleResponseHeader(res);
-      if (res.status >= 400 && res.status <= 599) {
-        that.onFatalError({ statusCode: res.status, statusText: res.statusText, reason: res.responseText }, url, method);
-      }
-      else {
-        callback && callback.call(that.palindrom, res, method);
-      }
-    };
-    req.onerror = that.onConnectionError.bind(that);
-    if (data) {
-      method = "PATCH";
-      req.open(method, url, true);
-      req.setRequestHeader('Content-Type', 'application/json-patch+json');
-    }
-    else {
-      req.open(method, url, true);
-    }
-    if (accept) {
-      req.setRequestHeader('Accept', accept);
-    }
-    if (that.remoteUrl && setReferer) {
-      req.setRequestHeader('X-Referer', that.remoteUrl.pathname);
-    }
-    that.onSend(data, url, method);
-    req.send(data);
 
-    return req;
-  };
+        var method = data ? 'PATCH' : 'GET';
+        var headers = {};
+
+        if (data) {
+            headers['Content-Type'] = 'application/json-patch+json';
+        }
+        if (accept) {
+            headers['Accept'] = accept;
+        }
+        if (this.remoteUrl && setReferer) {
+            headers['X-Referer'] = this.remoteUrl.pathname;
+        }
+        var successHandler = function (res) {
+            this.handleResponseHeader(res);
+            callback && callback.call(this.palindrom, res, method);
+        }.bind(this);
+        var failureHandler = function (res) {
+            this.onFatalError({ statusCode: res.status, statusText: res.statusText, reason: res.data }, url, method);
+        }.bind(this);
+        if (method === "GET") {
+            axios.get(url, {
+                headers: headers
+            }).then(successHandler).catch(failureHandler);
+        }
+        else {
+            axios.patch(url, data, {
+                headers: headers
+            }).then(successHandler).catch(failureHandler);
+        }
+        this.onSend(data, url, method);
+    };
 
   /**
    * Non-queuing object that conforms JSON-Patch-Queue API
@@ -475,16 +427,18 @@ var Palindrom = (function () {
   function connectToRemote(palindrom, reconnectionFn) {
     // if we lose connection at this point, the connection we're trying to establish should trigger onError
     palindrom.heartbeat.stop();
-    reconnectionFn(function bootstrap(responseText){
-      var json = JSON.parse(responseText);
+    
+    reconnectionFn(function bootstrap(json){
       palindrom.reconnector.stopReconnecting();
+
       palindrom.queue.reset(palindrom.obj, json);
 
       if (palindrom.debug) {
-        palindrom.remoteObj = responseText; // JSON.parse(JSON.stringify(palindrom.obj));
+        palindrom.remoteObj = JSON.parse(JSON.stringify(json));
       }
 
       palindrom.observe();
+
       if (palindrom.onDataReady) {
         palindrom.onDataReady.call(palindrom, palindrom.obj);
       }
@@ -543,6 +497,8 @@ var Palindrom = (function () {
     this.retransmissionThreshold = options.retransmissionThreshold || 3;
     this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
     this.onReconnectionEnd = options.onReconnectionEnd || noop;
+    this.onGenericError = options.onGenericError || noop;
+    
 
     this.reconnector = new Reconnector(function () {
       makeReconnection(this);
@@ -607,18 +563,8 @@ var Palindrom = (function () {
     makeInitialConnection(this);
   }
 
-  Palindrom.prototype = Object.create(EventDispatcher.prototype); //inherit EventTarget API from EventDispatcher
-
   var dispatchErrorEvent = function (palindrom, error) {
-    var errorEvent;
-    if (ErrorEvent.prototype.initErrorEvent) {
-      var ev = document.createEvent("ErrorEvent");
-      ev.initErrorEvent('error', true, true, error.message, "", ""); //IE10+
-      Object.defineProperty(ev, 'error', {value: error}); //ev.error is ignored
-    } else {
-      errorEvent = new ErrorEvent("error", {bubbles: true, cancelable: true, error: error}); //this works everywhere except IE
-    }
-    palindrom.dispatchEvent(errorEvent);
+    palindrom.onGenericError(error);
   };
 
   Palindrom.prototype.jsonpatch = jsonpatch;
@@ -746,10 +692,8 @@ var Palindrom = (function () {
 
     // until notifications are converged to single method (events vs. callbacks, #74)
     if (this.onRemoteChange) {
-      console.warn("Palindrom.onRemoteChange is deprecated, please use patch-applied event instead.");
       this.onRemoteChange(sequence, results);
     }
-    this.dispatchEvent(new CustomEvent("patch-applied", {bubbles: true, cancelable: true, detail: {patches: sequence, results: results}}));
   };
 
   Palindrom.prototype.validateSequence = function (tree, sequence) {
@@ -794,7 +738,8 @@ var Palindrom = (function () {
 
   Palindrom.prototype.handleRemoteChange = function (data, url, method) {
     this.heartbeat.notifyReceive();
-    var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
+    var patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
+
     if(patches.length === 0) { // ping message
       return;
     }
