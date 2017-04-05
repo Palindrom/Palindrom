@@ -7,6 +7,8 @@ if (!username) {
   console.error(
     "You need Sauce Labs access to run these specs, if you're a Palindrom org member, please contact @alshakero for this information, if not you need to add your own SauceLabs auth info to your system environment variables."
   );
+  process.exit(1);
+  
 } else {
   const allCaps = [
     {
@@ -38,24 +40,17 @@ if (!username) {
     }
   ];
 
-  CapabilityRunner(allCaps[0], function(passed) {
-    if (passed) {
-      CapabilityRunner(allCaps[1], function(passed) {
-        if (passed) {
-          CapabilityRunner(allCaps[2], function(passed) {
-            if (passed) {
-              console.log("Done!");
-              process.exit(0);
-            } else {
-              process.exit(1);
-            }
-          });
-        } else {
-          process.exit(1);
-        }
-      });
-    } else {
+  const chromePromise = CapabilityRunner(allCaps[0]);
+  const ffPromise = CapabilityRunner(allCaps[1]);
+  const edgePromise = CapabilityRunner(allCaps[2]);
+
+  Promise.all([chromePromise, ffPromise, edgePromise])
+    .then(() => {
+      console.log("Done!");
+      process.exit(0);
+    })
+    .catch(error => {
+      console.log(error);
       process.exit(1);
-    }
-  });
+    });
 }

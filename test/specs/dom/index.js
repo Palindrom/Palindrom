@@ -67,7 +67,6 @@ if (typeof window !== "undefined") {
   function clickHandler(event) {
     event.preventDefault();
   }
-  let instanceNumber = 0;
 
   describe("Links", function() {
     let currLoc;
@@ -96,7 +95,6 @@ if (typeof window !== "undefined") {
           palindrom = new PalindromDOM({
             remoteUrl: "http://localhost/testURL"
           });
-          palindrom.instanceNumber = instanceNumber++;
 
           setTimeout(done, 1);
         });
@@ -270,7 +268,6 @@ if (typeof window !== "undefined") {
           remoteUrl: "http://localhost/testURL",
           listenTo: palindromNode
         });
-        palindrom.instanceNumber = instanceNumber++;
 
         setTimeout(done, 1);
       });

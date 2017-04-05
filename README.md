@@ -207,41 +207,17 @@ bower install Polymer/URL
 
 #### Local installation of dependencies
 
-In order to develop Palindrom locally we suggest to use [polyserve](https://npmjs.com/polyserve) tool to handle bower paths gently.
-
-1. Install the global NPM modules [bower](http://bower.io/) & [polyserve](https://npmjs.com/polyserve): `npm install -g bower polyserve`
-2. Make a local clone of this repo: `git clone git@github.com:Palindrom/Palindrom.git`
-3. Go to the directory: `cd Palindrom`
-4. Install the local dependencies: `bower install`
+1. Make a local clone of this repo: `git clone git@github.com:Palindrom/Palindrom.git`
+2. Go to the directory: `cd Palindrom`
+3. Install the local dependencies: `npm install`
 5. Start the development server: `polyserve -p 8000`
 6. Open the demo: [http://localhost:8000/components/Palindrom/lab/polymer/index.html](http://localhost:8000/components/Palindrom/lab/polymer/index.html)
-7. Open the test suite: [http://localhost:8000/components/Palindrom/test/SpecRunner.html](http://localhost:8000/components/Palindrom/test/SpecRunner.html)
-
-#### Minifying
-
-In order to minify it locally you'll need a basic setup.
-
-* Install [Grunt](http://gruntjs.com/):
-
-    ```sh
-    $ [sudo] npm install -g grunt-cli
-    ```
-
-* Install local dependencies:
-
-    ```sh
-    $ npm install
-    ```
-
-* To minify project.
-
-    ```sh
-    $ grunt uglify
-    ```
+7. Open the test suite: [http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html](http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html)
 
 ### Releases
 
 To release new version run
+
 ```sh
 grunt uglify bump
 
@@ -249,7 +225,7 @@ grunt uglify bump
 
 ### Testing
 
-Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
+Please follow steps 5, 6 and 7 from [here](#Development).
 
 ### Changelog
 
@@ -286,7 +262,8 @@ After DOM is ready, initialize with the constructor:
  */
 var palindrom = new PalindromDOM({remoteUrl: window.location.href});
 
-_Make sure to use the correct remoteUrl_
+*Please make sure you pass the correct PATCH server URL.*
+
 ```
 Now click, blur, pop/pushstate events may trigger a HTTP PATCH request.
 
@@ -364,6 +341,7 @@ grunt uglify bump
 #### Local testing with your browser
 
 Start a web server:
+
 ```sh
 polyserve -p 8000
 ```
