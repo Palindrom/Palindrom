@@ -6156,7 +6156,8 @@ var Palindrom = (function () {
     this.retransmissionThreshold = options.retransmissionThreshold || 3;
     this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
     this.onReconnectionEnd = options.onReconnectionEnd || noop;
-    this.onGenericError = options.onGenericError || noop;
+    this.onIncomingPatchValidationError = options.onIncomingPatchValidationError || noop;
+    this.onOutgoingPatchValidationError = options.onOutgoingPatchValidationError || noop;
     
 
     this.reconnector = new Reconnector(function () {
@@ -6321,8 +6322,7 @@ var Palindrom = (function () {
       var results = this.jsonpatch.apply(tree, sequence, this.debug);
     } catch (error) {
       if(this.debug) {
-        error.message = "Incoming patch validation error: " + error.message;
-        this.onGenericError(error);
+        this.onIncomingPatchValidationError(error);
         return;
       } else {
         throw error;
@@ -6354,8 +6354,7 @@ var Palindrom = (function () {
   Palindrom.prototype.validateSequence = function (tree, sequence) {
     var error = this.jsonpatch.validate(sequence, tree);
     if (error) {
-      error.message = "Outgoing patch validation error: " + error.message;
-      this.onGenericError(error);
+      this.onOutgoingPatchValidationError(error);
     }
   };
 
@@ -13272,7 +13271,7 @@ describe('Palindrom', () => {
             const sequence = [];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onGenericError: spy });
+            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy });
 
             palindrom.validateAndApplySequence(tree, sequence);
 
@@ -13298,7 +13297,7 @@ describe('Palindrom', () => {
             const sequence = [{ op: "replace", path: "/address$", value: "" }];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onGenericError: spy });
+            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy });
 
             palindrom.validateAndApplySequence(tree, sequence);
 
@@ -13325,7 +13324,7 @@ describe('Palindrom', () => {
             const sequence = [{ op: "replace", path: "/address$", value: undefined }];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onGenericError: spy});
+            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy});
 
             palindrom.validateAndApplySequence(tree, sequence);
 
@@ -13352,7 +13351,7 @@ describe('Palindrom', () => {
             const sequence = [{ op: "replace", path: "/address$" }];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onGenericError: spy });
+            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy });
 
             palindrom.validateAndApplySequence(tree, sequence);
 
@@ -13379,7 +13378,7 @@ describe('Palindrom', () => {
             const sequence = [{ op: "replace", path: "/name", value: { first$: [undefined], last$: "Presley" } }];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onGenericError: spy});
+            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy});
 
             palindrom.validateAndApplySequence(tree, sequence);
 
@@ -13625,14 +13624,14 @@ describe("Sockets", () => {
           );
 
           const remoteUrl = "http://localhost/testURL/koko";
+          let everConnected = false;
 
           moxios.stubRequest(remoteUrl, {
             status: 200,
             headers: { location: "/test/this_is_a_nice_url" },
             responseText: '{"hello": "world"}'
           });
-
-          let everConnected = false;
+          
           server.on("connection", server => {
             everConnected = true;
           });
@@ -13646,14 +13645,14 @@ describe("Sockets", () => {
             }
           });
 
-          /* should connect before XHR */
+          /* should connect after XHR */
           moxios.wait(
             () => {
               assert(everConnected === true);
               /* stop server async then call done */
               server.stop(done);
             },
-            20
+            50
           );
         });
 

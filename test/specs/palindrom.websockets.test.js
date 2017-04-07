@@ -226,14 +226,14 @@ describe("Sockets", () => {
           );
 
           const remoteUrl = "http://localhost/testURL/koko";
+          let everConnected = false;
 
           moxios.stubRequest(remoteUrl, {
             status: 200,
             headers: { location: "/test/this_is_a_nice_url" },
             responseText: '{"hello": "world"}'
           });
-
-          let everConnected = false;
+          
           server.on("connection", server => {
             everConnected = true;
           });
@@ -247,14 +247,14 @@ describe("Sockets", () => {
             }
           });
 
-          /* should connect before XHR */
+          /* should connect after XHR */
           moxios.wait(
             () => {
               assert(everConnected === true);
               /* stop server async then call done */
               server.stop(done);
             },
-            20
+            50
           );
         });
 

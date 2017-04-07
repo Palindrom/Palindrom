@@ -499,7 +499,8 @@ var Palindrom = (function () {
     this.retransmissionThreshold = options.retransmissionThreshold || 3;
     this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
     this.onReconnectionEnd = options.onReconnectionEnd || noop;
-    this.onGenericError = options.onGenericError || noop;
+    this.onIncomingPatchValidationError = options.onIncomingPatchValidationError || noop;
+    this.onOutgoingPatchValidationError = options.onOutgoingPatchValidationError || noop;
     
 
     this.reconnector = new Reconnector(function () {
@@ -664,8 +665,7 @@ var Palindrom = (function () {
       var results = this.jsonpatch.apply(tree, sequence, this.debug);
     } catch (error) {
       if(this.debug) {
-        error.message = "Incoming patch validation error: " + error.message;
-        this.onGenericError(error);
+        this.onIncomingPatchValidationError(error);
         return;
       } else {
         throw error;
@@ -697,8 +697,7 @@ var Palindrom = (function () {
   Palindrom.prototype.validateSequence = function (tree, sequence) {
     var error = this.jsonpatch.validate(sequence, tree);
     if (error) {
-      error.message = "Outgoing patch validation error: " + error.message;
-      this.onGenericError(error);
+      this.onOutgoingPatchValidationError(error);
     }
   };
 

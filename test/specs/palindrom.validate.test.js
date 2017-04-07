@@ -30,7 +30,7 @@ describe('Palindrom', () => {
             const sequence = [];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onGenericError: spy });
+            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy });
 
             palindrom.validateAndApplySequence(tree, sequence);
 
@@ -56,7 +56,7 @@ describe('Palindrom', () => {
             const sequence = [{ op: "replace", path: "/address$", value: "" }];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onGenericError: spy });
+            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy });
 
             palindrom.validateAndApplySequence(tree, sequence);
 
@@ -83,7 +83,7 @@ describe('Palindrom', () => {
             const sequence = [{ op: "replace", path: "/address$", value: undefined }];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onGenericError: spy});
+            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy});
 
             palindrom.validateAndApplySequence(tree, sequence);
 
@@ -110,7 +110,7 @@ describe('Palindrom', () => {
             const sequence = [{ op: "replace", path: "/address$" }];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onGenericError: spy });
+            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy });
 
             palindrom.validateAndApplySequence(tree, sequence);
 
@@ -137,7 +137,7 @@ describe('Palindrom', () => {
             const sequence = [{ op: "replace", path: "/name", value: { first$: [undefined], last$: "Presley" } }];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onGenericError: spy});
+            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy});
 
             palindrom.validateAndApplySequence(tree, sequence);
 
