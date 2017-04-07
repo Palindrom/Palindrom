@@ -2,25 +2,29 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Mocha Tests</title>
-    <script type="text/javascript" src="lib/webcomponents.js"></script>
+    <title>Mocha Tests</title>    
     <link href="lib/mocha.css" rel="stylesheet" />
+
+    <script src="lib/webcomponents.js"></script>
+    <script src="lib/expect.js"></script>
+    <script src="lib/mocha.js"></script>
+    <script>
+        mocha.setup('bdd');
+    </script>
     <link rel="import" href="../lab/polymer/components/my-menu-button.html">
 </head>
 
 <body>
-    <my-menu-button style="position: absolute; top: 0; right: 0" href="subpage.html">Distributed <strong>Content</strong></my-menu-button>
+
     <div id="brand">
-        <img alt="Palindrom logo" title="Palindom Tests" src="tests-logo.png" style="max-width: 100%; margin: 20px 0px 0px 20px" />
+        <img alt="Palindrom logo" title="Palindom Tests" src="tests-logo.png" style="max-width: 100%; margin: 20px 0px 0px 20px"
+        />
     </div>
+
+    <my-menu-button style="position: absolute; top: 0; right: 0" href="subpage.html">Distributed <strong>Content</strong></my-menu-button>
+
     <div id="mocha"></div>
 
-    <script src="lib/expect.js"></script>
-    <script src="lib/mocha.js"></script>
-
-    <script>
-        mocha.setup('bdd');
-    </script>
     <script src="runner-browser.js"></script>
     <script>
         /* wait for button component to load */
