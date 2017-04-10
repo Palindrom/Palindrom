@@ -45,7 +45,7 @@ describe("Callbacks", () => {
         ]);
         done();
       },
-      10
+      30
     );
   });
 

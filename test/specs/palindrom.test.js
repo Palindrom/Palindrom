@@ -14,32 +14,27 @@ describe("Palindrom", () => {
     afterEach(() => {
       moxios.uninstall();
     });
-    it(
-      "should initiate an ajax request when initiated, and call the callback function",
-      done => {
-        moxios.stubRequest("http://localhost/testURL", {
-          status: 200,
-          headers: { Location: "http://localhost/testURL" },
-          responseText: '{"hello": "world"}'
-        });
-        const spy = sinon.spy();
-        const palindrom = new Palindrom({
-          remoteUrl: "http://localhost/testURL",
-          callback: spy
-        });
-        moxios.wait(
-          () => {
-            assert(spy.called);
-            assert(spy.calledWith({ hello: "world" }));
-            done();
-          },
-          10
-        );
-      }
-    );
-    it("should accept a JSON that has an empty string as a key", function(
-      done
-    ) {
+    it("should initiate an ajax request when initiated, and call the callback function", function(done) {
+      moxios.stubRequest("http://localhost/testURL", {
+        status: 200,
+        headers: { Location: "http://localhost/testURL" },
+        responseText: '{"hello": "world"}'
+      });
+      const spy = sinon.spy();
+      const palindrom = new Palindrom({
+        remoteUrl: "http://localhost/testURL",
+        callback: spy
+      });
+      moxios.wait(
+        () => {
+          assert(spy.called);
+          assert.deepEqual(spy.getCall(0).args[0], { hello: "world" });
+          done();
+        },
+        5
+      );
+    });
+    it("should accept a JSON that has an empty string as a key", function(done) {
       moxios.stubRequest("http://localhost/testURL", {
         status: 200,
         headers: { Location: "http://localhost/testURL" },
@@ -52,11 +47,14 @@ describe("Palindrom", () => {
       });
       moxios.wait(
         () => {
-          assert(spy.calledWith({ hello: "world", "": { hola: "mundo" } }));
+          assert.deepEqual(spy.getCall(0).args[0], {
+            hello: "world",
+            "": { hola: "mundo" }
+          });
           assert.equal("mundo", palindrom.obj[""].hola);
           done();
         },
-        10
+        5
       );
     });
   });
@@ -69,7 +67,7 @@ describe("Palindrom", () => {
     afterEach(() => {
       moxios.uninstall();
     });
-    it("should patch changes", done => {
+    it("should patch changes", function(done) {
       moxios.stubRequest("http://localhost/testURL", {
         status: 200,
         headers: { contentType: "application/json" },
@@ -95,12 +93,12 @@ describe("Palindrom", () => {
               );
               done();
             },
-            20
+            5
           );
         }
       });
     });
-    it("should not patch changes after unobserve() was called", done => {
+    it("should not patch changes after unobserve() was called", function(done) {
       moxios.stubRequest("http://localhost/testURL", {
         status: 200,
         headers: { contentType: "application/json" },
@@ -115,11 +113,11 @@ describe("Palindrom", () => {
       });
       moxios.wait(
         () => {
-          assert.equal(tempObject.unwatched, "object");
           assert.equal(1, moxios.requests.count());
+          assert.equal(tempObject.unwatched, "object");
           tempObject.unwatched = "objecto";
         },
-        10
+        5
       );
 
       /* now two ajax requests should have happened, 
@@ -135,7 +133,7 @@ describe("Palindrom", () => {
           palindrom.unobserve();
           tempObject.hello = "a change that shouldn't be considered";
         },
-        11
+        10
       );
 
       /* now palindrom is unobserved, requests should stay 2 */
@@ -144,10 +142,10 @@ describe("Palindrom", () => {
           assert.equal(2, moxios.requests.count());
           done();
         },
-        12
+        15
       );
     });
-    it("should patch changes after observe() was called", done => {
+    it("should patch changes after observe() was called", function(done) {
       moxios.stubRequest("http://localhost/testURL", {
         status: 200,
         headers: { contentType: "application/json" },
@@ -221,7 +219,7 @@ describe("Palindrom", () => {
     afterEach(() => {
       moxios.uninstall();
     });
-    it("should call onConnectionError on HTTP 400 response", done => {
+    it("should call onConnectionError on HTTP 400 response", function(done) {
       const spy = sinon.spy();
 
       moxios.stubRequest("http://localhost/testURL", {
@@ -244,11 +242,11 @@ describe("Palindrom", () => {
           assert(spy.calledOnce);
           done();
         },
-        10
+        5
       );
     });
 
-    it("should call onConnectionError on HTTP 599 response", done => {
+    it("should call onConnectionError on HTTP 599 response", function(done) {
       const spy = sinon.spy();
 
       moxios.stubRequest("http://localhost/testURL", {
@@ -271,13 +269,11 @@ describe("Palindrom", () => {
           assert(spy.calledOnce);
           done();
         },
-        10
+        5
       );
     });
 
-    it("should call onConnectionError on HTTP 400 response (patch)", function(
-      done
-    ) {
+    it("should call onConnectionError on HTTP 400 response (patch)", function(done) {
       const spy = sinon.spy();
 
       moxios.stubRequest("http://localhost/testURL", {
@@ -308,13 +304,11 @@ describe("Palindrom", () => {
                 done();
               });
           },
-          10
+          5
         );
       });
     });
-    it("should call onConnectionError on HTTP 599 response (patch)", function(
-      done
-    ) {
+    it("should call onConnectionError on HTTP 599 response (patch)", function(done) {
       const spy = sinon.spy();
 
       moxios.stubRequest("http://localhost/testURL", {
@@ -344,7 +338,7 @@ describe("Palindrom", () => {
                 done();
               });
           },
-          10
+          5
         );
       });
     });
@@ -358,7 +352,7 @@ describe("Palindrom", () => {
     afterEach(() => {
       moxios.uninstall();
     });
-    it("should not send add patch to an ignored property", done => {
+    it("should not send add patch to an ignored property", function(done) {
       const spy = sinon.spy();
 
       moxios.stubRequest("http://localhost/testURL", {
@@ -386,7 +380,7 @@ describe("Palindrom", () => {
           /* now we add an ignored variable */
           tempObject.$privateProp = 1;
         },
-        10
+        5
       );
 
       /* after adding an ignored variable, we should still have one ajax request */
@@ -397,7 +391,7 @@ describe("Palindrom", () => {
           /* now added a NOT ignored variable */
           tempObject.publicProb = 1;
         },
-        11
+        10
       );
 
       /* after adding a NOT ignored variable, we should have TWO ajax requests */
@@ -413,10 +407,10 @@ describe("Palindrom", () => {
           );
           done();
         },
-        12
+        15
       );
     });
-    it("should not send replace patch to an ignored property", done => {
+    it("should not send replace patch to an ignored property", function(done) {
       const spy = sinon.spy();
 
       moxios.stubRequest("http://localhost/testURL", {
@@ -444,7 +438,7 @@ describe("Palindrom", () => {
           /* add an ignored variable */
           tempObject.$privateProp = 1;
         },
-        10
+        5
       );
 
       /* let's change the ignored variable */
@@ -452,7 +446,7 @@ describe("Palindrom", () => {
         () => {
           tempObject.$privateProp = 2;
         },
-        11
+        10
       );
 
       /* after changing an ignored variable, we should still have one ajax request */
@@ -461,13 +455,11 @@ describe("Palindrom", () => {
           assert.equal(1, moxios.requests.count());
           done();
         },
-        12
+        15
       );
     });
 
-    it("should not send replace patch to an ignored deep object", function(
-      done
-    ) {
+    it("should not send replace patch to an ignored deep object", function(done) {
       const spy = sinon.spy();
 
       moxios.stubRequest("http://localhost/testURL", {
@@ -494,7 +486,7 @@ describe("Palindrom", () => {
                 () => {
                   assert.equal(2, moxios.requests.count());
                 },
-                1
+                5
               );
 
               /* change ignored property deeply */
@@ -502,7 +494,7 @@ describe("Palindrom", () => {
                 () => {
                   tempObject.$privateProp[1] = 32;
                 },
-                2
+                10
               );
 
               /* we should STILL have two requests, initial and publicProb add only */
@@ -511,10 +503,10 @@ describe("Palindrom", () => {
                   assert.equal(2, moxios.requests.count());
                   done();
                 },
-                3
+                15
               );
             },
-            4
+            5
           );
         }
       });
@@ -522,7 +514,7 @@ describe("Palindrom", () => {
       palindrom.ignoreAdd = /\/\$.+/;
     });
 
-    it("should not send any patch if all changes were ignored", done => {
+    it("should not send any patch if all changes were ignored", function(done) {
       const spy = sinon.spy();
 
       moxios.stubRequest("http://localhost/testURL", {
@@ -551,7 +543,7 @@ describe("Palindrom", () => {
 
           tempObject.$privateProp = 22;
         },
-        1
+        5
       );
 
       /* change ignored property deeply */
@@ -560,13 +552,11 @@ describe("Palindrom", () => {
           assert.equal(1, moxios.requests.count());
           done();
         },
-        2
+        100
       );
     });
 
-    it("should not send a patch when added property is replaced", function(
-      done
-    ) {
+    it("should not send a patch when added property is replaced", function(done) {
       const spy = sinon.spy();
 
       moxios.stubRequest("http://localhost/testURL", {
@@ -595,7 +585,7 @@ describe("Palindrom", () => {
           tempObject.$privateProp = 1;
           tempObject.$privateProp = 2;
         },
-        1
+        5
       );
 
       /*  we should still have one request, initial connection */
@@ -604,7 +594,7 @@ describe("Palindrom", () => {
           assert.equal(1, moxios.requests.count());
           done();
         },
-        2
+        100
       );
     });
   });

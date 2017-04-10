@@ -39,7 +39,7 @@ describe("Sockets", () => {
             assert(typeof palindrom.network._ws !== "undefined");
             server.stop(done);
           },
-          10
+          5
         );
       });
 
@@ -65,7 +65,7 @@ describe("Sockets", () => {
             /* stop server async then call done */
             server.stop(done);
           },
-          10
+          5
         );
       });
 
@@ -95,7 +95,7 @@ describe("Sockets", () => {
             /* stop server async then call done */
             server.stop(done);
           },
-          50
+          5
         );
       });
 
@@ -125,7 +125,7 @@ describe("Sockets", () => {
             /* stop server async then call done */
             server.stop(done);
           },
-          50
+          5
         );
       });
 
@@ -155,7 +155,7 @@ describe("Sockets", () => {
             /* stop server async then call done */
             server.stop(done);
           },
-          50
+          5
         );
       });
 
@@ -185,7 +185,7 @@ describe("Sockets", () => {
             /* stop server async then call done */
             server.stop(done);
           },
-          10
+          5
         );
       });
 
@@ -216,7 +216,7 @@ describe("Sockets", () => {
             /* stop server async then call done */
             server.stop(done);
           },
-          10
+          5
         );
       });
       describe("Before connection is established", () => {
@@ -233,7 +233,7 @@ describe("Sockets", () => {
             headers: { location: "/test/this_is_a_nice_url" },
             responseText: '{"hello": "world"}'
           });
-          
+
           server.on("connection", server => {
             everConnected = true;
           });
@@ -254,7 +254,7 @@ describe("Sockets", () => {
               /* stop server async then call done */
               server.stop(done);
             },
-            50
+            10
           );
         });
 
@@ -295,7 +295,7 @@ describe("Sockets", () => {
               assert(messages.length === 0);
               server.stop(done);
             },
-            10
+            5
           );
         });
       });
@@ -333,20 +333,20 @@ describe("Sockets", () => {
           moxios.wait(
             () => {
               palindrom.obj.firstName = "Omar";
-
               moxios.wait(
                 () => {
                   assert(messages.length === 1);
-                  assert(
-                    JSON.stringify(messages[0]) ===
-                      '{"op":"add","path":"/firstName","value":"Omar"}'
-                  );
+                  assert.deepEqual(messages[0], {
+                    op: "add",
+                    path: "/firstName",
+                    value: "Omar"
+                  });
                   server.stop(done);
                 },
-                10
+                5
               );
             },
-            30
+            50
           );
         });
 
@@ -397,7 +397,7 @@ describe("Sockets", () => {
                   /* make sure there is no socket messages */
                   assert(messages.length === 0);
                 },
-                1
+                5
               );
 
               /* now socket is connected, let's issue a change */
@@ -426,7 +426,7 @@ describe("Sockets", () => {
                   );
                   server.stop(done);
                 },
-                20
+                15
               );
             }
           });

@@ -135,10 +135,10 @@ if (typeof window !== "undefined") {
                     expect(historySpy.callCount).to.equal(1);
                     done();
                   },
-                  10
+                  50
                 );
               },
-              10
+              50
             );
           });
 
@@ -175,14 +175,14 @@ if (typeof window !== "undefined") {
             expect(historySpy.callCount).to.equal(0);
           });
 
-          it("full URL in the same host, different schema", function() {
+          it("full URL in the same host, different schema", function(done) {
             const protocol = window.location.protocol === "http:"
               ? "https:"
               : "http:";
             const href = protocol + "//" + window.location.host + "/test"; //https://localhost:8888/test
             createAndClickOnLink(href);
-
             expect(historySpy.callCount).to.equal(0);
+            setTimeout(done, 10);
           });
         });
 
@@ -195,29 +195,29 @@ if (typeof window !== "undefined") {
                 moxios.wait(
                   function() {
                     expect(historySpy.callCount).to.equal(1);
-                    done();
+                    setTimeout(done, 10);
                   },
-                  10
+                  50
                 );
               },
-              10
+              50
             );
           });
         });
 
-        it("should stop listening to DOM changes after `.unlisten()` was called", function() {
+        it("should stop listening to DOM changes after `.unlisten()` was called", function(done) {
           palindrom.unlisten();
-
           createAndClickOnLink("#will_not_get_caught_by_palindrom");
           expect(historySpy.callCount).to.equal(0);
+          setTimeout(done, 50);
         });
 
-        it("should start listening to DOM changes after `.listen()` was called", function() {
+        it("should start listening to DOM changes after `.listen()` was called", function(done) {
           palindrom.unlisten();
           palindrom.listen();
-
-          createAndClickOnLink("#will_not_get_caught_by_palindrom");
+          createAndClickOnLink("#will_get_caught_by_palindrom");
           expect(historySpy.callCount).to.equal(1);
+          setTimeout(done, 50);
         });
       });
     });
@@ -251,7 +251,7 @@ if (typeof window !== "undefined") {
           listenTo: palindromNode
         });
 
-        setTimeout(done, 1);
+        setTimeout(done, 50);
       });
 
       afterEach(function() {
@@ -370,10 +370,10 @@ if (typeof window !== "undefined") {
 
                   done();
                 },
-                10
+                50
               );
             },
-            10
+            50
           );
         });
       });
@@ -393,13 +393,13 @@ if (typeof window !== "undefined") {
                     expect(historySpy.callCount).to.equal(0);
                     done();
                   },
-                  10
+                  50
                 );
               },
-              10
+              50
             );
           },
-          10
+          50
         );
       });
 
@@ -450,7 +450,7 @@ if (typeof window !== "undefined") {
 
             done();
           },
-          10
+          50
         );
       });
     });
@@ -494,7 +494,7 @@ if (typeof window !== "undefined") {
             expect(window.location.pathname).to.equal("/newUrl-palindrom");
             done();
           },
-          10
+          50
         );
       });
     });

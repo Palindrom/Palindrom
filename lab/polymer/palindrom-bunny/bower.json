@@ -1,0 +1,24 @@
+{
+    "name": "palindrom-bunny",
+    "version": "2.0.0",
+    "description": "Polymer Element that shows a jumping puppet bunny",
+    "license": "MIT",
+    "main": "palindrom-bunny.html",
+    "keywords": [
+        "polymer",
+        "web-components",
+        "animation",
+        "bunny",
+        "palindrom"
+    ],
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "preview.png",
+        "index.html"
+    ],
+    "dependencies": {
+        "polymer": "Polymer/polymer#>=1.0.0"
+    }
+}

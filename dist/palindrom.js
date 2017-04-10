@@ -5569,6 +5569,10 @@ var Palindrom = (function () {
 
   /* backward compatibility */
   global.Puppet = Palindrom;
+  
+  /* Since we have jsonpatch bundled,
+  let's expose it in case anyone needs it */
+  global.jsonpatch = jsonpatch;
 
   return Palindrom;
 })();

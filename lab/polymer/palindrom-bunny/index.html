@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>&lt;palindrom-bunny&gt;</title>
+
+    <!-- Importing Web Component's Polyfill -->
+    <script src="../webcomponentsjs/webcomponents.js"></script>
+
+    <!-- Importing Custom Elements -->
+    <link rel="import" href="palindrom-bunny.html">
+
+    <style>
+        body {
+            font-family: sans-serif;
+            min-width: 200px;
+            width: 70%;
+            margin: 0 auto;
+            padding: 30px;
+            height: 100%;
+        }
+
+        juicy-jsoneditor {
+            height: 18em;
+        }
+
+        #demo {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        #examples {
+            display: flex;
+            flex-flow: row wrap;
+            justify-content: space-between;
+            align-content: center;
+            align-items: center;
+        }
+
+        #examples > section {
+            width: 21em;
+            margin: 0 2em;
+        }
+
+        iframe {
+            float: right;
+        }
+    </style>
+</head>
+<body>
+<a href="https://github.com/Palindrom/palindrom-bunny"><img style="position: absolute; top: 0; right: 0; border: 0;"
+                                                        src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"
+                                                        alt="Fork me on GitHub"></a>
+<article class="markdown-body">
+    <iframe src="http://ghbtns.com/github-btn.html?user=Palindrom&repo=palindrom-bunny&type=watch&count=true&size=medium"
+            allowtransparency="true" frameborder="0" scrolling="0" width="90" height="30"></iframe>
+
+    <h1>&lt;palindrom-bunny&gt;</h1>
+
+    <p>
+        Polymer Element that shows a jumping puppet bunny
+    </p>
+
+    <palindrom-bunny></palindrom-bunny>
+
+    <h2>How to use</h2>
+    <section id="examples">
+        <section>
+            <code>
+                &lt;palindrom-bunny&gt;&lt;/palindrom-bunny&gt;
+            </code>
+        </section>
+    </section>
+
+    <h2>Credits</h2>
+
+    <footer>bunny photo credit: <a href="https://www.flickr.com/photos/mujitra/4422575066">MIKI Yoshihito</a> (CC BY 2.0)
+    </footer>
+</article>
+</body>
+</html>

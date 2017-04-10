@@ -17,7 +17,7 @@ if (!username) {
       version: "57.0",
       username: username,
       accessKey: accessKey,
-      name: "Chrome: PalindromDOM tests",
+      name: "Chrome: Running tests",
       "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER
     },
     {
@@ -26,7 +26,7 @@ if (!username) {
       version: "52.0",
       username: username,
       accessKey: accessKey,
-      name: "Firefox: PalindromDOM tests",
+      name: "Firefox: Running tests",
       "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER
     },
     {
@@ -35,7 +35,7 @@ if (!username) {
       version: "14",
       username: username,
       accessKey: accessKey,
-      name: "MicrosoftEdge: PalindromDOM tests",
+      name: "MicrosoftEdge: Running tests",
       "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER
     }
   ];
