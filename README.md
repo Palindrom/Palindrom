@@ -3,6 +3,10 @@
   <img alt="Palindrom Logo" src="https://cloud.githubusercontent.com/assets/17054134/23406359/e2690c08-fdbe-11e6-8880-c23dc771f899.png">
 </p>
 
+[![Build Status](https://travis-ci.org/Palindrom/Palindrom.svg?branch=master)](https://travis-ci.org/Palindrom/Palindrom)
+[![npm version](https://badge.fury.io/js/palindrom.svg)](https://badge.fury.io/js/palindrom)
+[![MIT](https://badges.frapsoft.com/os/mit/mit.svg?v=102)](https://opensource.org/licenses/MIT)
+
 ---
 
 Library for two-way data binding between local JSON view models and remote, using JSON-Patch, w/ optional OT, via HTTP or WebSocket.
