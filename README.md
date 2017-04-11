@@ -22,10 +22,10 @@ For additional binding with DOM, browser history, etc. use [PalindromDOM](#Palin
 ##### Bower:
 
 ```sh
-bower install Palindrom
+bower install Palindrom --save
 ```
 
-Then add source to your `<head>`:
+Then add source to your HTML
 
 ```html
 
@@ -156,7 +156,7 @@ If you want to opt-out from such behavior, you need to force your framework to u
 
 ### Generating patches based on local changes
 
-Palindrom automatically observes local changes. This is implemented by ES6 Proxies, triggered with every modification the `palindrom.obj` object.
+Palindrom automatically observes local changes. This is implemented by [ES6 Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy), triggered with every modification the `palindrom.obj` object.
 
 ### Ignoring local changes (`ignoreAdd`)
 
@@ -207,7 +207,9 @@ to this new state and resumes its operations.
 
 ### Dependencies
 
-If you use the bundle, no dependencies are needed. However for more information, you can view all the dependencies in [package.json](https://github.com/Palindrom/Palindrom/blob/master/package.json).
+It depends on Native [ES6 Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy). Check usability on [caniuse](http://www.caniuse.com/#search=Proxy).
+
+If you use the bundle, no file dependencies are needed. You can view all the dependencies in [package.json](https://github.com/Palindrom/Palindrom/blob/master/package.json).
 
 ### Development
 
@@ -215,8 +217,9 @@ If you use the bundle, no dependencies are needed. However for more information,
 2. Go to the directory: `cd Palindrom`
 3. Install the local dependencies: `npm install`
 5. Start the development server: `polyserve -p 8000`
-6. Open the demo: [http://localhost:8000/components/Palindrom/lab/polymer/index.html](http://localhost:8000/components/Palindrom/lab/polymer/index.html)
-7. Open the test suite: [http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html](http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html)
+6. bundle by calling `webpack` in your shell.
+7. Open the demo: [http://localhost:8000/components/Palindrom/lab/polymer/index.html](http://localhost:8000/components/Palindrom/lab/polymer/index.html)
+8. Open the test suite: [http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html](http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html)
 
 ### Releases
 
@@ -224,6 +227,7 @@ To release new version run
 
 ```sh
 grunt uglify bump
+git push && git push --tags
 ...
 npm publish
 
@@ -231,7 +235,7 @@ npm publish
 
 ### Testing
 
-Please follow steps 5, 6 and 7 from [here](#Development).
+Please follow steps 5, 6, 7 and 8 from [Development section](#Development).
 
 ### Changelog
 
@@ -253,10 +257,10 @@ Implements [Server communication](https://github.com/Starcounter-Jack/Palindrom/
 ##### Bower:
 
 ```sh
-bower install Palindrom
+bower install Palindrom --save
 ```
 
-Then add source to your head:
+Then add source to your HTML:
 
 ```html
 
@@ -365,16 +369,16 @@ Open `http://127.0.0.1:8000/components/Palindrom/test/MochaSpecRunner.html` in y
 
 #### Testing with CLI and SauceLabs
 
-- Install [Sauce Connect](https://wiki.saucelabs.com/display/DOCS/Sauce+Connect+Proxy).
+1. Install [Sauce Connect](https://wiki.saucelabs.com/display/DOCS/Sauce+Connect+Proxy).
 
-- Add your `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables to your machine.
+2. Add your `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables to your machine.
 
-- Connect to SauceLabs using the command
+3. Connect to SauceLabs using the command
  `sc /u YOUR_SAUCE_USER /k YOUR_SAUCE_ACCESSKEY`
 
-- Start a web server `polyserve -p 8000`
+4. Start a web server `polyserve -p 8000`
 
-- In project's root folder, run `npm test`
+5. In project's root folder, run `npm test`
 
 
 ### Changelog
