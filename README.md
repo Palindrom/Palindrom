@@ -216,10 +216,10 @@ If you use the bundle, no file dependencies are needed. You can view all the dep
 1. Make a local clone of this repo: `git clone git@github.com:Palindrom/Palindrom.git`
 2. Go to the directory: `cd Palindrom`
 3. Install the local dependencies: `npm install`
-5. Start the development server: `polyserve -p 8000`
-6. bundle by calling `webpack` in your shell.
-7. Open the demo: [http://localhost:8000/components/Palindrom/lab/polymer/index.html](http://localhost:8000/components/Palindrom/lab/polymer/index.html)
-8. Open the test suite: [http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html](http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html)
+4. Start the development server: `polyserve -p 8000`
+5. bundle by calling `webpack` in your shell.
+6. Open the demo: [http://localhost:8000/components/Palindrom/lab/polymer/index.html](http://localhost:8000/components/Palindrom/lab/polymer/index.html)
+7. Open the test suite: [http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html](http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html)
 
 ### Releases
 
@@ -235,7 +235,7 @@ npm publish
 
 ### Testing
 
-Please follow steps 5, 6, 7 and 8 from [Development section](#Development).
+Please follow steps 4, 5, 6 and 7 from [Development section](#Development).
 
 ### Changelog
 
