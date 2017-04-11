@@ -12592,7 +12592,7 @@ describe("Callbacks", () => {
 
     moxios.stubRequest("http://house.of.cards/testURL", {
       status: 200,
-      headers: { Location: "http://house.of.cards/testURL" },
+      headers: { location: "http://house.of.cards/testURL2" },
       responseText: '{"hello": "world"}'
     });
 
@@ -12617,7 +12617,7 @@ describe("Callbacks", () => {
         assert(onPatchSent.calledOnce);
 
         /* prepare response */
-        moxios.stubRequest("http://house.of.cards/testURL", {
+        moxios.stubRequest("http://house.of.cards/testURL2", {
           status: 200,
           headers: { Location: "http://house.of.cards/testURL" },
           responseText: '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]'
@@ -12669,7 +12669,6 @@ describe("Callbacks", () => {
     );
   });
 });
-
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
