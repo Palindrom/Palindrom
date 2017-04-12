@@ -52,7 +52,7 @@ var Palindrom = require('palindrom');
 import Palindrom from 'palindrom'
 ```
 
-Or just download it manually from [github](https://github.com/Palindrom/Palindrom).
+###### Or just download it manually from [github](https://github.com/Palindrom/Palindrom/archive/master.zip).
 
 ### Usage
 
@@ -84,7 +84,7 @@ Attribute              | Type          | Default                | Description
 ---                    | ---           | ---                    | ---
 `remoteUrl`            | *String*      |  **Required**          | PATCH server URL
 `callback`             | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established)
-`obj [readonly]`      | *Object*      | `{}`,                  | Your initial state object, **please read notes below**.
+`obj [readonly]`      | *Object*      | `{}`                    | Your initial state object, **please read notes below**.
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
 `ignoreAdd`            | *RegExp*      |                        | Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
 `debug`                | *Boolean*     | `true`                 | Toggle debugging mode
@@ -106,7 +106,7 @@ Attribute              | Type          | Default                | Description
 `onReconnectionEnd`    | *Function*    |                        | Triggered when palindrom successfully reconnected
 `jsonpatch`            | *Object*      | `window.jsonpatch`       | The provider object for jsonpatch `apply` and  `validate`. By default it uses Starcounter-Jack/JSON-Patch library.
 
-**_ Note 1: the object you pass to Palindrom constructor in `options.obj` is deep cloned as the initial state, make sure to use `palindrom.obj` to issue patches and have them applied, the object you pass will not be observed_**.
+**_ Note 1: the object you pass to Palindrom constructor in `options.obj` is deep cloned as the initial state, make sure to use `palindrom.obj` to issue patches and have server patches applied, the object you pass will not be observed_**.
 
 **_ Note 2: `palindrom.obj` is a constant (as in `const`) property, you can modify its properties but you can't assign it again or `delete` it. `palindrom.obj = {}` would throw an error._**
 
@@ -161,7 +161,7 @@ If you want to opt-out from such behavior, you need to force your framework to u
 
 ### Generating patches based on local changes
 
-Palindrom automatically observes local changes. This is implemented by [ES6 Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy), triggered with every modification the `palindrom.obj` object.
+Palindrom automatically observes local changes. This is implemented with [ES6 Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy), triggered with every modification of `palindrom.obj` object.
 
 ### Ignoring local changes (`ignoreAdd`)
 
@@ -231,7 +231,8 @@ If you use the bundle, no file dependencies are needed. You can view all the dep
 To release new version run
 
 ```sh
-grunt uglify bump
+webpack # to bundle
+grunt uglify bump # to bump the version, commit, and create a git tag
 git push && git push --tags
 ...
 npm publish
