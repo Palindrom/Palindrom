@@ -254,7 +254,7 @@ describe("Sockets", () => {
               /* stop server async then call done */
               server.stop(done);
             },
-            10
+            50
           );
         });
 
