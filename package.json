@@ -2,7 +2,7 @@
   "name": "palindrom",
   "version": "2.4.0",
   "description": "",
-  "license" : "MIT",
+  "license": "MIT",
   "homepage": "https://github.com/palindrom/Palindrom",
   "keywords": [
     "json",
@@ -63,6 +63,6 @@
   "scripts": {
     "test": "webpack && node test/Sauce/Runner.js",
     "test-cli": "mocha test/runner.js",
-    "build": "webpack"     
+    "build": "webpack"
   }
 }
