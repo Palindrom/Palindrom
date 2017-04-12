@@ -60,6 +60,33 @@ describe("Palindrom", () => {
   });
 });
 describe("Palindrom", () => {
+  describe("obj", () => {
+    beforeEach(() => {
+      moxios.install();
+    });
+    afterEach(() => {
+      moxios.uninstall();
+    });
+    it("palindrom.obj should be readonly", function(done) {
+      moxios.stubRequest("http://localhost/testURL", {
+        status: 200,
+        headers: { contentType: "application/json" },
+        responseText: '{"hello": "world"}'
+      });
+
+      const palindrom = new Palindrom({
+        remoteUrl: "http://localhost/testURL"
+      });
+
+      moxios.wait(() => {
+        /* setting the object should throw an error */
+        assert.throws(() => palindrom.obj = {}, Error, "palindrom.obj is readonly");
+        done();
+      }, 10);
+    });
+  });
+});
+describe("Palindrom", () => {
   describe("#patching", () => {
     beforeEach(() => {
       moxios.install();

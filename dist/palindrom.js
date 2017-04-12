@@ -5381,8 +5381,17 @@ var Palindrom = (function () {
     this means it's the first observe call,
     let's proxify it then! */
     if (!this.isObjectProxified) {
-        this.obj = this.jsonPatcherProxy.observe(true, this.filterChangedCallback.bind(this));
-        this.isObjectProxified = true;
+      /* make exposed object read only */
+      const proxifiedObj = this.jsonPatcherProxy.observe(true, this.filterChangedCallback.bind(this));
+      Object.defineProperty(this, 'obj', {
+        get: function() {
+          return proxifiedObj
+        },
+        set: function() {
+          throw new Error("palindrom.obj is readonly");
+        }
+      });      
+      this.isObjectProxified = true;
     }
     /* we are already observing, just enable event emitting. */
     else {
