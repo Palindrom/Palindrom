@@ -1,6 +1,6 @@
 @charset "utf-8";
 
-
+#brand img {max-width: 100%; margin: 20px 0px 0px 20px }
 body {
   margin:0;
   background: rgb(239,239,239);
@@ -10,7 +10,11 @@ body {
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#efefef', endColorstr='#aa343c',GradientType=1 );
   background-attachment: fixed;
 }
-
+h3 {
+  margin: 3%;
+  color: #444;
+  font-style: italic
+}
 #mocha {
   font: 20px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
   margin: 60px 50px;

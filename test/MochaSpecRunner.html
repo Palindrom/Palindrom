@@ -2,29 +2,29 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Mocha Tests</title>    
+    <title>Mocha Tests</title>
     <link href="lib/mocha.css" rel="stylesheet" />
-
     <script src="../lab/polymer/bower_components/webcomponentsjs/webcomponents.js"></script>
-    <script src="lib/expect.js"></script>
-    <script src="lib/mocha.js"></script>
-    <script>
-        mocha.setup('bdd');
-    </script>
     <link rel="import" href="../lab/polymer/components/my-menu-button.html">
 </head>
 
 <body>
-
     <div id="brand">
-        <img alt="Palindrom logo" title="Palindom Tests" src="tests-logo.png" style="max-width: 100%; margin: 20px 0px 0px 20px"
-        />
+        <img alt="Palindrom logo" title="Palindom Tests" src="tests-logo.png" />
     </div>
-
     <my-menu-button style="position: absolute; top: 0; right: 0" href="subpage.html">Distributed <strong>Content</strong></my-menu-button>
-
     <div id="mocha"></div>
-
+    <script>
+        function failNicely() {
+            let message = document.createElement('H3');
+            message.innerHTML = "Please make sure to run `npm install` before running the tests..";
+            document.body.insertBefore(message, document.querySelector('my-menu-button'));
+        }
+    </script>
+    <script src="../node_modules/mocha/mocha.js" onerror="failNicely()"></script>
+    <script>
+        mocha.setup('bdd');
+    </script>
     <script src="runner-browser.js"></script>
     <script>
         /* wait for button component to load */

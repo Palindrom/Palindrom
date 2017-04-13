@@ -13326,7 +13326,6 @@ const assert = __webpack_require__(12);
 const moxios = __webpack_require__(14);
 const sinon = __webpack_require__(15);
 
-
 describe('Palindrom', () => {
     describe('#ValidatePatches', () => {
         beforeEach(() => {

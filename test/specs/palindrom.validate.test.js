@@ -5,7 +5,6 @@ const assert = require("assert");
 const moxios = require("moxios");
 const sinon = require("sinon");
 
-
 describe('Palindrom', () => {
     describe('#ValidatePatches', () => {
         beforeEach(() => {
