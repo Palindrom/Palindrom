@@ -31,7 +31,7 @@ describe("Callbacks", () => {
       }
     });
 
-    moxios.wait(
+    setTimeout(
       () => {
         /* onLocalChange shouldn't be called now */
         assert(sentSpy.notCalled);
@@ -67,7 +67,7 @@ describe("Callbacks", () => {
       onRemoteChange: receivedSpy
     });
 
-    moxios.wait(
+    setTimeout(
       () => {
         assert(receivedSpy.calledOnce);
 

@@ -33,7 +33,7 @@ describe("Sockets", () => {
         /* socket should be undefined before XHR delay */
         assert(typeof palindrom.network._ws === "undefined");
 
-        moxios.wait(
+        setTimeout(
           () => {
             /* socket should NOT be undefined after XHR delay */
             assert(typeof palindrom.network._ws !== "undefined");
@@ -58,7 +58,7 @@ describe("Sockets", () => {
           useWebSocket: true
         });
 
-        moxios.wait(
+        setTimeout(
           () => {
             assert(palindrom.network._ws.url === "ws://localhost/testURL");
 
@@ -86,7 +86,7 @@ describe("Sockets", () => {
           useWebSocket: true
         });
 
-        moxios.wait(
+        setTimeout(
           () => {
             assert(
               palindrom.network._ws.url ===
@@ -116,7 +116,7 @@ describe("Sockets", () => {
           useWebSocket: true
         });
 
-        moxios.wait(
+        setTimeout(
           () => {
             assert(
               palindrom.network._ws.url ===
@@ -146,7 +146,7 @@ describe("Sockets", () => {
           useWebSocket: true
         });
 
-        moxios.wait(
+        setTimeout(
           () => {
             assert(
               palindrom.network._ws.url ===
@@ -176,7 +176,7 @@ describe("Sockets", () => {
           useWebSocket: true
         });
 
-        moxios.wait(
+        setTimeout(
           () => {
             assert(
               palindrom.network._ws.url ===
@@ -205,7 +205,7 @@ describe("Sockets", () => {
           useWebSocket: true
         });
 
-        moxios.wait(
+        setTimeout(
           () => {
             assert(
               palindrom.network._ws.url ===
@@ -236,7 +236,7 @@ describe("Sockets", () => {
           useWebSocket: true
         });
 
-        moxios.wait(
+        setTimeout(
           () => {
             assert(
               palindrom.network._ws.url ===
@@ -277,7 +277,7 @@ describe("Sockets", () => {
           });
 
           /* should connect after XHR */
-          moxios.wait(
+          setTimeout(
             () => {
               assert(everConnected === true);
               /* stop server async then call done */
@@ -319,7 +319,7 @@ describe("Sockets", () => {
 
           palindrom.obj.firstName = "Omar";
 
-          moxios.wait(
+          setTimeout(
             () => {
               assert(messages.length === 0);
               server.stop(done);
@@ -359,10 +359,10 @@ describe("Sockets", () => {
             useWebSocket: true
           });
 
-          moxios.wait(
+          setTimeout(
             () => {
               palindrom.obj.firstName = "Omar";
-              moxios.wait(
+              setTimeout(
                 () => {
                   assert(messages.length === 1);
                   assert.deepEqual(messages[0], {
@@ -416,7 +416,7 @@ describe("Sockets", () => {
               /* here, socket connection isn't established yet, let's issue a change */
               obj.name = "Mark";
 
-              moxios.wait(
+              setTimeout(
                 () => {
                   assert(
                     '[{"op":"add","path":"/name","value":"Mark"}]' ===
@@ -430,7 +430,7 @@ describe("Sockets", () => {
               );
 
               /* now socket is connected, let's issue a change */
-              moxios.wait(
+              setTimeout(
                 () => {
                   palindrom.obj.firstName = "Omar";
 
@@ -444,7 +444,7 @@ describe("Sockets", () => {
               );
 
               /* now socket is connected, let's issue another change */
-              moxios.wait(
+              setTimeout(
                 () => {
                   palindrom.obj.firstName = "Hanan";
 

@@ -35,7 +35,7 @@ describe("Callbacks, onPatchSent and onPatchReceived", () => {
         onPatchSent
       });
 
-      moxios.wait(
+      setTimeout(
         () => {
           /* onPatchReceived, shouldn't be called now */
           assert(onPatchReceived.notCalled);
@@ -55,7 +55,7 @@ describe("Callbacks, onPatchSent and onPatchReceived", () => {
           assert(onPatchSent.calledTwice);
 
           /* wait for XHR */
-          moxios.wait(
+          setTimeout(
             () => {
               assert(onPatchReceived.calledOnce);
               assert.deepEqual(onPatchReceived.lastCall.args[0], [
@@ -114,7 +114,7 @@ describe("Callbacks, onPatchSent and onPatchReceived", () => {
         onPatchSent
       });
 
-      moxios.wait(
+      setTimeout(
         () => {
           /* onPatchReceived, shouldn't be called now */
           assert(onPatchReceived.notCalled);
@@ -127,7 +127,7 @@ describe("Callbacks, onPatchSent and onPatchReceived", () => {
           assert(onPatchSent.calledTwice);
 
           /* wait for XHR */
-          moxios.wait(
+          setTimeout(
             () => {
               assert(onPatchReceived.calledOnce);
               assert.deepEqual(onPatchReceived.lastCall.args[0], [

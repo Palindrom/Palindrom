@@ -3,5 +3,7 @@ require('./specs/palindrom.test');
 require('./specs/palindrom.validate.test');
 require('./specs/palindrom.websockets.test');
 require('./specs/onPatchSentAndReceived.test');
+require('./specs/palindrom.errors.test');
+require('./specs/palindrom.ignoreAdd.test');
 
 require('./specs/dom/index');
