@@ -25,7 +25,7 @@ describe("Palindrom", () => {
         remoteUrl: "http://localhost/testURL",
         callback: spy
       });
-      moxios.wait(
+      setTimeout(
         () => {
           assert(spy.called);
           assert.deepEqual(spy.getCall(0).args[0], { hello: "world" });
@@ -45,7 +45,7 @@ describe("Palindrom", () => {
         remoteUrl: "http://localhost/testURL",
         callback: spy
       });
-      moxios.wait(
+      setTimeout(
         () => {
           assert.deepEqual(spy.getCall(0).args[0], {
             hello: "world",
@@ -78,7 +78,7 @@ describe("Palindrom", () => {
         remoteUrl: "http://localhost/testURL"
       });
 
-      moxios.wait(() => {
+      setTimeout(() => {
         /* setting the object should throw an error */
         assert.throws(() => palindrom.obj = {}, Error, "palindrom.obj is readonly");
         done();
@@ -109,7 +109,7 @@ describe("Palindrom", () => {
 
           /* now two ajax requests should had happened,
                     the initial one, and the patch one (hello = world => hello = galaxy)*/
-          moxios.wait(
+          setTimeout(
             () => {
               assert.equal(2, moxios.requests.count());
               let request = moxios.requests.mostRecent();
@@ -138,7 +138,7 @@ describe("Palindrom", () => {
           tempObject = obj;
         }
       });
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(1, moxios.requests.count());
           assert.equal(tempObject.unwatched, "object");
@@ -149,7 +149,7 @@ describe("Palindrom", () => {
 
       /* now two ajax requests should have happened, 
             the initial one, and the patch one */
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(2, moxios.requests.count());
           let request = moxios.requests.mostRecent();
@@ -164,7 +164,7 @@ describe("Palindrom", () => {
       );
 
       /* now palindrom is unobserved, requests should stay 2 */
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(2, moxios.requests.count());
           done();
@@ -185,7 +185,7 @@ describe("Palindrom", () => {
           tempObject = obj;
         }
       });
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(tempObject.unwatched, "object");
           assert.equal(1, moxios.requests.count());
@@ -196,7 +196,7 @@ describe("Palindrom", () => {
 
       /* now two ajax requests should had happened, 
             the initial one, and the patch one */
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(2, moxios.requests.count());
           let request = moxios.requests.mostRecent();
@@ -211,7 +211,7 @@ describe("Palindrom", () => {
       );
 
       /* now palindrom is unobserved, requests should stay 2 */
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(2, moxios.requests.count());
 
@@ -223,7 +223,7 @@ describe("Palindrom", () => {
       );
 
       /* now palindrom is observed, requests should become 3  */
-      moxios.wait(
+      setTimeout(
         () => {
           let request = moxios.requests.mostRecent();
           assert.equal(3, moxios.requests.count());
@@ -264,7 +264,7 @@ describe("Palindrom", () => {
       });
 
       /* onConnectionError should be called once now */
-      moxios.wait(
+      setTimeout(
         () => {
           assert(spy.calledOnce);
           done();
@@ -291,7 +291,7 @@ describe("Palindrom", () => {
       });
 
       /* onConnectionError should be called once now */
-      moxios.wait(
+      setTimeout(
         () => {
           assert(spy.calledOnce);
           done();
@@ -315,7 +315,7 @@ describe("Palindrom", () => {
       });
 
       moxios.withMock(() => {
-        moxios.wait(
+        setTimeout(
           () => {
             palindrom.obj.hello = "galaxy";
             let request = moxios.requests.mostRecent();
@@ -350,7 +350,7 @@ describe("Palindrom", () => {
       });
 
       moxios.withMock(() => {
-        moxios.wait(
+        setTimeout(
           () => {
             palindrom.obj.hello = "galaxy";
             let request = moxios.requests.mostRecent();
@@ -400,7 +400,7 @@ describe("Palindrom", () => {
       palindrom.ignoreAdd = /\/\$.+/;
 
       /* before adding an ignored variable, we should have one ajax request */
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(1, moxios.requests.count());
 
@@ -411,7 +411,7 @@ describe("Palindrom", () => {
       );
 
       /* after adding an ignored variable, we should still have one ajax request */
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(1, moxios.requests.count());
 
@@ -422,7 +422,7 @@ describe("Palindrom", () => {
       );
 
       /* after adding a NOT ignored variable, we should have TWO ajax requests */
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(2, moxios.requests.count());
           let request = moxios.requests.mostRecent();
@@ -458,7 +458,7 @@ describe("Palindrom", () => {
       palindrom.ignoreAdd = /\/\$.+/;
 
       /* before adding an ignored variable, we should have one ajax request */
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(1, moxios.requests.count());
 
@@ -469,7 +469,7 @@ describe("Palindrom", () => {
       );
 
       /* let's change the ignored variable */
-      moxios.wait(
+      setTimeout(
         () => {
           tempObject.$privateProp = 2;
         },
@@ -477,7 +477,7 @@ describe("Palindrom", () => {
       );
 
       /* after changing an ignored variable, we should still have one ajax request */
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(1, moxios.requests.count());
           done();
@@ -501,7 +501,7 @@ describe("Palindrom", () => {
         callback: function(tempObject) {
           tempObject.publicProp = [1, 2, 3];
 
-          moxios.wait(
+          setTimeout(
             () => {
               /* initial request and `add` publicProb */
               assert.equal(2, moxios.requests.count());
@@ -509,7 +509,7 @@ describe("Palindrom", () => {
               tempObject.$privateProp = [1, 2, 3];
 
               /* we should have two requests, initial and publicProb add */
-              moxios.wait(
+              setTimeout(
                 () => {
                   assert.equal(2, moxios.requests.count());
                 },
@@ -517,7 +517,7 @@ describe("Palindrom", () => {
               );
 
               /* change ignored property deeply */
-              moxios.wait(
+              setTimeout(
                 () => {
                   tempObject.$privateProp[1] = 32;
                 },
@@ -525,7 +525,7 @@ describe("Palindrom", () => {
               );
 
               /* we should STILL have two requests, initial and publicProb add only */
-              moxios.wait(
+              setTimeout(
                 () => {
                   assert.equal(2, moxios.requests.count());
                   done();
@@ -564,7 +564,7 @@ describe("Palindrom", () => {
       palindrom.ignoreAdd = /\/\$.+/;
 
       /* we should have two requests, initial and publicProb add */
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(1, moxios.requests.count());
 
@@ -574,7 +574,7 @@ describe("Palindrom", () => {
       );
 
       /* change ignored property deeply */
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(1, moxios.requests.count());
           done();
@@ -604,7 +604,7 @@ describe("Palindrom", () => {
       palindrom.ignoreAdd = /\/\$.+/;
 
       /* we should have one request, initial connection */
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(1, moxios.requests.count());
 
@@ -616,7 +616,7 @@ describe("Palindrom", () => {
       );
 
       /*  we should still have one request, initial connection */
-      moxios.wait(
+      setTimeout(
         () => {
           assert.equal(1, moxios.requests.count());
           done();

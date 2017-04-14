@@ -126,11 +126,11 @@ if (typeof window !== "undefined") {
             expect(historySpy.callCount).to.equal(1);
           });  
           it("relative path (nested, Shadow DOM content)", function(done) {
-            moxios.wait(
+            setTimeout(
               () => {
                 createAndClickOnLinkNestedShadowDOMContent();
 
-                moxios.wait(
+                setTimeout(
                   function() {
                     expect(historySpy.callCount).to.equal(1);
                     done();
@@ -188,11 +188,11 @@ if (typeof window !== "undefined") {
 
         describe("should be accessible via API", function() {
           it("should change history state programmatically", function(done) {
-            moxios.wait(
+            setTimeout(
               function() {
                 palindrom.morphUrl("/page2");
 
-                moxios.wait(
+                setTimeout(
                   function() {
                     expect(historySpy.callCount).to.equal(1);
                     setTimeout(done, 10);
@@ -360,11 +360,11 @@ if (typeof window !== "undefined") {
 
       describe("should be accessible via API", function() {
         it("should change history state programmatically", function(done) {
-          moxios.wait(
+          setTimeout(
             function() {
               palindrom.morphUrl("/page2");
 
-              moxios.wait(
+              setTimeout(
                 function() {
                   assert(historySpy.callCount === 1);
 
@@ -379,16 +379,16 @@ if (typeof window !== "undefined") {
       });
 
       it("should stop listening to DOM changes after `.unlisten()` was called", function(done) {
-        moxios.wait(
+        setTimeout(
           function() {
             palindrom.unlisten();
-            moxios.wait(
+            setTimeout(
               function() {
                 createAndClickOnLink(
                   "#will_not_get_caught_by_palindrom",
                   palindromNode
                 );
-                moxios.wait(
+                setTimeout(
                   function() {
                     expect(historySpy.callCount).to.equal(0);
                     done();
@@ -442,7 +442,7 @@ if (typeof window !== "undefined") {
     describe("should send JSON Patch HTTP request once history state get changed", function() {
       it("by `palindrom.morphURL(url)` method", function(done) {
         palindrom.morphUrl("/newUrl");
-        moxios.wait(
+        setTimeout(
           function() {
             const request = moxios.requests.mostRecent();
             expect(request.url).to.equal("/newUrl");
@@ -486,7 +486,7 @@ if (typeof window !== "undefined") {
           })
         );
 
-        moxios.wait(
+        setTimeout(
           function() {
             const request = moxios.requests.mostRecent();
 

@@ -33,7 +33,7 @@ describe('Palindrom', () => {
 
             palindrom.validateAndApplySequence(tree, sequence);
 
-            moxios.wait(() => {
+            setTimeout(() => {
                 assert(spy.notCalled);
                 done();
             }, 10);
@@ -59,7 +59,7 @@ describe('Palindrom', () => {
 
             palindrom.validateAndApplySequence(tree, sequence);
 
-            moxios.wait(() => {
+            setTimeout(() => {
                 assert(spy.calledOnce);
                 assert.equal('OPERATION_PATH_UNRESOLVABLE', spy.lastCall.args[0].name);
                 done();
@@ -86,7 +86,7 @@ describe('Palindrom', () => {
 
             palindrom.validateAndApplySequence(tree, sequence);
 
-            moxios.wait(() => {
+            setTimeout(() => {
                 assert(spy.calledOnce);
                 assert.equal('OPERATION_VALUE_REQUIRED', spy.lastCall.args[0].name);
                 done();
@@ -113,7 +113,7 @@ describe('Palindrom', () => {
 
             palindrom.validateAndApplySequence(tree, sequence);
 
-            moxios.wait(() => {
+            setTimeout(() => {
                 assert(spy.calledOnce);
                 assert.equal('OPERATION_VALUE_REQUIRED', spy.lastCall.args[0].name);
                 done();
@@ -140,7 +140,7 @@ describe('Palindrom', () => {
 
             palindrom.validateAndApplySequence(tree, sequence);
 
-            moxios.wait(() => {
+            setTimeout(() => {
                 assert(spy.calledOnce);
                 assert.equal('OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED', spy.lastCall.args[0].name);
                 done();
