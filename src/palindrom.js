@@ -3,22 +3,22 @@
  * MIT license
  */
 
-if (typeof require !== "undefined") {
-  var jsonpatch = require("fast-json-patch/src/json-patch"); /* include only apply and validate */
-  var JSONPatcherProxy = require("jsonpatcherproxy");
-  var JSONPatchQueueSynchronous = require("json-patch-queue").JSONPatchQueueSynchronous;
-  var JSONPatchQueue = require("json-patch-queue").JSONPatchQueue;
-  var JSONPatchOT = require("json-patch-ot");
-  var JSONPatchOTAgent = require("json-patch-ot-agent");
-  var URL = require("./URL");
-  var axios = require("axios");
+if (typeof require !== 'undefined') {
+  var jsonpatch = require('fast-json-patch/src/json-patch'); /* include only apply and validate */
+  var JSONPatcherProxy = require('jsonpatcherproxy');
+  var JSONPatchQueueSynchronous = require('json-patch-queue').JSONPatchQueueSynchronous;
+  var JSONPatchQueue = require('json-patch-queue').JSONPatchQueue;
+  var JSONPatchOT = require('json-patch-ot');
+  var JSONPatchOTAgent = require('json-patch-ot-agent');
+  var URL = require('./URL');
+  var axios = require('axios');
 
   /* We are going to hand `websocket` lib as an external to webpack
   (see: https://webpack.js.org/configuration/externals/), 
   this will make `w3cwebsocket` property `undefined`, 
   and this will lead Palindrom to use Browser's WebSocket when it is used 
   from the bundle. And use `websocket` lib in Node environment */
-  var NodeWebSocket = require("websocket").w3cwebsocket;
+  var NodeWebSocket = require('websocket').w3cwebsocket;
 
   /* this allows us to stub WebSockets */
   if (!global.WebSocket && NodeWebSocket) {
@@ -33,8 +33,8 @@ if (typeof require !== "undefined") {
   } */
 }
 var Palindrom = (function() {
-  if (typeof global === "undefined") {
-    if (typeof window !== "undefined") {
+  if (typeof global === 'undefined') {
+    if (typeof window !== 'undefined') {
       /* incase neither window nor global existed, e.g React Native */
       var global = window;
     } else {
@@ -50,7 +50,7 @@ var Palindrom = (function() {
   function toWebSocketURL(remoteUrl) {
     /* replace 'http' strictly in the beginning of the string,
     this covers http and https */
-    return remoteUrl.replace(/^http/i, "ws");
+    return remoteUrl.replace(/^http/i, 'ws');
   }
 
   /**
@@ -207,7 +207,7 @@ var Palindrom = (function() {
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.palindrom = palindrom;
 
-    if (typeof window !== "undefined" && window.location) {
+    if (typeof window !== 'undefined' && window.location) {
       this.remoteUrl = new URL(remoteUrl, window.location.href);
     } else {
       // in Node, URL is absolute
@@ -222,7 +222,7 @@ var Palindrom = (function() {
 
     //useWebSocket = useWebSocket || false;
     var that = this;
-    Object.defineProperty(this, "useWebSocket", {
+    Object.defineProperty(this, 'useWebSocket', {
       get: function() {
         return useWebSocket;
       },
@@ -251,7 +251,7 @@ var Palindrom = (function() {
   PalindromNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
     establish(
       this,
-      this.remoteUrl.href + "/reconnect",
+      this.remoteUrl.href + '/reconnect',
       JSON.stringify(pending),
       bootstrap
     );
@@ -259,7 +259,7 @@ var Palindrom = (function() {
 
   // TODO: auto-configure here #38 (tomalec)
   function establish(network, url, body, bootstrap) {
-    return network.xhr(url, "application/json", body, function(res) {
+    return network.xhr(url, 'application/json', body, function(res) {
       bootstrap(res.data);
       if (network.useWebSocket) {
         network.webSocketUpgrade();
@@ -277,10 +277,10 @@ var Palindrom = (function() {
     // send message only if there is a working ws connection
     if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
       this._ws.send(msg);
-      that.onSend(msg, that._ws.url, "WS");
+      that.onSend(msg, that._ws.url, 'WS');
     } else {
       var url = this.remoteUrl.href;
-      this.xhr(url, "application/json-patch+json", msg, function(res, method) {
+      this.xhr(url, 'application/json-patch+json', msg, function(res, method) {
         that.onReceive(res.data, url, method);
       });
     }
@@ -326,7 +326,7 @@ var Palindrom = (function() {
       //TODO: trigger on-ready event (tomalec)
     };
     that._ws.onmessage = function(event) {
-      that.onReceive(JSON.parse(event.data), that._ws.url, "WS");
+      that.onReceive(JSON.parse(event.data), that._ws.url, 'WS');
     };
     that._ws.onerror = function(event) {
       that.onStateChange(that._ws.readyState, upgradeURL, event.data);
@@ -336,12 +336,12 @@ var Palindrom = (function() {
       }
 
       var m = {
-        statusText: "WebSocket connection could not be made.",
+        statusText: 'WebSocket connection could not be made.',
         readyState: that._ws.readyState,
         url: upgradeURL
       };
 
-      that.onFatalError(m, upgradeURL, "WS");
+      that.onFatalError(m, upgradeURL, 'WS');
     };
     that._ws.onclose = function(event) {
       that.onStateChange(
@@ -353,7 +353,7 @@ var Palindrom = (function() {
       );
 
       var m = {
-        statusText: "WebSocket connection closed.",
+        statusText: 'WebSocket connection closed.',
         readyState: that._ws.readyState,
         url: upgradeURL,
         statusCode: event.code,
@@ -361,7 +361,7 @@ var Palindrom = (function() {
       };
 
       if (event.reason) {
-        that.onFatalError(m, upgradeURL, "WS");
+        that.onFatalError(m, upgradeURL, 'WS');
       } else {
         that.onConnectionError();
       }
@@ -371,7 +371,7 @@ var Palindrom = (function() {
     var that = this;
     return this.xhr(
       href,
-      "application/json-patch+json",
+      'application/json-patch+json',
       null,
       function(res, method) {
         that.onReceive(res.data, href, method);
@@ -384,9 +384,9 @@ var Palindrom = (function() {
   PalindromNetworkChannel.prototype.setRemoteUrl = function(remoteUrl) {
     if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
       throw new Error(
-        "Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " +
+        'Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: ' +
           this.remoteUrl +
-          "\nNew session ID: " +
+          '\nNew session ID: ' +
           remoteUrl
       );
     }
@@ -396,7 +396,7 @@ var Palindrom = (function() {
 
   PalindromNetworkChannel.prototype.handleResponseHeader = function(res) {
     /* Axios always returns lowercase headers */
-    var location = res.headers["x-location"] || res.headers["location"];
+    var location = res.headers['x-location'] || res.headers['location'];
     if (location) {
       this.setRemoteUrl(location);
     }
@@ -417,21 +417,21 @@ var Palindrom = (function() {
     callback,
     setReferer
   ) {
-    const method = data ? "PATCH" : "GET";
+    const method = data ? 'PATCH' : 'GET';
     const headers = {};
     const that = this;
     var requestPromise;
 
     if (data) {
-      headers["Content-Type"] = "application/json-patch+json";
+      headers['Content-Type'] = 'application/json-patch+json';
     }
     if (accept) {
-      headers["Accept"] = accept;
+      headers['Accept'] = accept;
     }
     if (this.remoteUrl && setReferer) {
-      headers["X-Referer"] = this.remoteUrl.pathname;
+      headers['X-Referer'] = this.remoteUrl.pathname;
     }
-    if (method === "GET") {
+    if (method === 'GET') {
       requestPromise = axios.get(url, {
         headers: headers
       });
@@ -476,7 +476,7 @@ var Palindrom = (function() {
     this.apply(obj, sequence);
   };
   NoQueue.prototype.reset = function(obj, newState) {
-    var patch = [{ op: "replace", path: "", value: newState }];
+    var patch = [{ op: 'replace', path: '', value: newState }];
     this.apply(obj, patch);
   };
 
@@ -521,17 +521,17 @@ var Palindrom = (function() {
    * @param {Object} [options] map of arguments. See README.md for description
    */
   function Palindrom(options) {
-    if (typeof options !== "object") {
-      throw new Error("Palindrom constructor requires an object argument.");
+    if (typeof options !== 'object') {
+      throw new Error('Palindrom constructor requires an object argument.');
     }
     if (!options.remoteUrl) {
-      throw new Error("remoteUrl is required");
+      throw new Error('remoteUrl is required');
     }
     this.jsonpatch = options.jsonpatch || this.jsonpatch;
     this.debug = options.debug != undefined ? options.debug : true;
 
-    if ("obj" in options) {
-      if (typeof options.obj != "object") {
+    if ('obj' in options) {
+      if (typeof options.obj != 'object') {
         throw new Error("'options.obj' is not an object");
       }
       this.obj = options.obj;
@@ -590,7 +590,7 @@ var Palindrom = (function() {
       this.onSocketStateChanged.bind(this) //onStateChange
     );
 
-    Object.defineProperty(this, "useWebSocket", {
+    Object.defineProperty(this, 'useWebSocket', {
       get: function() {
         return this.network.useWebSocket;
       },
@@ -658,12 +658,12 @@ var Palindrom = (function() {
         true,
         this.filterChangedCallback.bind(this)
       );
-      Object.defineProperty(this, "obj", {
+      Object.defineProperty(this, 'obj', {
         get: function() {
           return proxifiedObj;
         },
         set: function() {
-          throw new Error("palindrom.obj is readonly");
+          throw new Error('palindrom.obj is readonly');
         }
       });
       this.isObjectProxified = true;
@@ -696,14 +696,14 @@ var Palindrom = (function() {
   };
 
   function isIgnored(pattern, ignoreCache, path, op) {
-    if (op === "add" && pattern.test(path)) {
+    if (op === 'add' && pattern.test(path)) {
       ignoreCache[path] = true;
       return true;
     }
-    var arr = path.split("/");
-    var joined = "";
+    var arr = path.split('/');
+    var joined = '';
     for (var i = 1, ilen = arr.length; i < ilen; i++) {
-      joined += "/" + arr[i];
+      joined += '/' + arr[i];
       if (ignoreCache[joined]) {
         return true; //once we decided to ignore something that was added, other operations (replace, remove, ...) are ignored as well
       }
@@ -768,14 +768,14 @@ var Palindrom = (function() {
 
     var that = this;
     sequence.forEach(function(patch) {
-      if (patch.path === "") {
+      if (patch.path === '') {
         var desc = JSON.stringify(sequence);
         if (desc.length > 103) {
-          desc = desc.substring(0, 100) + "...";
+          desc = desc.substring(0, 100) + '...';
         }
         //TODO Error
         that.showWarning(
-          "Server pushed patch that replaces the object root",
+          'Server pushed patch that replaces the object root',
           desc
         );
       }
@@ -824,9 +824,9 @@ var Palindrom = (function() {
   Palindrom.prototype.showWarning = function(heading, description) {
     if (this.debug && global.console && console.warn) {
       if (description) {
-        heading += " (" + description + ")";
+        heading += ' (' + description + ')';
       }
-      console.warn("Palindrom warning: " + heading);
+      console.warn('Palindrom warning: ' + heading);
     }
   };
 
@@ -875,7 +875,7 @@ var Palindrom = (function() {
   return Palindrom;
 })();
 
-if (typeof module !== "undefined") {
+if (typeof module !== 'undefined') {
   module.exports = Palindrom;
   module.exports.default = Palindrom;
   module.exports.__esModule = true;

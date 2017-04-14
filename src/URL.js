@@ -1,6 +1,6 @@
 /* URL DOM API shim */
-var resolve = require("url").resolve;
-var parse = require("url").parse;
+var resolve = require('url').resolve;
+var parse = require('url').parse;
 
 var URL = (function() {
   function URL(path, baseURL) {

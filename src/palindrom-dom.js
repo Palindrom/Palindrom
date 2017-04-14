@@ -2,8 +2,8 @@
  * (c) 2013 Joachim Wester
  * MIT license
  */
-if (typeof require !== "undefined") {
-  var Palindrom = require("./palindrom");
+if (typeof require !== 'undefined') {
+  var Palindrom = require('./palindrom');
 }
 
 var PalindromDOM = (function() {
@@ -13,11 +13,11 @@ var PalindromDOM = (function() {
    * @param {Object} [options] map of arguments. See README.md for description
    */
   var PalindromDOM = function(options) {
-    if (typeof options !== "object") {
-      throw new Error("PalindromDOM constructor requires an object argument.");
+    if (typeof options !== 'object') {
+      throw new Error('PalindromDOM constructor requires an object argument.');
     }
     if (!options.remoteUrl) {
-      throw new Error("remoteUrl is required");
+      throw new Error('remoteUrl is required');
     }
     var onDataReady = options.callback;
     this.element = options.listenTo || document.body;
@@ -33,12 +33,12 @@ var PalindromDOM = (function() {
 
     /* in some cases, people emit redirect requests before `listen` is called */
     this.element.addEventListener(
-      "palindrom-redirect-pushstate",
+      'palindrom-redirect-pushstate',
       this.historyHandler
     );
     /* backward compatibility: for people using old puppet-redirect */
     this.element.addEventListener(
-      "puppet-redirect-pushstate",
+      'puppet-redirect-pushstate',
       this.historyHandlerDeprecated
     );
 
@@ -49,33 +49,33 @@ var PalindromDOM = (function() {
 
     this.listen = function() {
       this.listening = true;
-      this.element.addEventListener("click", clickHandler);
-      window.addEventListener("popstate", this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
+      this.element.addEventListener('click', clickHandler);
+      window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
 
       this.element.addEventListener(
-        "palindrom-redirect-pushstate",
+        'palindrom-redirect-pushstate',
         this.historyHandler
       );
 
       /* backward compatibility: for people using old puppet-redirect */
       this.element.addEventListener(
-        "puppet-redirect-pushstate",
+        'puppet-redirect-pushstate',
         this.historyHandlerDeprecated
       );
     };
     this.unlisten = function() {
       this.listening = false;
 
-      this.element.removeEventListener("click", clickHandler);
-      window.removeEventListener("popstate", this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
+      this.element.removeEventListener('click', clickHandler);
+      window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
       this.element.removeEventListener(
-        "palindrom-redirect-pushstate",
+        'palindrom-redirect-pushstate',
         this.historyHandler
       );
 
       /* backward compatibility: for people using old puppet-redirect */
       this.element.removeEventListener(
-        "puppet-redirect-pushstate",
+        'puppet-redirect-pushstate',
         this.historyHandlerDeprecated
       );
     };
@@ -109,9 +109,9 @@ var PalindromDOM = (function() {
 
     var target = event.target;
 
-    if (target.nodeName !== "A") {
+    if (target.nodeName !== 'A') {
       for (var i = 0; i < event.path.length; i++) {
-        if (event.path[i].nodeName == "A") {
+        if (event.path[i].nodeName == 'A') {
           target = event.path[i];
           break;
         }
@@ -121,13 +121,13 @@ var PalindromDOM = (function() {
     //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
     //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
     //while target.getAttribute("href") returns desired href (as string)
-    var href = target.href || target.getAttribute("href");
+    var href = target.href || target.getAttribute('href');
 
     if (href && PalindromDOM.isApplicationLink(href)) {
       event.preventDefault();
       event.stopPropagation();
       this.morphUrl(href);
-    } else if (target.type === "submit") {
+    } else if (target.type === 'submit') {
       event.preventDefault();
     }
   };
@@ -142,16 +142,16 @@ var PalindromDOM = (function() {
    * @returns {boolean}
    */
   PalindromDOM.isApplicationLink = function(elem) {
-    if (typeof elem === "string") {
+    if (typeof elem === 'string') {
       //type string is reported in Polymer / Canary (Web Platform features disabled)
-      var parser = document.createElement("A");
+      var parser = document.createElement('A');
       parser.href = elem;
 
       // @see http://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
       // IE doesn't populate all link properties when setting .href with a relative URL,
       // however .href will return an absolute URL which then can be used on itself
       // to populate these additional fields.
-      if (parser.host == "") {
+      if (parser.host == '') {
         parser.href = parser.href;
       }
 
@@ -162,8 +162,8 @@ var PalindromDOM = (function() {
   };
 
   /* backward compatibility, not sure if this is good practice */
-  if (typeof global === "undefined") {
-    if (typeof window !== "undefined") {
+  if (typeof global === 'undefined') {
+    if (typeof window !== 'undefined') {
       /* incase neither window nor global existed, e.g React Native */
       var global = window;
     } else {
@@ -180,7 +180,7 @@ var PalindromDOM = (function() {
   return PalindromDOM;
 })();
 
-if (typeof module !== "undefined") {
+if (typeof module !== 'undefined') {
   module.exports = PalindromDOM;
   module.exports.default = PalindromDOM;
   module.exports.__esModule = true;
