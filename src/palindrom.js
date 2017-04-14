@@ -13,15 +13,23 @@ if(typeof require !== 'undefined') {
   var URL = require('./URL');
   var axios = require('axios');
 
+  /* We are going to hand `websocket` lib as an external to webpack
+  (see: https://webpack.js.org/configuration/externals/), 
+  this will make `w3cwebsocket` property `undefined`, 
+  and this will lead Palindrom to use Browser's WebSocket when it is used 
+  from the bundle. And use `websocket` lib in Node environment */
   var NodeWebSocket = require('websocket').w3cwebsocket;
 
   /* this allows us to stub WebSockets */
-  if(!global.WebSocket) { /* we are in production env */
+  if(!global.WebSocket && NodeWebSocket) { /* we are in production env */
     var WebSocket = NodeWebSocket;
   }
-  else { /* we are in testing env */
+  else if(global.WebSocket) { /* we are in testing env */
     var WebSocket = global.WebSocket;
   }
+  /* else {
+    we are using Browser's WebSocket
+  } */
 }
 var Palindrom = (function () {
   

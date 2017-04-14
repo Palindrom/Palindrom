@@ -41,6 +41,8 @@
     "websocket": "^1.0.24"
   },
   "devDependencies": {
+    "bluebird": "^3.5.0",
+    "bluebird-retry": "^0.10.1",
     "chai": "^3.5.0",
     "colors": "^1.1.2",
     "grunt": "~0.4.5",
@@ -61,8 +63,8 @@
     "webpack": "^2.2.1"
   },
   "scripts": {
-    "test": "webpack && node test/Sauce/Runner.js",
-    "test-cli": "mocha test/runner.js",
+    "test-sauce": "webpack && node test/Sauce/Runner.js",
+    "test": "mocha test/runner.js",
     "build": "webpack"
   }
 }

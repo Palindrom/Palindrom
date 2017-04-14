@@ -40,12 +40,12 @@ if (!username) {
     }
   ];
 
-  const chromePromise = CapabilityRunner(allCaps[0]);
-  const ffPromise = CapabilityRunner(allCaps[1]);
-  //const edgePromise = CapabilityRunner(allCaps[2]);
+  const runTestsInChrome = CapabilityRunner(allCaps[0]);
+  const runTestsInFirefox = CapabilityRunner(allCaps[1]);
+  //const runTestsInEdge = CapabilityRunner(allCaps[2]);
 
   /* disable Edge, https://github.com/Palindrom/Palindrom/pull/130#discussion_r110376869 */
-  Promise.all([chromePromise, ffPromise /* edgePromise */])
+  Promise.all([runTestsInChrome, runTestsInFirefox /* edgePromise */])
     .then(() => {
       console.log("Done!");
       process.exit(0);

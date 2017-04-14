@@ -1,7 +1,9 @@
 # Palindrom
 <p align="center">
-  <img alt="Palindrom Logo" src="https://cloud.githubusercontent.com/assets/17054134/23406359/e2690c08-fdbe-11e6-8880-c23dc771f899.png">
+  <img title="Palindrom" alt="Palindrom Logo" src="https://cloud.githubusercontent.com/assets/17054134/25017514/5f22bcd4-2084-11e7-816c-ee249e1b3164.png">
 </p>
+## Binds client side view models to server side view models using JSON-Patch and HTTP PATCH/WebSocket.
+
 
 [![Build Status](https://travis-ci.org/Palindrom/Palindrom.svg?branch=master)](https://travis-ci.org/Palindrom/Palindrom)
 [![npm version](https://badge.fury.io/js/palindrom.svg)](https://badge.fury.io/js/palindrom)
@@ -292,6 +294,8 @@ var PalindromDOM = require('palindrom/src/palindrom-dom');
 ```js
 import PalindromDOM from 'palindrom/src/palindrom-dom'
 ```
+
+###### Or just download it manually from [github](https://github.com/Palindrom/Palindrom/archive/master.zip).
 
 ### Usage
 

@@ -8,6 +8,8 @@
 const colors = require("colors");
 const SauceLabs = require("saucelabs");
 const webdriver = require("selenium-webdriver");
+const Promise = require("bluebird");
+const retryUntil = require("bluebird-retry");
 
 function CapabilityRunner(caps) {
   return new Promise(function(resolve, reject) {
@@ -37,29 +39,27 @@ function CapabilityRunner(caps) {
 
     const symbols = { passed: "√", pending: "-", failed: "x" };
 
-    function checkIfDone(callback) {
-      driver
-        .executeScript("return window.testResults;")
-        .then(function(results) {
-          if (results) {
-            callback(results);
-          } else {
-            setTimeout(() => checkIfDone(callback), 1000);
-          }
-        });
+    function checkIfDone() {
+      return new Promise(function(resolve, reject) {
+        driver
+          .executeScript("return window.testResults;")
+          .then(function(results) {
+            if (results) {
+              resolve(results);
+            } else {
+              reject();
+            }
+          });
+      });
     }
-
+    /* get session ID and keep checking if tests are finished */
     driver.getSession().then(sessionID => {
-      /* get session ID to finish it later */
+      /*set driver ID to end session later */
       driver.sessionID = sessionID.id_;
-      checkIfDone(
-        function(testResults) {
-          if (testResults) {
-            console.log("Specs finished");
-            analyzeResults(testResults);
-          }
-        }.bind(this)
-      );
+      retryUntil(checkIfDone, { interval: 15000 }).then(testResults => {
+        console.log("Specs finished");
+        analyzeResults(testResults);
+      });
     });
 
     function analyzeResults(results) {
@@ -97,10 +97,9 @@ function CapabilityRunner(caps) {
       driver.quit();
 
       saucelabs.updateJob(driver.sessionID, result, function() {
-        if(hadErrored === 0) {
+        if (hadErrored === 0) {
           resolve();
-        }
-        else {
+        } else {
           reject(caps.name + " failed");
         }
       });

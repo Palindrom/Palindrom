@@ -64,7 +64,7 @@ var PalindromDOM =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 46);
+/******/ 	return __webpack_require__(__webpack_require__.s = 43);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -1720,18 +1720,26 @@ if(true) {
   var JSONPatchQueue = __webpack_require__(3).JSONPatchQueue;
   var JSONPatchOT = __webpack_require__(32);
   var JSONPatchOTAgent = __webpack_require__(31);
-  var URL = __webpack_require__(45);
+  var URL = __webpack_require__(42);
   var axios = __webpack_require__(12);
 
-  var NodeWebSocket = __webpack_require__(42).w3cwebsocket;
+  /* We are going to hand `websocket` lib as an external to webpack
+  (see: https://webpack.js.org/configuration/externals/), 
+  this will make `w3cwebsocket` property `undefined`, 
+  and this will lead Palindrom to use Browser's WebSocket when it is used 
+  from the bundle. And use `websocket` lib in Node environment */
+  var NodeWebSocket = __webpack_require__(44).w3cwebsocket;
 
   /* this allows us to stub WebSockets */
-  if(!global.WebSocket) { /* we are in production env */
+  if(!global.WebSocket && NodeWebSocket) { /* we are in production env */
     var WebSocket = NodeWebSocket;
   }
-  else { /* we are in testing env */
+  else if(global.WebSocket) { /* we are in testing env */
     var WebSocket = global.WebSocket;
   }
+  /* else {
+    we are using Browser's WebSocket
+  } */
 }
 var Palindrom = (function () {
   
@@ -5396,180 +5404,6 @@ module.exports = function(module) {
 /* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var _global = (function() { return this; })();
-var NativeWebSocket = _global.WebSocket || _global.MozWebSocket;
-var websocket_version = __webpack_require__(43);
-
-
-/**
- * Expose a W3C WebSocket class with just one or two arguments.
- */
-function W3CWebSocket(uri, protocols) {
-	var native_instance;
-
-	if (protocols) {
-		native_instance = new NativeWebSocket(uri, protocols);
-	}
-	else {
-		native_instance = new NativeWebSocket(uri);
-	}
-
-	/**
-	 * 'native_instance' is an instance of nativeWebSocket (the browser's WebSocket
-	 * class). Since it is an Object it will be returned as it is when creating an
-	 * instance of W3CWebSocket via 'new W3CWebSocket()'.
-	 *
-	 * ECMAScript 5: http://bclary.com/2004/11/07/#a-13.2.2
-	 */
-	return native_instance;
-}
-
-
-/**
- * Module exports.
- */
-module.exports = {
-    'w3cwebsocket' : NativeWebSocket ? W3CWebSocket : null,
-    'version'      : websocket_version
-};
-
-
-/***/ }),
-/* 43 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(44).version;
-
-
-/***/ }),
-/* 44 */
-/***/ (function(module, exports) {
-
-module.exports = {
-	"_args": [
-		[
-			"websocket@^1.0.24",
-			"F:\\wamp\\www\\starcounter\\Transition\\Palindrom"
-		]
-	],
-	"_from": "websocket@>=1.0.24 <2.0.0",
-	"_id": "websocket@1.0.24",
-	"_inCache": true,
-	"_installable": true,
-	"_location": "/websocket",
-	"_nodeVersion": "7.3.0",
-	"_npmOperationalInternal": {
-		"host": "packages-12-west.internal.npmjs.com",
-		"tmp": "tmp/websocket-1.0.24.tgz_1482977757939_0.1858439394272864"
-	},
-	"_npmUser": {
-		"email": "brian@worlize.com",
-		"name": "theturtle32"
-	},
-	"_npmVersion": "3.10.10",
-	"_phantomChildren": {},
-	"_requested": {
-		"name": "websocket",
-		"raw": "websocket@^1.0.24",
-		"rawSpec": "^1.0.24",
-		"scope": null,
-		"spec": ">=1.0.24 <2.0.0",
-		"type": "range"
-	},
-	"_requiredBy": [
-		"/"
-	],
-	"_resolved": "https://registry.npmjs.org/websocket/-/websocket-1.0.24.tgz",
-	"_shasum": "74903e75f2545b6b2e1de1425bc1c905917a1890",
-	"_shrinkwrap": null,
-	"_spec": "websocket@^1.0.24",
-	"_where": "F:\\wamp\\www\\starcounter\\Transition\\Palindrom",
-	"author": {
-		"email": "brian@worlize.com",
-		"name": "Brian McKelvey",
-		"url": "https://www.worlize.com/"
-	},
-	"browser": "lib/browser.js",
-	"bugs": {
-		"url": "https://github.com/theturtle32/WebSocket-Node/issues"
-	},
-	"config": {
-		"verbose": false
-	},
-	"contributors": [
-		{
-			"email": "ibc@aliax.net",
-			"name": "Iñaki Baz Castillo",
-			"url": "http://dev.sipdoc.net"
-		}
-	],
-	"dependencies": {
-		"debug": "^2.2.0",
-		"nan": "^2.3.3",
-		"typedarray-to-buffer": "^3.1.2",
-		"yaeti": "^0.0.6"
-	},
-	"description": "Websocket Client & Server Library implementing the WebSocket protocol as specified in RFC 6455.",
-	"devDependencies": {
-		"buffer-equal": "^1.0.0",
-		"faucet": "^0.0.1",
-		"gulp": "git+https://github.com/gulpjs/gulp.git#4.0",
-		"gulp-jshint": "^2.0.4",
-		"jshint": "^2.0.0",
-		"jshint-stylish": "^2.2.1",
-		"tape": "^4.0.1"
-	},
-	"directories": {
-		"lib": "./lib"
-	},
-	"dist": {
-		"shasum": "74903e75f2545b6b2e1de1425bc1c905917a1890",
-		"tarball": "https://registry.npmjs.org/websocket/-/websocket-1.0.24.tgz"
-	},
-	"engines": {
-		"node": ">=0.8.0"
-	},
-	"gitHead": "0e15f9445953927c39ce84a232cb7dd6e3adf12e",
-	"homepage": "https://github.com/theturtle32/WebSocket-Node",
-	"keywords": [
-		"websocket",
-		"websockets",
-		"socket",
-		"networking",
-		"comet",
-		"push",
-		"RFC-6455",
-		"realtime",
-		"server",
-		"client"
-	],
-	"license": "Apache-2.0",
-	"main": "index",
-	"maintainers": [
-		{
-			"email": "brian@worlize.com",
-			"name": "theturtle32"
-		}
-	],
-	"name": "websocket",
-	"optionalDependencies": {},
-	"readme": "ERROR: No README data found!",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/theturtle32/WebSocket-Node.git"
-	},
-	"scripts": {
-		"gulp": "gulp",
-		"install": "(node-gyp rebuild 2> builderror.log) || (exit 0)",
-		"test": "faucet test/unit"
-	},
-	"version": "1.0.24"
-};
-
-/***/ }),
-/* 45 */
-/***/ (function(module, exports, __webpack_require__) {
-
 /* URL DOM API shim */
 var resolve = __webpack_require__(10).resolve;
 var parse = __webpack_require__(10).parse;
@@ -5595,7 +5429,7 @@ module.exports = URL;
 
 
 /***/ }),
-/* 46 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/*! palindrom-dom.js version: 2.4.0
@@ -5765,6 +5599,12 @@ if(true) {
 }
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
+
+/***/ }),
+/* 44 */
+/***/ (function(module, exports) {
+
+module.exports = WebSocket;
 
 /***/ })
 /******/ ]);
