@@ -65,6 +65,7 @@
   "scripts": {
     "test-sauce": "webpack && node test/Sauce/Runner.js",
     "test": "mocha test/runner.js",
+    "test-full": "mocha test/runner.js && webpack && node test/Sauce/Runner.js",
     "build": "webpack"
   }
 }

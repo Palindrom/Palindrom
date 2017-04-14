@@ -188,6 +188,35 @@ describe("Sockets", () => {
           5
         );
       });
+      it("should use wss for https remote URL", function(done) {
+        const server = new MockSocketServer(
+          "wss://localhost/testURL/default/this_is_a_nice_url"
+        );
+
+        moxios.stubRequest("https://localhost/testURL/koko", {
+          status: 200,
+          headers: { location: "default/this_is_a_nice_url" },
+          responseText: '{"hello": "world"}'
+        });
+
+        var spy = sinon.spy();
+        var palindrom = new Palindrom({
+          remoteUrl: "https://localhost/testURL/koko",
+          useWebSocket: true
+        });
+
+        moxios.wait(
+          () => {
+            assert(
+              palindrom.network._ws.url ===
+                "wss://localhost/testURL/default/this_is_a_nice_url"
+            );
+            /* stop server async then call done */
+            server.stop(done);
+          },
+          50
+        );
+      });
 
       it("should use same host, port, username, and password as provided in remoteUrl", function(done) {
         const server = new MockSocketServer(
