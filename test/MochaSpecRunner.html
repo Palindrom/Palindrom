@@ -1,0 +1,54 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Mocha Tests</title>
+    <link href="lib/mocha.css" rel="stylesheet" />
+    <script src="../lab/polymer/bower_components/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="../lab/polymer/components/my-menu-button.html">
+</head>
+
+<body>
+    <div id="brand">
+        <img alt="Palindrom logo" title="Palindom Tests" src="tests-logo.png" />
+    </div>
+    <my-menu-button style="position: absolute; top: 0; right: 0" href="subpage.html">Distributed <strong>Content</strong></my-menu-button>
+    <div id="mocha"></div>
+    <script>
+        function failNicely() {
+            let message = document.createElement('H3');
+            message.innerHTML = "Please make sure to run `npm install` before running the tests..";
+            document.body.insertBefore(message, document.querySelector('my-menu-button'));
+        }
+    </script>
+    <script src="../node_modules/mocha/mocha.js" onerror="failNicely()"></script>
+    <script>
+        mocha.setup('bdd');
+    </script>
+    <script src="runner-browser.js"></script>
+    <script>
+        /* wait for button component to load */
+        setTimeout(() => {
+            const runner = mocha.run();
+            const tempResults = [];
+
+            runner.on('pass', function (spec) {
+                let smallerSpec = { title: spec.title, state: 'passed' };
+                tempResults.push(smallerSpec);
+            });
+            runner.on('fail', function (spec) {
+                let smallerSpec = { title: spec.title, state: 'failed', err: spec.err };
+                tempResults.push(smallerSpec);
+            })
+            runner.on('pending', function (spec) {
+                let smallerSpec = { title: spec.title, state: 'pending' };
+                tempResults.push(smallerSpec);
+            });
+            runner.on('end', function () {
+                window.testResults = tempResults;
+            });
+        }, 2000);
+    </script>
+</body>
+
+</html>

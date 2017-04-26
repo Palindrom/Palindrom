@@ -1,7 +1,13 @@
 # Palindrom
 <p align="center">
-  <img alt="Palindrom Logo" src="https://cloud.githubusercontent.com/assets/17054134/23406359/e2690c08-fdbe-11e6-8880-c23dc771f899.png">
-</p> 
+  <img title="Palindrom" alt="Palindrom Logo" src="https://cloud.githubusercontent.com/assets/17054134/25017514/5f22bcd4-2084-11e7-816c-ee249e1b3164.png">
+</p>
+## Binds client side view models to server side view models using JSON-Patch and HTTP PATCH/WebSocket.
+
+
+[![Build Status](https://travis-ci.org/Palindrom/Palindrom.svg?branch=master)](https://travis-ci.org/Palindrom/Palindrom)
+[![npm version](https://badge.fury.io/js/palindrom.svg)](https://badge.fury.io/js/palindrom)
+[![MIT](https://badges.frapsoft.com/os/mit/mit.svg?v=102)](https://opensource.org/licenses/MIT)
 
 ---
 
@@ -13,31 +19,58 @@ For additional binding with DOM, browser history, etc. use [PalindromDOM](#Palin
 
 ### Installation
 
-You can install it using [bower](http://bower.io/) `bower install Palindrom` or just download from [github](https://github.com/Palindrom/Palindrom).
+#### You can install using [bower](http://bower.io/) and [NPM](http://npmjs.com/):
 
-Then add source to your head:
+##### Bower:
+
+```sh
+bower install Palindrom --save
+```
+
+Then add source to your HTML
 
 ```html
 
-<!-- include Palindrom with dependencies -->
-<script src="bower_components/fast-json-patch/src/json-patch-duplex.js"></script>
-<script src="bower_components/Palindrom/src/palindrom.js"></script>
+<!-- include Palindrom bundle -->
+<script src="bower_components/Palindrom/dist/palindrom.js"></script>
 ```
 See [Dependencies section](https://github.com/Palindrom/Palindrom#dependencies) for more details.
+
+##### NPM:
+
+```sh
+npm install palindrom --save
+```
+
+Then you can require it CommonJS or ES6/TS style:
+
+###### CommonJS:
+```js
+var Palindrom = require('palindrom');
+```
+
+###### ES6/TS:
+```js
+import Palindrom from 'palindrom'
+```
+
+###### Or just download it manually from [github](https://github.com/Palindrom/Palindrom/archive/master.zip).
 
 ### Usage
 
 After DOM is ready, initialize with the constructor:
 
-```javascript
+```js
 /**
  * Defines a connection to a remote PATCH server, gives an object that is persistent between browser and server
  */
-var palindrom = new Palindrom();
+var palindrom = new Palindrom({remoteUrl: window.location.href});
+
 // ..
 // use palindrom.obj
 palindrom.obj.someProperty = "new value";
 ```
+*Please make sure you pass the correct PATCH server URL.*
 
 ### Demo
 
@@ -51,18 +84,20 @@ var palindrom = new Palindrom({attribute: value});
 
 Attribute              | Type          | Default                | Description
 ---                    | ---           | ---                    | ---
-`remoteUrl` **Required**            | *String*      | `window.location.href` | PATCH server URL
+`remoteUrl`            | *String*      |  **Required**          | PATCH server URL
 `callback`             | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established)
-`obj`                  | *Object*      | `{}`                   | object where the parsed JSON data will be inserted
+`obj [readonly]`      | *Object*      | `{}`                    | Your initial state object, **please read notes below**.
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
 `ignoreAdd`            | *RegExp*      |                        | Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
 `debug`                | *Boolean*     | `true`                 | Toggle debugging mode
 `onLocalChange`        | *Function*    |                        | Helper callback triggered each time a change is observed locally
-`onRemoteChange`       | *Function*    |                        | Deprecated, please use patch-applied event. Helper callback triggered each time a remote patch is applied.
+`onRemoteChange`       | *Function*    |                        | Helper callback triggered each time a change is received from the server and applied.
 `onPatchReceived`      | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts three parameters: (*String* `data`, *String* `url`, *String*, `method`)
 `onPatchSent`          | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (*String* `data`, *String* `url`, *String*, `method`)
 `onSocketStateChanged` | *Function*    |                        | Helper callback triggered when socket state changes, accepts next parameters: (*int* `state`, *String* `url`, *String* `data`, *int* `code`, *String* `reason`)
 `onConnectionError`    | *Function*    |                        | Helper callback triggered when socket connection closed, socket connection failed to establish, http requiest failed. Accepts next parameters: (*Object* `data`, *String* `url`, *String*, `method`). The data object contains the following properties: *String* `statusText` (HTTP response status code reason phrase or WebSocket error title), *String* `statusCode` (HTTP response status code or WS error code), *Number* `readyState`, *String* `url`, *String* `reason` (HTTP error response body or WebSocket disconnection reason message)
+`onIncomingPatchValidationError`    | *Function*    |                        | Helper callback triggered when a wrong patch is received. It accepts one `Error` parameter.
+`onOutgoingPatchValidationError`    | *Function*    |                        | Helper callback triggered when a wrong patch is locally issued. It accepts one `Error` parameter.
 `localVersionPath`     | *JSONPointer* | `disabled`             | local version path, set it to enable Versioned JSON Patch communication
 `remoteVersionPath`    | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
 `ot`                   | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
@@ -71,19 +106,23 @@ Attribute              | Type          | Default                | Description
 `retransmissionThreshold`| *Number*    | `3`                    | After server reports this number of messages missing, we start retransmission
 `onReconnectionCountdown`| *Function*  |                        | Triggered when palindrom detected connection problem and reconnection is scheduled. Accepts number of milliseconds to scheduled reconnection. Called every second until countdown reaches 0 (inclusive)
 `onReconnectionEnd`    | *Function*    |                        | Triggered when palindrom successfully reconnected
-`jsonpatch`            | *Object*      | `window.jsonpatch`       | The provider object for jsonpatch apply, validate, observe and unobserve. By default assumes Starcounter-Jack/JSON-Patch library available in global `jsonpatch` variable.
+`jsonpatch`            | *Object*      | `window.jsonpatch`       | The provider object for jsonpatch `apply` and  `validate`. By default it uses Starcounter-Jack/JSON-Patch library.
 
-most of them are accessible also in runtime:
+**_ Note 1: the object you pass to Palindrom constructor in `options.obj` is deep cloned as the initial state, make sure to use `palindrom.obj` to issue patches and have server patches applied, the object you pass will not be observed_**.
+
+**_ Note 2: `palindrom.obj` is a constant (as in `const`) property, you can modify its properties but you can't assign it again or `delete` it. `palindrom.obj = {}` would throw an error._**
+
+most of the properties are accessible also in runtime:
 
 #### Properties
 
-```javascript
+```js
 palindrom.property
 ```
 Attribute             | Type       | Default                | Description
 ---                   | ---        | ---                    | ---
-`remoteUrl`           | *String*   | `window.location.href` | See above
-`obj`                 | *Object*   | `{}`                   | See above
+`remoteUrl`           | *String*   | **Required**           | See above
+`obj [readonly]`      | *Object*   | `{}`                   | See above
 `useWebSocket`        | *Boolean*  | `false`                | See above
 `ignoreAdd`           | *RegExp*   |                        | See above
 `debug`               | *Boolean*  | `true`                 | See above
@@ -92,19 +131,21 @@ Attribute             | Type       | Default                | Description
 `onSocketStateChanged`| *Function* |                        | See above
 `onPatchSent`         | *Function* |                        | See above
 `onConnectionError`   | *Function* |                        | See above
+`onIncomingPatchValidationError`   | *Function* |           | See above
+`onOutgoingPatchValidationError`   | *Function* |           | See above
 
 
 ### Binding object once is ready (`callback`)
 To bind object where you need once it will be fetched from remote you can use define `callback` in constructor:
-```javascript
-var palindrom = new Palindrom({callback: function (obj) {
+```js
+var palindrom = new Palindrom({remoteUrl: url, callback: function (obj) {
   document.getElementById('test').model = obj;
 }});
 ```
 
 ### Sending client changes to remote
 
-Palindrom detects changes to the observed object in real time. So after
+Palindrom detects changes to the observed object synchronously. So after
 ```javascript
 palindrom.obj.some="change";
 ```
@@ -112,7 +153,7 @@ The JSON Patch request will be send to the remote.
 
 ### Two-way data binding frameworks
 
-Palindrom works superbly with with frameworks that allow for two-way data binding, such as Polymer and Angular. These frameworks have the ability to bind an `<input>` element to a JavaScript data model in a way that the object updates after each keystroke. In consequence, Palindrom sends a patch the server after each keystroke.
+Palindrom works superbly with frameworks that allow for two-way data binding, such as Polymer, React, Vue and Angular. These frameworks have the ability to bind an `<input>` element to a JavaScript data model in a way that the object updates after each keystroke. In consequence, Palindrom sends a patch the server after each keystroke.
 
 If you want to opt-out from such behavior, you need to force your framework to update the data model after the element is unfocused (`blur` event). Depending on the framework:
 
@@ -122,23 +163,7 @@ If you want to opt-out from such behavior, you need to force your framework to u
 
 ### Generating patches based on local changes
 
-Palindrom automatically observes local changes. This is implemented by dirty checking, triggered in event listeners for typical browser events (`mousedown`, `mouseup`, etc). It is done by the JSON-Patch library ([source](https://github.com/Starcounter-Jack/JSON-Patch/blob/master/src/json-patch-duplex.ts#L352-L354)).
-
-To generate patches for changes made in code, you need to either simulate a browser event (recommended):
-
-```js
-var clickEvent = document.createEvent('MouseEvents');
-clickEvent.initEvent("mouseup", true, true);
-window.dispatchEvent(clickEvent);
-```
-
-Or use a low level API exposed by the JSON-Patch library, provided that you have a reference the Palindrom instance:
-
-```js
-jsonpatch.generate(palindrom.observer);
-```
-
-Future versions of Palindrom may contain a high level API for generating patches. Please follow the issue [#29](https://github.com/Palindrom/Palindrom/issues/29) to know more.
+Palindrom automatically observes local changes. This is implemented with [ES6 Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy), triggered with every modification of `palindrom.obj` object.
 
 ### Ignoring local changes (`ignoreAdd`)
 
@@ -147,7 +172,7 @@ let's you disregard client-side "add" operations in the object using a regular e
 
 ```javascript
 // in constructor
-var palindrom = new Palindrom({obj: myObj, ignoreAdd: /\/_.+/});
+var palindrom = new Palindrom({remoteUrl: url, obj: myObj, ignoreAdd: /\/_.+/});
 // or via property
 palindrom.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to server
 palindrom.ignoreAdd = /./; //ignore all the "add" operations
@@ -163,13 +188,13 @@ You can upgrade the communication protocol to use WebSocket by setting `useWebSo
 
 WebSocket is a replacement for requests that would be sent using `HTTP PATCH` otherwise. The requests sent over `HTTP GET` (such as link clicks) are not affected.
 
-:bulb: Note that this is an experimental implementation in which the WebSocket upgrade request URL is hardcoded (`__default/wsupgrade/<sessionID>`). In future, it will be replaced with a configurable URL.
+:bulb: Note that this is an experimental implementation in which the WebSocket upgrade request URL taken from `X-Location` header of your first AJAX call response.
 
 Sample:
 
 ```javascript
 // enable it in constructor
-var palindrom = new Palindrom({useWebSocket: true});
+var palindrom = new Palindrom({remoteUrl: url, useWebSocket: true});
 // change it later via property
 palindrom.useWebSocket = false;
 ```
@@ -189,68 +214,42 @@ to this new state and resumes its operations.
 
 ### Dependencies
 
-Palindrom is dependent on [Starcounter-Jack/JSON-Patch](https://github.com/Starcounter-Jack/JSON-Patch) to observe changes in local scope, generate patches to be sent to the server and apply changes received from the server.
+It depends on Native [ES6 Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy). Check usability on [caniuse](http://www.caniuse.com/#search=Proxy).
 
-It also, uses [URL API](http://www.w3.org/TR/url/), if your environment does not support it (IE, Node), you need to use shim, for example [Polymer/URL](https://github.com/Polymer/URL).
-```shell
-bower install Polymer/URL
-```
-```html
-<script src="bower_components/url/url.js"></script>
-```
+If you use the bundle, no file dependencies are needed. You can view all the dependencies in [package.json](https://github.com/Palindrom/Palindrom/blob/master/package.json).
 
 ### Development
 
-#### Local installation of dependencies
-
-In order to develop Palindrom locally we suggest to use [polyserve](https://npmjs.com/polyserve) tool to handle bower paths gently.
-
-1. Install the global NPM modules [bower](http://bower.io/) & [polyserve](https://npmjs.com/polyserve): `npm install -g bower polyserve`
-2. Make a local clone of this repo: `git clone git@github.com:Palindrom/Palindrom.git`
-3. Go to the directory: `cd Palindrom`
-4. Install the local dependencies: `bower install`
-5. Start the development server: `polyserve -p 8000`
+1. Make a local clone of this repo: `git clone git@github.com:Palindrom/Palindrom.git`
+2. Go to the directory: `cd Palindrom`
+3. Install the local dependencies: `npm install`
+4. Start the development server: `polyserve -p 8000`
+5. bundle by calling `webpack` in your shell.
 6. Open the demo: [http://localhost:8000/components/Palindrom/lab/polymer/index.html](http://localhost:8000/components/Palindrom/lab/polymer/index.html)
-7. Open the test suite: [http://localhost:8000/components/Palindrom/test/SpecRunner.html](http://localhost:8000/components/Palindrom/test/SpecRunner.html)
-
-#### Minifying
-
-In order to minify it locally you'll need a basic setup.
-
-* Install [Grunt](http://gruntjs.com/):
-
-    ```sh
-    $ [sudo] npm install -g grunt-cli
-    ```
-
-* Install local dependencies:
-
-    ```sh
-    $ npm install
-    ```
-
-* To minify project.
-
-    ```sh
-    $ grunt uglify
-    ```
+7. Open the test suite: [http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html](http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html)
 
 ### Releases
 
 To release new version run
+
 ```sh
-grunt uglify bump
+webpack # to bundle
+grunt uglify bump # to bump the version, commit, and create a git tag
+git push && git push --tags
+...
+npm publish
 
 ```
 
 ### Testing
 
-Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
+Please follow steps 4, 5, 6 and 7 from [Development section](#Development).
 
 ### Changelog
 
 To see the list of recent changes, see [Releases](https://github.com/Palindrom/Palindrom/releases).
 
+---
 
 PalindromDOM
 ========
@@ -261,28 +260,57 @@ Implements [Server communication](https://github.com/Starcounter-Jack/Palindrom/
 
 ### Installation
 
-You can install it using [bower](http://bower.io/) `bower install Palindrom` or just download from [github](https://github.com/Palindrom/Palindrom).
+#### You can install using [bower](http://bower.io/) and [NPM](http://npmjs.com/):
 
-Then add source to your head:
+##### Bower:
+
+```sh
+bower install Palindrom --save
+```
+
+Then add source to your HTML:
 
 ```html
-<!-- include Palindrom + PalindromDOM with dependencies -->
-<script src="bower_components/fast-json-patch/src/json-patch-duplex.js"></script>
-<script src="bower_components/Palindrom/src/palindrom.js"></script>
-<script src="bower_components/Palindrom/src/palindrom-dom.js"></script>
+
+<!-- include Palindrom bundle -->
+<script src="bower_components/Palindrom/dist/palindrom-dom.js"></script>
 ```
+See [Dependencies section](https://github.com/Palindrom/Palindrom#dependencies) for more details.
+
+##### NPM:
+
+```sh
+npm install palindrom --save
+```
+
+Then you can require it CommonJS or ES6/TS style:
+
+###### CommonJS:
+```js
+var PalindromDOM = require('palindrom/src/palindrom-dom');
+```
+
+###### ES6/TS:
+```js
+import PalindromDOM from 'palindrom/src/palindrom-dom'
+```
+
+###### Or just download it manually from [github](https://github.com/Palindrom/Palindrom/archive/master.zip).
 
 ### Usage
 
 After DOM is ready, initialize with the constructor:
 
-```javascript
+```js
 /**
  * Defines a connection to a remote PATCH server, gives an object that is persistent between browser and server
  */
-var palindrom = new PalindromDOM();
+var palindrom = new PalindromDOM({remoteUrl: window.location.href});
 ```
-Now click, blur, pop/pushstate events may trigger a HTTP PATCH request.
+
+*Please make sure you pass the correct PATCH server URL.*
+
+Now any changes to `palindrom.obj` will trigger a HTTP PATCH request. And any received will be applied.
 
 ### Demo
 
@@ -332,37 +360,36 @@ Palindrom uses the HTML5 history API to update the URL in the browser address ba
 
 ### Development
 
-In order to minify it locally you'll need a basic setup.
-
-* Install [Grunt](http://gruntjs.com/):
-
-    ```sh
-    $ [sudo] npm install -g grunt-cli
-    ```
-
-* Install local dependencies:
-
-    ```sh
-    $ npm install
-    ```
-
-* To minify project.
-
-    ```sh
-    $ grunt uglify
-    ```
+Same steps in Palindrom Development section. **tests cover both**.
 
 ### Releases
 
-To release new version run
-```sh
-grunt uglify bump
-
-```
+Same steps in Palindrom Releases section.
 
 ### Testing
 
-Open `test/SpecRunner.html` in your web browser to run Jasmine test suite.
+#### Local testing with your browser
+
+Start a web server:
+
+```sh
+polyserve -p 8000
+```
+Open `http://127.0.0.1:8000/components/Palindrom/test/MochaSpecRunner.html` in your web browser to run Mocha test suite.
+
+#### Testing with CLI and SauceLabs
+
+1. Install [Sauce Connect](https://wiki.saucelabs.com/display/DOCS/Sauce+Connect+Proxy).
+
+2. Add your `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables to your machine.
+
+3. Connect to SauceLabs using the command
+ `sc /u YOUR_SAUCE_USER /k YOUR_SAUCE_ACCESSKEY`
+
+4. Start a web server `polyserve -p 8000`
+
+5. In project's root folder, run `npm test`
+
 
 ### Changelog
 

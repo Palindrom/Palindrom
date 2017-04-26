@@ -5,31 +5,29 @@
   <meta charset="utf-8">
   <title>Palindrom with Polymer demo</title>
   <!-- include web components polyfill -->
-  <script src="../../../webcomponentsjs/webcomponents.js"></script>
+  <script src="bower_components/webcomponentsjs/webcomponents.js"></script>
 
   <!-- include Palindrom with dependencies -->
-  <script src="../../../fast-json-patch/src/json-patch-duplex.js"></script>
-  <script src="../../src/palindrom.js"></script>
-  <script src="../../src/palindrom-dom.js"></script>
+  <script src="../../dist/palindrom-dom.js"></script>
 
   <!-- include components for demo -->
-  <link rel="import" href="../../../polymer/polymer.html">
+  <link rel="import" href="bower_components/polymer/polymer.html">
 
   <!-- include polyfills -->
   <script src="polyfills/object-observe.js"></script>
   <script src="polyfills/array-observe.js"></script>
-  <link rel="import" href="../../../dom-bind-notifier/dom-bind-notifier.html">
+  <link rel="import" href="bower_components/dom-bind-notifier/dom-bind-notifier.html">
   <link rel="import" href="components/my-menu-button.html">
-  <link rel="import" href="../../../palindrom-bunny/palindrom-bunny.html">
+  <link rel="import" href="bower_components/palindrom-bunny/palindrom-bunny.html">
 
   <link rel="stylesheet" type="text/css" href="css/style.css">
 
   <!-- mock server responses -->
-  <script src="../../test/lib/jasmine-2.2.0/jasmine.js"></script>
+  <script src="../utils/lib/jasmine-2.2.0/jasmine.js"></script>
   <script>
     window.jasmine = jasmineRequire.core(jasmineRequire);
   </script>
-  <script src="../../test/lib/jasmine-ajax-3.0.0/lib/mock-ajax.js"></script>
+  <script src="../utils/lib/jasmine-ajax-3.0.0/lib/mock-ajax.js"></script>
   <script src="js/mockServer.js"></script>
 </head>
 
@@ -98,6 +96,7 @@
   <script>
     // it's global just for debugging
     var palindrom = new PalindromDOM({
+      remoteUrl: window.location.href,
       callback: function(obj) {
         document.getElementById('test').model = obj;
       },

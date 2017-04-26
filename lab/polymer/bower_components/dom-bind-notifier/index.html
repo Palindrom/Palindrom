@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>&lt;dom-bind-notifier&gt;</title>
+    <link rel="stylesheet" href="http://juicy.github.io/github-markdown-css/github-markdown.css">
+
+    <!-- Importing Web Component's Polyfill -->
+    <script src="../webcomponentsjs/webcomponents.js"></script>
+
+    <!-- Importing Custom Elements -->
+    <link rel="import" href="dom-bind-notifier.html">
+    <style>
+      body.markdown-body{ overflow: auto; }
+      .example-block{ display: flex; flex-wrap: wrap; justify-content: center; }
+      .example-block>*{ width: 50%; padding: 0 1em;}
+
+    </style>
+</head>
+<body class="markdown-body">
+  <h1>
+    &lt;dom-bind-notifier&gt;
+    <iframe src="http://ghbtns.com/github-btn.html?user=juicy&repo=dom-bind-notifier&type=watch&count=true&size=medium"
+    allowtransparency="true" frameborder="0" scrolling="0" width="90" height="20"></iframe>
+    <iframe src="http://ghbtns.com/github-btn.html?user=juicy&repo=dom-bind-notifier&type=fork&count=true&size=medium"
+    allowtransparency="true" frameborder="0" scrolling="0" width="90" height="20"></iframe></h1>
+  <blockquote>
+    <p>
+      Adds good old Object.observe to Polymer 1.0 template binding (dom-bind)
+    </p>
+  </blockquote>
+  <p>
+    Here we bind external static JS object literal to Polymer's <code>dom-bind</code>.
+    All changes on it, are automatically notified to Polymer templates.
+    <strong>Open debug console, and fiddle with <code>simple, deep, arrays</code> objects</strong>
+  </p>
+
+  <h2>Examples</h2>
+
+  <h3>Simple</h3>
+  <div class="example-block">
+    <pre><code>&lt;template is="dom-bind" id="simple"&gt;
+  &lt;h4&gt;Welcome to &lt;span&gt;{{model.name}}&lt;/span&gt;&lt;/h4&gt;
+  &lt;dom-bind-notifier path="model" observed-object="{{model}}"&gt;&lt;/dom-bind-notifier&gt;
+&lt;/template&gt;
+&lt;script&gt;
+  var simple = { name: "Juicy" };
+  document.getElementById("simple").model = simple;
+&lt;/script&gt;
+</code></pre>
+    <div class="example">
+      <template is="dom-bind" id="simple">
+        <h4>Welcome to <span>{{model.name}}</span>!</h4>
+          <!-- Using Custom Elements -->
+          <dom-bind-notifier path="model" observed-object="{{model}}"></dom-bind-notifier>
+      </template>
+
+
+      <script>
+      var simple = {
+        name: "Juicy"
+      };
+      document.getElementById("simple").model = simple;
+      </script>
+    </div>
+    <div>
+      <button onclick="simple.name='juicy-dom-notifier'">Click me to change <code>simple.name</code> to <code>"juicy-dom-notifier"</code></button>
+    </div>
+  </div>
+  <h3>Deep</h3>
+
+  <div class="example-block">
+    <pre><code>&lt;template is="dom-bind" id="deep"&gt;
+  &lt;h3&gt;{{repo.name}}&lt;/h3&gt;
+  by &lt;span&gt;{{repo.author.first}}&lt;/span&gt; &lt;span&gt;{{repo.author.last}}&lt;/span&gt;
+  &lt;dom-bind-notifier path="repo" observed-object="{{repo}}" deep&gt;&lt;/dom-bind-notifier&gt;
+&lt;/template&gt;
+&lt;script&gt;
+  var deep = {
+  name: "&lt;juicy-dom-notifier&gt;",
+  author: {
+    first: "Tomek",
+    last: "Wytrębowicz"
+  }
+  };
+  document.getElementById("deep").repo = deep;
+&lt;/script&gt;</code></pre>
+    <div class="example">
+      <template is="dom-bind" id="deep">
+        <h3>{{repo.name}}</h3>
+        by <span>{{repo.author.first}}</span> <span>{{repo.author.last}}</span>
+        <!-- Using Custom Elements -->
+        <dom-bind-notifier path="repo" observed-object="{{repo}}" deep></dom-bind-notifier>
+      </template>
+
+
+      <script>
+      var deep = {
+        name: "<juicy-dom-notifier>",
+        author: {
+          first: "Tomek",
+          last: "Wytrębowicz"
+        }
+      };
+      document.getElementById("deep").repo = deep;
+      </script>
+    </div>
+    <div>
+      <button onclick="deep.author.first='tomalec'">Click me to change <code>deep.author.first</code> to <code>"tomalec"</code></button>
+    </div>
+  </div>
+  <h3>Arrays</h3>
+
+  <div class="example-block">
+    <pre><code>&lt;template is="dom-bind" id="arrays"&gt;
+  &lt;h4&gt;&lt;span&gt;{{organization.name}}&lt;/span&gt; people:&lt;/h4&gt;
+  &lt;ul&gt;
+    &lt;template  is="dom-repeat" items="{{organization.people}}"&gt;
+      &lt;li&gt;&lt;span&gt;{{item.first}}&lt;/span&gt; &lt;span&gt;{{item.last}}&lt;/span&gt;&lt;/li&gt;
+    &lt;/template&gt;
+  &lt;/ul&gt;
+  &lt;dom-bind-notifier path="organization" observed-object="{{organization}}" deep&gt;&lt;/dom-bind-notifier&gt;
+&lt;/template&gt;
+
+
+&lt;script&gt;
+var arrays = {
+  name: "Juicy",
+  people: [
+    {
+      first: "Tomek",
+      last: "Wytrębowicz"
+    }
+  ]
+};
+document.getElementById("arrays").organization = arrays;
+&lt;/script&gt;</code></pre>
+    <div class="example">
+      <template is="dom-bind" id="arrays">
+        <h4><span>{{organization.name}}</span> people:</h4>
+        <ul>
+          <template  is="dom-repeat" items="{{organization.people}}">
+            <li><span>{{item.first}}</span> <span>{{item.last}}</span></li>
+          </template>
+        </ul>
+        <dom-bind-notifier path="organization" observed-object="{{organization}}" deep></dom-bind-notifier>
+      </template>
+      <!-- Using Custom Elements -->
+      <script>
+      var arrays = {
+        name: "Juicy",
+        people: [
+          {
+            first: "Tomek",
+            last: "Wytrębowicz"
+          }
+        ]
+      };
+      document.getElementById("arrays").organization = arrays;
+      </script>
+    </div>
+    <div>
+      <button onclick="arrays.people.push({first:'New', last:'Guy'});">Click to <code>push</code> a new guy to <code>arrays.people</code></button>
+      <button onclick="arrays.people.splice(1,0,{first:'Some', last:'One'});">Click to <code>splice</code> someone in the middle of<code>arrays.people</code></button>
+      <button onclick="arrays.people[1].first= 'An Apple';">Click to change <code>arrays.people[1].first</code>to an apple</button>
+      <button onclick="arrays.people.shift();">Click to shift a person from <code>arrays.people</code></button>
+    </div>
+  </div>
+</body>
+</html>

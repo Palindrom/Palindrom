@@ -1,0 +1,28 @@
+{
+  "name": "dom-bind-notifier",
+  "version": "1.2.1",
+  "description": "Adds good old Object.observe to Polymer 1.0 template binding (dom-bind)",
+  "license": "MIT",
+  "main": "src/dom-bind-notifier.html",
+  "authors": [
+    "Tomek Wytrebowicz <tomalecpub@gmail.com>"
+  ],
+  "keywords": [
+    "polymer",
+    "web-components",
+    "juicy"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "tests",
+    "bower_components",
+    "preview.png"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#>=1.0.9"
+  },
+  "devDependencies": {
+    "web-component-tester": "~3.3.6"
+  }
+}
