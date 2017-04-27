@@ -162,10 +162,6 @@ If you want to opt-out from such behavior, you need to force your framework to u
 - In Polymer 0.9+, use built-in `<input value="{{bindValue::blur}}">`
 - In Angular 1.3+, use built-in `<input type="text" ng-model="name" ng-model-options="{updateOn: 'blur'}" />`
 
-### Generating patches based on local changes
-
-Palindrom automatically observes local changes. This is implemented with [ES6 Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy), triggered with every modification of `palindrom.obj` object.
-
 ### Ignoring local changes (`ignoreAdd`)
 
 If you want to create a property in the observed object that will remain local, there is an `ignoreAdd` option and property that
