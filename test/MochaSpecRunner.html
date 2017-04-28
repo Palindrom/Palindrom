@@ -5,6 +5,7 @@
     <title>Mocha Tests</title>
     <link href="lib/mocha.css" rel="stylesheet" />
     <script src="../lab/polymer/bower_components/webcomponentsjs/webcomponents.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mocha/3.3.0/mocha.js"></script>
     <link rel="import" href="../lab/polymer/components/my-menu-button.html">
 </head>
 
@@ -14,14 +15,6 @@
     </div>
     <my-menu-button style="position: absolute; top: 0; right: 0" href="subpage.html">Distributed <strong>Content</strong></my-menu-button>
     <div id="mocha"></div>
-    <script>
-        function failNicely() {
-            let message = document.createElement('H3');
-            message.innerHTML = "Please make sure to run `npm install` before running the tests..";
-            document.body.insertBefore(message, document.querySelector('my-menu-button'));
-        }
-    </script>
-    <script src="../node_modules/mocha/mocha.js" onerror="failNicely()"></script>
     <script>
         mocha.setup('bdd');
     </script>
