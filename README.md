@@ -75,7 +75,9 @@ palindrom.obj.someProperty = "new value";
 
 ### Demo
 
-[Example of Palindrom + PalindromDOM with Polymer's Template Binding and Web Components](http://Palindrom.github.io/Palindrom/lab/polymer/index.html)
+- [Example with Polymer's Template Binding and Web Components](http://Palindrom.github.io/Palindrom/lab/polymer/index.html)
+- [Example with Vue](http://Palindrom.github.io/Palindrom/lab/vue/index.html)
+- [Example with React](http://Palindrom.github.io/Palindrom/lab/react/index.html)
 
 ### Options (`Palindrom()` constructor parameters)
 All the parameters are optional.
@@ -311,7 +313,9 @@ Now any changes to `palindrom.obj` will trigger a HTTP PATCH request. And any re
 
 ### Demo
 
-[Example with Polymer's Template Binding and Web Components](http://Palindrom.github.io/Palindrom/lab/polymer/index.html)
+- [Example with Polymer's Template Binding and Web Components](http://Palindrom.github.io/Palindrom/lab/polymer/index.html)
+- [Example with Vue](http://Palindrom.github.io/Palindrom/lab/vue/index.html)
+- [Example with React](http://Palindrom.github.io/Palindrom/lab/react/index.html)
 
 ### Options (`PalindromDOM()` constructor parameters)
 
