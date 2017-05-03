@@ -26,7 +26,7 @@
   var lastUrl = window.location.href;
   handlePageLoad(lastUrl);
 
-  var stub = jasmine.Ajax.stubRequest(/(\/lab\/polymer\/?$|index\.html$|subpage\.html$)/);
+  var stub = jasmine.Ajax.stubRequest(/(\/lab\/vue\/?$|index\.html$|subpage\.html$)/);
   stub.andReturn({
     "responseText": "Error"
   });
