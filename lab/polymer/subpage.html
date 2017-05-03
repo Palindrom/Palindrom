@@ -33,7 +33,11 @@
 
 <body>
 
-  <h1>Palindrom + Polymer</h1>
+  <div id="brand">
+        <div class="float"><img alt="Palindrom + Polymer" title="Palindrom and Vue logos" src="css/logo.png"></div>
+        <div class="float"><h1> Palindrom + Polymer</h1></div>
+        <div style="clear: both"></div>
+  </div>
 
   <p>This demo shows usage with Polymer's TemplateBinding outside and inside of Polymer Element</p>
 
@@ -97,7 +101,7 @@
     // it's global just for debugging
     var palindrom = new PalindromDOM({
       remoteUrl: window.location.href,
-      callback: function(obj) {
+      callback: function(obj) {        
         document.getElementById('test').model = obj;
       },
       debug: false,
