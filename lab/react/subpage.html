@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Palindrom + React</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="../../dist/palindrom-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.3.1/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.3.1/react-dom.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <!-- mock server responses -->
+    <script src="../utils/lib/jasmine-2.2.0/jasmine.js"></script>
+    <script>
+        window.jasmine = jasmineRequire.core(jasmineRequire);
+    </script>
+    <link rel="import" href="components/my-menu-button.html">
+    <script src="../utils/lib/jasmine-ajax-3.0.0/lib/mock-ajax.js"></script>
+    <script src="js/mockServer.js"></script>
+</head>
+
+<body>
+
+    <div id="brand">
+        <div class="float"><img alt="Palindrom + React" title="Palindrom and React logos" src="css/logo.png"></div>
+        <div class="float">
+            <h1>Palindrom + React</h1>
+        </div>
+        <div style="clear: both"></div>
+    </div>
+
+    <h3>This demo shows usage with React's state updates</h3>
+
+    <article>
+        <section id="listeningScope">
+            <h2>
+                Capturing Links
+            </h2>
+
+            <p>Clicking one of the links contained in a Polymer Element (or in regular DOM, doesn't matter) actually sends a PATCH </p>
+            <ul>
+                <li>
+                    <a href="index.html">Albert <strong>Einstein</strong></a> (index.html)
+                </li>
+                <li>
+                    <my-menu-button href="subpage.html">Nikola
+                        <strong>Tesla</strong>
+                    </my-menu-button>
+                    (subpage.html)
+                </li>
+            </ul>
+        </section>
+        <section id="app">
+        </section>
+    </article>
+    <script type="text/babel">
+        var palindrom = new PalindromDOM({
+            remoteUrl: window.location.href,
+            callback: function (obj) {
+                class MyComponent extends React.Component {
+                    constructor() {
+                        super();
+                        this.state = { ...palindrom.obj };
+                        palindrom.onRemoteChange = this.remoteUpdateHappened.bind(this);
+                    }
+                    remoteUpdateHappened() {
+                        this.updating = true;
+                        this.setState({...palindrom.obj}, () => this.updating = false);
+                    }
+                    componentDidUpdate() {
+                        if(!this.updating)
+                            Object.assign(palindrom.obj.user, this.state.user);
+                    }
+                    render() {
+                        const section = 
+                        <section>
+                            <h2>
+                                Capturing input
+                            </h2>
+                            <div>
+                                <h4>Welcome <em>{this.state.user.fullName}</em>!
+                                </h4>
+                                <p>
+                                    <label>First Name: </label>
+                                    <input type="text" onChange={(ev) => {this.setState({user: {...this.state.user, firstName$: ev.target.value}})}} value={this.state.user.firstName$} />
+                                </p>
+
+                                <p>
+                                    <label>Last Name: </label>
+                                    <input type="text" onChange={(ev) => {this.setState({user: {...this.state.user, lastName$: ev.target.value}})}} value={this.state.user.lastName$} />
+                                </p>
+                                <button onClick={() => {obj.user.resetNameClicked$ = true}}>Replace with Newton!</button>
+                            </div>
+                        </section>;
+
+                        return section;
+                    }
+                }
+                ReactDOM.render(
+                    <MyComponent />,
+                    document.getElementById('app')
+                );
+            },
+            listenTo: document.getElementById('listeningScope'),
+            debug: false
+        });
+    </script>
+</body>
+
+</html>
