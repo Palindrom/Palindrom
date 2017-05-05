@@ -64,7 +64,7 @@ var Tests =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 162);
+/******/ 	return __webpack_require__(__webpack_require__.s = 164);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -101,7 +101,7 @@ module.exports = g;
 "use strict";
 
 
-var bind = __webpack_require__(43);
+var bind = __webpack_require__(44);
 
 /*global toString:true*/
 
@@ -402,693 +402,6 @@ module.exports = {
 
 /***/ }),
 /* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var deepEqual = __webpack_require__(8).use(match); // eslint-disable-line no-use-before-define
-var every = __webpack_require__(60);
-var functionName = __webpack_require__(18);
-var iterableToString = __webpack_require__(61);
-var typeOf = __webpack_require__(30);
-var valueToString = __webpack_require__(4);
-
-var indexOf = Array.prototype.indexOf;
-
-function assertType(value, type, name) {
-    var actual = typeOf(value);
-    if (actual !== type) {
-        throw new TypeError("Expected type of " + name + " to be " +
-            type + ", but was " + actual);
-    }
-}
-
-var matcher = {
-    toString: function () {
-        return this.message;
-    }
-};
-
-function isMatcher(object) {
-    return matcher.isPrototypeOf(object);
-}
-
-function matchObject(expectation, actual) {
-    if (actual === null || actual === undefined) {
-        return false;
-    }
-
-    return Object.keys(expectation).every(function (key) {
-        var exp = expectation[key];
-        var act = actual[key];
-
-        if (isMatcher(exp)) {
-            if (!exp.test(act)) {
-                return false;
-            }
-        } else if (typeOf(exp) === "object") {
-            if (!matchObject(exp, act)) {
-                return false;
-            }
-        } else if (!deepEqual(exp, act)) {
-            return false;
-        }
-
-        return true;
-    });
-}
-
-var TYPE_MAP = {
-    "function": function (m, expectation, message) {
-        m.test = expectation;
-        m.message = message || "match(" + functionName(expectation) + ")";
-    },
-    number: function (m, expectation) {
-        m.test = function (actual) {
-            // we need type coercion here
-            return expectation == actual; // eslint-disable-line eqeqeq
-        };
-    },
-    object: function (m, expectation) {
-        var array = [];
-
-        if (typeof expectation.test === "function") {
-            m.test = function (actual) {
-                return expectation.test(actual) === true;
-            };
-            m.message = "match(" + functionName(expectation.test) + ")";
-            return m;
-        }
-
-        array = Object.keys(expectation).map(function (key) {
-            return key + ": " + valueToString(expectation[key]);
-        });
-
-        m.test = function (actual) {
-            return matchObject(expectation, actual);
-        };
-        m.message = "match(" + array.join(", ") + ")";
-
-        return m;
-    },
-    regexp: function (m, expectation) {
-        m.test = function (actual) {
-            return typeof actual === "string" && expectation.test(actual);
-        };
-    },
-    string: function (m, expectation) {
-        m.test = function (actual) {
-            return typeof actual === "string" && actual.indexOf(expectation) !== -1;
-        };
-        m.message = "match(\"" + expectation + "\")";
-    }
-};
-
-function match(expectation, message) {
-    var m = Object.create(matcher);
-    var type = typeOf(expectation);
-
-    if (type in TYPE_MAP) {
-        TYPE_MAP[type](m, expectation, message);
-    } else {
-        m.test = function (actual) {
-            return deepEqual(expectation, actual);
-        };
-    }
-
-    if (!m.message) {
-        m.message = "match(" + valueToString(expectation) + ")";
-    }
-
-    return m;
-}
-
-matcher.or = function (m2) {
-    if (!arguments.length) {
-        throw new TypeError("Matcher expected");
-    } else if (!isMatcher(m2)) {
-        m2 = match(m2);
-    }
-    var m1 = this;
-    var or = Object.create(matcher);
-    or.test = function (actual) {
-        return m1.test(actual) || m2.test(actual);
-    };
-    or.message = m1.message + ".or(" + m2.message + ")";
-    return or;
-};
-
-matcher.and = function (m2) {
-    if (!arguments.length) {
-        throw new TypeError("Matcher expected");
-    } else if (!isMatcher(m2)) {
-        m2 = match(m2);
-    }
-    var m1 = this;
-    var and = Object.create(matcher);
-    and.test = function (actual) {
-        return m1.test(actual) && m2.test(actual);
-    };
-    and.message = m1.message + ".and(" + m2.message + ")";
-    return and;
-};
-
-match.isMatcher = isMatcher;
-
-match.any = match(function () {
-    return true;
-}, "any");
-
-match.defined = match(function (actual) {
-    return actual !== null && actual !== undefined;
-}, "defined");
-
-match.truthy = match(function (actual) {
-    return !!actual;
-}, "truthy");
-
-match.falsy = match(function (actual) {
-    return !actual;
-}, "falsy");
-
-match.same = function (expectation) {
-    return match(function (actual) {
-        return expectation === actual;
-    }, "same(" + valueToString(expectation) + ")");
-};
-
-match.typeOf = function (type) {
-    assertType(type, "string", "type");
-    return match(function (actual) {
-        return typeOf(actual) === type;
-    }, "typeOf(\"" + type + "\")");
-};
-
-match.instanceOf = function (type) {
-    assertType(type, "function", "type");
-    return match(function (actual) {
-        return actual instanceof type;
-    }, "instanceOf(" + functionName(type) + ")");
-};
-
-function createPropertyMatcher(propertyTest, messagePrefix) {
-    return function (property, value) {
-        assertType(property, "string", "property");
-        var onlyProperty = arguments.length === 1;
-        var message = messagePrefix + "(\"" + property + "\"";
-        if (!onlyProperty) {
-            message += ", " + valueToString(value);
-        }
-        message += ")";
-        return match(function (actual) {
-            if (actual === undefined || actual === null ||
-                    !propertyTest(actual, property)) {
-                return false;
-            }
-            return onlyProperty || deepEqual(value, actual[property]);
-        }, message);
-    };
-}
-
-match.has = createPropertyMatcher(function (actual, property) {
-    if (typeof actual === "object") {
-        return property in actual;
-    }
-    return actual[property] !== undefined;
-}, "has");
-
-match.hasOwn = createPropertyMatcher(function (actual, property) {
-    return actual.hasOwnProperty(property);
-}, "hasOwn");
-
-match.array = match.typeOf("array");
-
-match.array.deepEquals = function (expectation) {
-    return match(function (actual) {
-        // Comparing lengths is the fastest way to spot a difference before iterating through every item
-        var sameLength = actual.length === expectation.length;
-        return typeOf(actual) === "array" && sameLength && every(actual, function (element, index) {
-            return expectation[index] === element;
-        });
-    }, "deepEquals([" + iterableToString(expectation) + "])");
-};
-
-match.array.startsWith = function (expectation) {
-    return match(function (actual) {
-        return typeOf(actual) === "array" && every(expectation, function (expectedElement, index) {
-            return actual[index] === expectedElement;
-        });
-    }, "startsWith([" + iterableToString(expectation) + "])");
-};
-
-match.array.endsWith = function (expectation) {
-    return match(function (actual) {
-        // This indicates the index in which we should start matching
-        var offset = actual.length - expectation.length;
-
-        return typeOf(actual) === "array" && every(expectation, function (expectedElement, index) {
-            return actual[offset + index] === expectedElement;
-        });
-    }, "endsWith([" + iterableToString(expectation) + "])");
-};
-
-match.array.contains = function (expectation) {
-    return match(function (actual) {
-        return typeOf(actual) === "array" && every(expectation, function (expectedElement) {
-            return indexOf.call(actual, expectedElement) !== -1;
-        });
-    }, "contains([" + iterableToString(expectation) + "])");
-};
-
-match.map = match.typeOf("map");
-
-match.map.deepEquals = function mapDeepEquals(expectation) {
-    return match(function (actual) {
-        // Comparing lengths is the fastest way to spot a difference before iterating through every item
-        var sameLength = actual.size === expectation.size;
-        return typeOf(actual) === "map" && sameLength && every(actual, function (element, key) {
-            return expectation.has(key) && expectation.get(key) === element;
-        });
-    }, "deepEquals(Map[" + iterableToString(expectation) + "])");
-};
-
-match.map.contains = function mapContains(expectation) {
-    return match(function (actual) {
-        return typeOf(actual) === "map" && every(expectation, function (element, key) {
-            return actual.has(key) && actual.get(key) === element;
-        });
-    }, "contains(Map[" + iterableToString(expectation) + "])");
-};
-
-match.set = match.typeOf("set");
-
-match.set.deepEquals = function setDeepEquals(expectation) {
-    return match(function (actual) {
-        // Comparing lengths is the fastest way to spot a difference before iterating through every item
-        var sameLength = actual.size === expectation.size;
-        return typeOf(actual) === "set" && sameLength && every(actual, function (element) {
-            return expectation.has(element);
-        });
-    }, "deepEquals(Set[" + iterableToString(expectation) + "])");
-};
-
-match.set.contains = function setContains(expectation) {
-    return match(function (actual) {
-        return typeOf(actual) === "set" && every(expectation, function (element) {
-            return actual.has(element);
-        });
-    }, "contains(Set[" + iterableToString(expectation) + "])");
-};
-
-match.bool = match.typeOf("boolean");
-match.number = match.typeOf("number");
-match.string = match.typeOf("string");
-match.object = match.typeOf("object");
-match.func = match.typeOf("function");
-match.regexp = match.typeOf("regexp");
-match.date = match.typeOf("date");
-match.symbol = match.typeOf("symbol");
-
-module.exports = match;
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-// Adapted from https://developer.mozilla.org/en/docs/ECMAScript_DontEnum_attribute#JScript_DontEnum_Bug
-var hasDontEnumBug = (function () {
-    var obj = {
-        constructor: function () {
-            return "0";
-        },
-        toString: function () {
-            return "1";
-        },
-        valueOf: function () {
-            return "2";
-        },
-        toLocaleString: function () {
-            return "3";
-        },
-        prototype: function () {
-            return "4";
-        },
-        isPrototypeOf: function () {
-            return "5";
-        },
-        propertyIsEnumerable: function () {
-            return "6";
-        },
-        hasOwnProperty: function () {
-            return "7";
-        },
-        length: function () {
-            return "8";
-        },
-        unique: function () {
-            return "9";
-        }
-    };
-
-    var result = [];
-    for (var prop in obj) {
-        if (obj.hasOwnProperty(prop)) {
-            result.push(obj[prop]());
-        }
-    }
-    return result.join("") !== "0123456789";
-})();
-
-/* Public: Extend target in place with all (own) properties from sources in-order. Thus, last source will
- *         override properties in previous sources.
- *
- * target - The Object to extend
- * sources - Objects to copy properties from.
- *
- * Returns the extended target
- */
-module.exports = function extend(target /*, sources */) {
-    var sources = Array.prototype.slice.call(arguments, 1);
-    var source, i, prop;
-
-    for (i = 0; i < sources.length; i++) {
-        source = sources[i];
-
-        for (prop in source) {
-            if (source.hasOwnProperty(prop)) {
-                target[prop] = source[prop];
-            }
-        }
-
-        // Make sure we copy (own) toString method even when in JScript with DontEnum bug
-        // See https://developer.mozilla.org/en/docs/ECMAScript_DontEnum_attribute#JScript_DontEnum_Bug
-        if (hasDontEnumBug && source.hasOwnProperty("toString") && source.toString !== target.toString) {
-            target.toString = source.toString;
-        }
-    }
-
-    return target;
-};
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function (value) {
-    if (value && value.toString) {
-        return value.toString();
-    }
-    return String(value);
-};
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/*istanbul ignore start*/
-
-exports.__esModule = true;
-exports['default'] = /*istanbul ignore end*/Diff;
-function Diff() {}
-
-Diff.prototype = { /*istanbul ignore start*/
-  /*istanbul ignore end*/diff: function diff(oldString, newString) {
-    /*istanbul ignore start*/var /*istanbul ignore end*/options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-
-    var callback = options.callback;
-    if (typeof options === 'function') {
-      callback = options;
-      options = {};
-    }
-    this.options = options;
-
-    var self = this;
-
-    function done(value) {
-      if (callback) {
-        setTimeout(function () {
-          callback(undefined, value);
-        }, 0);
-        return true;
-      } else {
-        return value;
-      }
-    }
-
-    // Allow subclasses to massage the input prior to running
-    oldString = this.castInput(oldString);
-    newString = this.castInput(newString);
-
-    oldString = this.removeEmpty(this.tokenize(oldString));
-    newString = this.removeEmpty(this.tokenize(newString));
-
-    var newLen = newString.length,
-        oldLen = oldString.length;
-    var editLength = 1;
-    var maxEditLength = newLen + oldLen;
-    var bestPath = [{ newPos: -1, components: [] }];
-
-    // Seed editLength = 0, i.e. the content starts with the same values
-    var oldPos = this.extractCommon(bestPath[0], newString, oldString, 0);
-    if (bestPath[0].newPos + 1 >= newLen && oldPos + 1 >= oldLen) {
-      // Identity per the equality and tokenizer
-      return done([{ value: this.join(newString), count: newString.length }]);
-    }
-
-    // Main worker method. checks all permutations of a given edit length for acceptance.
-    function execEditLength() {
-      for (var diagonalPath = -1 * editLength; diagonalPath <= editLength; diagonalPath += 2) {
-        var basePath = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
-        var addPath = bestPath[diagonalPath - 1],
-            removePath = bestPath[diagonalPath + 1],
-            _oldPos = (removePath ? removePath.newPos : 0) - diagonalPath;
-        if (addPath) {
-          // No one else is going to attempt to use this value, clear it
-          bestPath[diagonalPath - 1] = undefined;
-        }
-
-        var canAdd = addPath && addPath.newPos + 1 < newLen,
-            canRemove = removePath && 0 <= _oldPos && _oldPos < oldLen;
-        if (!canAdd && !canRemove) {
-          // If this path is a terminal then prune
-          bestPath[diagonalPath] = undefined;
-          continue;
-        }
-
-        // Select the diagonal that we want to branch from. We select the prior
-        // path whose position in the new string is the farthest from the origin
-        // and does not pass the bounds of the diff graph
-        if (!canAdd || canRemove && addPath.newPos < removePath.newPos) {
-          basePath = clonePath(removePath);
-          self.pushComponent(basePath.components, undefined, true);
-        } else {
-          basePath = addPath; // No need to clone, we've pulled it from the list
-          basePath.newPos++;
-          self.pushComponent(basePath.components, true, undefined);
-        }
-
-        _oldPos = self.extractCommon(basePath, newString, oldString, diagonalPath);
-
-        // If we have hit the end of both strings, then we are done
-        if (basePath.newPos + 1 >= newLen && _oldPos + 1 >= oldLen) {
-          return done(buildValues(self, basePath.components, newString, oldString, self.useLongestToken));
-        } else {
-          // Otherwise track this path as a potential candidate and continue.
-          bestPath[diagonalPath] = basePath;
-        }
-      }
-
-      editLength++;
-    }
-
-    // Performs the length of edit iteration. Is a bit fugly as this has to support the
-    // sync and async mode which is never fun. Loops over execEditLength until a value
-    // is produced.
-    if (callback) {
-      (function exec() {
-        setTimeout(function () {
-          // This should not happen, but we want to be safe.
-          /* istanbul ignore next */
-          if (editLength > maxEditLength) {
-            return callback();
-          }
-
-          if (!execEditLength()) {
-            exec();
-          }
-        }, 0);
-      })();
-    } else {
-      while (editLength <= maxEditLength) {
-        var ret = execEditLength();
-        if (ret) {
-          return ret;
-        }
-      }
-    }
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/pushComponent: function pushComponent(components, added, removed) {
-    var last = components[components.length - 1];
-    if (last && last.added === added && last.removed === removed) {
-      // We need to clone here as the component clone operation is just
-      // as shallow array clone
-      components[components.length - 1] = { count: last.count + 1, added: added, removed: removed };
-    } else {
-      components.push({ count: 1, added: added, removed: removed });
-    }
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/extractCommon: function extractCommon(basePath, newString, oldString, diagonalPath) {
-    var newLen = newString.length,
-        oldLen = oldString.length,
-        newPos = basePath.newPos,
-        oldPos = newPos - diagonalPath,
-        commonCount = 0;
-    while (newPos + 1 < newLen && oldPos + 1 < oldLen && this.equals(newString[newPos + 1], oldString[oldPos + 1])) {
-      newPos++;
-      oldPos++;
-      commonCount++;
-    }
-
-    if (commonCount) {
-      basePath.components.push({ count: commonCount });
-    }
-
-    basePath.newPos = newPos;
-    return oldPos;
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/equals: function equals(left, right) {
-    return left === right;
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/removeEmpty: function removeEmpty(array) {
-    var ret = [];
-    for (var i = 0; i < array.length; i++) {
-      if (array[i]) {
-        ret.push(array[i]);
-      }
-    }
-    return ret;
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/castInput: function castInput(value) {
-    return value;
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/tokenize: function tokenize(value) {
-    return value.split('');
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/join: function join(chars) {
-    return chars.join('');
-  }
-};
-
-function buildValues(diff, components, newString, oldString, useLongestToken) {
-  var componentPos = 0,
-      componentLen = components.length,
-      newPos = 0,
-      oldPos = 0;
-
-  for (; componentPos < componentLen; componentPos++) {
-    var component = components[componentPos];
-    if (!component.removed) {
-      if (!component.added && useLongestToken) {
-        var value = newString.slice(newPos, newPos + component.count);
-        value = value.map(function (value, i) {
-          var oldValue = oldString[oldPos + i];
-          return oldValue.length > value.length ? oldValue : value;
-        });
-
-        component.value = diff.join(value);
-      } else {
-        component.value = diff.join(newString.slice(newPos, newPos + component.count));
-      }
-      newPos += component.count;
-
-      // Common case
-      if (!component.added) {
-        oldPos += component.count;
-      }
-    } else {
-      component.value = diff.join(oldString.slice(oldPos, oldPos + component.count));
-      oldPos += component.count;
-
-      // Reverse add and remove so removes are output first to match common convention
-      // The diffing algorithm is tied to add then remove output and this is the simplest
-      // route to get the desired output with minimal overhead.
-      if (componentPos && components[componentPos - 1].added) {
-        var tmp = components[componentPos - 1];
-        components[componentPos - 1] = components[componentPos];
-        components[componentPos] = tmp;
-      }
-    }
-  }
-
-  // Special case handle for when one terminal is ignored. For this case we merge the
-  // terminal into the prior string and drop the change.
-  var lastComponent = components[componentLen - 1];
-  if (componentLen > 1 && (lastComponent.added || lastComponent.removed) && diff.equals('', lastComponent.value)) {
-    components[componentLen - 2].value += lastComponent.value;
-    components.pop();
-  }
-
-  return components;
-}
-
-function clonePath(path) {
-  return { newPos: path.newPos, components: path.components.slice(0) };
-}
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uL3NyYy9kaWZmL2Jhc2UuanMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7OzRDQUF3QixJO0FBQVQsU0FBUyxJQUFULEdBQWdCLENBQUU7O0FBRWpDLEtBQUssU0FBTCxHQUFpQixFO3lCQUNmLElBRGUsZ0JBQ1YsU0FEVSxFQUNDLFNBREQsRUFDMEI7NkJBQUEsSSx1QkFBZCxPQUFjLHlEQUFKLEVBQUk7O0FBQ3ZDLFFBQUksV0FBVyxRQUFRLFFBQXZCO0FBQ0EsUUFBSSxPQUFPLE9BQVAsS0FBbUIsVUFBdkIsRUFBbUM7QUFDakMsaUJBQVcsT0FBWDtBQUNBLGdCQUFVLEVBQVY7QUFDRDtBQUNELFNBQUssT0FBTCxHQUFlLE9BQWY7O0FBRUEsUUFBSSxPQUFPLElBQVg7O0FBRUEsYUFBUyxJQUFULENBQWMsS0FBZCxFQUFxQjtBQUNuQixVQUFJLFFBQUosRUFBYztBQUNaLG1CQUFXLFlBQVc7QUFBRSxtQkFBUyxTQUFULEVBQW9CLEtBQXBCO0FBQTZCLFNBQXJELEVBQXVELENBQXZEO0FBQ0EsZUFBTyxJQUFQO0FBQ0QsT0FIRCxNQUdPO0FBQ0wsZUFBTyxLQUFQO0FBQ0Q7QUFDRjs7O0FBR0QsZ0JBQVksS0FBSyxTQUFMLENBQWUsU0FBZixDQUFaO0FBQ0EsZ0JBQVksS0FBSyxTQUFMLENBQWUsU0FBZixDQUFaOztBQUVBLGdCQUFZLEtBQUssV0FBTCxDQUFpQixLQUFLLFFBQUwsQ0FBYyxTQUFkLENBQWpCLENBQVo7QUFDQSxnQkFBWSxLQUFLLFdBQUwsQ0FBaUIsS0FBSyxRQUFMLENBQWMsU0FBZCxDQUFqQixDQUFaOztBQUVBLFFBQUksU0FBUyxVQUFVLE1BQXZCO0FBQUEsUUFBK0IsU0FBUyxVQUFVLE1BQWxEO0FBQ0EsUUFBSSxhQUFhLENBQWpCO0FBQ0EsUUFBSSxnQkFBZ0IsU0FBUyxNQUE3QjtBQUNBLFFBQUksV0FBVyxDQUFDLEVBQUUsUUFBUSxDQUFDLENBQVgsRUFBYyxZQUFZLEVBQTFCLEVBQUQsQ0FBZjs7O0FBR0EsUUFB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LFVBQUwsQ0FBZ0IsS0FBaEIsQ0FBc0IsQ0FBdEIsQ0FBbkMsRUFBUDtBQUNEIiwiZmlsZSI6ImJhc2UuanMiLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBEaWZmKCkge31cblxuRGlmZi5wcm90b3R5cGUgPSB7XG4gIGRpZmYob2xkU3RyaW5nLCBuZXdTdHJpbmcsIG9wdGlvbnMgPSB7fSkge1xuICAgIGxldCBjYWxsYmFjayA9IG9wdGlvbnMuY2FsbGJhY2s7XG4gICAgaWYgKHR5cGVvZiBvcHRpb25zID09PSAnZnVuY3Rpb24nKSB7XG4gICAgICBjYWxsYmFjayA9IG9wdGlvbnM7XG4gICAgICBvcHRpb25zID0ge307XG4gICAgfVxuICAgIHRoaXMub3B0aW9ucyA9IG9wdGlvbnM7XG5cbiAgICBsZXQgc2VsZiA9IHRoaXM7XG5cbiAgICBmdW5jdGlvbiBkb25lKHZhbHVlKSB7XG4gICAgICBpZiAoY2FsbGJhY2spIHtcbiAgICAgICAgc2V0VGltZW91dChmdW5jdGlvbigpIHsgY2FsbGJhY2sodW5kZWZpbmVkLCB2YWx1ZSk7IH0sIDApO1xuICAgICAgICByZXR1cm4gdHJ1ZTtcbiAgICAgIH0gZWxzZSB7XG4gICAgICAgIHJldHVybiB2YWx1ZTtcbiAgICAgIH1cbiAgICB9XG5cbiAgICAvLyBBbGxvdyBzdWJjbGFzc2VzIHRvIG1hc3NhZ2UgdGhlIGlucHV0IHByaW9yIHRvIHJ1bm5pbmdcbiAgICBvbGRTdHJpbmcgPSB0aGlzLmNhc3RJbnB1dChvbGRTdHJpbmcpO1xuICAgIG5ld1N0cmluZyA9IHRoaXMuY2FzdElucHV0KG5ld1N0cmluZyk7XG5cbiAgICBvbGRTdHJpbmcgPSB0aGlzLnJlbW92ZUVtcHR5KHRoaXMudG9rZW5pemUob2xkU3RyaW5nKSk7XG4gICAgbmV3U3RyaW5nID0gdGhpcy5yZW1vdmVFbXB0eSh0aGlzLnRva2VuaXplKG5ld1N0cmluZykpO1xuXG4gICAgbGV0IG5ld0xlbiA9IG5ld1N0cmluZy5sZW5ndGgsIG9sZExlbiA9IG9sZFN0cmluZy5sZW5ndGg7XG4gICAgbGV0IGVkaXRMZW5ndGggPSAxO1xuICAgIGxldCBtYXhFZGl0TGVuZ3RoID0gbmV3TGVuICsgb2xkTGVuO1xuICAgIGxldCBiZXN0UGF0aCA9IFt7IG5ld1BvczogLTEsIGNvbXBvbmVudHM6IFtdIH1dO1xuXG4gICAgLy8gU2VlZCBlZGl0TGVuZ3RoID0gMCwgaS5lLiB0aGUgY29udGVudCBzdGFydHMgd2l0aCB0aGUgc2FtZSB2YWx1ZXNcbiAgICBsZXQgb2xkUG9zID0gdGhpcy5leHRyYWN0Q29tbW9uKGJlc3RQYXRoWzBdLCBuZXdTdHJpbmcsIG9sZFN0cmluZywgMCk7XG4gICAgaWYgKGJlc3RQYXRoWzBdLm5ld1BvcyArIDEgPj0gbmV3TGVuICYmIG9sZFBvcyArIDEgPj0gb2xkTGVuKSB7XG4gICAgICAvLyBJZGVudGl0eSBwZXIgdGhlIGVxdWFsaXR5IGFuZCB0b2tlbml6ZXJcbiAgICAgIHJldHVybiBkb25lKFt7dmFsdWU6IHRoaXMuam9pbihuZXdTdHJpbmcpLCBjb3VudDogbmV3U3RyaW5nLmxlbmd0aH1dKTtcbiAgICB9XG5cbiAgICAvLyBNYWluIHdvcmtlciBtZXRob2QuIGNoZWNrcyBhbGwgcGVybXV0YXRpb25zIG9mIGEgZ2l2ZW4gZWRpdCBsZW5ndGggZm9yIGFjY2VwdGFuY2UuXG4gICAgZnVuY3Rpb24gZXhlY0VkaXRMZW5ndGgoKSB7XG4gICAgICBmb3IgKGxldCBkaWFnb25hbFBhdGggPSAtMSAqIGVkaXRMZW5ndGg7IGRpYWdvbmFsUGF0aCA8PSBlZGl0TGVuZ3RoOyBkaWFnb25hbFBhdGggKz0gMikge1xuICAgICAgICBsZXQgYmFzZVBhdGg7XG4gICAgICAgIGxldCBhZGRQYXRoID0gYmVzdFBhdGhbZGlhZ29uYWxQYXRoIC0gMV0sXG4gICAgICAgICAgICByZW1vdmVQYXRoID0gYmVzdFBhdGhbZGlhZ29uYWxQYXRoICsgMV0sXG4gICAgICAgICAgICBvbGRQb3MgPSAocmVtb3ZlUGF0aCA/IHJlbW92ZVBhdGgubmV3UG9zIDogMCkgLSBkaWFnb25hbFBhdGg7XG4gICAgICAgIGlmIChhZGRQYXRoKSB7XG4gICAgICAgICAgLy8gTm8gb25lIGVsc2UgaXMgZ29pbmcgdG8gYXR0ZW1wdCB0byB1c2UgdGhpcyB2YWx1ZSwgY2xlYXIgaXRcbiAgICAgICAgICBiZXN0UGF0aFtkaWFnb25hbFBhdGggLSAxXSA9IHVuZGVmaW5lZDtcbiAgICAgICAgfVxuXG4gICAgICAgIGxldCBjYW5BZGQgPSBhZGRQYXRoICYmIGFkZFBhdGgubmV3UG9zICsgMSA8IG5ld0xlbixcbiAgICAgICAgICAgIGNhblJlbW92ZSA9IHJlbW92ZVBhdGggJiYgMCA8PSBvbGRQb3MgJiYgb2xkUG9zIDwgb2xkTGVuO1xuICAgICAgICBpZiAoIWNhbkFkZCAmJiAhY2FuUmVtb3ZlKSB7XG4gICAgICAgICAgLy8gSWYgdGhpcyBwYXRoIGlzIGEgdGVybWluYWwgdGhlbiBwcnVuZVxuICAgICAgICAgIGJlc3RQYXRoW2RpYWdvbmFsUGF0aF0gPSB1bmRlZmluZWQ7XG4gICAgICAgICAgY29udGludWU7XG4gICAgICAgIH1cblxuICAgICAgICAvLyBTZWxlY3QgdGhlIGRpYWdvbmFsIHRoYXQgd2Ugd2FudCB0byBicmFuY2ggZnJvbS4gV2Ugc2VsZWN0IHRoZSBwcmlvclxuICAgICAgICAvLyBwYXRoIHdob3NlIHBvc2l0aW9uIGluIHRoZSBuZXcgc3RyaW5nIGlzIHRoZSBmYXJ0aGVzdCBmcm9tIHRoZSBvcmlnaW5cbiAgICAgICAgLy8gYW5kIGRvZXMgbm90IHBhc3MgdGhlIGJvdW5kcyBvZiB0aGUgZGlmZiBncmFwaFxuICAgICAgICBpZiAoIWNhbkFkZCB8fCAoY2FuUmVtb3ZlICYmIGFkZFBhdGgubmV3UG9zIDwgcmVtb3ZlUGF0aC5uZXdQb3MpKSB7XG4gICAgICAgICAgYmFzZVBhdGggPSBjbG9uZVBhdGgocmVtb3ZlUGF0aCk7XG4gICAgICAgICAgc2VsZi5wdXNoQ29tcG9uZW50KGJhc2VQYXRoLmNvbXBvbmVudHMsIHVuZGVmaW5lZCwgdHJ1ZSk7XG4gICAgICAgIH0gZWxzZSB7XG4gICAgICAgICAgYmFzZVBhdGggPSBhZGRQYXRoOyAgIC8vIE5vIG5lZWQgdG8gY2xvbmUsIHdlJ3ZlIHB1bGxlZCBpdCBmcm9tIHRoZSBsaXN0XG4gICAgICAgICAgYmFzZVBhdGgubmV3UG9zKys7XG4gICAgICAgICAgc2VsZi5wdXNoQ29tcG9uZW50KGJhc2VQYXRoLmNvbXBvbmVudHMsIHRydWUsIHVuZGVmaW5lZCk7XG4gICAgICAgIH1cblxuICAgICAgICBvbGRQb3MgPSBzZWxmLmV4dHJhY3RDb21tb24oYmFzZVBhdGgsIG5ld1N0cmluZywgb2xkU3RyaW5nLCBkaWFnb25hbFBhdGgpO1xuXG4gICAgICAgIC8vIElmIHdlIGhhdmUgaGl0IHRoZSBlbmQgb2YgYm90aCBzdHJpbmdzLCB0aGVuIHdlIGFyZSBkb25lXG4gICAgICAgIGlmIChiYXNlUGF0aC5uZXdQb3MgKyAxID49IG5ld0xlbiAmJiBvbGRQb3MgKyAxID49IG9sZExlbikge1xuICAgICAgICAgIHJldHVybiBkb25lKGJ1aWxkVmFsdWVzKHNlbGYsIGJhc2VQYXRoLmNvbXBvbmVudHMsIG5ld1N0cmluZywgb2xkU3RyaW5nLCBzZWxmLnVzZUxvbmdlc3RUb2tlbikpO1xuICAgICAgICB9IGVsc2Uge1xuICAgICAgICAgIC8vIE90aGVyd2lzZSB0cmFjayB0aGlzIHBhdGggYXMgYSBwb3RlbnRpYWwgY2FuZGlkYXRlIGFuZCBjb250aW51ZS5cbiAgICAgICAgICBiZXN0UGF0aFtkaWFnb25hbFBhdGhdID0gYmFzZVBhdGg7XG4gICAgICAgIH1cbiAgICAgIH1cblxuICAgICAgZWRpdExlbmd0aCsrO1xuICAgIH1cblxuICAgIC8vIFBlcmZvcm1zIHRoZSBsZW5ndGggb2YgZWRpdCBpdGVyYXRpb24uIElzIGEgYml0IGZ1Z2x5IGFzIHRoaXMgaGFzIHRvIHN1cHBvcnQgdGhlXG4gICAgLy8gc3luYyBhbmQgYXN5bmMgbW9kZSB3aGljaCBpcyBuZXZlciBmdW4uIExvb3BzIG92ZXIgZXhlY0VkaXRMZW5ndGggdW50aWwgYSB2YWx1ZVxuICAgIC8vIGlzIHByb2R1Y2VkLlxuICAgIGlmIChjYWxsYmFjaykge1xuICAgICAgKGZ1bmN0aW9uIGV4ZWMoKSB7XG4gICAgICAgIHNldFRpbWVvdXQoZnVuY3Rpb24oKSB7XG4gICAgICAgICAgLy8gVGhpcyBzaG91bGQgbm90IGhhcHBlbiwgYnV0IHdlIHdhbnQgdG8gYmUgc2FmZS5cbiAgICAgICAgICAvKiBpc3RhbmJ1bCBpZ25vcmUgbmV4dCAqL1xuICAgICAgICAgIGlmIChlZGl0TGVuZ3RoID4gbWF4RWRpdExlbmd0aCkge1xuICAgICAgICAgICAgcmV0dXJuIGNhbGxiYWNrKCk7XG4gICAgICAgICAgfVxuXG4gICAgICAgICAgaWYgKCFleGVjRWRpdExlbmd0aCgpKSB7XG4gICAgICAgICAgICBleGVjKCk7XG4gICAgICAgICAgfVxuICAgICAgICB9LCAwKTtcbiAgICAgIH0oKSk7XG4gICAgfSBlbHNlIHtcbiAgICAgIHdoaWxlIChlZGl0TGVuZ3RoIDw9IG1heEVkaXRMZW5ndGgpIHtcbiAgICAgICAgbGV0IHJldCA9IGV4ZWNFZGl0TGVuZ3RoKCk7XG4gICAgICAgIGlmIChyZXQpIHtcbiAgICAgICAgICByZXR1cm4gcmV0O1xuICAgICAgICB9XG4gICAgICB9XG4gICAgfVxuICB9LFxuXG4gIHB1c2hDb21wb25lbnQoY29tcG9uZW50cywgYWRkZWQsIHJlbW92ZWQpIHtcbiAgICBsZXQgbGFzdCA9IGNvbXBvbmVudHNbY29tcG9uZW50cy5sZW5ndGggLSAxXTtcbiAgICBpZiAobGFzdCAmJiBsYXN0LmFkZGVkID09PSBhZGRlZCAmJiBsYXN0LnJlbW92ZWQgPT09IHJlbW92ZWQpIHtcbiAgICAgIC8vIFdlIG5lZWQgdG8gY2xvbmUgaGVyZSBhcyB0aGUgY29tcG9uZW50IGNsb25lIG9wZXJhdGlvbiBpcyBqdXN0XG4gICAgICAvLyBhcyBzaGFsbG93IGFycmF5IGNsb25lXG4gICAgICBjb21wb25lbnRzW2NvbXBvbmVudHMubGVuZ3RoIC0gMV0gPSB7Y291bnQ6IGxhc3QuY291bnQgKyAxLCBhZGRlZDogYWRkZWQsIHJlbW92ZWQ6IHJlbW92ZWQgfTtcbiAgICB9IGVsc2Uge1xuICAgICAgY29tcG9uZW50cy5wdXNoKHtjb3VudDogMSwgYWRkZWQ6IGFkZGVkLCByZW1vdmVkOiByZW1vdmVkIH0pO1xuICAgIH1cbiAgfSxcbiAgZXh0cmFjdENvbW1vbihiYXNlUGF0aCwgbmV3U3RyaW5nLCBvbGRTdHJpbmcsIGRpYWdvbmFsUGF0aCkge1xuICAgIGxldCBuZXdMZW4gPSBuZXdTdHJpbmcubGVuZ3RoLFxuICAgICAgICBvbGRMZW4gPSBvbGRTdHJpbmcubGVuZ3RoLFxuICAgICAgICBuZXdQb3MgPSBiYXNlUGF0aC5uZXdQb3MsXG4gICAgICAgIG9sZFBvcyA9IG5ld1BvcyAtIGRpYWdvbmFsUGF0aCxcblxuICAgICAgICBjb21tb25Db3VudCA9IDA7XG4gICAgd2hpbGUgKG5ld1BvcyArIDEgPCBuZXdMZW4gJiYgb2xkUG9zICsgMSA8IG9sZExlbiAmJiB0aGlzLmVxdWFscyhuZXdTdHJpbmdbbmV3UG9zICsgMV0sIG9sZFN0cmluZ1tvbGRQb3MgKyAxXSkpIHtcbiAgICAgIG5ld1BvcysrO1xuICAgICAgb2xkUG9zKys7XG4gICAgICBjb21tb25Db3VudCsrO1xuICAgIH1cblxuICAgIGlmIChjb21tb25Db3VudCkge1xuICAgICAgYmFzZVBhdGguY29tcG9uZW50cy5wdXNoKHtjb3VudDogY29tbW9uQ291bnR9KTtcbiAgICB9XG5cbiAgICBiYXNlUGF0aC5uZXdQb3MgPSBuZXdQb3M7XG4gICAgcmV0dXJuIG9sZFBvcztcbiAgfSxcblxuICBlcXVhbHMobGVmdCwgcmlnaHQpIHtcbiAgICByZXR1cm4gbGVmdCA9PT0gcmlnaHQ7XG4gIH0sXG4gIHJlbW92ZUVtcHR5KGFycmF5KSB7XG4gICAgbGV0IHJldCA9IFtdO1xuICAgIGZvciAobGV0IGkgPSAwOyBpIDwgYXJyYXkubGVuZ3RoOyBpKyspIHtcbiAgICAgIGlmIChhcnJheVtpXSkge1xuICAgICAgICByZXQucHVzaChhcnJheVtpXSk7XG4gICAgICB9XG4gICAgfVxuICAgIHJldHVybiByZXQ7XG4gIH0sXG4gIGNhc3RJbnB1dCh2YWx1ZSkge1xuICAgIHJldHVybiB2YWx1ZTtcbiAgfSxcbiAgdG9rZW5pemUodmFsdWUpIHtcbiAgICByZXR1cm4gdmFsdWUuc3BsaXQoJycpO1xuICB9LFxuICBqb2luKGNoYXJzKSB7XG4gICAgcmV0dXJuIGNoYXJzLmpvaW4oJycpO1xuICB9XG59O1xuXG5mdW5jdGlvbiBidWlsZFZhbHVlcyhkaWZmLCBjb21wb25lbnRzLCBuZXdTdHJpbmcsIG9sZFN0cmluZywgdXNlTG9uZ2VzdFRva2VuKSB7XG4gIGxldCBjb21wb25lbnRQb3MgPSAwLFxuICAgICAgY29tcG9uZW50TGVuID0gY29tcG9uZW50cy5sZW5ndGgsXG4gICAgICBuZXdQb3MgPSAwLFxuICAgICAgb2xkUG9zID0gMDtcblxuICBmb3IgKDsgY29tcG9uZW50UG9zIDwgY29tcG9uZW50TGVuOyBjb21wb25lbnRQb3MrKykge1xuICAgIGxldCBjb21wb25lbnQgPSBjb21wb25lbnRzW2NvbXBvbmVudFBvc107XG4gICAgaWYgKCFjb21wb25lbnQucmVtb3ZlZCkge1xuICAgICAgaWYgKCFjb21wb25lbnQuYWRkZWQgJiYgdXNlTG9uZ2VzdFRva2VuKSB7XG4gICAgICAgIGxldCB2YWx1ZSA9IG5ld1N0cmluZy5zbGljZShuZXdQb3MsIG5ld1BvcyArIGNvbXBvbmVudC5jb3VudCk7XG4gICAgICAgIHZhbHVlID0gdmFsdWUubWFwKGZ1bmN0aW9uKHZhbHVlLCBpKSB7XG4gICAgICAgICAgbGV0IG9sZFZhbHVlID0gb2xkU3RyaW5nW29sZFBvcyArIGldO1xuICAgICAgICAgIHJldHVybiBvbGRWYWx1ZS5sZW5ndGggPiB2YWx1ZS5sZW5ndGggPyBvbGRWYWx1ZSA6IHZhbHVlO1xuICAgICAgICB9KTtcblxuICAgICAgICBjb21wb25lbnQudmFsdWUgPSBkaWZmLmpvaW4odmFsdWUpO1xuICAgICAgfSBlbHNlIHtcbiAgICAgICAgY29tcG9uZW50LnZhbHVlID0gZGlmZi5qb2luKG5ld1N0cmluZy5zbGljZShuZXdQb3MsIG5ld1BvcyArIGNvbXBvbmVudC5jb3VudCkpO1xuICAgICAgfVxuICAgICAgbmV3UG9zICs9IGNvbXBvbmVudC5jb3VudDtcblxuICAgICAgLy8gQ29tbW9uIGNhc2VcbiAgICAgIGlmICghY29tcG9uZW50LmFkZGVkKSB7XG4gICAgICAgIG9sZFBvcyArPSBjb21wb25lbnQuY291bnQ7XG4gICAgICB9XG4gICAgfSBlbHNlIHtcbiAgICAgIGNvbXBvbmVudC52YWx1ZSA9IGRpZmYuam9pbihvbGRTdHJpbmcuc2xpY2Uob2xkUG9zLCBvbGRQb3MgKyBjb21wb25lbnQuY291bnQpKTtcbiAgICAgIG9sZFBvcyArPSBjb21wb25lbnQuY291bnQ7XG5cbiAgICAgIC8vIFJldmVyc2UgYWRkIGFuZCByZW1vdmUgc28gcmVtb3ZlcyBhcmUgb3V0cHV0IGZpcnN0IHRvIG1hdGNoIGNvbW1vbiBjb252ZW50aW9uXG4gICAgICAvLyBUaGUgZGlmZmluZyBhbGdvcml0aG0gaXMgdGllZCB0byBhZGQgdGhlbiByZW1vdmUgb3V0cHV0IGFuZCB0aGlzIGlzIHRoZSBzaW1wbGVzdFxuICAgICAgLy8gcm91dGUgdG8gZ2V0IHRoZSBkZXNpcmVkIG91dHB1dCB3aXRoIG1pbmltYWwgb3ZlcmhlYWQuXG4gICAgICBpZiAoY29tcG9uZW50UG9zICYmIGNvbXBvbmVudHNbY29tcG9uZW50UG9zIC0gMV0uYWRkZWQpIHtcbiAgICAgICAgbGV0IHRtcCA9IGNvbXBvbmVudHNbY29tcG9uZW50UG9zIC0gMV07XG4gICAgICAgIGNvbXBvbmVudHNbY29tcG9uZW50UG9zIC0gMV0gPSBjb21wb25lbnRzW2NvbXBvbmVudFBvc107XG4gICAgICAgIGNvbXBvbmVudHNbY29tcG9uZW50UG9zXSA9IHRtcDtcbiAgICAgIH1cbiAgICB9XG4gIH1cblxuICAvLyBTcGVjaWFsIGNhc2UgaGFuZGxlIGZvciB3aGVuIG9uZSB0ZXJtaW5hbCBpcyBpZ25vcmVkLiBGb3IgdGhpcyBjYXNlIHdlIG1lcmdlIHRoZVxuICAvLyB0ZXJtaW5hbCBpbnRvIHRoZSBwcmlvciBzdHJpbmcgYW5kIGRyb3AgdGhlIGNoYW5nZS5cbiAgbGV0IGxhc3RDb21wb25lbnQgPSBjb21wb25lbnRzW2NvbXBvbmVudExlbiAtIDFdO1xuICBpZiAoY29tcG9uZW50TGVuID4gMVxuICAgICAgJiYgKGxhc3RDb21wb25lbnQuYWRkZWQgfHwgbGFzdENvbXBvbmVudC5yZW1vdmVkKVxuICAgICAgJiYgZGlmZi5lcXVhbHMoJycsIGxhc3RDb21wb25lbnQudmFsdWUpKSB7XG4gICAgY29tcG9uZW50c1tjb21wb25lbnRMZW4gLSAyXS52YWx1ZSArPSBsYXN0Q29tcG9uZW50LnZhbHVlO1xuICAgIGNvbXBvbmVudHMucG9wKCk7XG4gIH1cblxuICByZXR1cm4gY29tcG9uZW50cztcbn1cblxuZnVuY3Rpb24gY2xvbmVQYXRoKHBhdGgpIHtcbiAgcmV0dXJuIHsgbmV3UG9zOiBwYXRoLm5ld1BvcywgY29tcG9uZW50czogcGF0aC5jb21wb25lbnRzLnNsaWNlKDApIH07XG59XG4iXX0=
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports) {
-
-/*!
- * Chai - flag utility
- * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
- * MIT Licensed
- */
-
-/**
- * ### flag(object, key, [value])
- *
- * Get or set a flag value on an object. If a
- * value is provided it will be set, else it will
- * return the currently set value or `undefined` if
- * the value is not set.
- *
- *     utils.flag(this, 'foo', 'bar'); // setter
- *     utils.flag(this, 'foo'); // getter, returns `bar`
- *
- * @param {Object} object constructed Assertion
- * @param {String} key
- * @param {Mixed} value (optional)
- * @namespace Utils
- * @name flag
- * @api private
- */
-
-module.exports = function (obj, key, value) {
-  var flags = obj.__flags || (obj.__flags = Object.create(null));
-  if (arguments.length === 3) {
-    flags[key] = value;
-  } else {
-    return flags[key];
-  }
-};
-
-
-/***/ }),
-/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -3031,146 +2344,7 @@ return /******/ (function(modules) { // webpackBootstrap
 //# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIndlYnBhY2s6Ly8vd2VicGFjay91bml2ZXJzYWxNb2R1bGVEZWZpbml0aW9uIiwid2VicGFjazovLy93ZWJwYWNrL2Jvb3RzdHJhcCAwM2Y3ZDc3N2IxMDYwZDQ4NTZjYSIsIndlYnBhY2s6Ly8vLi9zcmMvaW5kZXguanMiLCJ3ZWJwYWNrOi8vLy4vc3JjL3NlcnZlci5qcyIsIndlYnBhY2s6Ly8vLi9zcmMvd2Vic29ja2V0LmpzIiwid2VicGFjazovLy8uL3NyYy9oZWxwZXJzL2RlbGF5LmpzIiwid2VicGFjazovLy8uL3NyYy9ldmVudC10YXJnZXQuanMiLCJ3ZWJwYWNrOi8vLy4vc3JjL2hlbHBlcnMvYXJyYXktaGVscGVycy5qcyIsIndlYnBhY2s6Ly8vLi9zcmMvbmV0d29yay1icmlkZ2UuanMiLCJ3ZWJwYWNrOi8vLy4vc3JjL2hlbHBlcnMvY2xvc2UtY29kZXMuanMiLCJ3ZWJwYWNrOi8vLy4vc3JjL2hlbHBlcnMvbm9ybWFsaXplLXVybC5qcyIsIndlYnBhY2s6Ly8vLi9zcmMvaGVscGVycy9sb2dnZXIuanMiLCJ3ZWJwYWNrOi8vLy4vfi9wcm9jZXNzL2Jyb3dzZXIuanMiLCJ3ZWJwYWNrOi8vLy4vc3JjL2V2ZW50LWZhY3RvcnkuanMiLCJ3ZWJwYWNrOi8vLy4vc3JjL2hlbHBlcnMvZXZlbnQuanMiLCJ3ZWJwYWNrOi8vLy4vc3JjL2hlbHBlcnMvZXZlbnQtcHJvdG90eXBlLmpzIiwid2VicGFjazovLy8uL3NyYy9oZWxwZXJzL21lc3NhZ2UtZXZlbnQuanMiLCJ3ZWJwYWNrOi8vLy4vc3JjL2hlbHBlcnMvY2xvc2UtZXZlbnQuanMiLCJ3ZWJwYWNrOi8vLy4vc3JjL2hlbHBlcnMvZ2xvYmFsLW9iamVjdC5qcyIsIndlYnBhY2s6Ly8vLi9zcmMvc29ja2V0LWlvLmpzIl0sIm5hbWVzIjpbIlNlcnZlciIsIldlYlNvY2tldCIsIlNvY2tldElPIiwidXJsIiwib3B0aW9ucyIsIm9yaWdpbmFsV2ViU29ja2V0Iiwic2VydmVyIiwiYXR0YWNoU2VydmVyIiwiZGlzcGF0Y2hFdmVudCIsInR5cGUiLCJFcnJvciIsInZlcmlmaXlDbGllbnQiLCJzdGFydCIsImdsb2JhbE9iaiIsImNhbGxiYWNrIiwicmVtb3ZlU2VydmVyIiwiYWRkRXZlbnRMaXN0ZW5lciIsImRhdGEiLCJlbWl0IiwiZXZlbnQiLCJ3ZWJzb2NrZXRzIiwid2Vic29ja2V0c0xvb2t1cCIsImFyZ3VtZW50cyIsImxlbmd0aCIsIkFycmF5IiwicHJvdG90eXBlIiwic2xpY2UiLCJjYWxsIiwiZm9yRWFjaCIsInNvY2tldCIsImlzQXJyYXkiLCJvcmlnaW4iLCJ0YXJnZXQiLCJjb2RlIiwicmVhc29uIiwid2FzQ2xlYW4iLCJsaXN0ZW5lcnMiLCJyZWFkeVN0YXRlIiwiQ0xPU0UiLCJDTE9TRV9OT1JNQUwiLCJyb29tIiwiYnJvYWRjYXN0ZXIiLCJzZWxmIiwiYXJncyIsInRvIiwiYXBwbHkiLCJvZiIsInByb3RvY29sIiwiVHlwZUVycm9yIiwiYmluYXJ5VHlwZSIsIkNPTk5FQ1RJTkciLCJPYmplY3QiLCJkZWZpbmVQcm9wZXJ0aWVzIiwib25vcGVuIiwiY29uZmlndXJhYmxlIiwiZW51bWVyYWJsZSIsImdldCIsIm9wZW4iLCJzZXQiLCJsaXN0ZW5lciIsIm9ubWVzc2FnZSIsIm1lc3NhZ2UiLCJvbmNsb3NlIiwiY2xvc2UiLCJvbmVycm9yIiwiZXJyb3IiLCJhdHRhY2hXZWJTb2NrZXQiLCJkZWxheUNhbGxiYWNrIiwidmVyaWZ5Q2xpZW50IiwiQ0xPU0VEIiwicmVtb3ZlV2ViU29ja2V0IiwiT1BFTiIsIkNMT1NJTkciLCJtZXNzYWdlRXZlbnQiLCJzZXJ2ZXJMb29rdXAiLCJ1bmRlZmluZWQiLCJjbG9zZUV2ZW50IiwiZGVsYXkiLCJjb250ZXh0Iiwic2V0VGltZW91dCIsInRpbWVvdXRDb250ZXh0IiwiRXZlbnRUYXJnZXQiLCJpdGVtIiwicHVzaCIsInJlbW92aW5nTGlzdGVuZXIiLCJhcnJheU9mTGlzdGVuZXJzIiwiY3VzdG9tQXJndW1lbnRzIiwiZXZlbnROYW1lIiwicmVqZWN0IiwiZmlsdGVyIiwiYXJyYXkiLCJyZXN1bHRzIiwiaXRlbUluQXJyYXkiLCJOZXR3b3JrQnJpZGdlIiwidXJsTWFwIiwid2Vic29ja2V0IiwiY29ubmVjdGlvbkxvb2t1cCIsImluZGV4T2YiLCJyb29tTWVtYmVyc2hpcHMiLCJtZW1iZXJzIiwibWVtYmVyc2hpcHMiLCJjb2RlcyIsIkNMT1NFX0dPSU5HX0FXQVkiLCJDTE9TRV9QUk9UT0NPTF9FUlJPUiIsIkNMT1NFX1VOU1VQUE9SVEVEIiwiQ0xPU0VfTk9fU1RBVFVTIiwiQ0xPU0VfQUJOT1JNQUwiLCJDTE9TRV9UT09fTEFSR0UiLCJub3JtYWxpemVVcmwiLCJwYXJ0cyIsInNwbGl0IiwibG9nIiwibWV0aG9kIiwicHJvY2VzcyIsImVudiIsIk5PREVfRU5WIiwiY29uc29sZSIsImNyZWF0ZUV2ZW50IiwiY29uZmlnIiwiZXZlbnRPYmplY3QiLCJzcmNFbGVtZW50IiwiY3VycmVudFRhcmdldCIsImNyZWF0ZU1lc3NhZ2VFdmVudCIsImNyZWF0ZUNsb3NlRXZlbnQiLCJFdmVudCIsImV2ZW50SW5pdENvbmZpZyIsImJ1YmJsZXMiLCJjYW5jZWxhYmxlIiwiU3RyaW5nIiwidGltZVN0YW1wIiwiRGF0ZSIsIm5vdyIsInJldHVyblZhbHVlIiwiaXNUcnVzdGVkIiwiZXZlbnRQaGFzZSIsImRlZmF1bHRQcmV2ZW50ZWQiLCJCb29sZWFuIiwiY2FubmNlbEJ1YmJsZSIsIkV2ZW50UHJvdG90eXBlIiwiTWVzc2FnZUV2ZW50IiwibGFzdEV2ZW50SWQiLCJwb3J0cyIsIkNsb3NlRXZlbnQiLCJOdW1iZXIiLCJyZXRyaWV2ZUdsb2JhbE9iamVjdCIsIndpbmRvdyIsImdsb2JhbCIsImFkZE1lbWJlcnNoaXBUb1Jvb20iLCJyZW1vdmVNZW1iZXJzaGlwRnJvbVJvb20iLCJpbiIsIklPIiwiaW9Db25zdHJ1Y3RvciIsImNvbm5lY3QiLCJpb0Nvbm5lY3QiXSwibWFwcGluZ3MiOiJBQUFBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7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Q0FBYUMsR0FBYixDQUFQO0FBQ0QsRUFGRDs7QUFJQTs7O0FBR0FtSixJQUFHRSxPQUFILEdBQWEsU0FBU0MsU0FBVCxDQUFtQnRKLEdBQW5CLEVBQXdCO0FBQ25DO0FBQ0EsVUFBT21KLEdBQUduSixHQUFILENBQVA7QUFDQTtBQUNELEVBSkQ7O21CQU1lbUosRSIsImZpbGUiOiJkaXN0L21vY2stc29ja2V0LmpzIiwic291cmNlc0NvbnRlbnQiOlsiKGZ1bmN0aW9uIHdlYnBhY2tVbml2ZXJzYWxNb2R1bGVEZWZpbml0aW9uKHJvb3QsIGZhY3RvcnkpIHtcblx0aWYodHlwZW9mIGV4cG9ydHMgPT09ICdvYmplY3QnICYmIHR5cGVvZiBtb2R1bGUgPT09ICdvYmplY3QnKVxuXHRcdG1vZHVsZS5leHBvcnRzID0gZmFjdG9yeSgpO1xuXHRlbHNlIGlmKHR5cGVvZiBkZWZpbmUgPT09ICdmdW5jdGlvbicgJiYgZGVmaW5lLmFtZClcblx0XHRkZWZpbmUoW10sIGZhY3RvcnkpO1xuXHRlbHNlIGlmKHR5cGVvZiBleHBvcnRzID09PSAnb2JqZWN0Jylcblx0XHRleHBvcnRzW1wiTW9ja1wiXSA9IGZhY3RvcnkoKTtcblx0ZWxzZVxuXHRcdHJvb3RbXCJNb2NrXCJdID0gZmFjdG9yeSgpO1xufSkodGhpcywgZnVuY3Rpb24oKSB7XG5yZXR1cm4gXG5cblxuLy8gV0VCUEFDSyBGT09URVIgLy9cbi8vIHdlYnBhY2svdW5pdmVyc2FsTW9kdWxlRGVmaW5pdGlvbiIsIiBcdC8vIFRoZSBtb2R1bGUgY2FjaGVcbiBcdHZhciBpbnN0YWxsZWRNb2R1bGVzID0ge307XG5cbiBcdC8vIFRoZSByZXF1aXJlIGZ1bmN0aW9uXG4gXHRmdW5jdGlvbiBfX3dlYnBhY2tfcmVxdWlyZV9fKG1vZHVsZUlkKSB7XG5cbiBcdFx0Ly8gQ2hlY2sgaWYgbW9kdWxlIGlzIGluIGNhY2hlXG4gXHRcdGlmKGluc3RhbGxlZE1vZHVsZXNbbW9kdWxlSWRdKVxuIFx0XHRcdHJldHVybiBpbnN0YWxsZWRNb2R1bGVzW21vZHVsZUlkXS5leHBvcnRzO1xuXG4gXHRcdC8vIENyZWF0ZSBhIG5ldyBtb2R1bGUgKGFuZCBwdXQgaXQgaW50byB0aGUgY2FjaGUpXG4gXHRcdHZhciBtb2R1bGUgPSBpbnN0YWxsZWRNb2R1bGVzW21vZHVsZUlkXSA9IHtcbiBcdFx0XHRleHBvcnRzOiB7fSxcbiBcdFx0XHRpZDogbW9kdWxlSWQsXG4gXHRcdFx0bG9hZGVkOiBmYWxzZVxuIFx0XHR9O1xuXG4gXHRcdC8vIEV4ZWN1dGUgdGhlIG1vZHVsZSBmdW5jdGlvblxuIFx0XHRtb2R1bGVzW21vZHVsZUlkXS5jYWxsKG1vZHVsZS5leHBvcnRzLCBtb2R1bGUsIG1vZHVsZS5leHBvcnRzLCBfX3dlYnBhY2tfcmVxdWlyZV9fKTtcblxuIFx0XHQvLyBGbGFnIHRoZSBtb2R1bGUgYXMgbG9hZGVkXG4gXHRcdG1vZHVsZS5sb2FkZWQgPSB0cnVlO1xuXG4gXHRcdC8vIFJldHVybiB0aGUgZXhwb3J0cyBvZiB0aGUgbW9kdWxlXG4gXHRcdHJldHVybiBtb2R1bGUuZXhwb3J0cztcbiBcdH1cblxuXG4gXHQvLyBleHBvc2UgdGhlIG1vZHVsZXMgb2JqZWN0IChfX3dlYnBhY2tfbW9kdWxlc19fKVxuIFx0X193ZWJwYWNrX3JlcXVpcmVfXy5tID0gbW9kdWxlcztcblxuIFx0Ly8gZXhwb3NlIHRoZSBtb2R1bGUgY2FjaGVcbiBcdF9fd2VicGFja19yZXF1aXJlX18uYyA9IGluc3RhbGxlZE1vZHVsZXM7XG5cbiBcdC8vIF9fd2VicGFja19wdWJsaWNfcGF0aF9fXG4gXHRfX3dlYnBhY2tfcmVxdWlyZV9fLnAgPSBcIlwiO1xuXG4gXHQvLyBMb2FkIGVudHJ5IG1vZHVsZSBhbmQgcmV0dXJuIGV4cG9ydHNcbiBcdHJldHVybiBfX3dlYnBhY2tfcmVxdWlyZV9fKDApO1xuXG5cblxuLy8gV0VCUEFDSyBGT09URVIgLy9cbi8vIHdlYnBhY2svYm9vdHN0cmFwIDAzZjdkNzc3YjEwNjBkNDg1NmNhIiwiaW1wb3J0IE1vY2tTZXJ2ZXIgZnJvbSAnLi9zZXJ2ZXInO1xuaW1wb3J0IE1vY2tTb2NrZXRJTyBmcm9tICcuL3NvY2tldC1pbyc7XG5pbXBvcnQgTW9ja1dlYlNvY2tldCBmcm9tICcuL3dlYnNvY2tldCc7XG5cbmV4cG9ydCBjb25zdCBTZXJ2ZXIgPSBNb2NrU2VydmVyO1xuZXhwb3J0IGNvbnN0IFdlYlNvY2tldCA9IE1vY2tXZWJTb2NrZXQ7XG5leHBvcnQgY29uc3QgU29ja2V0SU8gPSBNb2NrU29ja2V0SU87XG5cblxuXG4vLyBXRUJQQUNLIEZPT1RFUiAvL1xuLy8gLi9zcmMvaW5kZXguanMiLCJpbXBvcnQgV2ViU29ja2V0IGZyb20gJy4vd2Vic29ja2V0JztcbmltcG9ydCBFdmVudFRhcmdldCBmcm9tICcuL2V2ZW50LXRhcmdldCc7XG5pbXBvcnQgbmV0d29ya0JyaWRnZSBmcm9tICcuL25ldHdvcmstYnJpZGdlJztcbmltcG9ydCBDTE9TRV9DT0RFUyBmcm9tICcuL2hlbHBlcnMvY2xvc2UtY29kZXMnO1xuaW1wb3J0IG5vcm1hbGl6ZSBmcm9tICcuL2hlbHBlcnMvbm9ybWFsaXplLXVybCc7XG5pbXBvcnQgZ2xvYmFsT2JqZWN0IGZyb20gJy4vaGVscGVycy9nbG9iYWwtb2JqZWN0JztcbmltcG9ydCB7IGNyZWF0ZUV2ZW50LCBjcmVhdGVNZXNzYWdlRXZlbnQsIGNyZWF0ZUNsb3NlRXZlbnQgfSBmcm9tICcuL2V2ZW50LWZhY3RvcnknO1xuXG4vKlxuKiBodHRwczovL2dpdGh1Yi5jb20vd2Vic29ja2V0cy93cyNzZXJ2ZXItZXhhbXBsZVxuKi9cbmNsYXNzIFNlcnZlciBleHRlbmRzIEV2ZW50VGFyZ2V0IHtcbiAgLypcbiAgKiBAcGFyYW0ge3N0cmluZ30gdXJsXG4gICovXG4gIGNvbnN0cnVjdG9yKHVybCwgb3B0aW9ucyA9IHt9KSB7XG4gICAgc3VwZXIoKTtcbiAgICB0aGlzLnVybCA9IG5vcm1hbGl6ZSh1cmwpO1xuICAgIHRoaXMub3JpZ2luYWxXZWJTb2NrZXQgPSBudWxsO1xuICAgIGNvbnN0IHNlcnZlciA9IG5ldHdvcmtCcmlkZ2UuYXR0YWNoU2VydmVyKHRoaXMsIHRoaXMudXJsKTtcblxuICAgIGlmICghc2VydmVyKSB7XG4gICAgICB0aGlzLmRpc3BhdGNoRXZlbnQoY3JlYXRlRXZlbnQoeyB0eXBlOiAnZXJyb3InIH0pKTtcbiAgICAgIHRocm93IG5ldyBFcnJvcignQSBtb2NrIHNlcnZlciBpcyBhbHJlYWR5IGxpc3RlbmluZyBvbiB0aGlzIHVybCcpO1xuICAgIH1cblxuICAgIGlmICh0eXBlb2Ygb3B0aW9ucy52ZXJpZml5Q2xpZW50ID09PSAndW5kZWZpbmVkJykge1xuICAgICAgb3B0aW9ucy52ZXJpZml5Q2xpZW50ID0gbnVsbDtcbiAgICB9XG5cbiAgICB0aGlzLm9wdGlvbnMgPSBvcHRpb25zO1xuXG4gICAgdGhpcy5zdGFydCgpO1xuICB9XG5cbiAgLypcbiAgKiBBdHRhY2hlcyB0aGUgbW9jayB3ZWJzb2NrZXQgb2JqZWN0IHRvIHRoZSBnbG9iYWwgb2JqZWN0XG4gICovXG4gIHN0YXJ0KCkge1xuICAgIGNvbnN0IGdsb2JhbE9iaiA9IGdsb2JhbE9iamVjdCgpO1xuXG4gICAgaWYgKGdsb2JhbE9iai5XZWJTb2NrZXQpIHtcbiAgICAgIHRoaXMub3JpZ2luYWxXZWJTb2NrZXQgPSBnbG9iYWxPYmouV2ViU29ja2V0O1xuICAgIH1cblxuICAgIGdsb2JhbE9iai5XZWJTb2NrZXQgPSBXZWJTb2NrZXQ7XG4gIH1cblxuICAvKlxuICAqIFJlbW92ZXMgdGhlIG1vY2sgd2Vic29ja2V0IG9iamVjdCBmcm9tIHRoZSBnbG9iYWwgb2JqZWN0XG4gICovXG4gIHN0b3AoY2FsbGJhY2sgPSAoKSA9PiB7fSkge1xuICAgIGNvbnN0IGdsb2JhbE9iaiA9IGdsb2JhbE9iamVjdCgpO1xuXG4gICAgaWYgKHRoaXMub3JpZ2luYWxXZWJTb2NrZXQpIHtcbiAgICAgIGdsb2JhbE9iai5XZWJTb2NrZXQgPSB0aGlzLm9yaWdpbmFsV2ViU29ja2V0O1xuICAgIH0gZWxzZSB7XG4gICAgICBkZWxldGUgZ2xvYmFsT2JqLldlYlNvY2tldDtcbiAgICB9XG5cbiAgICB0aGlzLm9yaWdpbmFsV2ViU29ja2V0ID0gbnVsbDtcblxuICAgIG5ldHdvcmtCcmlkZ2UucmVtb3ZlU2VydmVyKHRoaXMudXJsKTtcblxuICAgIGlmICh0eXBlb2YgY2FsbGJhY2sgPT09ICdmdW5jdGlvbicpIHtcbiAgICAgIGNhbGxiYWNrKCk7XG4gICAgfVxuICB9XG5cbiAgLypcbiAgKiBUaGlzIGlzIHRoZSBtYWluIGZ1bmN0aW9uIGZvciB0aGUgbW9jayBzZXJ2ZXIgdG8gc3Vic2NyaWJlIHRvIHRoZSBvbiBldmVudHMuXG4gICpcbiAgKiBpZTogbW9ja1NlcnZlci5vbignY29ubmVjdGlvbicsIGZ1bmN0aW9uKCkgeyBjb25zb2xlLmxvZygnYSBtb2NrIGNsaWVudCBjb25uZWN0ZWQnKTsgfSk7XG4gICpcbiAgKiBAcGFyYW0ge3N0cmluZ30gdHlwZSAtIFRoZSBldmVudCBrZXkgdG8gc3Vic2NyaWJlIHRvLiBWYWxpZCBrZXlzIGFyZTogY29ubmVjdGlvbiwgbWVzc2FnZSwgYW5kIGNsb3NlLlxuICAqIEBwYXJhbSB7ZnVuY3Rpb259IGNhbGxiYWNrIC0gVGhlIGNhbGxiYWNrIHdoaWNoIHNob3VsZCBiZSBjYWxsZWQgd2hlbiBhIGNlcnRhaW4gZXZlbnQgaXMgZmlyZWQuXG4gICovXG4gIG9uKHR5cGUsIGNhbGxiYWNrKSB7XG4gICAgdGhpcy5hZGRFdmVudExpc3RlbmVyKHR5cGUsIGNhbGxiYWNrKTtcbiAgfVxuXG4gIC8qXG4gICogVGhpcyBzZW5kIGZ1bmN0aW9uIHdpbGwgbm90aWZ5IGFsbCBtb2NrIGNsaWVudHMgdmlhIHRoZWlyIG9ubWVzc2FnZSBjYWxsYmFja3MgdGhhdCB0aGUgc2VydmVyXG4gICogaGFzIGEgbWVzc2FnZSBmb3IgdGhlbS5cbiAgKlxuICAqIEBwYXJhbSB7Kn0gZGF0YSAtIEFueSBqYXZhc2NyaXB0IG9iamVjdCB3aGljaCB3aWxsIGJlIGNyYWZ0ZWQgaW50byBhIE1lc3NhZ2VPYmplY3QuXG4gICovXG4gIHNlbmQoZGF0YSwgb3B0aW9ucyA9IHt9KSB7XG4gICAgdGhpcy5lbWl0KCdtZXNzYWdlJywgZGF0YSwgb3B0aW9ucyk7XG4gIH1cblxuICAvKlxuICAqIFNlbmRzIGEgZ2VuZXJpYyBtZXNzYWdlIGV2ZW50IHRvIGFsbCBtb2NrIGNsaWVudHMuXG4gICovXG4gIGVtaXQoZXZlbnQsIGRhdGEsIG9wdGlvbnMgPSB7fSkge1xuICAgIGxldCB7IHdlYnNvY2tldHMgfSA9IG9wdGlvbnM7XG5cbiAgICBpZiAoIXdlYnNvY2tldHMpIHtcbiAgICAgIHdlYnNvY2tldHMgPSBuZXR3b3JrQnJpZGdlLndlYnNvY2tldHNMb29rdXAodGhpcy51cmwpO1xuICAgIH1cblxuICAgIGlmICh0eXBlb2Ygb3B0aW9ucyAhPT0gJ29iamVjdCcgfHwgYXJndW1lbnRzLmxlbmd0aCA+IDMpIHtcbiAgICAgIGRhdGEgPSBBcnJheS5wcm90b3R5cGUuc2xpY2UuY2FsbChhcmd1bWVudHMsIDEsIGFyZ3VtZW50cy5sZW5ndGgpO1xuICAgIH1cblxuICAgIHdlYnNvY2tldHMuZm9yRWFjaCgoc29ja2V0KSA9PiB7XG4gICAgICBpZiAoQXJyYXkuaXNBcnJheShkYXRhKSkge1xuICAgICAgICBzb2NrZXQuZGlzcGF0Y2hFdmVudChjcmVhdGVNZXNzYWdlRXZlbnQoe1xuICAgICAgICAgIHR5cGU6IGV2ZW50LFxuICAgICAgICAgIGRhdGEsXG4gICAgICAgICAgb3JpZ2luOiB0aGlzLnVybCxcbiAgICAgICAgICB0YXJnZXQ6IHNvY2tldFxuICAgICAgICB9KSwgLi4uZGF0YSk7XG4gICAgICB9IGVsc2Uge1xuICAgICAgICBzb2NrZXQuZGlzcGF0Y2hFdmVudChjcmVhdGVNZXNzYWdlRXZlbnQoe1xuICAgICAgICAgIHR5cGU6IGV2ZW50LFxuICAgICAgICAgIGRhdGEsXG4gICAgICAgICAgb3JpZ2luOiB0aGlzLnVybCxcbiAgICAgICAgICB0YXJnZXQ6IHNvY2tldFxuICAgICAgICB9KSk7XG4gICAgICB9XG4gICAgfSk7XG4gIH1cblxuICAvKlxuICAqIENsb3NlcyB0aGUgY29ubmVjdGlvbiBhbmQgdHJpZ2dlcnMgdGhlIG9uY2xvc2UgbWV0aG9kIG9mIGFsbCBsaXN0ZW5pbmdcbiAgKiB3ZWJzb2NrZXRzLiBBZnRlciB0aGF0IGl0IHJlbW92ZXMgaXRzZWxmIGZyb20gdGhlIHVybE1hcCBzbyBhbm90aGVyIHNlcnZlclxuICAqIGNvdWxkIGFkZCBpdHNlbGYgdG8gdGhlIHVybC5cbiAgKlxuICAqIEBwYXJhbSB7b2JqZWN0fSBvcHRpb25zXG4gICovXG4gIGNsb3NlKG9wdGlvbnMgPSB7fSkge1xuICAgIGNvbnN0IHtcbiAgICAgIGNvZGUsXG4gICAgICByZWFzb24sXG4gICAgICB3YXNDbGVhblxuICAgIH0gPSBvcHRpb25zO1xuICAgIGNvbnN0IGxpc3RlbmVycyA9IG5ldHdvcmtCcmlkZ2Uud2Vic29ja2V0c0xvb2t1cCh0aGlzLnVybCk7XG5cbiAgICBsaXN0ZW5lcnMuZm9yRWFjaCgoc29ja2V0KSA9PiB7XG4gICAgICBzb2NrZXQucmVhZHlTdGF0ZSA9IFdlYlNvY2tldC5DTE9TRTtcbiAgICAgIHNvY2tldC5kaXNwYXRjaEV2ZW50KGNyZWF0ZUNsb3NlRXZlbnQoe1xuICAgICAgICB0eXBlOiAnY2xvc2UnLFxuICAgICAgICB0YXJnZXQ6IHNvY2tldCxcbiAgICAgICAgY29kZTogY29kZSB8fCBDTE9TRV9DT0RFUy5DTE9TRV9OT1JNQUwsXG4gICAgICAgIHJlYXNvbjogcmVhc29uIHx8ICcnLFxuICAgICAgICB3YXNDbGVhblxuICAgICAgfSkpO1xuICAgIH0pO1xuXG4gICAgdGhpcy5kaXNwYXRjaEV2ZW50KGNyZWF0ZUNsb3NlRXZlbnQoeyB0eXBlOiAnY2xvc2UnIH0pLCB0aGlzKTtcbiAgICBuZXR3b3JrQnJpZGdlLnJlbW92ZVNlcnZlcih0aGlzLnVybCk7XG4gIH1cblxuICAvKlxuICAqIFJldHVybnMgYW4gYXJyYXkgb2Ygd2Vic29ja2V0cyB3aGljaCBhcmUgbGlzdGVuaW5nIHRvIHRoaXMgc2VydmVyXG4gICovXG4gIGNsaWVudHMoKSB7XG4gICAgcmV0dXJuIG5ldHdvcmtCcmlkZ2Uud2Vic29ja2V0c0xvb2t1cCh0aGlzLnVybCk7XG4gIH1cblxuICAvKlxuICAqIFByZXBhcmVzIGEgbWV0aG9kIHRvIHN1Ym1pdCBhbiBldmVudCB0byBtZW1iZXJzIG9mIHRoZSByb29tXG4gICpcbiAgKiBlLmcuIHNlcnZlci50bygnbXktcm9vbScpLmVtaXQoJ2hpIScpO1xuICAqL1xuICB0byhyb29tLCBicm9hZGNhc3Rlcikge1xuICAgIGNvbnN0IHNlbGYgPSB0aGlzO1xuICAgIGNvbnN0IHdlYnNvY2tldHMgPSBuZXR3b3JrQnJpZGdlLndlYnNvY2tldHNMb29rdXAodGhpcy51cmwsIHJvb20sIGJyb2FkY2FzdGVyKTtcbiAgICByZXR1cm4ge1xuICAgICAgZW1pdChldmVudCwgZGF0YSkge1xuICAgICAgICBzZWxmLmVtaXQoZXZlbnQsIGRhdGEsIHsgd2Vic29ja2V0cyB9KTtcbiAgICAgIH1cbiAgICB9O1xuICB9XG5cbiAgLypcbiAgICogQWxpYXMgZm9yIFNlcnZlci50b1xuICAgKi9cbiAgaW4oLi4uYXJncykge1xuICAgIHJldHVybiB0aGlzLnRvLmFwcGx5KG51bGwsIGFyZ3MpO1xuICB9XG59XG5cbi8qXG4gKiBBbHRlcm5hdGl2ZSBjb25zdHJ1Y3RvciB0byBzdXBwb3J0IG5hbWVzcGFjZXMgaW4gc29ja2V0LmlvXG4gKlxuICogaHR0cDovL3NvY2tldC5pby9kb2NzL3Jvb21zLWFuZC1uYW1lc3BhY2VzLyNjdXN0b20tbmFtZXNwYWNlc1xuICovXG5TZXJ2ZXIub2YgPSBmdW5jdGlvbiBvZih1cmwpIHtcbiAgcmV0dXJuIG5ldyBTZXJ2ZXIodXJsKTtcbn07XG5cbmV4cG9ydCBkZWZhdWx0IFNlcnZlcjtcblxuXG5cbi8vIFdFQlBBQ0sgRk9PVEVSIC8vXG4vLyAuL3NyYy9zZXJ2ZXIuanMiLCJpbXBvcnQgZGVsYXkgZnJvbSAnLi9oZWxwZXJzL2RlbGF5JztcbmltcG9ydCBFdmVudFRhcmdldCBmcm9tICcuL2V2ZW50LXRhcmdldCc7XG5pbXBvcnQgbmV0d29ya0JyaWRnZSBmcm9tICcuL25ldHdvcmstYnJpZGdlJztcbmltcG9ydCBDTE9TRV9DT0RFUyBmcm9tICcuL2hlbHBlcnMvY2xvc2UtY29kZXMnO1xuaW1wb3J0IG5vcm1hbGl6ZSBmcm9tICcuL2hlbHBlcnMvbm9ybWFsaXplLXVybCc7XG5pbXBvcnQgbG9nZ2VyIGZyb20gJy4vaGVscGVycy9sb2dnZXInO1xuaW1wb3J0IHsgY3JlYXRlRXZlbnQsIGNyZWF0ZU1lc3NhZ2VFdmVudCwgY3JlYXRlQ2xvc2VFdmVudCB9IGZyb20gJy4vZXZlbnQtZmFjdG9yeSc7XG5cbi8qXG4qIFRoZSBtYWluIHdlYnNvY2tldCBjbGFzcyB3aGljaCBpcyBkZXNpZ25lZCB0byBtaW1pY2sgdGhlIG5hdGl2ZSBXZWJTb2NrZXQgY2xhc3MgYXMgY2xvc2VcbiogYXMgcG9zc2libGUuXG4qXG4qIGh0dHBzOi8vZGV2ZWxvcGVyLm1vemlsbGEub3JnL2VuLVVTL2RvY3MvV2ViL0FQSS9XZWJTb2NrZXRcbiovXG5jbGFzcyBXZWJTb2NrZXQgZXh0ZW5kcyBFdmVudFRhcmdldCB7XG4gIC8qXG4gICogQHBhcmFtIHtzdHJpbmd9IHVybFxuICAqL1xuICBjb25zdHJ1Y3Rvcih1cmwsIHByb3RvY29sID0gJycpIHtcbiAgICBzdXBlcigpO1xuXG4gICAgaWYgKCF1cmwpIHtcbiAgICAgIHRocm93IG5ldyBUeXBlRXJyb3IoJ0ZhaWxlZCB0byBjb25zdHJ1Y3QgXFwnV2ViU29ja2V0XFwnOiAxIGFyZ3VtZW50IHJlcXVpcmVkLCBidXQgb25seSAwIHByZXNlbnQuJyk7XG4gICAgfVxuXG4gICAgdGhpcy5iaW5hcnlUeXBlID0gJ2Jsb2InO1xuICAgIHRoaXMudXJsID0gbm9ybWFsaXplKHVybCk7XG4gICAgdGhpcy5yZWFkeVN0YXRlID0gV2ViU29ja2V0LkNPTk5FQ1RJTkc7XG4gICAgdGhpcy5wcm90b2NvbCA9ICcnO1xuXG4gICAgaWYgKHR5cGVvZiBwcm90b2NvbCA9PT0gJ3N0cmluZycpIHtcbiAgICAgIHRoaXMucHJvdG9jb2wgPSBwcm90b2NvbDtcbiAgICB9IGVsc2UgaWYgKEFycmF5LmlzQXJyYXkocHJvdG9jb2wpICYmIHByb3RvY29sLmxlbmd0aCA+IDApIHtcbiAgICAgIHRoaXMucHJvdG9jb2wgPSBwcm90b2NvbFswXTtcbiAgICB9XG5cbiAgICAvKlxuICAgICogSW4gb3JkZXIgdG8gY2FwdHVyZSB0aGUgY2FsbGJhY2sgZnVuY3Rpb24gd2UgbmVlZCB0byBkZWZpbmUgY3VzdG9tIHNldHRlcnMuXG4gICAgKiBUbyBpbGx1c3RyYXRlOlxuICAgICogICBteVNvY2tldC5vbm9wZW4gPSBmdW5jdGlvbigpIHsgYWxlcnQodHJ1ZSkgfTtcbiAgICAqXG4gICAgKiBUaGUgb25seSB3YXkgdG8gY2FwdHVyZSB0aGF0IGZ1bmN0aW9uIGFuZCBob2xkIG9udG8gaXQgZm9yIGxhdGVyIGlzIHdpdGggdGhlXG4gICAgKiBiZWxvdyBjb2RlOlxuICAgICovXG4gICAgT2JqZWN0LmRlZmluZVByb3BlcnRpZXModGhpcywge1xuICAgICAgb25vcGVuOiB7XG4gICAgICAgIGNvbmZpZ3VyYWJsZTogdHJ1ZSxcbiAgICAgICAgZW51bWVyYWJsZTogdHJ1ZSxcbiAgICAgICAgZ2V0KCkgeyByZXR1cm4gdGhpcy5saXN0ZW5lcnMub3BlbjsgfSxcbiAgICAgICAgc2V0KGxpc3RlbmVyKSB7XG4gICAgICAgICAgdGhpcy5hZGRFdmVudExpc3RlbmVyKCdvcGVuJywgbGlzdGVuZXIpO1xuICAgICAgICB9XG4gICAgICB9LFxuICAgICAgb25tZXNzYWdlOiB7XG4gICAgICAgIGNvbmZpZ3VyYWJsZTogdHJ1ZSxcbiAgICAgICAgZW51bWVyYWJsZTogdHJ1ZSxcbiAgICAgICAgZ2V0KCkgeyByZXR1cm4gdGhpcy5saXN0ZW5lcnMubWVzc2FnZTsgfSxcbiAgICAgICAgc2V0KGxpc3RlbmVyKSB7XG4gICAgICAgICAgdGhpcy5hZGRFdmVudExpc3RlbmVyKCdtZXNzYWdlJywgbGlzdGVuZXIpO1xuICAgICAgICB9XG4gICAgICB9LFxuICAgICAgb25jbG9zZToge1xuICAgICAgICBjb25maWd1cmFibGU6IHRydWUsXG4gICAgICAgIGVudW1lcmFibGU6IHRydWUsXG4gICAgICAgIGdldCgpIHsgcmV0dXJuIHRoaXMubGlzdGVuZXJzLmNsb3NlOyB9LFxuICAgICAgICBzZXQobGlzdGVuZXIpIHtcbiAgICAgICAgICB0aGlzLmFkZEV2ZW50TGlzdGVuZXIoJ2Nsb3NlJywgbGlzdGVuZXIpO1xuICAgICAgICB9XG4gICAgICB9LFxuICAgICAgb25lcnJvcjoge1xuICAgICAgICBjb25maWd1cmFibGU6IHRydWUsXG4gICAgICAgIGVudW1lcmFibGU6IHRydWUsXG4gICAgICAgIGdldCgpIHsgcmV0dXJuIHRoaXMubGlzdGVuZXJzLmVycm9yOyB9LFxuICAgICAgICBzZXQobGlzdGVuZXIpIHtcbiAgICAgICAgICB0aGlzLmFkZEV2ZW50TGlzdGVuZXIoJ2Vycm9yJywgbGlzdGVuZXIpO1xuICAgICAgICB9XG4gICAgICB9XG4gICAgfSk7XG5cbiAgICBjb25zdCBzZXJ2ZXIgPSBuZXR3b3JrQnJpZGdlLmF0dGFjaFdlYlNvY2tldCh0aGlzLCB0aGlzLnVybCk7XG5cbiAgICAvKlxuICAgICogVGhpcyBkZWxheSBpcyBuZWVkZWQgc28gdGhhdCB3ZSBkb250IHRyaWdnZXIgYW4gZXZlbnQgYmVmb3JlIHRoZSBjYWxsYmFja3MgaGF2ZSBiZWVuXG4gICAgKiBzZXR1cC4gRm9yIGV4YW1wbGU6XG4gICAgKlxuICAgICogdmFyIHNvY2tldCA9IG5ldyBXZWJTb2NrZXQoJ3dzOi8vbG9jYWxob3N0Jyk7XG4gICAgKlxuICAgICogLy8gSWYgd2UgZG9udCBoYXZlIHRoZSBkZWxheSB0aGVuIHRoZSBldmVudCB3b3VsZCBiZSB0cmlnZ2VyZWQgcmlnaHQgaGVyZSBhbmQgdGhpcyBpc1xuICAgICogLy8gYmVmb3JlIHRoZSBvbm9wZW4gaGFkIGEgY2hhbmNlIHRvIHJlZ2lzdGVyIGl0c2VsZi5cbiAgICAqXG4gICAgKiBzb2NrZXQub25vcGVuID0gKCkgPT4geyAvLyB0aGlzIHdvdWxkIG5ldmVyIGJlIGNhbGxlZCB9O1xuICAgICpcbiAgICAqIC8vIGFuZCB3aXRoIHRoZSBkZWxheSB0aGUgZXZlbnQgZ2V0cyB0cmlnZ2VyZWQgaGVyZSBhZnRlciBhbGwgb2YgdGhlIGNhbGxiYWNrcyBoYXZlIGJlZW5cbiAgICAqIC8vIHJlZ2lzdGVyZWQgOi0pXG4gICAgKi9cbiAgICBkZWxheShmdW5jdGlvbiBkZWxheUNhbGxiYWNrKCkge1xuICAgICAgaWYgKHNlcnZlcikge1xuICAgICAgICBpZiAoc2VydmVyLm9wdGlvbnMudmVyaWZ5Q2xpZW50XG4gICAgICAgICAgJiYgdHlwZW9mIHNlcnZlci5vcHRpb25zLnZlcmlmeUNsaWVudCA9PT0gJ2Z1bmN0aW9uJ1xuICAgICAgICAgICYmICFzZXJ2ZXIub3B0aW9ucy52ZXJpZnlDbGllbnQoKSkge1xuICAgICAgICAgIHRoaXMucmVhZHlTdGF0ZSA9IFdlYlNvY2tldC5DTE9TRUQ7XG5cbiAgICAgICAgICBsb2dnZXIoXG4gICAgICAgICAgICAnZXJyb3InLFxuICAgICAgICAgICAgYFdlYlNvY2tldCBjb25uZWN0aW9uIHRvICcke3RoaXMudXJsfScgZmFpbGVkOiBIVFRQIEF1dGhlbnRpY2F0aW9uIGZhaWxlZDsgbm8gdmFsaWQgY3JlZGVudGlhbHMgYXZhaWxhYmxlYFxuICAgICAgICAgICk7XG5cbiAgICAgICAgICBuZXR3b3JrQnJpZGdlLnJlbW92ZVdlYlNvY2tldCh0aGlzLCB0aGlzLnVybCk7XG4gICAgICAgICAgdGhpcy5kaXNwYXRjaEV2ZW50KGNyZWF0ZUV2ZW50KHsgdHlwZTogJ2Vycm9yJywgdGFyZ2V0OiB0aGlzIH0pKTtcbiAgICAgICAgICB0aGlzLmRpc3BhdGNoRXZlbnQoY3JlYXRlQ2xvc2VFdmVudCh7IHR5cGU6ICdjbG9zZScsIHRhcmdldDogdGhpcywgY29kZTogQ0xPU0VfQ09ERVMuQ0xPU0VfTk9STUFMIH0pKTtcbiAgICAgICAgfSBlbHNlIHtcbiAgICAgICAgICB0aGlzLnJlYWR5U3RhdGUgPSBXZWJTb2NrZXQuT1BFTjtcbiAgICAgICAgICBzZXJ2ZXIuZGlzcGF0Y2hFdmVudChjcmVhdGVFdmVudCh7IHR5cGU6ICdjb25uZWN0aW9uJyB9KSwgc2VydmVyLCB0aGlzKTtcbiAgICAgICAgICB0aGlzLmRpc3BhdGNoRXZlbnQoY3JlYXRlRXZlbnQoeyB0eXBlOiAnb3BlbicsIHRhcmdldDogdGhpcyB9KSk7XG4gICAgICAgIH1cbiAgICAgIH0gZWxzZSB7XG4gICAgICAgIHRoaXMucmVhZHlTdGF0ZSA9IFdlYlNvY2tldC5DTE9TRUQ7XG4gICAgICAgIHRoaXMuZGlzcGF0Y2hFdmVudChjcmVhdGVFdmVudCh7IHR5cGU6ICdlcnJvcicsIHRhcmdldDogdGhpcyB9KSk7XG4gICAgICAgIHRoaXMuZGlzcGF0Y2hFdmVudChjcmVhdGVDbG9zZUV2ZW50KHsgdHlwZTogJ2Nsb3NlJywgdGFyZ2V0OiB0aGlzLCBjb2RlOiBDTE9TRV9DT0RFUy5DTE9TRV9OT1JNQUwgfSkpO1xuXG4gICAgICAgIGxvZ2dlcignZXJyb3InLCBgV2ViU29ja2V0IGNvbm5lY3Rpb24gdG8gJyR7dGhpcy51cmx9JyBmYWlsZWRgKTtcbiAgICAgIH1cbiAgICB9LCB0aGlzKTtcbiAgfVxuXG4gIC8qXG4gICogVHJhbnNtaXRzIGRhdGEgdG8gdGhlIHNlcnZlciBvdmVyIHRoZSBXZWJTb2NrZXQgY29ubmVjdGlvbi5cbiAgKlxuICAqIGh0dHBzOi8vZGV2ZWxvcGVyLm1vemlsbGEub3JnL2VuLVVTL2RvY3MvV2ViL0FQSS9XZWJTb2NrZXQjc2VuZCgpXG4gICovXG4gIHNlbmQoZGF0YSkge1xuICAgIGlmICh0aGlzLnJlYWR5U3RhdGUgPT09IFdlYlNvY2tldC5DTE9TSU5HIHx8IHRoaXMucmVhZHlTdGF0ZSA9PT0gV2ViU29ja2V0LkNMT1NFRCkge1xuICAgICAgdGhyb3cgbmV3IEVycm9yKCdXZWJTb2NrZXQgaXMgYWxyZWFkeSBpbiBDTE9TSU5HIG9yIENMT1NFRCBzdGF0ZScpO1xuICAgIH1cblxuICAgIGNvbnN0IG1lc3NhZ2VFdmVudCA9IGNyZWF0ZU1lc3NhZ2VFdmVudCh7XG4gICAgICB0eXBlOiAnbWVzc2FnZScsXG4gICAgICBvcmlnaW46IHRoaXMudXJsLFxuICAgICAgZGF0YVxuICAgIH0pO1xuXG4gICAgY29uc3Qgc2VydmVyID0gbmV0d29ya0JyaWRnZS5zZXJ2ZXJMb29rdXAodGhpcy51cmwpO1xuXG4gICAgaWYgKHNlcnZlcikge1xuICAgICAgc2VydmVyLmRpc3BhdGNoRXZlbnQobWVzc2FnZUV2ZW50LCBkYXRhKTtcbiAgICB9XG4gIH1cblxuICAvKlxuICAqIENsb3NlcyB0aGUgV2ViU29ja2V0IGNvbm5lY3Rpb24gb3IgY29ubmVjdGlvbiBhdHRlbXB0LCBpZiBhbnkuXG4gICogSWYgdGhlIGNvbm5lY3Rpb24gaXMgYWxyZWFkeSBDTE9TRUQsIHRoaXMgbWV0aG9kIGRvZXMgbm90aGluZy5cbiAgKlxuICAqIGh0dHBzOi8vZGV2ZWxvcGVyLm1vemlsbGEub3JnL2VuLVVTL2RvY3MvV2ViL0FQSS9XZWJTb2NrZXQjY2xvc2UoKVxuICAqL1xuICBjbG9zZSgpIHtcbiAgICBpZiAodGhpcy5yZWFkeVN0YXRlICE9PSBXZWJTb2NrZXQuT1BFTikgeyByZXR1cm4gdW5kZWZpbmVkOyB9XG5cbiAgICBjb25zdCBzZXJ2ZXIgPSBuZXR3b3JrQnJpZGdlLnNlcnZlckxvb2t1cCh0aGlzLnVybCk7XG4gICAgY29uc3QgY2xvc2VFdmVudCA9IGNyZWF0ZUNsb3NlRXZlbnQoe1xuICAgICAgdHlwZTogJ2Nsb3NlJyxcbiAgICAgIHRhcmdldDogdGhpcyxcbiAgICAgIGNvZGU6IENMT1NFX0NPREVTLkNMT1NFX05PUk1BTFxuICAgIH0pO1xuXG4gICAgbmV0d29ya0JyaWRnZS5yZW1vdmVXZWJTb2NrZXQodGhpcywgdGhpcy51cmwpO1xuXG4gICAgdGhpcy5yZWFkeVN0YXRlID0gV2ViU29ja2V0LkNMT1NFRDtcbiAgICB0aGlzLmRpc3BhdGNoRXZlbnQoY2xvc2VFdmVudCk7XG5cbiAgICBpZiAoc2VydmVyKSB7XG4gICAgICBzZXJ2ZXIuZGlzcGF0Y2hFdmVudChjbG9zZUV2ZW50LCBzZXJ2ZXIpO1xuICAgIH1cbiAgfVxufVxuXG5XZWJTb2NrZXQuQ09OTkVDVElORyA9IDA7XG5XZWJTb2NrZXQuT1BFTiA9IDE7XG5XZWJTb2NrZXQuQ0xPU0lORyA9IDI7XG5XZWJTb2NrZXQuQ0xPU0VEID0gMztcblxuZXhwb3J0IGRlZmF1bHQgV2ViU29ja2V0O1xuXG5cblxuLy8gV0VCUEFDSyBGT09URVIgLy9cbi8vIC4vc3JjL3dlYnNvY2tldC5qcyIsIi8qXG4qIFRoaXMgZGVsYXkgYWxsb3dzIHRoZSB0aHJlYWQgdG8gZmluaXNoIGFzc2lnbmluZyBpdHMgb24qIG1ldGhvZHNcbiogYmVmb3JlIGludm9raW5nIHRoZSBkZWxheSBjYWxsYmFjay4gVGhpcyBpcyBwdXJlbHkgYSB0aW1pbmcgaGFjay5cbiogaHR0cDovL2dlZWthYnl0ZS5ibG9nc3BvdC5jb20vMjAxNC8wMS9qYXZhc2NyaXB0LWVmZmVjdC1vZi1zZXR0aW5nLXNldHRpbWVvdXQuaHRtbFxuKlxuKiBAcGFyYW0ge2NhbGxiYWNrOiBmdW5jdGlvbn0gdGhlIGNhbGxiYWNrIHdoaWNoIHdpbGwgYmUgaW52b2tlZCBhZnRlciB0aGUgdGltZW91dFxuKiBAcGFybWEge2NvbnRleHQ6IG9iamVjdH0gdGhlIGNvbnRleHQgaW4gd2hpY2ggdG8gaW52b2tlIHRoZSBmdW5jdGlvblxuKi9cbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIGRlbGF5KGNhbGxiYWNrLCBjb250ZXh0KSB7XG4gIHNldFRpbWVvdXQodGltZW91dENvbnRleHQgPT4gY2FsbGJhY2suY2FsbCh0aW1lb3V0Q29udGV4dCksIDQsIGNvbnRleHQpO1xufVxuXG5cblxuLy8gV0VCUEFDSyBGT09URVIgLy9cbi8vIC4vc3JjL2hlbHBlcnMvZGVsYXkuanMiLCJpbXBvcnQgeyByZWplY3QsIGZpbHRlciB9IGZyb20gJy4vaGVscGVycy9hcnJheS1oZWxwZXJzJztcblxuLypcbiogRXZlbnRUYXJnZXQgaXMgYW4gaW50ZXJmYWNlIGltcGxlbWVudGVkIGJ5IG9iamVjdHMgdGhhdCBjYW5cbiogcmVjZWl2ZSBldmVudHMgYW5kIG1heSBoYXZlIGxpc3RlbmVycyBmb3IgdGhlbS5cbipcbiogaHR0cHM6Ly9kZXZlbG9wZXIubW96aWxsYS5vcmcvZW4tVVMvZG9jcy9XZWIvQVBJL0V2ZW50VGFyZ2V0XG4qL1xuY2xhc3MgRXZlbnRUYXJnZXQge1xuXG4gIGNvbnN0cnVjdG9yKCkge1xuICAgIHRoaXMubGlzdGVuZXJzID0ge307XG4gIH1cblxuICAvKlxuICAqIFRpZXMgYSBsaXN0ZW5lciBmdW5jdGlvbiB0byBhIGV2ZW50IHR5cGUgd2hpY2ggY2FuIGxhdGVyIGJlIGludm9rZWQgdmlhIHRoZVxuICAqIGRpc3BhdGNoRXZlbnQgbWV0aG9kLlxuICAqXG4gICogQHBhcmFtIHtzdHJpbmd9IHR5cGUgLSB0aGUgdHlwZSBvZiBldmVudCAoaWU6ICdvcGVuJywgJ21lc3NhZ2UnLCBldGMuKVxuICAqIEBwYXJhbSB7ZnVuY3Rpb259IGxpc3RlbmVyIC0gdGhlIGNhbGxiYWNrIGZ1bmN0aW9uIHRvIGludm9rZSB3aGVuZXZlciBhIGV2ZW50IGlzIGRpc3BhdGNoZWQgbWF0Y2hpbmcgdGhlIGdpdmVuIHR5cGVcbiAgKiBAcGFyYW0ge2Jvb2xlYW59IHVzZUNhcHR1cmUgLSBOL0EgVE9ETzogaW1wbGVtZW50IHVzZUNhcHR1cmUgZnVuY3Rpb25hbGl0eVxuICAqL1xuICBhZGRFdmVudExpc3RlbmVyKHR5cGUsIGxpc3RlbmVyIC8qICwgdXNlQ2FwdHVyZSAqLykge1xuICAgIGlmICh0eXBlb2YgbGlzdGVuZXIgPT09ICdmdW5jdGlvbicpIHtcbiAgICAgIGlmICghQXJyYXkuaXNBcnJheSh0aGlzLmxpc3RlbmVyc1t0eXBlXSkpIHtcbiAgICAgICAgdGhpcy5saXN0ZW5lcnNbdHlwZV0gPSBbXTtcbiAgICAgIH1cblxuICAgICAgLy8gT25seSBhZGQgdGhlIHNhbWUgZnVuY3Rpb24gb25jZVxuICAgICAgaWYgKGZpbHRlcih0aGlzLmxpc3RlbmVyc1t0eXBlXSwgaXRlbSA9PiBpdGVtID09PSBsaXN0ZW5lcikubGVuZ3RoID09PSAwKSB7XG4gICAgICAgIHRoaXMubGlzdGVuZXJzW3R5cGVdLnB1c2gobGlzdGVuZXIpO1xuICAgICAgfVxuICAgIH1cbiAgfVxuXG4gIC8qXG4gICogUmVtb3ZlcyB0aGUgbGlzdGVuZXIgc28gaXQgd2lsbCBubyBsb25nZXIgYmUgaW52b2tlZCB2aWEgdGhlIGRpc3BhdGNoRXZlbnQgbWV0aG9kLlxuICAqXG4gICogQHBhcmFtIHtzdHJpbmd9IHR5cGUgLSB0aGUgdHlwZSBvZiBldmVudCAoaWU6ICdvcGVuJywgJ21lc3NhZ2UnLCBldGMuKVxuICAqIEBwYXJhbSB7ZnVuY3Rpb259IGxpc3RlbmVyIC0gdGhlIGNhbGxiYWNrIGZ1bmN0aW9uIHRvIGludm9rZSB3aGVuZXZlciBhIGV2ZW50IGlzIGRpc3BhdGNoZWQgbWF0Y2hpbmcgdGhlIGdpdmVuIHR5cGVcbiAgKiBAcGFyYW0ge2Jvb2xlYW59IHVzZUNhcHR1cmUgLSBOL0EgVE9ETzogaW1wbGVtZW50IHVzZUNhcHR1cmUgZnVuY3Rpb25hbGl0eVxuICAqL1xuICByZW1vdmVFdmVudExpc3RlbmVyKHR5cGUsIHJlbW92aW5nTGlzdGVuZXIgLyogLCB1c2VDYXB0dXJlICovKSB7XG4gICAgY29uc3QgYXJyYXlPZkxpc3RlbmVycyA9IHRoaXMubGlzdGVuZXJzW3R5cGVdO1xuICAgIHRoaXMubGlzdGVuZXJzW3R5cGVdID0gcmVqZWN0KGFycmF5T2ZMaXN0ZW5lcnMsIGxpc3RlbmVyID0+IGxpc3RlbmVyID09PSByZW1vdmluZ0xpc3RlbmVyKTtcbiAgfVxuXG4gIC8qXG4gICogSW52b2tlcyBhbGwgbGlzdGVuZXIgZnVuY3Rpb25zIHRoYXQgYXJlIGxpc3RlbmluZyB0byB0aGUgZ2l2ZW4gZXZlbnQudHlwZSBwcm9wZXJ0eS4gRWFjaFxuICAqIGxpc3RlbmVyIHdpbGwgYmUgcGFzc2VkIHRoZSBldmVudCBhcyB0aGUgZmlyc3QgYXJndW1lbnQuXG4gICpcbiAgKiBAcGFyYW0ge29iamVjdH0gZXZlbnQgLSBldmVudCBvYmplY3Qgd2hpY2ggd2lsbCBiZSBwYXNzZWQgdG8gYWxsIGxpc3RlbmVycyBvZiB0aGUgZXZlbnQudHlwZSBwcm9wZXJ0eVxuICAqL1xuICBkaXNwYXRjaEV2ZW50KGV2ZW50LCAuLi5jdXN0b21Bcmd1bWVudHMpIHtcbiAgICBjb25zdCBldmVudE5hbWUgPSBldmVudC50eXBlO1xuICAgIGNvbnN0IGxpc3RlbmVycyA9IHRoaXMubGlzdGVuZXJzW2V2ZW50TmFtZV07XG5cbiAgICBpZiAoIUFycmF5LmlzQXJyYXkobGlzdGVuZXJzKSkge1xuICAgICAgcmV0dXJuIGZhbHNlO1xuICAgIH1cblxuICAgIGxpc3RlbmVycy5mb3JFYWNoKChsaXN0ZW5lcikgPT4ge1xuICAgICAgaWYgKGN1c3RvbUFyZ3VtZW50cy5sZW5ndGggPiAwKSB7XG4gICAgICAgIGxpc3RlbmVyLmFwcGx5KHRoaXMsIGN1c3RvbUFyZ3VtZW50cyk7XG4gICAgICB9IGVsc2Uge1xuICAgICAgICBsaXN0ZW5lci5jYWxsKHRoaXMsIGV2ZW50KTtcbiAgICAgIH1cbiAgICB9KTtcblxuICAgIHJldHVybiB0cnVlO1xuICB9XG59XG5cbmV4cG9ydCBkZWZhdWx0IEV2ZW50VGFyZ2V0O1xuXG5cblxuLy8gV0VCUEFDSyBGT09URVIgLy9cbi8vIC4vc3JjL2V2ZW50LXRhcmdldC5qcyIsImV4cG9ydCBmdW5jdGlvbiByZWplY3QoYXJyYXksIGNhbGxiYWNrKSB7XG4gIGNvbnN0IHJlc3VsdHMgPSBbXTtcbiAgYXJyYXkuZm9yRWFjaCgoaXRlbUluQXJyYXkpID0+IHtcbiAgICBpZiAoIWNhbGxiYWNrKGl0ZW1JbkFycmF5KSkge1xuICAgICAgcmVzdWx0cy5wdXNoKGl0ZW1JbkFycmF5KTtcbiAgICB9XG4gIH0pO1xuXG4gIHJldHVybiByZXN1bHRzO1xufVxuXG5leHBvcnQgZnVuY3Rpb24gZmlsdGVyKGFycmF5LCBjYWxsYmFjaykge1xuICBjb25zdCByZXN1bHRzID0gW107XG4gIGFycmF5LmZvckVhY2goKGl0ZW1JbkFycmF5KSA9PiB7XG4gICAgaWYgKGNhbGxiYWNrKGl0ZW1JbkFycmF5KSkge1xuICAgICAgcmVzdWx0cy5wdXNoKGl0ZW1JbkFycmF5KTtcbiAgICB9XG4gIH0pO1xuXG4gIHJldHVybiByZXN1bHRzO1xufVxuXG5cblxuLy8gV0VCUEFDSyBGT09URVIgLy9cbi8vIC4vc3JjL2hlbHBlcnMvYXJyYXktaGVscGVycy5qcyIsImltcG9ydCB7IHJlamVjdCB9IGZyb20gJy4vaGVscGVycy9hcnJheS1oZWxwZXJzJztcblxuLypcbiogVGhlIG5ldHdvcmsgYnJpZGdlIGlzIGEgd2F5IGZvciB0aGUgbW9jayB3ZWJzb2NrZXQgb2JqZWN0IHRvICdjb21tdW5pY2F0ZScgd2l0aFxuKiBhbGwgYXZhaWxhYmxlIHNlcnZlcnMuIFRoaXMgaXMgYSBzaW5nbGV0b24gb2JqZWN0IHNvIGl0IGlzIGltcG9ydGFudCB0aGF0IHlvdVxuKiBjbGVhbiB1cCB1cmxNYXAgd2hlbmV2ZXIgeW91IGFyZSBmaW5pc2hlZC5cbiovXG5jbGFzcyBOZXR3b3JrQnJpZGdlIHtcbiAgY29uc3RydWN0b3IoKSB7XG4gICAgdGhpcy51cmxNYXAgPSB7fTtcbiAgfVxuXG4gIC8qXG4gICogQXR0YWNoZXMgYSB3ZWJzb2NrZXQgb2JqZWN0IHRvIHRoZSB1cmxNYXAgaGFzaCBzbyB0aGF0IGl0IGNhbiBmaW5kIHRoZSBzZXJ2ZXJcbiAgKiBpdCBpcyBjb25uZWN0ZWQgdG8gYW5kIHRoZSBzZXJ2ZXIgaW4gdHVybiBjYW4gZmluZCBpdC5cbiAgKlxuICAqIEBwYXJhbSB7b2JqZWN0fSB3ZWJzb2NrZXQgLSB3ZWJzb2NrZXQgb2JqZWN0IHRvIGFkZCB0byB0aGUgdXJsTWFwIGhhc2hcbiAgKiBAcGFyYW0ge3N0cmluZ30gdXJsXG4gICovXG4gIGF0dGFjaFdlYlNvY2tldCh3ZWJzb2NrZXQsIHVybCkge1xuICAgIGNvbnN0IGNvbm5lY3Rpb25Mb29rdXAgPSB0aGlzLnVybE1hcFt1cmxdO1xuXG4gICAgaWYgKGNvbm5lY3Rpb25Mb29rdXAgJiZcbiAgICAgICAgY29ubmVjdGlvbkxvb2t1cC5zZXJ2ZXIgJiZcbiAgICAgICAgY29ubmVjdGlvbkxvb2t1cC53ZWJzb2NrZXRzLmluZGV4T2Yod2Vic29ja2V0KSA9PT0gLTEpIHtcbiAgICAgIGNvbm5lY3Rpb25Mb29rdXAud2Vic29ja2V0cy5wdXNoKHdlYnNvY2tldCk7XG4gICAgICByZXR1cm4gY29ubmVjdGlvbkxvb2t1cC5zZXJ2ZXI7XG4gICAgfVxuICB9XG5cbiAgLypcbiAgKiBBdHRhY2hlcyBhIHdlYnNvY2tldCB0byBhIHJvb21cbiAgKi9cbiAgYWRkTWVtYmVyc2hpcFRvUm9vbSh3ZWJzb2NrZXQsIHJvb20pIHtcbiAgICBjb25zdCBjb25uZWN0aW9uTG9va3VwID0gdGhpcy51cmxNYXBbd2Vic29ja2V0LnVybF07XG5cbiAgICBpZiAoY29ubmVjdGlvbkxvb2t1cCAmJlxuICAgICAgICBjb25uZWN0aW9uTG9va3VwLnNlcnZlciAmJlxuICAgICAgICBjb25uZWN0aW9uTG9va3VwLndlYnNvY2tldHMuaW5kZXhPZih3ZWJzb2NrZXQpICE9PSAtMSkge1xuICAgICAgaWYgKCFjb25uZWN0aW9uTG9va3VwLnJvb21NZW1iZXJzaGlwc1tyb29tXSkge1xuICAgICAgICBjb25uZWN0aW9uTG9va3VwLnJvb21NZW1iZXJzaGlwc1tyb29tXSA9IFtdO1xuICAgICAgfVxuXG4gICAgICBjb25uZWN0aW9uTG9va3VwLnJvb21NZW1iZXJzaGlwc1tyb29tXS5wdXNoKHdlYnNvY2tldCk7XG4gICAgfVxuICB9XG5cbiAgLypcbiAgKiBBdHRhY2hlcyBhIHNlcnZlciBvYmplY3QgdG8gdGhlIHVybE1hcCBoYXNoIHNvIHRoYXQgaXQgY2FuIGZpbmQgYSB3ZWJzb2NrZXRzXG4gICogd2hpY2ggYXJlIGNvbm5lY3RlZCB0byBpdCBhbmQgc28gdGhhdCB3ZWJzb2NrZXRzIGNhbiBpbiB0dXJuIGNhbiBmaW5kIGl0LlxuICAqXG4gICogQHBhcmFtIHtvYmplY3R9IHNlcnZlciAtIHNlcnZlciBvYmplY3QgdG8gYWRkIHRvIHRoZSB1cmxNYXAgaGFzaFxuICAqIEBwYXJhbSB7c3RyaW5nfSB1cmxcbiAgKi9cbiAgYXR0YWNoU2VydmVyKHNlcnZlciwgdXJsKSB7XG4gICAgY29uc3QgY29ubmVjdGlvbkxvb2t1cCA9IHRoaXMudXJsTWFwW3VybF07XG5cbiAgICBpZiAoIWNvbm5lY3Rpb25Mb29rdXApIHtcbiAgICAgIHRoaXMudXJsTWFwW3VybF0gPSB7XG4gICAgICAgIHNlcnZlcixcbiAgICAgICAgd2Vic29ja2V0czogW10sXG4gICAgICAgIHJvb21NZW1iZXJzaGlwczoge31cbiAgICAgIH07XG5cbiAgICAgIHJldHVybiBzZXJ2ZXI7XG4gICAgfVxuICB9XG5cbiAgLypcbiAgKiBGaW5kcyB0aGUgc2VydmVyIHdoaWNoIGlzICdydW5uaW5nJyBvbiB0aGUgZ2l2ZW4gdXJsLlxuICAqXG4gICogQHBhcmFtIHtzdHJpbmd9IHVybCAtIHRoZSB1cmwgdG8gdXNlIHRvIGZpbmQgd2hpY2ggc2VydmVyIGlzIHJ1bm5pbmcgb24gaXRcbiAgKi9cbiAgc2VydmVyTG9va3VwKHVybCkge1xuICAgIGNvbnN0IGNvbm5lY3Rpb25Mb29rdXAgPSB0aGlzLnVybE1hcFt1cmxdO1xuXG4gICAgaWYgKGNvbm5lY3Rpb25Mb29rdXApIHtcbiAgICAgIHJldHVybiBjb25uZWN0aW9uTG9va3VwLnNlcnZlcjtcbiAgICB9XG4gIH1cblxuICAvKlxuICAqIEZpbmRzIGFsbCB3ZWJzb2NrZXRzIHdoaWNoIGlzICdsaXN0ZW5pbmcnIG9uIHRoZSBnaXZlbiB1cmwuXG4gICpcbiAgKiBAcGFyYW0ge3N0cmluZ30gdXJsIC0gdGhlIHVybCB0byB1c2UgdG8gZmluZCBhbGwgd2Vic29ja2V0cyB3aGljaCBhcmUgYXNzb2NpYXRlZCB3aXRoIGl0XG4gICogQHBhcmFtIHtzdHJpbmd9IHJvb20gLSBpZiBhIHJvb20gaXMgcHJvdmlkZWQsIHdpbGwgb25seSByZXR1cm4gc29ja2V0cyBpbiB0aGlzIHJvb21cbiAgKiBAcGFyYW0ge2NsYXNzfSBicm9hZGNhc3RlciAtIHNvY2tldCB0aGF0IGlzIGJyb2FkY2FzdGluZyBhbmQgaXMgdG8gYmUgZXhjbHVkZWQgZnJvbSB0aGUgbG9va3VwXG4gICovXG4gIHdlYnNvY2tldHNMb29rdXAodXJsLCByb29tLCBicm9hZGNhc3Rlcikge1xuICAgIGxldCB3ZWJzb2NrZXRzO1xuICAgIGNvbnN0IGNvbm5lY3Rpb25Mb29rdXAgPSB0aGlzLnVybE1hcFt1cmxdO1xuXG4gICAgd2Vic29ja2V0cyA9IGNvbm5lY3Rpb25Mb29rdXAgPyBjb25uZWN0aW9uTG9va3VwLndlYnNvY2tldHMgOiBbXTtcblxuICAgIGlmIChyb29tKSB7XG4gICAgICBjb25zdCBtZW1iZXJzID0gY29ubmVjdGlvbkxvb2t1cC5yb29tTWVtYmVyc2hpcHNbcm9vbV07XG4gICAgICB3ZWJzb2NrZXRzID0gbWVtYmVycyB8fCBbXTtcbiAgICB9XG5cbiAgICByZXR1cm4gYnJvYWRjYXN0ZXIgPyB3ZWJzb2NrZXRzLmZpbHRlcih3ZWJzb2NrZXQgPT4gd2Vic29ja2V0ICE9PSBicm9hZGNhc3RlcikgOiB3ZWJzb2NrZXRzO1xuICB9XG5cbiAgLypcbiAgKiBSZW1vdmVzIHRoZSBlbnRyeSBhc3NvY2lhdGVkIHdpdGggdGhlIHVybC5cbiAgKlxuICAqIEBwYXJhbSB7c3RyaW5nfSB1cmxcbiAgKi9cbiAgcmVtb3ZlU2VydmVyKHVybCkge1xuICAgIGRlbGV0ZSB0aGlzLnVybE1hcFt1cmxdO1xuICB9XG5cbiAgLypcbiAgKiBSZW1vdmVzIHRoZSBpbmRpdmlkdWFsIHdlYnNvY2tldCBmcm9tIHRoZSBtYXAgb2YgYXNzb2NpYXRlZCB3ZWJzb2NrZXRzLlxuICAqXG4gICogQHBhcmFtIHtvYmplY3R9IHdlYnNvY2tldCAtIHdlYnNvY2tldCBvYmplY3QgdG8gcmVtb3ZlIGZyb20gdGhlIHVybCBtYXBcbiAgKiBAcGFyYW0ge3N0cmluZ30gdXJsXG4gICovXG4gIHJlbW92ZVdlYlNvY2tldCh3ZWJzb2NrZXQsIHVybCkge1xuICAgIGNvbnN0IGNvbm5lY3Rpb25Mb29rdXAgPSB0aGlzLnVybE1hcFt1cmxdO1xuXG4gICAgaWYgKGNvbm5lY3Rpb25Mb29rdXApIHtcbiAgICAgIGNvbm5lY3Rpb25Mb29rdXAud2Vic29ja2V0cyA9IHJlamVjdChjb25uZWN0aW9uTG9va3VwLndlYnNvY2tldHMsIHNvY2tldCA9PiBzb2NrZXQgPT09IHdlYnNvY2tldCk7XG4gICAgfVxuICB9XG5cbiAgLypcbiAgKiBSZW1vdmVzIGEgd2Vic29ja2V0IGZyb20gYSByb29tXG4gICovXG4gIHJlbW92ZU1lbWJlcnNoaXBGcm9tUm9vbSh3ZWJzb2NrZXQsIHJvb20pIHtcbiAgICBjb25zdCBjb25uZWN0aW9uTG9va3VwID0gdGhpcy51cmxNYXBbd2Vic29ja2V0LnVybF07XG4gICAgY29uc3QgbWVtYmVyc2hpcHMgPSBjb25uZWN0aW9uTG9va3VwLnJvb21NZW1iZXJzaGlwc1tyb29tXTtcblxuICAgIGlmIChjb25uZWN0aW9uTG9va3VwICYmIG1lbWJlcnNoaXBzICE9PSBudWxsKSB7XG4gICAgICBjb25uZWN0aW9uTG9va3VwLnJvb21NZW1iZXJzaGlwc1tyb29tXSA9IHJlamVjdChtZW1iZXJzaGlwcywgc29ja2V0ID0+IHNvY2tldCA9PT0gd2Vic29ja2V0KTtcbiAgICB9XG4gIH1cbn1cblxuZXhwb3J0IGRlZmF1bHQgbmV3IE5ldHdvcmtCcmlkZ2UoKTsgLy8gTm90ZTogdGhpcyBpcyBhIHNpbmdsZXRvblxuXG5cblxuLy8gV0VCUEFDSyBGT09URVIgLy9cbi8vIC4vc3JjL25ldHdvcmstYnJpZGdlLmpzIiwiLypcbiogaHR0cHM6Ly9kZXZlbG9wZXIubW96aWxsYS5vcmcvZW4tVVMvZG9jcy9XZWIvQVBJL0Nsb3NlRXZlbnRcbiovXG5jb25zdCBjb2RlcyA9IHtcbiAgQ0xPU0VfTk9STUFMOiAxMDAwLFxuICBDTE9TRV9HT0lOR19BV0FZOiAxMDAxLFxuICBDTE9TRV9QUk9UT0NPTF9FUlJPUjogMTAwMixcbiAgQ0xPU0VfVU5TVVBQT1JURUQ6IDEwMDMsXG4gIENMT1NFX05PX1NUQVRVUzogMTAwNSxcbiAgQ0xPU0VfQUJOT1JNQUw6IDEwMDYsXG4gIENMT1NFX1RPT19MQVJHRTogMTAwOVxufTtcblxuZXhwb3J0IGRlZmF1bHQgY29kZXM7XG5cblxuXG4vLyBXRUJQQUNLIEZPT1RFUiAvL1xuLy8gLi9zcmMvaGVscGVycy9jbG9zZS1jb2Rlcy5qcyIsImV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIG5vcm1hbGl6ZVVybCh1cmwpIHtcbiAgY29uc3QgcGFydHMgPSB1cmwuc3BsaXQoJzovLycpO1xuICByZXR1cm4gKHBhcnRzWzFdICYmIHBhcnRzWzFdLmluZGV4T2YoJy8nKSA9PT0gLTEpID8gYCR7dXJsfS9gIDogdXJsO1xufVxuXG5cblxuLy8gV0VCUEFDSyBGT09URVIgLy9cbi8vIC4vc3JjL2hlbHBlcnMvbm9ybWFsaXplLXVybC5qcyIsImV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIGxvZyhtZXRob2QsIG1lc3NhZ2UpIHtcbiAgLyogZXNsaW50LWRpc2FibGUgbm8tY29uc29sZSAqL1xuICBpZiAodHlwZW9mIHByb2Nlc3MgIT09ICd1bmRlZmluZWQnICYmIHByb2Nlc3MuZW52Lk5PREVfRU5WICE9PSAndGVzdCcpIHtcbiAgICBjb25zb2xlW21ldGhvZF0uY2FsbChudWxsLCBtZXNzYWdlKTtcbiAgfVxuICAvKiBlc2xpbnQtZW5hYmxlIG5vLWNvbnNvbGUgKi9cbn1cblxuXG5cbi8vIFdFQlBBQ0sgRk9PVEVSIC8vXG4vLyAuL3NyYy9oZWxwZXJzL2xvZ2dlci5qcyIsIi8vIHNoaW0gZm9yIHVzaW5nIHByb2Nlc3MgaW4gYnJvd3NlclxudmFyIHByb2Nlc3MgPSBtb2R1bGUuZXhwb3J0cyA9IHt9O1xuXG4vLyBjYWNoZWQgZnJvbSB3aGF0ZXZlciBnbG9iYWwgaXMgcHJlc2VudCBzbyB0aGF0IHRlc3QgcnVubmVycyB0aGF0IHN0dWIgaXRcbi8vIGRvbid0IGJyZWFrIHRoaW5ncy4gIEJ1dCB3ZSBuZWVkIHRvIHdyYXAgaXQgaW4gYSB0cnkgY2F0Y2ggaW4gY2FzZSBpdCBpc1xuLy8gd3JhcHBlZCBpbiBzdHJpY3QgbW9kZSBjb2RlIHdoaWNoIGRvZXNuJ3QgZGVmaW5lIGFueSBnbG9iYWxzLiAgSXQncyBpbnNpZGUgYVxuLy8gZnVuY3Rpb24gYmVjYXVzZSB0cnkvY2F0Y2hlcyBkZW9wdGltaXplIGluIGNlcnRhaW4gZW5naW5lcy5cblxudmFyIGNhY2hlZFNldFRpbWVvdXQ7XG52YXIgY2FjaGVkQ2xlYXJUaW1lb3V0O1xuXG5mdW5jdGlvbiBkZWZhdWx0U2V0VGltb3V0KCkge1xuICAgIHRocm93IG5ldyBFcnJvcignc2V0VGltZW91dCBoYXMgbm90IGJlZW4gZGVmaW5lZCcpO1xufVxuZnVuY3Rpb24gZGVmYXVsdENsZWFyVGltZW91dCAoKSB7XG4gICAgdGhyb3cgbmV3IEVycm9yKCdjbGVhclRpbWVvdXQgaGFzIG5vdCBiZWVuIGRlZmluZWQnKTtcbn1cbihmdW5jdGlvbiAoKSB7XG4gICAgdHJ5IHtcbiAgICAgICAgaWYgKHR5cGVvZiBzZXRUaW1lb3V0ID09PSAnZnVuY3Rpb24nKSB7XG4gICAgICAgICAgICBjYWNoZWRTZXRUaW1lb3V0ID0gc2V0VGltZW91dDtcbiAgICAgICAgfSBlbHNlIHtcbiAgICAgICAgICAgIGNhY2hlZFNldFRpbWVvdXQgPSBkZWZhdWx0U2V0VGltb3V0O1xuICAgICAgICB9XG4gICAgfSBjYXRjaCAoZSkge1xuICAgICAgICBjYWNoZWRTZXRUaW1lb3V0ID0gZGVmYXVsdFNldFRpbW91dDtcbiAgICB9XG4gICAgdHJ5IHtcbiAgICAgICAgaWYgKHR5cGVvZiBjbGVhclRpbWVvdXQgPT09ICdmdW5jdGlvbicpIHtcbiAgICAgICAgICAgIGNhY2hlZENsZWFyVGltZW91dCA9IGNsZWFyVGltZW91dDtcbiAgICAgICAgfSBlbHNlIHtcbiAgICAgICAgICAgIGNhY2hlZENsZWFyVGltZW91dCA9IGRlZmF1bHRDbGVhclRpbWVvdXQ7XG4gICAgICAgIH1cbiAgICB9IGNhdGNoIChlKSB7XG4gICAgICAgIGNhY2hlZENsZWFyVGltZW91dCA9IGRlZmF1bHRDbGVhclRpbWVvdXQ7XG4gICAgfVxufSAoKSlcbmZ1bmN0aW9uIHJ1blRpbWVvdXQoZnVuKSB7XG4gICAgaWYgKGNhY2hlZFNldFRpbWVvdXQgPT09IHNldFRpbWVvdXQpIHtcbiAgICAgICAgLy9ub3JtYWwgZW52aXJvbWVudHMgaW4gc2FuZSBzaXR1YXRpb25zXG4gICAgICAgIHJldHVybiBzZXRUaW1lb3V0KGZ1biwgMCk7XG4gICAgfVxuICAgIC8vIGlmIHNldFRpbWVvdXQgd2Fzbid0IGF2YWlsYWJsZSBidXQgd2FzIGxhdHRlciBkZWZpbmVkXG4gICAgaWYgKChjYWNoZWRTZXRUaW1lb3V0ID09PSBkZWZhdWx0U2V0VGltb3V0IHx8ICFjYWNoZWRTZXRUaW1lb3V0KSAmJiBzZXRUaW1lb3V0KSB7XG4gICAgICAgIGNhY2hlZFNldFRpbWVvdXQgPSBzZXRUaW1lb3V0O1xuICAgICAgICByZXR1cm4gc2V0VGltZW91dChmdW4sIDApO1xuICAgIH1cbiAgICB0cnkge1xuICAgICAgICAvLyB3aGVuIHdoZW4gc29tZWJvZHkgaGFzIHNjcmV3ZWQgd2l0aCBzZXRUaW1lb3V0IGJ1dCBubyBJLkUuIG1hZGRuZXNzXG4gICAgICAgIHJldHVybiBjYWNoZWRTZXRUaW1lb3V0KGZ1biwgMCk7XG4gICAgfSBjYXRjaChlKXtcbiAgICAgICAgdHJ5IHtcbiAgICAgICAgICAgIC8vIFdoZW4gd2UgYXJlIGluIEkuRS4gYnV0IHRoZSBzY3JpcHQgaGFzIGJlZW4gZXZhbGVkIHNvIEkuRS4gZG9lc24ndCB0cnVzdCB0aGUgZ2xvYmFsIG9iamVjdCB3aGVuIGNhbGxlZCBub3JtYWxseVxuICAgICAgICAgICAgcmV0dXJuIGNhY2hlZFNldFRpbWVvdXQuY2FsbChudWxsLCBmdW4sIDApO1xuICAgICAgICB9IGNhdGNoKGUpe1xuICAgICAgICAgICAgLy8gc2FtZSBhcyBhYm92ZSBidXQgd2hlbiBpdCdzIGEgdmVyc2lvbiBvZiBJLkUuIHRoYXQgbXVzdCBoYXZlIHRoZSBnbG9iYWwgb2JqZWN0IGZvciAndGhpcycsIGhvcGZ1bGx5IG91ciBjb250ZXh0IGNvcnJlY3Qgb3RoZXJ3aXNlIGl0IHdpbGwgdGhyb3cgYSBnbG9iYWwgZXJyb3JcbiAgICAgICAgICAgIHJldHVybiBjYWNoZWRTZXRUaW1lb3V0LmNhbGwodGhpcywgZnVuLCAwKTtcbiAgICAgICAgfVxuICAgIH1cblxuXG59XG5mdW5jdGlvbiBydW5DbGVhclRpbWVvdXQobWFya2VyKSB7XG4gICAgaWYgKGNhY2hlZENsZWFyVGltZW91dCA9PT0gY2xlYXJUaW1lb3V0KSB7XG4gICAgICAgIC8vbm9ybWFsIGVudmlyb21lbnRzIGluIHNhbmUgc2l0dWF0aW9uc1xuICAgICAgICByZXR1cm4gY2xlYXJUaW1lb3V0KG1hcmtlcik7XG4gICAgfVxuICAgIC8vIGlmIGNsZWFyVGltZW91dCB3YXNuJ3QgYXZhaWxhYmxlIGJ1dCB3YXMgbGF0dGVyIGRlZmluZWRcbiAgICBpZiAoKGNhY2hlZENsZWFyVGltZW91dCA9PT0gZGVmYXVsdENsZWFyVGltZW91dCB8fCAhY2FjaGVkQ2xlYXJUaW1lb3V0KSAmJiBjbGVhclRpbWVvdXQpIHtcbiAgICAgICAgY2FjaGVkQ2xlYXJUaW1lb3V0ID0gY2xlYXJUaW1lb3V0O1xuICAgICAgICByZXR1cm4gY2xlYXJUaW1lb3V0KG1hcmtlcik7XG4gICAgfVxuICAgIHRyeSB7XG4gICAgICAgIC8vIHdoZW4gd2hlbiBzb21lYm9keSBoYXMgc2NyZXdlZCB3aXRoIHNldFRpbWVvdXQgYnV0IG5vIEkuRS4gbWFkZG5lc3NcbiAgICAgICAgcmV0dXJuIGNhY2hlZENsZWFyVGltZW91dChtYXJrZXIpO1xuICAgIH0gY2F0Y2ggKGUpe1xuICAgICAgICB0cnkge1xuICAgICAgICAgICAgLy8gV2hlbiB3ZSBhcmUgaW4gSS5FLiBidXQgdGhlIHNjcmlwdCBoYXMgYmVlbiBldmFsZWQgc28gSS5FLiBkb2Vzbid0ICB0cnVzdCB0aGUgZ2xvYmFsIG9iamVjdCB3aGVuIGNhbGxlZCBub3JtYWxseVxuICAgICAgICAgICAgcmV0dXJuIGNhY2hlZENsZWFyVGltZW91dC5jYWxsKG51bGwsIG1hcmtlcik7XG4gICAgICAgIH0gY2F0Y2ggKGUpe1xuICAgICAgICAgICAgLy8gc2FtZSBhcyBhYm92ZSBidXQgd2hlbiBpdCdzIGEgdmVyc2lvbiBvZiBJLkUuIHRoYXQgbXVzdCBoYXZlIHRoZSBnbG9iYWwgb2JqZWN0IGZvciAndGhpcycsIGhvcGZ1bGx5IG91ciBjb250ZXh0IGNvcnJlY3Qgb3RoZXJ3aXNlIGl0IHdpbGwgdGhyb3cgYSBnbG9iYWwgZXJyb3IuXG4gICAgICAgICAgICAvLyBTb21lIHZlcnNpb25zIG9mIEkuRS4gaGF2ZSBkaWZmZXJlbnQgcnVsZXMgZm9yIGNsZWFyVGltZW91dCB2cyBzZXRUaW1lb3V0XG4gICAgICAgICAgICByZXR1cm4gY2FjaGVkQ2xlYXJUaW1lb3V0LmNhbGwodGhpcywgbWFya2VyKTtcbiAgICAgICAgfVxuICAgIH1cblxuXG5cbn1cbnZhciBxdWV1ZSA9IFtdO1xudmFyIGRyYWluaW5nID0gZmFsc2U7XG52YXIgY3VycmVudFF1ZXVlO1xudmFyIHF1ZXVlSW5kZXggPSAtMTtcblxuZnVuY3Rpb24gY2xlYW5VcE5leHRUaWNrKCkge1xuICAgIGlmICghZHJhaW5pbmcgfHwgIWN1cnJlbnRRdWV1ZSkge1xuICAgICAgICByZXR1cm47XG4gICAgfVxuICAgIGRyYWluaW5nID0gZmFsc2U7XG4gICAgaWYgKGN1cnJlbnRRdWV1ZS5sZW5ndGgpIHtcbiAgICAgICAgcXVldWUgPSBjdXJyZW50UXVldWUuY29uY2F0KHF1ZXVlKTtcbiAgICB9IGVsc2Uge1xuICAgICAgICBxdWV1ZUluZGV4ID0gLTE7XG4gICAgfVxuICAgIGlmIChxdWV1ZS5sZW5ndGgpIHtcbiAgICAgICAgZHJhaW5RdWV1ZSgpO1xuICAgIH1cbn1cblxuZnVuY3Rpb24gZHJhaW5RdWV1ZSgpIHtcbiAgICBpZiAoZHJhaW5pbmcpIHtcbiAgICAgICAgcmV0dXJuO1xuICAgIH1cbiAgICB2YXIgdGltZW91dCA9IHJ1blRpbWVvdXQoY2xlYW5VcE5leHRUaWNrKTtcbiAgICBkcmFpbmluZyA9IHRydWU7XG5cbiAgICB2YXIgbGVuID0gcXVldWUubGVuZ3RoO1xuICAgIHdoaWxlKGxlbikge1xuICAgICAgICBjdXJyZW50UXVldWUgPSBxdWV1ZTtcbiAgICAgICAgcXVldWUgPSBbXTtcbiAgICAgICAgd2hpbGUgKCsrcXVldWVJbmRleCA8IGxlbikge1xuICAgICAgICAgICAgaWYgKGN1cnJlbnRRdWV1ZSkge1xuICAgICAgICAgICAgICAgIGN1cnJlbnRRdWV1ZVtxdWV1ZUluZGV4XS5ydW4oKTtcbiAgICAgICAgICAgIH1cbiAgICAgICAgfVxuICAgICAgICBxdWV1ZUluZGV4ID0gLTE7XG4gICAgICAgIGxlbiA9IHF1ZXVlLmxlbmd0aDtcbiAgICB9XG4gICAgY3VycmVudFF1ZXVlID0gbnVsbDtcbiAgICBkcmFpbmluZyA9IGZhbHNlO1xuICAgIHJ1bkNsZWFyVGltZW91dCh0aW1lb3V0KTtcbn1cblxucHJvY2Vzcy5uZXh0VGljayA9IGZ1bmN0aW9uIChmdW4pIHtcbiAgICB2YXIgYXJncyA9IG5ldyBBcnJheShhcmd1bWVudHMubGVuZ3RoIC0gMSk7XG4gICAgaWYgKGFyZ3VtZW50cy5sZW5ndGggPiAxKSB7XG4gICAgICAgIGZvciAodmFyIGkgPSAxOyBpIDwgYXJndW1lbnRzLmxlbmd0aDsgaSsrKSB7XG4gICAgICAgICAgICBhcmdzW2kgLSAxXSA9IGFyZ3VtZW50c1tpXTtcbiAgICAgICAgfVxuICAgIH1cbiAgICBxdWV1ZS5wdXNoKG5ldyBJdGVtKGZ1biwgYXJncykpO1xuICAgIGlmIChxdWV1ZS5sZW5ndGggPT09IDEgJiYgIWRyYWluaW5nKSB7XG4gICAgICAgIHJ1blRpbWVvdXQoZHJhaW5RdWV1ZSk7XG4gICAgfVxufTtcblxuLy8gdjggbGlrZXMgcHJlZGljdGlibGUgb2JqZWN0c1xuZnVuY3Rpb24gSXRlbShmdW4sIGFycmF5KSB7XG4gICAgdGhpcy5mdW4gPSBmdW47XG4gICAgdGhpcy5hcnJheSA9IGFycmF5O1xufVxuSXRlbS5wcm90b3R5cGUucnVuID0gZnVuY3Rpb24gKCkge1xuICAgIHRoaXMuZnVuLmFwcGx5KG51bGwsIHRoaXMuYXJyYXkpO1xufTtcbnByb2Nlc3MudGl0bGUgPSAnYnJvd3Nlcic7XG5wcm9jZXNzLmJyb3dzZXIgPSB0cnVlO1xucHJvY2Vzcy5lbnYgPSB7fTtcbnByb2Nlc3MuYXJndiA9IFtdO1xucHJvY2Vzcy52ZXJzaW9uID0gJyc7IC8vIGVtcHR5IHN0cmluZyB0byBhdm9pZCByZWdleHAgaXNzdWVzXG5wcm9jZXNzLnZlcnNpb25zID0ge307XG5cbmZ1bmN0aW9uIG5vb3AoKSB7fVxuXG5wcm9jZXNzLm9uID0gbm9vcDtcbnByb2Nlc3MuYWRkTGlzdGVuZXIgPSBub29wO1xucHJvY2Vzcy5vbmNlID0gbm9vcDtcbnByb2Nlc3Mub2ZmID0gbm9vcDtcbnByb2Nlc3MucmVtb3ZlTGlzdGVuZXIgPSBub29wO1xucHJvY2Vzcy5yZW1vdmVBbGxMaXN0ZW5lcnMgPSBub29wO1xucHJvY2Vzcy5lbWl0ID0gbm9vcDtcblxucHJvY2Vzcy5iaW5kaW5nID0gZnVuY3Rpb24gKG5hbWUpIHtcbiAgICB0aHJvdyBuZXcgRXJyb3IoJ3Byb2Nlc3MuYmluZGluZyBpcyBub3Qgc3VwcG9ydGVkJyk7XG59O1xuXG5wcm9jZXNzLmN3ZCA9IGZ1bmN0aW9uICgpIHsgcmV0dXJuICcvJyB9O1xucHJvY2Vzcy5jaGRpciA9IGZ1bmN0aW9uIChkaXIpIHtcbiAgICB0aHJvdyBuZXcgRXJyb3IoJ3Byb2Nlc3MuY2hkaXIgaXMgbm90IHN1cHBvcnRlZCcpO1xufTtcbnByb2Nlc3MudW1hc2sgPSBmdW5jdGlvbigpIHsgcmV0dXJuIDA7IH07XG5cblxuXG4vLy8vLy8vLy8vLy8vLy8vLy9cbi8vIFdFQlBBQ0sgRk9PVEVSXG4vLyAuL34vcHJvY2Vzcy9icm93c2VyLmpzXG4vLyBtb2R1bGUgaWQgPSAxMFxuLy8gbW9kdWxlIGNodW5rcyA9IDAiLCJpbXBvcnQgRXZlbnQgZnJvbSAnLi9oZWxwZXJzL2V2ZW50JztcbmltcG9ydCBNZXNzYWdlRXZlbnQgZnJvbSAnLi9oZWxwZXJzL21lc3NhZ2UtZXZlbnQnO1xuaW1wb3J0IENsb3NlRXZlbnQgZnJvbSAnLi9oZWxwZXJzL2Nsb3NlLWV2ZW50JztcblxuLypcbiogQ3JlYXRlcyBhbiBFdmVudCBvYmplY3QgYW5kIGV4dGVuZHMgaXQgdG8gYWxsb3cgZnVsbCBtb2RpZmljYXRpb24gb2ZcbiogaXRzIHByb3BlcnRpZXMuXG4qXG4qIEBwYXJhbSB7b2JqZWN0fSBjb25maWcgLSB3aXRoaW4gY29uZmlnIHlvdSB3aWxsIG5lZWQgdG8gcGFzcyB0eXBlIGFuZCBvcHRpb25hbGx5IHRhcmdldFxuKi9cbmZ1bmN0aW9uIGNyZWF0ZUV2ZW50KGNvbmZpZykge1xuICBjb25zdCB7IHR5cGUsIHRhcmdldCB9ID0gY29uZmlnO1xuICBjb25zdCBldmVudE9iamVjdCA9IG5ldyBFdmVudCh0eXBlKTtcblxuICBpZiAodGFyZ2V0KSB7XG4gICAgZXZlbnRPYmplY3QudGFyZ2V0ID0gdGFyZ2V0O1xuICAgIGV2ZW50T2JqZWN0LnNyY0VsZW1lbnQgPSB0YXJnZXQ7XG4gICAgZXZlbnRPYmplY3QuY3VycmVudFRhcmdldCA9IHRhcmdldDtcbiAgfVxuXG4gIHJldHVybiBldmVudE9iamVjdDtcbn1cblxuLypcbiogQ3JlYXRlcyBhIE1lc3NhZ2VFdmVudCBvYmplY3QgYW5kIGV4dGVuZHMgaXQgdG8gYWxsb3cgZnVsbCBtb2RpZmljYXRpb24gb2ZcbiogaXRzIHByb3BlcnRpZXMuXG4qXG4qIEBwYXJhbSB7b2JqZWN0fSBjb25maWcgLSB3aXRoaW4gY29uZmlnOiB0eXBlLCBvcmlnaW4sIGRhdGEgYW5kIG9wdGlvbmFsbHkgdGFyZ2V0XG4qL1xuZnVuY3Rpb24gY3JlYXRlTWVzc2FnZUV2ZW50KGNvbmZpZykge1xuICBjb25zdCB7IHR5cGUsIG9yaWdpbiwgZGF0YSwgdGFyZ2V0IH0gPSBjb25maWc7XG4gIGNvbnN0IG1lc3NhZ2VFdmVudCA9IG5ldyBNZXNzYWdlRXZlbnQodHlwZSwge1xuICAgIGRhdGEsXG4gICAgb3JpZ2luXG4gIH0pO1xuXG4gIGlmICh0YXJnZXQpIHtcbiAgICBtZXNzYWdlRXZlbnQudGFyZ2V0ID0gdGFyZ2V0O1xuICAgIG1lc3NhZ2VFdmVudC5zcmNFbGVtZW50ID0gdGFyZ2V0O1xuICAgIG1lc3NhZ2VFdmVudC5jdXJyZW50VGFyZ2V0ID0gdGFyZ2V0O1xuICB9XG5cbiAgcmV0dXJuIG1lc3NhZ2VFdmVudDtcbn1cblxuLypcbiogQ3JlYXRlcyBhIENsb3NlRXZlbnQgb2JqZWN0IGFuZCBleHRlbmRzIGl0IHRvIGFsbG93IGZ1bGwgbW9kaWZpY2F0aW9uIG9mXG4qIGl0cyBwcm9wZXJ0aWVzLlxuKlxuKiBAcGFyYW0ge29iamVjdH0gY29uZmlnIC0gd2l0aGluIGNvbmZpZzogdHlwZSBhbmQgb3B0aW9uYWxseSB0YXJnZXQsIGNvZGUsIGFuZCByZWFzb25cbiovXG5mdW5jdGlvbiBjcmVhdGVDbG9zZUV2ZW50KGNvbmZpZykge1xuICBjb25zdCB7IGNvZGUsIHJlYXNvbiwgdHlwZSwgdGFyZ2V0IH0gPSBjb25maWc7XG4gIGxldCB7IHdhc0NsZWFuIH0gPSBjb25maWc7XG5cbiAgaWYgKCF3YXNDbGVhbikge1xuICAgIHdhc0NsZWFuID0gKGNvZGUgPT09IDEwMDApO1xuICB9XG5cbiAgY29uc3QgY2xvc2VFdmVudCA9IG5ldyBDbG9zZUV2ZW50KHR5cGUsIHtcbiAgICBjb2RlLFxuICAgIHJlYXNvbixcbiAgICB3YXNDbGVhblxuICB9KTtcblxuICBpZiAodGFyZ2V0KSB7XG4gICAgY2xvc2VFdmVudC50YXJnZXQgPSB0YXJnZXQ7XG4gICAgY2xvc2VFdmVudC5zcmNFbGVtZW50ID0gdGFyZ2V0O1xuICAgIGNsb3NlRXZlbnQuY3VycmVudFRhcmdldCA9IHRhcmdldDtcbiAgfVxuXG4gIHJldHVybiBjbG9zZUV2ZW50O1xufVxuXG5leHBvcnQge1xuICBjcmVhdGVFdmVudCxcbiAgY3JlYXRlTWVzc2FnZUV2ZW50LFxuICBjcmVhdGVDbG9zZUV2ZW50XG59O1xuXG5cblxuLy8gV0VCUEFDSyBGT09URVIgLy9cbi8vIC4vc3JjL2V2ZW50LWZhY3RvcnkuanMiLCJpbXBvcnQgRXZlbnRQcm90b3R5cGUgZnJvbSAnLi9ldmVudC1wcm90b3R5cGUnO1xuXG5leHBvcnQgZGVmYXVsdCBjbGFzcyBFdmVudCBleHRlbmRzIEV2ZW50UHJvdG90eXBlIHtcbiAgY29uc3RydWN0b3IodHlwZSwgZXZlbnRJbml0Q29uZmlnID0ge30pIHtcbiAgICBzdXBlcigpO1xuXG4gICAgaWYgKCF0eXBlKSB7XG4gICAgICB0aHJvdyBuZXcgVHlwZUVycm9yKCdGYWlsZWQgdG8gY29uc3RydWN0IFxcJ0V2ZW50XFwnOiAxIGFyZ3VtZW50IHJlcXVpcmVkLCBidXQgb25seSAwIHByZXNlbnQuJyk7XG4gICAgfVxuXG4gICAgaWYgKHR5cGVvZiBldmVudEluaXRDb25maWcgIT09ICdvYmplY3QnKSB7XG4gICAgICB0aHJvdyBuZXcgVHlwZUVycm9yKCdGYWlsZWQgdG8gY29uc3RydWN0IFxcJ0V2ZW50XFwnOiBwYXJhbWV0ZXIgMiAoXFwnZXZlbnRJbml0RGljdFxcJykgaXMgbm90IGFuIG9iamVjdCcpO1xuICAgIH1cblxuICAgIGNvbnN0IHsgYnViYmxlcywgY2FuY2VsYWJsZSB9ID0gZXZlbnRJbml0Q29uZmlnO1xuXG4gICAgdGhpcy50eXBlID0gU3RyaW5nKHR5cGUpO1xuICAgIHRoaXMudGltZVN0YW1wID0gRGF0ZS5ub3coKTtcbiAgICB0aGlzLnRhcmdldCA9IG51bGw7XG4gICAgdGhpcy5zcmNFbGVtZW50ID0gbnVsbDtcbiAgICB0aGlzLnJldHVyblZhbHVlID0gdHJ1ZTtcbiAgICB0aGlzLmlzVHJ1c3RlZCA9IGZhbHNlO1xuICAgIHRoaXMuZXZlbnRQaGFzZSA9IDA7XG4gICAgdGhpcy5kZWZhdWx0UHJldmVudGVkID0gZmFsc2U7XG4gICAgdGhpcy5jdXJyZW50VGFyZ2V0ID0gbnVsbDtcbiAgICB0aGlzLmNhbmNlbGFibGUgPSBjYW5jZWxhYmxlID8gQm9vbGVhbihjYW5jZWxhYmxlKSA6IGZhbHNlO1xuICAgIHRoaXMuY2FubmNlbEJ1YmJsZSA9IGZhbHNlO1xuICAgIHRoaXMuYnViYmxlcyA9IGJ1YmJsZXMgPyBCb29sZWFuKGJ1YmJsZXMpIDogZmFsc2U7XG4gIH1cbn1cblxuXG5cbi8vIFdFQlBBQ0sgRk9PVEVSIC8vXG4vLyAuL3NyYy9oZWxwZXJzL2V2ZW50LmpzIiwiXG5leHBvcnQgZGVmYXVsdCBjbGFzcyBFdmVudFByb3RvdHlwZSB7XG4gIC8vIE5vb3BzXG4gIHN0b3BQcm9wYWdhdGlvbigpIHt9XG4gIHN0b3BJbW1lZGlhdGVQcm9wYWdhdGlvbigpIHt9XG5cbiAgLy8gaWYgbm8gYXJndW1lbnRzIGFyZSBwYXNzZWQgdGhlbiB0aGUgdHlwZSBpcyBzZXQgdG8gXCJ1bmRlZmluZWRcIiBvblxuICAvLyBjaHJvbWUgYW5kIHNhZmFyaS5cbiAgaW5pdEV2ZW50KHR5cGUgPSAndW5kZWZpbmVkJywgYnViYmxlcyA9IGZhbHNlLCBjYW5jZWxhYmxlID0gZmFsc2UpIHtcbiAgICB0aGlzLnR5cGUgPSBTdHJpbmcodHlwZSk7XG4gICAgdGhpcy5idWJibGVzID0gQm9vbGVhbihidWJibGVzKTtcbiAgICB0aGlzLmNhbmNlbGFibGUgPSBCb29sZWFuKGNhbmNlbGFibGUpO1xuICB9XG59XG5cblxuXG4vLyBXRUJQQUNLIEZPT1RFUiAvL1xuLy8gLi9zcmMvaGVscGVycy9ldmVudC1wcm90b3R5cGUuanMiLCJpbXBvcnQgRXZlbnRQcm90b3R5cGUgZnJvbSAnLi9ldmVudC1wcm90b3R5cGUnO1xuXG5leHBvcnQgZGVmYXVsdCBjbGFzcyBNZXNzYWdlRXZlbnQgZXh0ZW5kcyBFdmVudFByb3RvdHlwZSB7XG4gIGNvbnN0cnVjdG9yKHR5cGUsIGV2ZW50SW5pdENvbmZpZyA9IHt9KSB7XG4gICAgc3VwZXIoKTtcblxuICAgIGlmICghdHlwZSkge1xuICAgICAgdGhyb3cgbmV3IFR5cGVFcnJvcignRmFpbGVkIHRvIGNvbnN0cnVjdCBcXCdNZXNzYWdlRXZlbnRcXCc6IDEgYXJndW1lbnQgcmVxdWlyZWQsIGJ1dCBvbmx5IDAgcHJlc2VudC4nKTtcbiAgICB9XG5cbiAgICBpZiAodHlwZW9mIGV2ZW50SW5pdENvbmZpZyAhPT0gJ29iamVjdCcpIHtcbiAgICAgIHRocm93IG5ldyBUeXBlRXJyb3IoJ0ZhaWxlZCB0byBjb25zdHJ1Y3QgXFwnTWVzc2FnZUV2ZW50XFwnOiBwYXJhbWV0ZXIgMiAoXFwnZXZlbnRJbml0RGljdFxcJykgaXMgbm90IGFuIG9iamVjdCcpO1xuICAgIH1cblxuICAgIGNvbnN0IHtcbiAgICAgIGJ1YmJsZXMsXG4gICAgICBjYW5jZWxhYmxlLFxuICAgICAgZGF0YSxcbiAgICAgIG9yaWdpbixcbiAgICAgIGxhc3RFdmVudElkLFxuICAgICAgcG9ydHNcbiAgICB9ID0gZXZlbnRJbml0Q29uZmlnO1xuXG4gICAgdGhpcy50eXBlID0gU3RyaW5nKHR5cGUpO1xuICAgIHRoaXMudGltZVN0YW1wID0gRGF0ZS5ub3coKTtcbiAgICB0aGlzLnRhcmdldCA9IG51bGw7XG4gICAgdGhpcy5zcmNFbGVtZW50ID0gbnVsbDtcbiAgICB0aGlzLnJldHVyblZhbHVlID0gdHJ1ZTtcbiAgICB0aGlzLmlzVHJ1c3RlZCA9IGZhbHNlO1xuICAgIHRoaXMuZXZlbnRQaGFzZSA9IDA7XG4gICAgdGhpcy5kZWZhdWx0UHJldmVudGVkID0gZmFsc2U7XG4gICAgdGhpcy5jdXJyZW50VGFyZ2V0ID0gbnVsbDtcbiAgICB0aGlzLmNhbmNlbGFibGUgPSBjYW5jZWxhYmxlID8gQm9vbGVhbihjYW5jZWxhYmxlKSA6IGZhbHNlO1xuICAgIHRoaXMuY2FubmNlbEJ1YmJsZSA9IGZhbHNlO1xuICAgIHRoaXMuYnViYmxlcyA9IGJ1YmJsZXMgPyBCb29sZWFuKGJ1YmJsZXMpIDogZmFsc2U7XG4gICAgdGhpcy5vcmlnaW4gPSBvcmlnaW4gPyBTdHJpbmcob3JpZ2luKSA6ICcnO1xuICAgIHRoaXMucG9ydHMgPSB0eXBlb2YgcG9ydHMgPT09ICd1bmRlZmluZWQnID8gbnVsbCA6IHBvcnRzO1xuICAgIHRoaXMuZGF0YSA9IHR5cGVvZiBkYXRhID09PSAndW5kZWZpbmVkJyA/IG51bGwgOiBkYXRhO1xuICAgIHRoaXMubGFzdEV2ZW50SWQgPSBsYXN0RXZlbnRJZCA/IFN0cmluZyhsYXN0RXZlbnRJZCkgOiAnJztcbiAgfVxufVxuXG5cblxuLy8gV0VCUEFDSyBGT09URVIgLy9cbi8vIC4vc3JjL2hlbHBlcnMvbWVzc2FnZS1ldmVudC5qcyIsImltcG9ydCBFdmVudFByb3RvdHlwZSBmcm9tICcuL2V2ZW50LXByb3RvdHlwZSc7XG5cbmV4cG9ydCBkZWZhdWx0IGNsYXNzIENsb3NlRXZlbnQgZXh0ZW5kcyBFdmVudFByb3RvdHlwZSB7XG4gIGNvbnN0cnVjdG9yKHR5cGUsIGV2ZW50SW5pdENvbmZpZyA9IHt9KSB7XG4gICAgc3VwZXIoKTtcblxuICAgIGlmICghdHlwZSkge1xuICAgICAgdGhyb3cgbmV3IFR5cGVFcnJvcignRmFpbGVkIHRvIGNvbnN0cnVjdCBcXCdDbG9zZUV2ZW50XFwnOiAxIGFyZ3VtZW50IHJlcXVpcmVkLCBidXQgb25seSAwIHByZXNlbnQuJyk7XG4gICAgfVxuXG4gICAgaWYgKHR5cGVvZiBldmVudEluaXRDb25maWcgIT09ICdvYmplY3QnKSB7XG4gICAgICB0aHJvdyBuZXcgVHlwZUVycm9yKCdGYWlsZWQgdG8gY29uc3RydWN0IFxcJ0Nsb3NlRXZlbnRcXCc6IHBhcmFtZXRlciAyIChcXCdldmVudEluaXREaWN0XFwnKSBpcyBub3QgYW4gb2JqZWN0Jyk7XG4gICAgfVxuXG4gICAgY29uc3Qge1xuICAgICAgYnViYmxlcyxcbiAgICAgIGNhbmNlbGFibGUsXG4gICAgICBjb2RlLFxuICAgICAgcmVhc29uLFxuICAgICAgd2FzQ2xlYW5cbiAgICB9ID0gZXZlbnRJbml0Q29uZmlnO1xuXG4gICAgdGhpcy50eXBlID0gU3RyaW5nKHR5cGUpO1xuICAgIHRoaXMudGltZVN0YW1wID0gRGF0ZS5ub3coKTtcbiAgICB0aGlzLnRhcmdldCA9IG51bGw7XG4gICAgdGhpcy5zcmNFbGVtZW50ID0gbnVsbDtcbiAgICB0aGlzLnJldHVyblZhbHVlID0gdHJ1ZTtcbiAgICB0aGlzLmlzVHJ1c3RlZCA9IGZhbHNlO1xuICAgIHRoaXMuZXZlbnRQaGFzZSA9IDA7XG4gICAgdGhpcy5kZWZhdWx0UHJldmVudGVkID0gZmFsc2U7XG4gICAgdGhpcy5jdXJyZW50VGFyZ2V0ID0gbnVsbDtcbiAgICB0aGlzLmNhbmNlbGFibGUgPSBjYW5jZWxhYmxlID8gQm9vbGVhbihjYW5jZWxhYmxlKSA6IGZhbHNlO1xuICAgIHRoaXMuY2FubmNlbEJ1YmJsZSA9IGZhbHNlO1xuICAgIHRoaXMuYnViYmxlcyA9IGJ1YmJsZXMgPyBCb29sZWFuKGJ1YmJsZXMpIDogZmFsc2U7XG4gICAgdGhpcy5jb2RlID0gdHlwZW9mIGNvZGUgPT09ICdudW1iZXInID8gTnVtYmVyKGNvZGUpIDogMDtcbiAgICB0aGlzLnJlYXNvbiA9IHJlYXNvbiA/IFN0cmluZyhyZWFzb24pIDogJyc7XG4gICAgdGhpcy53YXNDbGVhbiA9IHdhc0NsZWFuID8gQm9vbGVhbih3YXNDbGVhbikgOiBmYWxzZTtcbiAgfVxufVxuXG5cblxuLy8gV0VCUEFDSyBGT09URVIgLy9cbi8vIC4vc3JjL2hlbHBlcnMvY2xvc2UtZXZlbnQuanMiLCJleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiByZXRyaWV2ZUdsb2JhbE9iamVjdCgpIHtcbiAgaWYgKHR5cGVvZiB3aW5kb3cgIT09ICd1bmRlZmluZWQnKSB7XG4gICAgcmV0dXJuIHdpbmRvdztcbiAgfVxuXG4gIHJldHVybiAodHlwZW9mIHByb2Nlc3MgPT09ICdvYmplY3QnICYmXG4gICAgICB0eXBlb2YgcmVxdWlyZSA9PT0gJ2Z1bmN0aW9uJyAmJlxuICAgICAgdHlwZW9mIGdsb2JhbCA9PT0gJ29iamVjdCcpID8gZ2xvYmFsIDogdGhpcztcbn1cblxuXG5cbi8vIFdFQlBBQ0sgRk9PVEVSIC8vXG4vLyAuL3NyYy9oZWxwZXJzL2dsb2JhbC1vYmplY3QuanMiLCJpbXBvcnQgZGVsYXkgZnJvbSAnLi9oZWxwZXJzL2RlbGF5JztcbmltcG9ydCBFdmVudFRhcmdldCBmcm9tICcuL2V2ZW50LXRhcmdldCc7XG5pbXBvcnQgbmV0d29ya0JyaWRnZSBmcm9tICcuL25ldHdvcmstYnJpZGdlJztcbmltcG9ydCBDTE9TRV9DT0RFUyBmcm9tICcuL2hlbHBlcnMvY2xvc2UtY29kZXMnO1xuaW1wb3J0IG5vcm1hbGl6ZSBmcm9tICcuL2hlbHBlcnMvbm9ybWFsaXplLXVybCc7XG5pbXBvcnQgbG9nZ2VyIGZyb20gJy4vaGVscGVycy9sb2dnZXInO1xuaW1wb3J0IHsgY3JlYXRlRXZlbnQsIGNyZWF0ZU1lc3NhZ2VFdmVudCwgY3JlYXRlQ2xvc2VFdmVudCB9IGZyb20gJy4vZXZlbnQtZmFjdG9yeSc7XG5cbi8qXG4qIFRoZSBzb2NrZXQtaW8gY2xhc3MgaXMgZGVzaWduZWQgdG8gbWltaWNrIHRoZSByZWFsIEFQSSBhcyBjbG9zZWx5IGFzIHBvc3NpYmxlLlxuKlxuKiBodHRwOi8vc29ja2V0LmlvL2RvY3MvXG4qL1xuY2xhc3MgU29ja2V0SU8gZXh0ZW5kcyBFdmVudFRhcmdldCB7XG4gIC8qXG4gICogQHBhcmFtIHtzdHJpbmd9IHVybFxuICAqL1xuICBjb25zdHJ1Y3Rvcih1cmwgPSAnc29ja2V0LmlvJywgcHJvdG9jb2wgPSAnJykge1xuICAgIHN1cGVyKCk7XG5cbiAgICB0aGlzLmJpbmFyeVR5cGUgPSAnYmxvYic7XG4gICAgdGhpcy51cmwgPSBub3JtYWxpemUodXJsKTtcbiAgICB0aGlzLnJlYWR5U3RhdGUgPSBTb2NrZXRJTy5DT05ORUNUSU5HO1xuICAgIHRoaXMucHJvdG9jb2wgPSAnJztcblxuICAgIGlmICh0eXBlb2YgcHJvdG9jb2wgPT09ICdzdHJpbmcnKSB7XG4gICAgICB0aGlzLnByb3RvY29sID0gcHJvdG9jb2w7XG4gICAgfSBlbHNlIGlmIChBcnJheS5pc0FycmF5KHByb3RvY29sKSAmJiBwcm90b2NvbC5sZW5ndGggPiAwKSB7XG4gICAgICB0aGlzLnByb3RvY29sID0gcHJvdG9jb2xbMF07XG4gICAgfVxuXG4gICAgY29uc3Qgc2VydmVyID0gbmV0d29ya0JyaWRnZS5hdHRhY2hXZWJTb2NrZXQodGhpcywgdGhpcy51cmwpO1xuXG4gICAgLypcbiAgICAqIERlbGF5IHRyaWdnZXJpbmcgdGhlIGNvbm5lY3Rpb24gZXZlbnRzIHNvIHRoZXkgY2FuIGJlIGRlZmluZWQgaW4gdGltZS5cbiAgICAqL1xuICAgIGRlbGF5KGZ1bmN0aW9uIGRlbGF5Q2FsbGJhY2soKSB7XG4gICAgICBpZiAoc2VydmVyKSB7XG4gICAgICAgIHRoaXMucmVhZHlTdGF0ZSA9IFNvY2tldElPLk9QRU47XG4gICAgICAgIHNlcnZlci5kaXNwYXRjaEV2ZW50KGNyZWF0ZUV2ZW50KHsgdHlwZTogJ2Nvbm5lY3Rpb24nIH0pLCBzZXJ2ZXIsIHRoaXMpO1xuICAgICAgICBzZXJ2ZXIuZGlzcGF0Y2hFdmVudChjcmVhdGVFdmVudCh7IHR5cGU6ICdjb25uZWN0JyB9KSwgc2VydmVyLCB0aGlzKTsgLy8gYWxpYXNcbiAgICAgICAgdGhpcy5kaXNwYXRjaEV2ZW50KGNyZWF0ZUV2ZW50KHsgdHlwZTogJ2Nvbm5lY3QnLCB0YXJnZXQ6IHRoaXMgfSkpO1xuICAgICAgfSBlbHNlIHtcbiAgICAgICAgdGhpcy5yZWFkeVN0YXRlID0gU29ja2V0SU8uQ0xPU0VEO1xuICAgICAgICB0aGlzLmRpc3BhdGNoRXZlbnQoY3JlYXRlRXZlbnQoeyB0eXBlOiAnZXJyb3InLCB0YXJnZXQ6IHRoaXMgfSkpO1xuICAgICAgICB0aGlzLmRpc3BhdGNoRXZlbnQoY3JlYXRlQ2xvc2VFdmVudCh7XG4gICAgICAgICAgdHlwZTogJ2Nsb3NlJyxcbiAgICAgICAgICB0YXJnZXQ6IHRoaXMsXG4gICAgICAgICAgY29kZTogQ0xPU0VfQ09ERVMuQ0xPU0VfTk9STUFMXG4gICAgICAgIH0pKTtcblxuICAgICAgICBsb2dnZXIoJ2Vycm9yJywgYFNvY2tldC5pbyBjb25uZWN0aW9uIHRvICcke3RoaXMudXJsfScgZmFpbGVkYCk7XG4gICAgICB9XG4gICAgfSwgdGhpcyk7XG5cbiAgICAvKipcbiAgICAgIEFkZCBhbiBhbGlhc2VkIGV2ZW50IGxpc3RlbmVyIGZvciBjbG9zZSAvIGRpc2Nvbm5lY3RcbiAgICAgKi9cbiAgICB0aGlzLmFkZEV2ZW50TGlzdGVuZXIoJ2Nsb3NlJywgKGV2ZW50KSA9PiB7XG4gICAgICB0aGlzLmRpc3BhdGNoRXZlbnQoY3JlYXRlQ2xvc2VFdmVudCh7XG4gICAgICAgIHR5cGU6ICdkaXNjb25uZWN0JyxcbiAgICAgICAgdGFyZ2V0OiBldmVudC50YXJnZXQsXG4gICAgICAgIGNvZGU6IGV2ZW50LmNvZGVcbiAgICAgIH0pKTtcbiAgICB9KTtcbiAgfVxuXG4gIC8qXG4gICogQ2xvc2VzIHRoZSBTb2NrZXRJTyBjb25uZWN0aW9uIG9yIGNvbm5lY3Rpb24gYXR0ZW1wdCwgaWYgYW55LlxuICAqIElmIHRoZSBjb25uZWN0aW9uIGlzIGFscmVhZHkgQ0xPU0VELCB0aGlzIG1ldGhvZCBkb2VzIG5vdGhpbmcuXG4gICovXG4gIGNsb3NlKCkge1xuICAgIGlmICh0aGlzLnJlYWR5U3RhdGUgIT09IFNvY2tldElPLk9QRU4pIHsgcmV0dXJuIHVuZGVmaW5lZDsgfVxuXG4gICAgY29uc3Qgc2VydmVyID0gbmV0d29ya0JyaWRnZS5zZXJ2ZXJMb29rdXAodGhpcy51cmwpO1xuICAgIG5ldHdvcmtCcmlkZ2UucmVtb3ZlV2ViU29ja2V0KHRoaXMsIHRoaXMudXJsKTtcblxuICAgIHRoaXMucmVhZHlTdGF0ZSA9IFNvY2tldElPLkNMT1NFRDtcbiAgICB0aGlzLmRpc3BhdGNoRXZlbnQoY3JlYXRlQ2xvc2VFdmVudCh7XG4gICAgICB0eXBlOiAnY2xvc2UnLFxuICAgICAgdGFyZ2V0OiB0aGlzLFxuICAgICAgY29kZTogQ0xPU0VfQ09ERVMuQ0xPU0VfTk9STUFMXG4gICAgfSkpO1xuXG4gICAgaWYgKHNlcnZlcikge1xuICAgICAgc2VydmVyLmRpc3BhdGNoRXZlbnQoY3JlYXRlQ2xvc2VFdmVudCh7XG4gICAgICAgIHR5cGU6ICdkaXNjb25uZWN0JyxcbiAgICAgICAgdGFyZ2V0OiB0aGlzLFxuICAgICAgICBjb2RlOiBDTE9TRV9DT0RFUy5DTE9TRV9OT1JNQUxcbiAgICAgIH0pLCBzZXJ2ZXIpO1xuICAgIH1cbiAgfVxuXG4gIC8qXG4gICogQWxpYXMgZm9yIFNvY2tldCNjbG9zZVxuICAqXG4gICogaHR0cHM6Ly9naXRodWIuY29tL3NvY2tldGlvL3NvY2tldC5pby1jbGllbnQvYmxvYi9tYXN0ZXIvbGliL3NvY2tldC5qcyNMMzgzXG4gICovXG4gIGRpc2Nvbm5lY3QoKSB7XG4gICAgdGhpcy5jbG9zZSgpO1xuICB9XG5cbiAgLypcbiAgKiBTdWJtaXRzIGFuIGV2ZW50IHRvIHRoZSBzZXJ2ZXIgd2l0aCBhIHBheWxvYWRcbiAgKi9cbiAgZW1pdChldmVudCwgLi4uZGF0YSkge1xuICAgIGlmICh0aGlzLnJlYWR5U3RhdGUgIT09IFNvY2tldElPLk9QRU4pIHtcbiAgICAgIHRocm93IG5ldyBFcnJvcignU29ja2V0SU8gaXMgYWxyZWFkeSBpbiBDTE9TSU5HIG9yIENMT1NFRCBzdGF0ZScpO1xuICAgIH1cblxuICAgIGNvbnN0IG1lc3NhZ2VFdmVudCA9IGNyZWF0ZU1lc3NhZ2VFdmVudCh7XG4gICAgICB0eXBlOiBldmVudCxcbiAgICAgIG9yaWdpbjogdGhpcy51cmwsXG4gICAgICBkYXRhXG4gICAgfSk7XG5cbiAgICBjb25zdCBzZXJ2ZXIgPSBuZXR3b3JrQnJpZGdlLnNlcnZlckxvb2t1cCh0aGlzLnVybCk7XG5cbiAgICBpZiAoc2VydmVyKSB7XG4gICAgICBzZXJ2ZXIuZGlzcGF0Y2hFdmVudChtZXNzYWdlRXZlbnQsIC4uLmRhdGEpO1xuICAgIH1cbiAgfVxuXG4gIC8qXG4gICogU3VibWl0cyBhICdtZXNzYWdlJyBldmVudCB0byB0aGUgc2VydmVyLlxuICAqXG4gICogU2hvdWxkIGJlaGF2ZSBleGFjdGx5IGxpa2UgV2ViU29ja2V0I3NlbmRcbiAgKlxuICAqIGh0dHBzOi8vZ2l0aHViLmNvbS9zb2NrZXRpby9zb2NrZXQuaW8tY2xpZW50L2Jsb2IvbWFzdGVyL2xpYi9zb2NrZXQuanMjTDExM1xuICAqL1xuICBzZW5kKGRhdGEpIHtcbiAgICB0aGlzLmVtaXQoJ21lc3NhZ2UnLCBkYXRhKTtcbiAgfVxuXG4gIC8qXG4gICogRm9yIGJyb2FkY2FzdGluZyBldmVudHMgdG8gb3RoZXIgY29ubmVjdGVkIHNvY2tldHMuXG4gICpcbiAgKiBlLmcuIHNvY2tldC5icm9hZGNhc3QuZW1pdCgnaGkhJyk7XG4gICogZS5nLiBzb2NrZXQuYnJvYWRjYXN0LnRvKCdteS1yb29tJykuZW1pdCgnaGkhJyk7XG4gICovXG4gIGdldCBicm9hZGNhc3QoKSB7XG4gICAgaWYgKHRoaXMucmVhZHlTdGF0ZSAhPT0gU29ja2V0SU8uT1BFTikge1xuICAgICAgdGhyb3cgbmV3IEVycm9yKCdTb2NrZXRJTyBpcyBhbHJlYWR5IGluIENMT1NJTkcgb3IgQ0xPU0VEIHN0YXRlJyk7XG4gICAgfVxuXG4gICAgY29uc3Qgc2VsZiA9IHRoaXM7XG4gICAgY29uc3Qgc2VydmVyID0gbmV0d29ya0JyaWRnZS5zZXJ2ZXJMb29rdXAodGhpcy51cmwpO1xuICAgIGlmICghc2VydmVyKSB7XG4gICAgICB0aHJvdyBuZXcgRXJyb3IoYFNvY2tldElPIGNhbiBub3QgZmluZCBhIHNlcnZlciBhdCB0aGUgc3BlY2lmaWVkIFVSTCAoJHt0aGlzLnVybH0pYCk7XG4gICAgfVxuXG4gICAgcmV0dXJuIHtcbiAgICAgIGVtaXQoZXZlbnQsIGRhdGEpIHtcbiAgICAgICAgc2VydmVyLmVtaXQoZXZlbnQsIGRhdGEsIHsgd2Vic29ja2V0czogbmV0d29ya0JyaWRnZS53ZWJzb2NrZXRzTG9va3VwKHNlbGYudXJsLCBudWxsLCBzZWxmKSB9KTtcbiAgICAgIH0sXG4gICAgICB0byhyb29tKSB7XG4gICAgICAgIHJldHVybiBzZXJ2ZXIudG8ocm9vbSwgc2VsZik7XG4gICAgICB9LFxuICAgICAgaW4ocm9vbSkge1xuICAgICAgICByZXR1cm4gc2VydmVyLmluKHJvb20sIHNlbGYpO1xuICAgICAgfVxuICAgIH07XG4gIH1cblxuICAvKlxuICAqIEZvciByZWdpc3RlcmluZyBldmVudHMgdG8gYmUgcmVjZWl2ZWQgZnJvbSB0aGUgc2VydmVyXG4gICovXG4gIG9uKHR5cGUsIGNhbGxiYWNrKSB7XG4gICAgdGhpcy5hZGRFdmVudExpc3RlbmVyKHR5cGUsIGNhbGxiYWNrKTtcbiAgfVxuXG4gIC8qXG4gICAqIEpvaW4gYSByb29tIG9uIGEgc2VydmVyXG4gICAqXG4gICAqIGh0dHA6Ly9zb2NrZXQuaW8vZG9jcy9yb29tcy1hbmQtbmFtZXNwYWNlcy8jam9pbmluZy1hbmQtbGVhdmluZ1xuICAgKi9cbiAgam9pbihyb29tKSB7XG4gICAgbmV0d29ya0JyaWRnZS5hZGRNZW1iZXJzaGlwVG9Sb29tKHRoaXMsIHJvb20pO1xuICB9XG5cbiAgLypcbiAgICogR2V0IHRoZSB3ZWJzb2NrZXQgdG8gbGVhdmUgdGhlIHJvb21cbiAgICpcbiAgICogaHR0cDovL3NvY2tldC5pby9kb2NzL3Jvb21zLWFuZC1uYW1lc3BhY2VzLyNqb2luaW5nLWFuZC1sZWF2aW5nXG4gICAqL1xuICBsZWF2ZShyb29tKSB7XG4gICAgbmV0d29ya0JyaWRnZS5yZW1vdmVNZW1iZXJzaGlwRnJvbVJvb20odGhpcywgcm9vbSk7XG4gIH1cblxuICAvKlxuICAgKiBJbnZva2VzIGFsbCBsaXN0ZW5lciBmdW5jdGlvbnMgdGhhdCBhcmUgbGlzdGVuaW5nIHRvIHRoZSBnaXZlbiBldmVudC50eXBlIHByb3BlcnR5LiBFYWNoXG4gICAqIGxpc3RlbmVyIHdpbGwgYmUgcGFzc2VkIHRoZSBldmVudCBhcyB0aGUgZmlyc3QgYXJndW1lbnQuXG4gICAqXG4gICAqIEBwYXJhbSB7b2JqZWN0fSBldmVudCAtIGV2ZW50IG9iamVjdCB3aGljaCB3aWxsIGJlIHBhc3NlZCB0byBhbGwgbGlzdGVuZXJzIG9mIHRoZSBldmVudC50eXBlIHByb3BlcnR5XG4gICAqL1xuICBkaXNwYXRjaEV2ZW50KGV2ZW50LCAuLi5jdXN0b21Bcmd1bWVudHMpIHtcbiAgICBjb25zdCBldmVudE5hbWUgPSBldmVudC50eXBlO1xuICAgIGNvbnN0IGxpc3RlbmVycyA9IHRoaXMubGlzdGVuZXJzW2V2ZW50TmFtZV07XG5cbiAgICBpZiAoIUFycmF5LmlzQXJyYXkobGlzdGVuZXJzKSkge1xuICAgICAgcmV0dXJuIGZhbHNlO1xuICAgIH1cblxuICAgIGxpc3RlbmVycy5mb3JFYWNoKChsaXN0ZW5lcikgPT4ge1xuICAgICAgaWYgKGN1c3RvbUFyZ3VtZW50cy5sZW5ndGggPiAwKSB7XG4gICAgICAgIGxpc3RlbmVyLmFwcGx5KHRoaXMsIGN1c3RvbUFyZ3VtZW50cyk7XG4gICAgICB9IGVsc2Uge1xuICAgICAgICAvLyBSZWd1bGFyIFdlYlNvY2tldHMgZXhwZWN0IGEgTWVzc2FnZUV2ZW50IGJ1dCBTb2NrZXRpby5pbyBqdXN0IHdhbnRzIHJhdyBkYXRhXG4gICAgICAgIC8vICBwYXlsb2FkIGluc3RhbmNlb2YgTWVzc2FnZUV2ZW50IHdvcmtzLCBidXQgeW91IGNhbid0IGlzbnRhbmNlIG9mIE5vZGVFdmVudFxuICAgICAgICAvLyAgZm9yIG5vdyB3ZSBkZXRlY3QgaWYgdGhlIG91dHB1dCBoYXMgZGF0YSBkZWZpbmVkIG9uIGl0XG4gICAgICAgIGxpc3RlbmVyLmNhbGwodGhpcywgZXZlbnQuZGF0YSA/IGV2ZW50LmRhdGEgOiBldmVudCk7XG4gICAgICB9XG4gICAgfSk7XG4gIH1cbn1cblxuU29ja2V0SU8uQ09OTkVDVElORyA9IDA7XG5Tb2NrZXRJTy5PUEVOID0gMTtcblNvY2tldElPLkNMT1NJTkcgPSAyO1xuU29ja2V0SU8uQ0xPU0VEID0gMztcblxuLypcbiogU3RhdGljIGNvbnN0cnVjdG9yIG1ldGhvZHMgZm9yIHRoZSBJTyBTb2NrZXRcbiovXG5jb25zdCBJTyA9IGZ1bmN0aW9uIGlvQ29uc3RydWN0b3IodXJsKSB7XG4gIHJldHVybiBuZXcgU29ja2V0SU8odXJsKTtcbn07XG5cbi8qXG4qIEFsaWFzIHRoZSByYXcgSU8oKSBjb25zdHJ1Y3RvclxuKi9cbklPLmNvbm5lY3QgPSBmdW5jdGlvbiBpb0Nvbm5lY3QodXJsKSB7XG4gIC8qIGVzbGludC1kaXNhYmxlIG5ldy1jYXAgKi9cbiAgcmV0dXJuIElPKHVybCk7XG4gIC8qIGVzbGludC1lbmFibGUgbmV3LWNhcCAqL1xufTtcblxuZXhwb3J0IGRlZmF1bHQgSU87XG5cblxuXG4vLyBXRUJQQUNLIEZPT1RFUiAvL1xuLy8gLi9zcmMvc29ja2V0LWlvLmpzIl0sInNvdXJjZVJvb3QiOiIifQ==
 
 /***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var div = typeof document !== "undefined" && document.createElement("div");
-
-function isReallyNaN(val) {
-    return val !== val;
-}
-
-function isDOMNode(obj) {
-    var success = false;
-
-    try {
-        obj.appendChild(div);
-        success = div.parentNode === obj;
-    } catch (e) {
-        return false;
-    } finally {
-        try {
-            obj.removeChild(div);
-        } catch (e) {
-            // Remove failed, not much we can do about that
-        }
-    }
-
-    return success;
-}
-
-function isElement(obj) {
-    return div && obj && obj.nodeType === 1 && isDOMNode(obj);
-}
-
-var deepEqual = module.exports = function deepEqual(a, b) {
-    if (typeof a !== "object" || typeof b !== "object") {
-        return isReallyNaN(a) && isReallyNaN(b) || a === b;
-    }
-
-    if (isElement(a) || isElement(b)) {
-        return a === b;
-    }
-
-    if (a === b) {
-        return true;
-    }
-
-    if ((a === null && b !== null) || (a !== null && b === null)) {
-        return false;
-    }
-
-    if (a instanceof RegExp && b instanceof RegExp) {
-        return (a.source === b.source) && (a.global === b.global) &&
-            (a.ignoreCase === b.ignoreCase) && (a.multiline === b.multiline);
-    }
-
-    if (a instanceof Error && b instanceof Error) {
-        return a === b;
-    }
-
-    var aString = Object.prototype.toString.call(a);
-    if (aString !== Object.prototype.toString.call(b)) {
-        return false;
-    }
-
-    if (aString === "[object Date]") {
-        return a.valueOf() === b.valueOf();
-    }
-
-    var prop;
-    var aLength = 0;
-    var bLength = 0;
-
-    if (aString === "[object Array]" && a.length !== b.length) {
-        return false;
-    }
-
-    for (prop in a) {
-        if (Object.prototype.hasOwnProperty.call(a, prop)) {
-            aLength += 1;
-
-            if (!(prop in b)) {
-                return false;
-            }
-
-            // allow alternative function for recursion
-            if (!(arguments[2] || deepEqual)(a[prop], b[prop])) {
-                return false;
-            }
-        }
-    }
-
-    for (prop in b) {
-        if (Object.prototype.hasOwnProperty.call(b, prop)) {
-            bLength += 1;
-        }
-    }
-
-    return aLength === bLength;
-};
-
-deepEqual.use = function (match) {
-    return function deepEqual$matcher(a, b) {
-        // If both are matchers they must be the same instance in order to be considered equal
-        // If we didn't do that we would end up running one matcher against the other
-        if (match.isMatcher(a)) {
-            if (match.isMatcher(b)) {
-                return a === b;
-            }
-
-            return a.test(b);
-        }
-
-        return deepEqual(a, b, deepEqual$matcher);
-    };
-};
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var formatio = __webpack_require__(117);
-
-var formatter = formatio.configure({
-    quoteStrings: false,
-    limitChildrenCount: 250
-});
-
-module.exports = function format() {
-    return formatter.ascii.apply(formatter, arguments);
-};
-
-
-/***/ }),
-/* 10 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3242,7 +2416,7 @@ function isBuffer(b) {
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var util = __webpack_require__(160);
+var util = __webpack_require__(162);
 var hasOwn = Object.prototype.hasOwnProperty;
 var pSlice = Array.prototype.slice;
 var functionsHaveNames = (function () {
@@ -3668,73 +2842,12 @@ var objectKeys = Object.keys || function (obj) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 11 */
-/***/ (function(module, exports) {
-
-module.exports = {
-
-  /**
-   * ### config.includeStack
-   *
-   * User configurable property, influences whether stack trace
-   * is included in Assertion error message. Default of false
-   * suppresses stack trace in the error message.
-   *
-   *     chai.config.includeStack = true;  // enable stack on error
-   *
-   * @param {Boolean}
-   * @api public
-   */
-
-   includeStack: false,
-
-  /**
-   * ### config.showDiff
-   *
-   * User configurable property, influences whether or not
-   * the `showDiff` flag should be included in the thrown
-   * AssertionErrors. `false` will always be `false`; `true`
-   * will be true when the assertion has requested a diff
-   * be shown.
-   *
-   * @param {Boolean}
-   * @api public
-   */
-
-  showDiff: true,
-
-  /**
-   * ### config.truncateThreshold
-   *
-   * User configurable property, sets length threshold for actual and
-   * expected values in assertion errors. If this threshold is exceeded, for
-   * example for large data structures, the value is replaced with something
-   * like `[ Array(3) ]` or `{ Object (prop1, prop2) }`.
-   *
-   * Set it to zero if you want to disable truncating altogether.
-   *
-   * This is especially userful when doing assertions on arrays: having this
-   * set to a reasonable large value makes the failure messages readily
-   * inspectable.
-   *
-   *     chai.config.truncateThreshold = 0;  // disable truncating
-   *
-   * @param {Number}
-   * @api public
-   */
-
-  truncateThreshold: 40
-
-};
-
-
-/***/ }),
-/* 12 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(true)
-		module.exports = factory(__webpack_require__(38));
+		module.exports = factory(__webpack_require__(39));
 	else if(typeof define === 'function' && define.amd)
 		define(["axios"], factory);
 	else if(typeof exports === 'object')
@@ -3988,7 +3101,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var response = new Response(this, res);
 	      (0, _settle2.default)(this.resolve, this.reject, response);
 	      return new Promise(function (resolve) {
-	        setTimeout(function () {
+	        moxios.wait(function () {
 	          resolve(response);
 	        });
 	      });
@@ -4749,7 +3862,1856 @@ return /******/ (function(modules) { // webpackBootstrap
 //# sourceMappingURL=moxios.js.map
 
 /***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var match = __webpack_require__(6);
+var deepEqual = __webpack_require__(12);
+var deprecated = __webpack_require__(59);
+
+function exposeCoreUtils(target, utils) {
+    var keys = Object.keys(utils);
+
+    keys.forEach(function (key) {
+        var value = utils[key];
+
+        // allow deepEqual to check equality of matchers through dependency injection. Otherwise we get a circular
+        // dependency
+        if (key === "deepEqual") {
+            value = deepEqual.use(match);
+        }
+        if (typeof value === "function") {
+            value = deprecated.wrap(value, deprecated.defaultMsg(key));
+        }
+        target[key] = value;
+    });
+}
+
+function exposeEventTarget(target, eventTarget) {
+    var keys = Object.keys(eventTarget);
+
+    keys.forEach(function (key) {
+        target[key] = deprecated.wrap(eventTarget[key], deprecated.defaultMsg("EventTarget"));
+    });
+}
+
+// Expose internal utilities on `sinon` global for backwards compatibility.
+exposeCoreUtils(exports, __webpack_require__(139));
+
+exports.assert = __webpack_require__(28);
+exports.collection = __webpack_require__(53);
+exports.match = match;
+exports.spy = __webpack_require__(17);
+exports.spyCall = __webpack_require__(21);
+exports.stub = __webpack_require__(22);
+exports.mock = __webpack_require__(55);
+exports.sandbox = __webpack_require__(133);
+exports.expectation = __webpack_require__(54);
+exports.createStubInstance = __webpack_require__(22).createStubInstance;
+
+var fakeTimers = __webpack_require__(33);
+exports.useFakeTimers = fakeTimers.useFakeTimers;
+exports.clock = fakeTimers.clock;
+exports.timers = fakeTimers.timers;
+
+var event = __webpack_require__(63);
+exports.Event = deprecated.wrap(event.Event, deprecated.defaultMsg("Event"));
+exports.CustomEvent = deprecated.wrap(event.CustomEvent, deprecated.defaultMsg("CustomEvent"));
+exports.ProgressEvent = deprecated.wrap(event.ProgressEvent, deprecated.defaultMsg("ProgressEvent"));
+exports.EventTarget = {};
+exposeEventTarget(exports.EventTarget, event.EventTarget);
+
+var fakeXhr = __webpack_require__(34);
+exports.xhr = fakeXhr.xhr;
+exports.FakeXMLHttpRequest = fakeXhr.FakeXMLHttpRequest;
+exports.useFakeXMLHttpRequest = fakeXhr.useFakeXMLHttpRequest;
+
+exports.fakeServer = __webpack_require__(32);
+exports.fakeServerWithClock = __webpack_require__(64);
+
+var behavior = __webpack_require__(52);
+
+exports.addBehavior = function (name, fn) {
+    behavior.addBehavior(exports.stub, name, fn);
+};
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var deepEqual = __webpack_require__(12).use(match); // eslint-disable-line no-use-before-define
+var every = __webpack_require__(60);
+var functionName = __webpack_require__(18);
+var iterableToString = __webpack_require__(61);
+var typeOf = __webpack_require__(31);
+var valueToString = __webpack_require__(8);
+
+var indexOf = Array.prototype.indexOf;
+
+function assertType(value, type, name) {
+    var actual = typeOf(value);
+    if (actual !== type) {
+        throw new TypeError("Expected type of " + name + " to be " +
+            type + ", but was " + actual);
+    }
+}
+
+var matcher = {
+    toString: function () {
+        return this.message;
+    }
+};
+
+function isMatcher(object) {
+    return matcher.isPrototypeOf(object);
+}
+
+function matchObject(expectation, actual) {
+    if (actual === null || actual === undefined) {
+        return false;
+    }
+
+    return Object.keys(expectation).every(function (key) {
+        var exp = expectation[key];
+        var act = actual[key];
+
+        if (isMatcher(exp)) {
+            if (!exp.test(act)) {
+                return false;
+            }
+        } else if (typeOf(exp) === "object") {
+            if (!matchObject(exp, act)) {
+                return false;
+            }
+        } else if (!deepEqual(exp, act)) {
+            return false;
+        }
+
+        return true;
+    });
+}
+
+var TYPE_MAP = {
+    "function": function (m, expectation, message) {
+        m.test = expectation;
+        m.message = message || "match(" + functionName(expectation) + ")";
+    },
+    number: function (m, expectation) {
+        m.test = function (actual) {
+            // we need type coercion here
+            return expectation == actual; // eslint-disable-line eqeqeq
+        };
+    },
+    object: function (m, expectation) {
+        var array = [];
+
+        if (typeof expectation.test === "function") {
+            m.test = function (actual) {
+                return expectation.test(actual) === true;
+            };
+            m.message = "match(" + functionName(expectation.test) + ")";
+            return m;
+        }
+
+        array = Object.keys(expectation).map(function (key) {
+            return key + ": " + valueToString(expectation[key]);
+        });
+
+        m.test = function (actual) {
+            return matchObject(expectation, actual);
+        };
+        m.message = "match(" + array.join(", ") + ")";
+
+        return m;
+    },
+    regexp: function (m, expectation) {
+        m.test = function (actual) {
+            return typeof actual === "string" && expectation.test(actual);
+        };
+    },
+    string: function (m, expectation) {
+        m.test = function (actual) {
+            return typeof actual === "string" && actual.indexOf(expectation) !== -1;
+        };
+        m.message = "match(\"" + expectation + "\")";
+    }
+};
+
+function match(expectation, message) {
+    var m = Object.create(matcher);
+    var type = typeOf(expectation);
+
+    if (type in TYPE_MAP) {
+        TYPE_MAP[type](m, expectation, message);
+    } else {
+        m.test = function (actual) {
+            return deepEqual(expectation, actual);
+        };
+    }
+
+    if (!m.message) {
+        m.message = "match(" + valueToString(expectation) + ")";
+    }
+
+    return m;
+}
+
+matcher.or = function (m2) {
+    if (!arguments.length) {
+        throw new TypeError("Matcher expected");
+    } else if (!isMatcher(m2)) {
+        m2 = match(m2);
+    }
+    var m1 = this;
+    var or = Object.create(matcher);
+    or.test = function (actual) {
+        return m1.test(actual) || m2.test(actual);
+    };
+    or.message = m1.message + ".or(" + m2.message + ")";
+    return or;
+};
+
+matcher.and = function (m2) {
+    if (!arguments.length) {
+        throw new TypeError("Matcher expected");
+    } else if (!isMatcher(m2)) {
+        m2 = match(m2);
+    }
+    var m1 = this;
+    var and = Object.create(matcher);
+    and.test = function (actual) {
+        return m1.test(actual) && m2.test(actual);
+    };
+    and.message = m1.message + ".and(" + m2.message + ")";
+    return and;
+};
+
+match.isMatcher = isMatcher;
+
+match.any = match(function () {
+    return true;
+}, "any");
+
+match.defined = match(function (actual) {
+    return actual !== null && actual !== undefined;
+}, "defined");
+
+match.truthy = match(function (actual) {
+    return !!actual;
+}, "truthy");
+
+match.falsy = match(function (actual) {
+    return !actual;
+}, "falsy");
+
+match.same = function (expectation) {
+    return match(function (actual) {
+        return expectation === actual;
+    }, "same(" + valueToString(expectation) + ")");
+};
+
+match.typeOf = function (type) {
+    assertType(type, "string", "type");
+    return match(function (actual) {
+        return typeOf(actual) === type;
+    }, "typeOf(\"" + type + "\")");
+};
+
+match.instanceOf = function (type) {
+    assertType(type, "function", "type");
+    return match(function (actual) {
+        return actual instanceof type;
+    }, "instanceOf(" + functionName(type) + ")");
+};
+
+function createPropertyMatcher(propertyTest, messagePrefix) {
+    return function (property, value) {
+        assertType(property, "string", "property");
+        var onlyProperty = arguments.length === 1;
+        var message = messagePrefix + "(\"" + property + "\"";
+        if (!onlyProperty) {
+            message += ", " + valueToString(value);
+        }
+        message += ")";
+        return match(function (actual) {
+            if (actual === undefined || actual === null ||
+                    !propertyTest(actual, property)) {
+                return false;
+            }
+            return onlyProperty || deepEqual(value, actual[property]);
+        }, message);
+    };
+}
+
+match.has = createPropertyMatcher(function (actual, property) {
+    if (typeof actual === "object") {
+        return property in actual;
+    }
+    return actual[property] !== undefined;
+}, "has");
+
+match.hasOwn = createPropertyMatcher(function (actual, property) {
+    return actual.hasOwnProperty(property);
+}, "hasOwn");
+
+match.array = match.typeOf("array");
+
+match.array.deepEquals = function (expectation) {
+    return match(function (actual) {
+        // Comparing lengths is the fastest way to spot a difference before iterating through every item
+        var sameLength = actual.length === expectation.length;
+        return typeOf(actual) === "array" && sameLength && every(actual, function (element, index) {
+            return expectation[index] === element;
+        });
+    }, "deepEquals([" + iterableToString(expectation) + "])");
+};
+
+match.array.startsWith = function (expectation) {
+    return match(function (actual) {
+        return typeOf(actual) === "array" && every(expectation, function (expectedElement, index) {
+            return actual[index] === expectedElement;
+        });
+    }, "startsWith([" + iterableToString(expectation) + "])");
+};
+
+match.array.endsWith = function (expectation) {
+    return match(function (actual) {
+        // This indicates the index in which we should start matching
+        var offset = actual.length - expectation.length;
+
+        return typeOf(actual) === "array" && every(expectation, function (expectedElement, index) {
+            return actual[offset + index] === expectedElement;
+        });
+    }, "endsWith([" + iterableToString(expectation) + "])");
+};
+
+match.array.contains = function (expectation) {
+    return match(function (actual) {
+        return typeOf(actual) === "array" && every(expectation, function (expectedElement) {
+            return indexOf.call(actual, expectedElement) !== -1;
+        });
+    }, "contains([" + iterableToString(expectation) + "])");
+};
+
+match.map = match.typeOf("map");
+
+match.map.deepEquals = function mapDeepEquals(expectation) {
+    return match(function (actual) {
+        // Comparing lengths is the fastest way to spot a difference before iterating through every item
+        var sameLength = actual.size === expectation.size;
+        return typeOf(actual) === "map" && sameLength && every(actual, function (element, key) {
+            return expectation.has(key) && expectation.get(key) === element;
+        });
+    }, "deepEquals(Map[" + iterableToString(expectation) + "])");
+};
+
+match.map.contains = function mapContains(expectation) {
+    return match(function (actual) {
+        return typeOf(actual) === "map" && every(expectation, function (element, key) {
+            return actual.has(key) && actual.get(key) === element;
+        });
+    }, "contains(Map[" + iterableToString(expectation) + "])");
+};
+
+match.set = match.typeOf("set");
+
+match.set.deepEquals = function setDeepEquals(expectation) {
+    return match(function (actual) {
+        // Comparing lengths is the fastest way to spot a difference before iterating through every item
+        var sameLength = actual.size === expectation.size;
+        return typeOf(actual) === "set" && sameLength && every(actual, function (element) {
+            return expectation.has(element);
+        });
+    }, "deepEquals(Set[" + iterableToString(expectation) + "])");
+};
+
+match.set.contains = function setContains(expectation) {
+    return match(function (actual) {
+        return typeOf(actual) === "set" && every(expectation, function (element) {
+            return actual.has(element);
+        });
+    }, "contains(Set[" + iterableToString(expectation) + "])");
+};
+
+match.bool = match.typeOf("boolean");
+match.number = match.typeOf("number");
+match.string = match.typeOf("string");
+match.object = match.typeOf("object");
+match.func = match.typeOf("function");
+match.regexp = match.typeOf("regexp");
+match.date = match.typeOf("date");
+match.symbol = match.typeOf("symbol");
+
+module.exports = match;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+// Adapted from https://developer.mozilla.org/en/docs/ECMAScript_DontEnum_attribute#JScript_DontEnum_Bug
+var hasDontEnumBug = (function () {
+    var obj = {
+        constructor: function () {
+            return "0";
+        },
+        toString: function () {
+            return "1";
+        },
+        valueOf: function () {
+            return "2";
+        },
+        toLocaleString: function () {
+            return "3";
+        },
+        prototype: function () {
+            return "4";
+        },
+        isPrototypeOf: function () {
+            return "5";
+        },
+        propertyIsEnumerable: function () {
+            return "6";
+        },
+        hasOwnProperty: function () {
+            return "7";
+        },
+        length: function () {
+            return "8";
+        },
+        unique: function () {
+            return "9";
+        }
+    };
+
+    var result = [];
+    for (var prop in obj) {
+        if (obj.hasOwnProperty(prop)) {
+            result.push(obj[prop]());
+        }
+    }
+    return result.join("") !== "0123456789";
+})();
+
+/* Public: Extend target in place with all (own) properties from sources in-order. Thus, last source will
+ *         override properties in previous sources.
+ *
+ * target - The Object to extend
+ * sources - Objects to copy properties from.
+ *
+ * Returns the extended target
+ */
+module.exports = function extend(target /*, sources */) {
+    var sources = Array.prototype.slice.call(arguments, 1);
+    var source, i, prop;
+
+    for (i = 0; i < sources.length; i++) {
+        source = sources[i];
+
+        for (prop in source) {
+            if (source.hasOwnProperty(prop)) {
+                target[prop] = source[prop];
+            }
+        }
+
+        // Make sure we copy (own) toString method even when in JScript with DontEnum bug
+        // See https://developer.mozilla.org/en/docs/ECMAScript_DontEnum_attribute#JScript_DontEnum_Bug
+        if (hasDontEnumBug && source.hasOwnProperty("toString") && source.toString !== target.toString) {
+            target.toString = source.toString;
+        }
+    }
+
+    return target;
+};
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function (value) {
+    if (value && value.toString) {
+        return value.toString();
+    }
+    return String(value);
+};
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/*istanbul ignore start*/
+
+exports.__esModule = true;
+exports['default'] = /*istanbul ignore end*/Diff;
+function Diff() {}
+
+Diff.prototype = { /*istanbul ignore start*/
+  /*istanbul ignore end*/diff: function diff(oldString, newString) {
+    /*istanbul ignore start*/var /*istanbul ignore end*/options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+    var callback = options.callback;
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    }
+    this.options = options;
+
+    var self = this;
+
+    function done(value) {
+      if (callback) {
+        setTimeout(function () {
+          callback(undefined, value);
+        }, 0);
+        return true;
+      } else {
+        return value;
+      }
+    }
+
+    // Allow subclasses to massage the input prior to running
+    oldString = this.castInput(oldString);
+    newString = this.castInput(newString);
+
+    oldString = this.removeEmpty(this.tokenize(oldString));
+    newString = this.removeEmpty(this.tokenize(newString));
+
+    var newLen = newString.length,
+        oldLen = oldString.length;
+    var editLength = 1;
+    var maxEditLength = newLen + oldLen;
+    var bestPath = [{ newPos: -1, components: [] }];
+
+    // Seed editLength = 0, i.e. the content starts with the same values
+    var oldPos = this.extractCommon(bestPath[0], newString, oldString, 0);
+    if (bestPath[0].newPos + 1 >= newLen && oldPos + 1 >= oldLen) {
+      // Identity per the equality and tokenizer
+      return done([{ value: this.join(newString), count: newString.length }]);
+    }
+
+    // Main worker method. checks all permutations of a given edit length for acceptance.
+    function execEditLength() {
+      for (var diagonalPath = -1 * editLength; diagonalPath <= editLength; diagonalPath += 2) {
+        var basePath = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
+        var addPath = bestPath[diagonalPath - 1],
+            removePath = bestPath[diagonalPath + 1],
+            _oldPos = (removePath ? removePath.newPos : 0) - diagonalPath;
+        if (addPath) {
+          // No one else is going to attempt to use this value, clear it
+          bestPath[diagonalPath - 1] = undefined;
+        }
+
+        var canAdd = addPath && addPath.newPos + 1 < newLen,
+            canRemove = removePath && 0 <= _oldPos && _oldPos < oldLen;
+        if (!canAdd && !canRemove) {
+          // If this path is a terminal then prune
+          bestPath[diagonalPath] = undefined;
+          continue;
+        }
+
+        // Select the diagonal that we want to branch from. We select the prior
+        // path whose position in the new string is the farthest from the origin
+        // and does not pass the bounds of the diff graph
+        if (!canAdd || canRemove && addPath.newPos < removePath.newPos) {
+          basePath = clonePath(removePath);
+          self.pushComponent(basePath.components, undefined, true);
+        } else {
+          basePath = addPath; // No need to clone, we've pulled it from the list
+          basePath.newPos++;
+          self.pushComponent(basePath.components, true, undefined);
+        }
+
+        _oldPos = self.extractCommon(basePath, newString, oldString, diagonalPath);
+
+        // If we have hit the end of both strings, then we are done
+        if (basePath.newPos + 1 >= newLen && _oldPos + 1 >= oldLen) {
+          return done(buildValues(self, basePath.components, newString, oldString, self.useLongestToken));
+        } else {
+          // Otherwise track this path as a potential candidate and continue.
+          bestPath[diagonalPath] = basePath;
+        }
+      }
+
+      editLength++;
+    }
+
+    // Performs the length of edit iteration. Is a bit fugly as this has to support the
+    // sync and async mode which is never fun. Loops over execEditLength until a value
+    // is produced.
+    if (callback) {
+      (function exec() {
+        setTimeout(function () {
+          // This should not happen, but we want to be safe.
+          /* istanbul ignore next */
+          if (editLength > maxEditLength) {
+            return callback();
+          }
+
+          if (!execEditLength()) {
+            exec();
+          }
+        }, 0);
+      })();
+    } else {
+      while (editLength <= maxEditLength) {
+        var ret = execEditLength();
+        if (ret) {
+          return ret;
+        }
+      }
+    }
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/pushComponent: function pushComponent(components, added, removed) {
+    var last = components[components.length - 1];
+    if (last && last.added === added && last.removed === removed) {
+      // We need to clone here as the component clone operation is just
+      // as shallow array clone
+      components[components.length - 1] = { count: last.count + 1, added: added, removed: removed };
+    } else {
+      components.push({ count: 1, added: added, removed: removed });
+    }
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/extractCommon: function extractCommon(basePath, newString, oldString, diagonalPath) {
+    var newLen = newString.length,
+        oldLen = oldString.length,
+        newPos = basePath.newPos,
+        oldPos = newPos - diagonalPath,
+        commonCount = 0;
+    while (newPos + 1 < newLen && oldPos + 1 < oldLen && this.equals(newString[newPos + 1], oldString[oldPos + 1])) {
+      newPos++;
+      oldPos++;
+      commonCount++;
+    }
+
+    if (commonCount) {
+      basePath.components.push({ count: commonCount });
+    }
+
+    basePath.newPos = newPos;
+    return oldPos;
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/equals: function equals(left, right) {
+    return left === right;
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/removeEmpty: function removeEmpty(array) {
+    var ret = [];
+    for (var i = 0; i < array.length; i++) {
+      if (array[i]) {
+        ret.push(array[i]);
+      }
+    }
+    return ret;
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/castInput: function castInput(value) {
+    return value;
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/tokenize: function tokenize(value) {
+    return value.split('');
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/join: function join(chars) {
+    return chars.join('');
+  }
+};
+
+function buildValues(diff, components, newString, oldString, useLongestToken) {
+  var componentPos = 0,
+      componentLen = components.length,
+      newPos = 0,
+      oldPos = 0;
+
+  for (; componentPos < componentLen; componentPos++) {
+    var component = components[componentPos];
+    if (!component.removed) {
+      if (!component.added && useLongestToken) {
+        var value = newString.slice(newPos, newPos + component.count);
+        value = value.map(function (value, i) {
+          var oldValue = oldString[oldPos + i];
+          return oldValue.length > value.length ? oldValue : value;
+        });
+
+        component.value = diff.join(value);
+      } else {
+        component.value = diff.join(newString.slice(newPos, newPos + component.count));
+      }
+      newPos += component.count;
+
+      // Common case
+      if (!component.added) {
+        oldPos += component.count;
+      }
+    } else {
+      component.value = diff.join(oldString.slice(oldPos, oldPos + component.count));
+      oldPos += component.count;
+
+      // Reverse add and remove so removes are output first to match common convention
+      // The diffing algorithm is tied to add then remove output and this is the simplest
+      // route to get the desired output with minimal overhead.
+      if (componentPos && components[componentPos - 1].added) {
+        var tmp = components[componentPos - 1];
+        components[componentPos - 1] = components[componentPos];
+        components[componentPos] = tmp;
+      }
+    }
+  }
+
+  // Special case handle for when one terminal is ignored. For this case we merge the
+  // terminal into the prior string and drop the change.
+  var lastComponent = components[componentLen - 1];
+  if (componentLen > 1 && (lastComponent.added || lastComponent.removed) && diff.equals('', lastComponent.value)) {
+    components[componentLen - 2].value += lastComponent.value;
+    components.pop();
+  }
+
+  return components;
+}
+
+function clonePath(path) {
+  return { newPos: path.newPos, components: path.components.slice(0) };
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uL3NyYy9kaWZmL2Jhc2UuanMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7OzRDQUF3QixJO0FBQVQsU0FBUyxJQUFULEdBQWdCLENBQUU7O0FBRWpDLEtBQUssU0FBTCxHQUFpQixFO3lCQUNmLElBRGUsZ0JBQ1YsU0FEVSxFQUNDLFNBREQsRUFDMEI7NkJBQUEsSSx1QkFBZCxPQUFjLHlEQUFKLEVBQUk7O0FBQ3ZDLFFBQUksV0FBVyxRQUFRLFFBQXZCO0FBQ0EsUUFBSSxPQUFPLE9BQVAsS0FBbUIsVUFBdkIsRUFBbUM7QUFDakMsaUJBQVcsT0FBWDtBQUNBLGdCQUFVLEVBQVY7QUFDRDtBQUNELFNBQUssT0FBTCxHQUFlLE9BQWY7O0FBRUEsUUFBSSxPQUFPLElBQVg7O0FBRUEsYUFBUyxJQUFULENBQWMsS0FBZCxFQUFxQjtBQUNuQixVQUFJLFFBQUosRUFBYztBQUNaLG1CQUFXLFlBQVc7QUFBRSxtQkFBUyxTQUFULEVBQW9CLEtBQXBCO0FBQTZCLFNBQXJELEVBQXVELENBQXZEO0FBQ0EsZUFBTyxJQUFQO0FBQ0QsT0FIRCxNQUdPO0FBQ0wsZUFBTyxLQUFQO0FBQ0Q7QUFDRjs7O0FBR0QsZ0JBQVksS0FBSyxTQUFMLENBQWUsU0FBZixDQUFaO0FBQ0EsZ0JBQVksS0FBSyxTQUFMLENBQWUsU0FBZixDQUFaOztBQUVBLGdCQUFZLEtBQUssV0FBTCxDQUFpQixLQUFLLFFBQUwsQ0FBYyxTQUFkLENBQWpCLENBQVo7QUFDQSxnQkFBWSxLQUFLLFdBQUwsQ0FBaUIsS0FBSyxRQUFMLENBQWMsU0FBZCxDQUFqQixDQUFaOztBQUVBLFFBQUksU0FBUyxVQUFVLE1BQXZCO0FBQUEsUUFBK0IsU0FBUyxVQUFVLE1BQWxEO0FBQ0EsUUFBSSxhQUFhLENBQWpCO0FBQ0EsUUFBSSxnQkFBZ0IsU0FBUyxNQUE3QjtBQUNBLFFBQUksV0FBVyxDQUFDLEVBQUUsUUFBUSxDQUFDLENBQVgsRUFBYyxZQUFZLEVBQTFCLEVBQUQsQ0FBZjs7O0FBR0EsUUFB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LFVBQUwsQ0FBZ0IsS0FBaEIsQ0FBc0IsQ0FBdEIsQ0FBbkMsRUFBUDtBQUNEIiwiZmlsZSI6ImJhc2UuanMiLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBEaWZmKCkge31cblxuRGlmZi5wcm90b3R5cGUgPSB7XG4gIGRpZmYob2xkU3RyaW5nLCBuZXdTdHJpbmcsIG9wdGlvbnMgPSB7fSkge1xuICAgIGxldCBjYWxsYmFjayA9IG9wdGlvbnMuY2FsbGJhY2s7XG4gICAgaWYgKHR5cGVvZiBvcHRpb25zID09PSAnZnVuY3Rpb24nKSB7XG4gICAgICBjYWxsYmFjayA9IG9wdGlvbnM7XG4gICAgICBvcHRpb25zID0ge307XG4gICAgfVxuICAgIHRoaXMub3B0aW9ucyA9IG9wdGlvbnM7XG5cbiAgICBsZXQgc2VsZiA9IHRoaXM7XG5cbiAgICBmdW5jdGlvbiBkb25lKHZhbHVlKSB7XG4gICAgICBpZiAoY2FsbGJhY2spIHtcbiAgICAgICAgc2V0VGltZW91dChmdW5jdGlvbigpIHsgY2FsbGJhY2sodW5kZWZpbmVkLCB2YWx1ZSk7IH0sIDApO1xuICAgICAgICByZXR1cm4gdHJ1ZTtcbiAgICAgIH0gZWxzZSB7XG4gICAgICAgIHJldHVybiB2YWx1ZTtcbiAgICAgIH1cbiAgICB9XG5cbiAgICAvLyBBbGxvdyBzdWJjbGFzc2VzIHRvIG1hc3NhZ2UgdGhlIGlucHV0IHByaW9yIHRvIHJ1bm5pbmdcbiAgICBvbGRTdHJpbmcgPSB0aGlzLmNhc3RJbnB1dChvbGRTdHJpbmcpO1xuICAgIG5ld1N0cmluZyA9IHRoaXMuY2FzdElucHV0KG5ld1N0cmluZyk7XG5cbiAgICBvbGRTdHJpbmcgPSB0aGlzLnJlbW92ZUVtcHR5KHRoaXMudG9rZW5pemUob2xkU3RyaW5nKSk7XG4gICAgbmV3U3RyaW5nID0gdGhpcy5yZW1vdmVFbXB0eSh0aGlzLnRva2VuaXplKG5ld1N0cmluZykpO1xuXG4gICAgbGV0IG5ld0xlbiA9IG5ld1N0cmluZy5sZW5ndGgsIG9sZExlbiA9IG9sZFN0cmluZy5sZW5ndGg7XG4gICAgbGV0IGVkaXRMZW5ndGggPSAxO1xuICAgIGxldCBtYXhFZGl0TGVuZ3RoID0gbmV3TGVuICsgb2xkTGVuO1xuICAgIGxldCBiZXN0UGF0aCA9IFt7IG5ld1BvczogLTEsIGNvbXBvbmVudHM6IFtdIH1dO1xuXG4gICAgLy8gU2VlZCBlZGl0TGVuZ3RoID0gMCwgaS5lLiB0aGUgY29udGVudCBzdGFydHMgd2l0aCB0aGUgc2FtZSB2YWx1ZXNcbiAgICBsZXQgb2xkUG9zID0gdGhpcy5leHRyYWN0Q29tbW9uKGJlc3RQYXRoWzBdLCBuZXdTdHJpbmcsIG9sZFN0cmluZywgMCk7XG4gICAgaWYgKGJlc3RQYXRoWzBdLm5ld1BvcyArIDEgPj0gbmV3TGVuICYmIG9sZFBvcyArIDEgPj0gb2xkTGVuKSB7XG4gICAgICAvLyBJZGVudGl0eSBwZXIgdGhlIGVxdWFsaXR5IGFuZCB0b2tlbml6ZXJcbiAgICAgIHJldHVybiBkb25lKFt7dmFsdWU6IHRoaXMuam9pbihuZXdTdHJpbmcpLCBjb3VudDogbmV3U3RyaW5nLmxlbmd0aH1dKTtcbiAgICB9XG5cbiAgICAvLyBNYWluIHdvcmtlciBtZXRob2QuIGNoZWNrcyBhbGwgcGVybXV0YXRpb25zIG9mIGEgZ2l2ZW4gZWRpdCBsZW5ndGggZm9yIGFjY2VwdGFuY2UuXG4gICAgZnVuY3Rpb24gZXhlY0VkaXRMZW5ndGgoKSB7XG4gICAgICBmb3IgKGxldCBkaWFnb25hbFBhdGggPSAtMSAqIGVkaXRMZW5ndGg7IGRpYWdvbmFsUGF0aCA8PSBlZGl0TGVuZ3RoOyBkaWFnb25hbFBhdGggKz0gMikge1xuICAgICAgICBsZXQgYmFzZVBhdGg7XG4gICAgICAgIGxldCBhZGRQYXRoID0gYmVzdFBhdGhbZGlhZ29uYWxQYXRoIC0gMV0sXG4gICAgICAgICAgICByZW1vdmVQYXRoID0gYmVzdFBhdGhbZGlhZ29uYWxQYXRoICsgMV0sXG4gICAgICAgICAgICBvbGRQb3MgPSAocmVtb3ZlUGF0aCA/IHJlbW92ZVBhdGgubmV3UG9zIDogMCkgLSBkaWFnb25hbFBhdGg7XG4gICAgICAgIGlmIChhZGRQYXRoKSB7XG4gICAgICAgICAgLy8gTm8gb25lIGVsc2UgaXMgZ29pbmcgdG8gYXR0ZW1wdCB0byB1c2UgdGhpcyB2YWx1ZSwgY2xlYXIgaXRcbiAgICAgICAgICBiZXN0UGF0aFtkaWFnb25hbFBhdGggLSAxXSA9IHVuZGVmaW5lZDtcbiAgICAgICAgfVxuXG4gICAgICAgIGxldCBjYW5BZGQgPSBhZGRQYXRoICYmIGFkZFBhdGgubmV3UG9zICsgMSA8IG5ld0xlbixcbiAgICAgICAgICAgIGNhblJlbW92ZSA9IHJlbW92ZVBhdGggJiYgMCA8PSBvbGRQb3MgJiYgb2xkUG9zIDwgb2xkTGVuO1xuICAgICAgICBpZiAoIWNhbkFkZCAmJiAhY2FuUmVtb3ZlKSB7XG4gICAgICAgICAgLy8gSWYgdGhpcyBwYXRoIGlzIGEgdGVybWluYWwgdGhlbiBwcnVuZVxuICAgICAgICAgIGJlc3RQYXRoW2RpYWdvbmFsUGF0aF0gPSB1bmRlZmluZWQ7XG4gICAgICAgICAgY29udGludWU7XG4gICAgICAgIH1cblxuICAgICAgICAvLyBTZWxlY3QgdGhlIGRpYWdvbmFsIHRoYXQgd2Ugd2FudCB0byBicmFuY2ggZnJvbS4gV2Ugc2VsZWN0IHRoZSBwcmlvclxuICAgICAgICAvLyBwYXRoIHdob3NlIHBvc2l0aW9uIGluIHRoZSBuZXcgc3RyaW5nIGlzIHRoZSBmYXJ0aGVzdCBmcm9tIHRoZSBvcmlnaW5cbiAgICAgICAgLy8gYW5kIGRvZXMgbm90IHBhc3MgdGhlIGJvdW5kcyBvZiB0aGUgZGlmZiBncmFwaFxuICAgICAgICBpZiAoIWNhbkFkZCB8fCAoY2FuUmVtb3ZlICYmIGFkZFBhdGgubmV3UG9zIDwgcmVtb3ZlUGF0aC5uZXdQb3MpKSB7XG4gICAgICAgICAgYmFzZVBhdGggPSBjbG9uZVBhdGgocmVtb3ZlUGF0aCk7XG4gICAgICAgICAgc2VsZi5wdXNoQ29tcG9uZW50KGJhc2VQYXRoLmNvbXBvbmVudHMsIHVuZGVmaW5lZCwgdHJ1ZSk7XG4gICAgICAgIH0gZWxzZSB7XG4gICAgICAgICAgYmFzZVBhdGggPSBhZGRQYXRoOyAgIC8vIE5vIG5lZWQgdG8gY2xvbmUsIHdlJ3ZlIHB1bGxlZCBpdCBmcm9tIHRoZSBsaXN0XG4gICAgICAgICAgYmFzZVBhdGgubmV3UG9zKys7XG4gICAgICAgICAgc2VsZi5wdXNoQ29tcG9uZW50KGJhc2VQYXRoLmNvbXBvbmVudHMsIHRydWUsIHVuZGVmaW5lZCk7XG4gICAgICAgIH1cblxuICAgICAgICBvbGRQb3MgPSBzZWxmLmV4dHJhY3RDb21tb24oYmFzZVBhdGgsIG5ld1N0cmluZywgb2xkU3RyaW5nLCBkaWFnb25hbFBhdGgpO1xuXG4gICAgICAgIC8vIElmIHdlIGhhdmUgaGl0IHRoZSBlbmQgb2YgYm90aCBzdHJpbmdzLCB0aGVuIHdlIGFyZSBkb25lXG4gICAgICAgIGlmIChiYXNlUGF0aC5uZXdQb3MgKyAxID49IG5ld0xlbiAmJiBvbGRQb3MgKyAxID49IG9sZExlbikge1xuICAgICAgICAgIHJldHVybiBkb25lKGJ1aWxkVmFsdWVzKHNlbGYsIGJhc2VQYXRoLmNvbXBvbmVudHMsIG5ld1N0cmluZywgb2xkU3RyaW5nLCBzZWxmLnVzZUxvbmdlc3RUb2tlbikpO1xuICAgICAgICB9IGVsc2Uge1xuICAgICAgICAgIC8vIE90aGVyd2lzZSB0cmFjayB0aGlzIHBhdGggYXMgYSBwb3RlbnRpYWwgY2FuZGlkYXRlIGFuZCBjb250aW51ZS5cbiAgICAgICAgICBiZXN0UGF0aFtkaWFnb25hbFBhdGhdID0gYmFzZVBhdGg7XG4gICAgICAgIH1cbiAgICAgIH1cblxuICAgICAgZWRpdExlbmd0aCsrO1xuICAgIH1cblxuICAgIC8vIFBlcmZvcm1zIHRoZSBsZW5ndGggb2YgZWRpdCBpdGVyYXRpb24uIElzIGEgYml0IGZ1Z2x5IGFzIHRoaXMgaGFzIHRvIHN1cHBvcnQgdGhlXG4gICAgLy8gc3luYyBhbmQgYXN5bmMgbW9kZSB3aGljaCBpcyBuZXZlciBmdW4uIExvb3BzIG92ZXIgZXhlY0VkaXRMZW5ndGggdW50aWwgYSB2YWx1ZVxuICAgIC8vIGlzIHByb2R1Y2VkLlxuICAgIGlmIChjYWxsYmFjaykge1xuICAgICAgKGZ1bmN0aW9uIGV4ZWMoKSB7XG4gICAgICAgIHNldFRpbWVvdXQoZnVuY3Rpb24oKSB7XG4gICAgICAgICAgLy8gVGhpcyBzaG91bGQgbm90IGhhcHBlbiwgYnV0IHdlIHdhbnQgdG8gYmUgc2FmZS5cbiAgICAgICAgICAvKiBpc3RhbmJ1bCBpZ25vcmUgbmV4dCAqL1xuICAgICAgICAgIGlmIChlZGl0TGVuZ3RoID4gbWF4RWRpdExlbmd0aCkge1xuICAgICAgICAgICAgcmV0dXJuIGNhbGxiYWNrKCk7XG4gICAgICAgICAgfVxuXG4gICAgICAgICAgaWYgKCFleGVjRWRpdExlbmd0aCgpKSB7XG4gICAgICAgICAgICBleGVjKCk7XG4gICAgICAgICAgfVxuICAgICAgICB9LCAwKTtcbiAgICAgIH0oKSk7XG4gICAgfSBlbHNlIHtcbiAgICAgIHdoaWxlIChlZGl0TGVuZ3RoIDw9IG1heEVkaXRMZW5ndGgpIHtcbiAgICAgICAgbGV0IHJldCA9IGV4ZWNFZGl0TGVuZ3RoKCk7XG4gICAgICAgIGlmIChyZXQpIHtcbiAgICAgICAgICByZXR1cm4gcmV0O1xuICAgICAgICB9XG4gICAgICB9XG4gICAgfVxuICB9LFxuXG4gIHB1c2hDb21wb25lbnQoY29tcG9uZW50cywgYWRkZWQsIHJlbW92ZWQpIHtcbiAgICBsZXQgbGFzdCA9IGNvbXBvbmVudHNbY29tcG9uZW50cy5sZW5ndGggLSAxXTtcbiAgICBpZiAobGFzdCAmJiBsYXN0LmFkZGVkID09PSBhZGRlZCAmJiBsYXN0LnJlbW92ZWQgPT09IHJlbW92ZWQpIHtcbiAgICAgIC8vIFdlIG5lZWQgdG8gY2xvbmUgaGVyZSBhcyB0aGUgY29tcG9uZW50IGNsb25lIG9wZXJhdGlvbiBpcyBqdXN0XG4gICAgICAvLyBhcyBzaGFsbG93IGFycmF5IGNsb25lXG4gICAgICBjb21wb25lbnRzW2NvbXBvbmVudHMubGVuZ3RoIC0gMV0gPSB7Y291bnQ6IGxhc3QuY291bnQgKyAxLCBhZGRlZDogYWRkZWQsIHJlbW92ZWQ6IHJlbW92ZWQgfTtcbiAgICB9IGVsc2Uge1xuICAgICAgY29tcG9uZW50cy5wdXNoKHtjb3VudDogMSwgYWRkZWQ6IGFkZGVkLCByZW1vdmVkOiByZW1vdmVkIH0pO1xuICAgIH1cbiAgfSxcbiAgZXh0cmFjdENvbW1vbihiYXNlUGF0aCwgbmV3U3RyaW5nLCBvbGRTdHJpbmcsIGRpYWdvbmFsUGF0aCkge1xuICAgIGxldCBuZXdMZW4gPSBuZXdTdHJpbmcubGVuZ3RoLFxuICAgICAgICBvbGRMZW4gPSBvbGRTdHJpbmcubGVuZ3RoLFxuICAgICAgICBuZXdQb3MgPSBiYXNlUGF0aC5uZXdQb3MsXG4gICAgICAgIG9sZFBvcyA9IG5ld1BvcyAtIGRpYWdvbmFsUGF0aCxcblxuICAgICAgICBjb21tb25Db3VudCA9IDA7XG4gICAgd2hpbGUgKG5ld1BvcyArIDEgPCBuZXdMZW4gJiYgb2xkUG9zICsgMSA8IG9sZExlbiAmJiB0aGlzLmVxdWFscyhuZXdTdHJpbmdbbmV3UG9zICsgMV0sIG9sZFN0cmluZ1tvbGRQb3MgKyAxXSkpIHtcbiAgICAgIG5ld1BvcysrO1xuICAgICAgb2xkUG9zKys7XG4gICAgICBjb21tb25Db3VudCsrO1xuICAgIH1cblxuICAgIGlmIChjb21tb25Db3VudCkge1xuICAgICAgYmFzZVBhdGguY29tcG9uZW50cy5wdXNoKHtjb3VudDogY29tbW9uQ291bnR9KTtcbiAgICB9XG5cbiAgICBiYXNlUGF0aC5uZXdQb3MgPSBuZXdQb3M7XG4gICAgcmV0dXJuIG9sZFBvcztcbiAgfSxcblxuICBlcXVhbHMobGVmdCwgcmlnaHQpIHtcbiAgICByZXR1cm4gbGVmdCA9PT0gcmlnaHQ7XG4gIH0sXG4gIHJlbW92ZUVtcHR5KGFycmF5KSB7XG4gICAgbGV0IHJldCA9IFtdO1xuICAgIGZvciAobGV0IGkgPSAwOyBpIDwgYXJyYXkubGVuZ3RoOyBpKyspIHtcbiAgICAgIGlmIChhcnJheVtpXSkge1xuICAgICAgICByZXQucHVzaChhcnJheVtpXSk7XG4gICAgICB9XG4gICAgfVxuICAgIHJldHVybiByZXQ7XG4gIH0sXG4gIGNhc3RJbnB1dCh2YWx1ZSkge1xuICAgIHJldHVybiB2YWx1ZTtcbiAgfSxcbiAgdG9rZW5pemUodmFsdWUpIHtcbiAgICByZXR1cm4gdmFsdWUuc3BsaXQoJycpO1xuICB9LFxuICBqb2luKGNoYXJzKSB7XG4gICAgcmV0dXJuIGNoYXJzLmpvaW4oJycpO1xuICB9XG59O1xuXG5mdW5jdGlvbiBidWlsZFZhbHVlcyhkaWZmLCBjb21wb25lbnRzLCBuZXdTdHJpbmcsIG9sZFN0cmluZywgdXNlTG9uZ2VzdFRva2VuKSB7XG4gIGxldCBjb21wb25lbnRQb3MgPSAwLFxuICAgICAgY29tcG9uZW50TGVuID0gY29tcG9uZW50cy5sZW5ndGgsXG4gICAgICBuZXdQb3MgPSAwLFxuICAgICAgb2xkUG9zID0gMDtcblxuICBmb3IgKDsgY29tcG9uZW50UG9zIDwgY29tcG9uZW50TGVuOyBjb21wb25lbnRQb3MrKykge1xuICAgIGxldCBjb21wb25lbnQgPSBjb21wb25lbnRzW2NvbXBvbmVudFBvc107XG4gICAgaWYgKCFjb21wb25lbnQucmVtb3ZlZCkge1xuICAgICAgaWYgKCFjb21wb25lbnQuYWRkZWQgJiYgdXNlTG9uZ2VzdFRva2VuKSB7XG4gICAgICAgIGxldCB2YWx1ZSA9IG5ld1N0cmluZy5zbGljZShuZXdQb3MsIG5ld1BvcyArIGNvbXBvbmVudC5jb3VudCk7XG4gICAgICAgIHZhbHVlID0gdmFsdWUubWFwKGZ1bmN0aW9uKHZhbHVlLCBpKSB7XG4gICAgICAgICAgbGV0IG9sZFZhbHVlID0gb2xkU3RyaW5nW29sZFBvcyArIGldO1xuICAgICAgICAgIHJldHVybiBvbGRWYWx1ZS5sZW5ndGggPiB2YWx1ZS5sZW5ndGggPyBvbGRWYWx1ZSA6IHZhbHVlO1xuICAgICAgICB9KTtcblxuICAgICAgICBjb21wb25lbnQudmFsdWUgPSBkaWZmLmpvaW4odmFsdWUpO1xuICAgICAgfSBlbHNlIHtcbiAgICAgICAgY29tcG9uZW50LnZhbHVlID0gZGlmZi5qb2luKG5ld1N0cmluZy5zbGljZShuZXdQb3MsIG5ld1BvcyArIGNvbXBvbmVudC5jb3VudCkpO1xuICAgICAgfVxuICAgICAgbmV3UG9zICs9IGNvbXBvbmVudC5jb3VudDtcblxuICAgICAgLy8gQ29tbW9uIGNhc2VcbiAgICAgIGlmICghY29tcG9uZW50LmFkZGVkKSB7XG4gICAgICAgIG9sZFBvcyArPSBjb21wb25lbnQuY291bnQ7XG4gICAgICB9XG4gICAgfSBlbHNlIHtcbiAgICAgIGNvbXBvbmVudC52YWx1ZSA9IGRpZmYuam9pbihvbGRTdHJpbmcuc2xpY2Uob2xkUG9zLCBvbGRQb3MgKyBjb21wb25lbnQuY291bnQpKTtcbiAgICAgIG9sZFBvcyArPSBjb21wb25lbnQuY291bnQ7XG5cbiAgICAgIC8vIFJldmVyc2UgYWRkIGFuZCByZW1vdmUgc28gcmVtb3ZlcyBhcmUgb3V0cHV0IGZpcnN0IHRvIG1hdGNoIGNvbW1vbiBjb252ZW50aW9uXG4gICAgICAvLyBUaGUgZGlmZmluZyBhbGdvcml0aG0gaXMgdGllZCB0byBhZGQgdGhlbiByZW1vdmUgb3V0cHV0IGFuZCB0aGlzIGlzIHRoZSBzaW1wbGVzdFxuICAgICAgLy8gcm91dGUgdG8gZ2V0IHRoZSBkZXNpcmVkIG91dHB1dCB3aXRoIG1pbmltYWwgb3ZlcmhlYWQuXG4gICAgICBpZiAoY29tcG9uZW50UG9zICYmIGNvbXBvbmVudHNbY29tcG9uZW50UG9zIC0gMV0uYWRkZWQpIHtcbiAgICAgICAgbGV0IHRtcCA9IGNvbXBvbmVudHNbY29tcG9uZW50UG9zIC0gMV07XG4gICAgICAgIGNvbXBvbmVudHNbY29tcG9uZW50UG9zIC0gMV0gPSBjb21wb25lbnRzW2NvbXBvbmVudFBvc107XG4gICAgICAgIGNvbXBvbmVudHNbY29tcG9uZW50UG9zXSA9IHRtcDtcbiAgICAgIH1cbiAgICB9XG4gIH1cblxuICAvLyBTcGVjaWFsIGNhc2UgaGFuZGxlIGZvciB3aGVuIG9uZSB0ZXJtaW5hbCBpcyBpZ25vcmVkLiBGb3IgdGhpcyBjYXNlIHdlIG1lcmdlIHRoZVxuICAvLyB0ZXJtaW5hbCBpbnRvIHRoZSBwcmlvciBzdHJpbmcgYW5kIGRyb3AgdGhlIGNoYW5nZS5cbiAgbGV0IGxhc3RDb21wb25lbnQgPSBjb21wb25lbnRzW2NvbXBvbmVudExlbiAtIDFdO1xuICBpZiAoY29tcG9uZW50TGVuID4gMVxuICAgICAgJiYgKGxhc3RDb21wb25lbnQuYWRkZWQgfHwgbGFzdENvbXBvbmVudC5yZW1vdmVkKVxuICAgICAgJiYgZGlmZi5lcXVhbHMoJycsIGxhc3RDb21wb25lbnQudmFsdWUpKSB7XG4gICAgY29tcG9uZW50c1tjb21wb25lbnRMZW4gLSAyXS52YWx1ZSArPSBsYXN0Q29tcG9uZW50LnZhbHVlO1xuICAgIGNvbXBvbmVudHMucG9wKCk7XG4gIH1cblxuICByZXR1cm4gY29tcG9uZW50cztcbn1cblxuZnVuY3Rpb24gY2xvbmVQYXRoKHBhdGgpIHtcbiAgcmV0dXJuIHsgbmV3UG9zOiBwYXRoLm5ld1BvcywgY29tcG9uZW50czogcGF0aC5jb21wb25lbnRzLnNsaWNlKDApIH07XG59XG4iXX0=
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {/*! palindrom.js version: 2.4.0
+ * (c) 2013 Joachim Wester
+ * MIT license
+ */
+
+if (true) {
+  var jsonpatch = __webpack_require__(118); /* include only apply and validate */
+  var JSONPatcherProxy = __webpack_require__(126);
+  var JSONPatchQueueSynchronous = __webpack_require__(27).JSONPatchQueueSynchronous;
+  var JSONPatchQueue = __webpack_require__(27).JSONPatchQueue;
+  var JSONPatchOT = __webpack_require__(123);
+  var JSONPatchOTAgent = __webpack_require__(122);
+  var URL = __webpack_require__(165);
+  var axios = __webpack_require__(39);
+
+  /* We are going to hand `websocket` lib as an external to webpack
+  (see: https://webpack.js.org/configuration/externals/), 
+  this will make `w3cwebsocket` property `undefined`, 
+  and this will lead Palindrom to use Browser's WebSocket when it is used 
+  from the bundle. And use `websocket` lib in Node environment */
+  var NodeWebSocket = __webpack_require__(166).w3cwebsocket;
+
+  /* this allows us to stub WebSockets */
+  if (!global.WebSocket && NodeWebSocket) {
+    /* we are in production env */
+    var WebSocket = NodeWebSocket;
+  } else if (global.WebSocket) {
+    /* we are in testing env */
+    var WebSocket = global.WebSocket;
+  }
+  /* else {
+    we are using Browser's WebSocket
+  } */
+}
+var Palindrom = (function() {
+  if (typeof global === 'undefined') {
+    if (typeof window !== 'undefined') {
+      /* incase neither window nor global existed, e.g React Native */
+      var global = window;
+    } else {
+      var global = {};
+    }
+  }
+
+  /**
+   * Replaces http and https to ws and wss in a URL and returns it as a string.
+   * @param  {String} remoteUrl HTTP remote address
+   * @return {String}           WS address
+   */
+  function toWebSocketURL(remoteUrl) {
+    /* replace 'http' strictly in the beginning of the string,
+    this covers http and https */
+    return remoteUrl.replace(/^http/i, 'ws');
+  }
+
+  /**
+   * @callback reconnectionCallback called when reconnection attempt is scheduled.
+   * It's called every second until reconnection attempt is made (`milliseconds` reaches 0)
+   * @param {number} milliseconds - number of milliseconds to next reconnection attempt. >= 0
+   */
+  /**
+   * @param {Function} reconnect used to perform reconnection. No arguments
+   * @param {reconnectionCallback} onReconnectionCountdown called to notify that reconnection attempt is scheduled
+   * @param {Function} onReconnectionEnd called to notify that reconnection attempt is not longer scheduled
+   * @constructor
+   */
+  function Reconnector(reconnect, onReconnectionCountdown, onReconnectionEnd) {
+    var intervalMs,
+      timeToCurrentReconnectionMs,
+      reconnectionPending,
+      reconnection,
+      defaultIntervalMs = 1000;
+
+    function reset() {
+      intervalMs = defaultIntervalMs;
+      timeToCurrentReconnectionMs = 0;
+      reconnectionPending = false;
+      clearTimeout(reconnection);
+      reconnection = null;
+    }
+
+    var step = function() {
+      if (timeToCurrentReconnectionMs == 0) {
+        onReconnectionCountdown(0);
+        reconnectionPending = false;
+        intervalMs *= 2;
+        reconnect();
+      } else {
+        onReconnectionCountdown(timeToCurrentReconnectionMs);
+        timeToCurrentReconnectionMs -= 1000;
+        setTimeout(step, 1000);
+      }
+    };
+
+    /**
+     * Notify Reconnector that connection error occurred and automatic reconnection should be scheduled.
+     */
+    this.triggerReconnection = function() {
+      if (reconnectionPending) {
+        return;
+      }
+      timeToCurrentReconnectionMs = intervalMs;
+      reconnectionPending = true;
+      step();
+    };
+
+    /**
+     * Reconnect immediately and reset all reconnection timers.
+     */
+    this.reconnectNow = function() {
+      timeToCurrentReconnectionMs = 0;
+      intervalMs = defaultIntervalMs;
+    };
+
+    /**
+     * Notify Reconnector that there's no need to do further actions (either connection has been established or a fatal error occured).
+     * Resets state of Reconnector
+     */
+    this.stopReconnecting = function() {
+      reset();
+      onReconnectionEnd();
+    };
+
+    // remember, we're still in constructor
+    reset();
+  }
+
+  /**
+   * Guarantees some communication to server and monitors responses for timeouts.
+   * @param sendHeartbeatAction will be called to send a heartbeat
+   * @param onError will be called if no response will arrive after `timeoutMs` since a message has been sent
+   * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
+   * @param timeoutMs should a response fail to arrive in this time, `onError` will be called
+   * @constructor
+     */
+  function Heartbeat(sendHeartbeatAction, onError, intervalMs, timeoutMs) {
+    var scheduledSend, scheduledError;
+
+    /**
+     * Call this function at the beginning of operation and after successful reconnection.
+     */
+    this.start = function() {
+      if (scheduledSend) {
+        return;
+      }
+      scheduledSend = setTimeout(
+        function() {
+          this.notifySend();
+          sendHeartbeatAction();
+        }.bind(this),
+        intervalMs
+      );
+    };
+
+    /**
+     * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
+     */
+    this.notifySend = function() {
+      clearTimeout(scheduledSend); // sending heartbeat will not be necessary until our response arrives
+      scheduledSend = null;
+      if (scheduledError) {
+        return;
+      }
+      scheduledError = setTimeout(
+        function() {
+          scheduledError = null;
+          onError(); // timeout has passed and response hasn't arrived
+        }.bind(this),
+        timeoutMs
+      );
+    };
+
+    /**
+     * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
+     */
+    this.notifyReceive = function() {
+      clearTimeout(scheduledError);
+      scheduledError = null;
+      this.start();
+    };
+
+    /**
+     * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
+     */
+    this.stop = function() {
+      clearTimeout(scheduledSend);
+      scheduledSend = null;
+      clearTimeout(scheduledError);
+      scheduledError = null;
+    };
+  }
+
+  function NoHeartbeat() {
+    this.start = (this.stop = (this.notifySend = (this.notifyReceive = function() {})));
+  }
+
+  function PalindromNetworkChannel(
+    palindrom,
+    remoteUrl,
+    useWebSocket,
+    onReceive,
+    onSend,
+    onConnectionError,
+    onFatalError,
+    onStateChange
+  ) {
+    // TODO(tomalec): to be removed once we will achieve better separation of concerns
+    this.palindrom = palindrom;
+
+    if (typeof window !== 'undefined' && window.location) {
+      this.remoteUrl = new URL(remoteUrl, window.location.href);
+    } else {
+      // in Node, URL is absolute
+      this.remoteUrl = new URL(remoteUrl);
+    }
+
+    onReceive && (this.onReceive = onReceive);
+    onSend && (this.onSend = onSend);
+    onConnectionError && (this.onConnectionError = onConnectionError);
+    onFatalError && (this.onFatalError = onFatalError);
+    onStateChange && (this.onStateChange = onStateChange);
+
+    //useWebSocket = useWebSocket || false;
+    var that = this;
+    Object.defineProperty(this, 'useWebSocket', {
+      get: function() {
+        return useWebSocket;
+      },
+      set: function(newValue) {
+        useWebSocket = newValue;
+
+        if (newValue == false) {
+          if (that._ws) {
+            that._ws.onclose = function() {
+              //overwrites the previous onclose
+              that._ws = null;
+            };
+            that._ws.close();
+          }
+          // define wsUrl if needed
+        } else if (!that.wsUrl) {
+          that.wsUrl = toWebSocketURL(that.remoteUrl.href);
+        }
+        return useWebSocket;
+      }
+    });
+  }
+  PalindromNetworkChannel.prototype.establish = function(bootstrap) {
+    establish(this, this.remoteUrl.href, null, bootstrap);
+  };
+  PalindromNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
+    establish(
+      this,
+      this.remoteUrl.href + '/reconnect',
+      JSON.stringify(pending),
+      bootstrap
+    );
+  };
+
+  // TODO: auto-configure here #38 (tomalec)
+  function establish(network, url, body, bootstrap) {
+    return network.xhr(url, 'application/json', body, function(res) {
+      bootstrap(res.data);
+      if (network.useWebSocket) {
+        network.webSocketUpgrade();
+      }
+    });
+  }
+  /**
+   * Send any text message by currently established channel
+   * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
+   * @param  {String} msg message to be sent
+   * @return {PalindromNetworkChannel}     self
+   */
+  PalindromNetworkChannel.prototype.send = function(msg) {
+    var that = this;
+    // send message only if there is a working ws connection
+    if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
+      this._ws.send(msg);
+      that.onSend(msg, that._ws.url, 'WS');
+    } else {
+      var url = this.remoteUrl.href;
+      this.xhr(url, 'application/json-patch+json', msg, function(res, method) {
+        that.onReceive(res.data, url, method);
+      });
+    }
+    return this;
+  };
+  /**
+   * Callback function that will be called once message from remote comes.
+   * @param {String} [JSONPatch_sequences] message with Array of JSONPatches that were send by remote.
+   * @return {[type]} [description]
+   */
+  PalindromNetworkChannel.prototype.onReceive = function(/*String_with_JSONPatch_sequences*/) {};
+  PalindromNetworkChannel.prototype.onSend = function() {};
+  PalindromNetworkChannel.prototype.onStateChange = function() {};
+  PalindromNetworkChannel.prototype.upgrade = function(msg) {};
+
+  function closeWsIfNeeded(network) {
+    if (network._ws) {
+      network._ws.onclose = function() {};
+      network._ws.close();
+      network._ws = null;
+    }
+  }
+
+  /**
+   * Send a WebSocket upgrade request to the server.
+   * For testing purposes WS upgrade url is hardcoded now in Palindrom (replace __default/ID with __default/ID)
+   * In future, server should suggest the WebSocket upgrade URL
+   * @TODO:(tomalec)[cleanup] hide from public API.
+   * @param {Function} [callback] Function to be called once connection gets opened.
+   * @returns {WebSocket} created WebSocket
+   */
+  PalindromNetworkChannel.prototype.webSocketUpgrade = function(callback) {
+    var that = this;
+
+    this.wsUrl = toWebSocketURL(this.remoteUrl.href);
+    var upgradeURL = this.wsUrl;
+
+    closeWsIfNeeded(that);
+    that._ws = new WebSocket(upgradeURL);
+    that._ws.onopen = function(event) {
+      that.onStateChange(that._ws.readyState, upgradeURL);
+      callback && callback(event);
+      //TODO: trigger on-ready event (tomalec)
+    };
+    that._ws.onmessage = function(event) {
+      that.onReceive(JSON.parse(event.data), that._ws.url, 'WS');
+    };
+    that._ws.onerror = function(event) {
+      that.onStateChange(that._ws.readyState, upgradeURL, event.data);
+
+      if (!that.useWebSocket) {
+        return;
+      }
+
+      var m = {
+        statusText: 'WebSocket connection could not be made.',
+        readyState: that._ws.readyState,
+        url: upgradeURL
+      };
+
+      that.onFatalError(m, upgradeURL, 'WS');
+    };
+    that._ws.onclose = function(event) {
+      that.onStateChange(
+        that._ws.readyState,
+        upgradeURL,
+        null,
+        event.code,
+        event.reason
+      );
+
+      var m = {
+        statusText: 'WebSocket connection closed.',
+        readyState: that._ws.readyState,
+        url: upgradeURL,
+        statusCode: event.code,
+        reason: event.reason
+      };
+
+      if (event.reason) {
+        that.onFatalError(m, upgradeURL, 'WS');
+      } else {
+        that.onConnectionError();
+      }
+    };
+  };
+  PalindromNetworkChannel.prototype.changeState = function(href) {
+    var that = this;
+    return this.xhr(
+      href,
+      'application/json-patch+json',
+      null,
+      function(res, method) {
+        that.onReceive(res.data, href, method);
+      },
+      true
+    );
+  };
+
+  // TODO:(tomalec)[cleanup] hide from public API.
+  PalindromNetworkChannel.prototype.setRemoteUrl = function(remoteUrl) {
+    if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
+      throw new Error(
+        'Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: ' +
+          this.remoteUrl +
+          '\nNew session ID: ' +
+          remoteUrl
+      );
+    }
+    this.remoteUrlSet = true;
+    this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
+  };
+
+  PalindromNetworkChannel.prototype.handleResponseHeader = function(res) {
+    /* Axios always returns lowercase headers */
+    var location = res.headers['x-location'] || res.headers['location'];
+    if (location) {
+      this.setRemoteUrl(location);
+    }
+  };
+
+  /**
+   * Internal method to perform XMLHttpRequest
+   * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
+   * @param accept (Optional) HTTP accept header
+   * @param data (Optional) Data payload
+   * @param [callback(response)] callback to be called in context of palindrom with response as argument
+   * @returns {XMLHttpRequest} performed XHR
+   */
+  PalindromNetworkChannel.prototype.xhr = function(
+    url,
+    accept,
+    data,
+    callback,
+    setReferer
+  ) {
+    const method = data ? 'PATCH' : 'GET';
+    const headers = {};
+    const that = this;
+    var requestPromise;
+
+    if (data) {
+      headers['Content-Type'] = 'application/json-patch+json';
+    }
+    if (accept) {
+      headers['Accept'] = accept;
+    }
+    if (this.remoteUrl && setReferer) {
+      headers['X-Referer'] = this.remoteUrl.pathname;
+    }
+    if (method === 'GET') {
+      requestPromise = axios.get(url, {
+        headers: headers
+      });
+    } else {
+      requestPromise = axios.patch(url, data, {
+        headers: headers
+      });
+    }
+    requestPromise
+      .then(function(res) {
+        that.handleResponseHeader(res);
+        callback && callback.call(that.palindrom, res, method);
+      })
+      .catch(function(res) {
+        that.onFatalError(
+          {
+            statusCode: res.status,
+            statusText: res.statusText,
+            reason: res.data
+          },
+          url,
+          method
+        );
+      });
+
+    this.onSend(data, url, method);
+  };
+
+  /**
+   * Non-queuing object that conforms JSON-Patch-Queue API
+   * @param {Function} apply function to apply received patch
+   */
+  function NoQueue(apply) {
+    this.apply = apply;
+  }
+  /** just forward message */
+  NoQueue.prototype.send = function(msg) {
+    return msg;
+  };
+  /** Apply given JSON Patch sequence immediately */
+  NoQueue.prototype.receive = function(obj, sequence) {
+    this.apply(obj, sequence);
+  };
+  NoQueue.prototype.reset = function(obj, newState) {
+    var patch = [{ op: 'replace', path: '', value: newState }];
+    this.apply(obj, patch);
+  };
+
+  function connectToRemote(palindrom, reconnectionFn) {
+    // if we lose connection at this point, the connection we're trying to establish should trigger onError
+    palindrom.heartbeat.stop();
+
+    reconnectionFn(function bootstrap(json) {
+      palindrom.reconnector.stopReconnecting();
+
+      if (palindrom.debug) {
+        palindrom.remoteObj = JSON.parse(JSON.stringify(json));
+      }
+
+      palindrom.observe(json);
+
+      if(palindrom.onRemoteChange) {
+        palindrom.onRemoteChange([{op: 'replace', path: '', value: palindrom.obj}]);
+      }
+
+      if (palindrom.onDataReady) {
+        palindrom.onDataReady.call(palindrom, palindrom.obj);
+      }
+
+      palindrom.heartbeat.start();
+    });
+  }
+
+  function makeInitialConnection(palindrom) {
+    connectToRemote(
+      palindrom,
+      palindrom.network.establish.bind(palindrom.network)
+    );
+  }
+
+  function makeReconnection(palindrom) {
+    connectToRemote(palindrom, function(bootstrap) {
+      palindrom.network.reestablish(palindrom.queue.pending, bootstrap);
+    });
+  }
+
+  /**
+   * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
+   * @param {Object} [options] map of arguments. See README.md for description
+   */
+  function Palindrom(options) {
+    if (typeof options !== 'object') {
+      throw new Error('Palindrom constructor requires an object argument.');
+    }
+    if (!options.remoteUrl) {
+      throw new Error('remoteUrl is required');
+    }
+    this.jsonpatch = options.jsonpatch || this.jsonpatch;
+    this.debug = options.debug != undefined ? options.debug : true;
+
+    var noop = function() {};
+
+    this.isObjectProxified = false;
+    this.isObserving = false;
+    this.onLocalChange = options.onLocalChange;
+    this.onRemoteChange = options.onRemoteChange;
+    this.onPatchReceived = options.onPatchReceived || noop;
+    this.onPatchSent = options.onPatchSent || noop;
+    this.onSocketStateChanged = options.onSocketStateChanged || noop;
+    this.onConnectionError = options.onConnectionError || noop;
+    this.retransmissionThreshold = options.retransmissionThreshold || 3;
+    this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
+    this.onReconnectionEnd = options.onReconnectionEnd || noop;
+    this.onIncomingPatchValidationError = options.onIncomingPatchValidationError ||
+      noop;
+    this.onOutgoingPatchValidationError = options.onOutgoingPatchValidationError ||
+      noop;
+
+    this.reconnector = new Reconnector(
+      function() {
+        makeReconnection(this);
+      }.bind(this),
+      this.onReconnectionCountdown,
+      this.onReconnectionEnd
+    );
+
+    if (options.pingIntervalS) {
+      const intervalMs = options.pingIntervalS * 1000;
+      this.heartbeat = new Heartbeat(
+        this.ping.bind(this),
+        this.handleConnectionError.bind(this),
+        intervalMs,
+        intervalMs
+      );
+    } else {
+      this.heartbeat = new NoHeartbeat();
+    }
+
+    this.network = new PalindromNetworkChannel(
+      this, // palindrom instance TODO: to be removed, used for error reporting
+      options.remoteUrl,
+      options.useWebSocket || false, // useWebSocket
+      this.handleRemoteChange.bind(this), //onReceive
+      this.onPatchSent.bind(this), //onSend,
+      this.handleConnectionError.bind(this), //onConnectionError,
+      this.handleFatalError.bind(this), //onFatalError,
+      this.onSocketStateChanged.bind(this) //onStateChange
+    );
+
+    Object.defineProperty(this, 'useWebSocket', {
+      get: function() {
+        return this.network.useWebSocket;
+      },
+      set: function(newValue) {
+        this.network.useWebSocket = newValue;
+      }
+    });
+
+    this.ignoreCache = {};
+    this.ignoreAdd = options.ignoreAdd || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
+
+    //usage:
+    //palindrom.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to remote
+    //palindrom.ignoreAdd = /./; //ignore all the "add" operations
+    //palindrom.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
+    //palindrom.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
+
+    this.onDataReady = options.callback;
+
+    // choose queuing engine
+    if (options.localVersionPath) {
+      if (!options.remoteVersionPath) {
+        // just versioning
+        this.queue = new JSONPatchQueueSynchronous(
+          options.localVersionPath,
+          this.validateAndApplySequence.bind(this),
+          options.purity
+        );
+      } else {
+        // double versioning or OT
+        this.queue = options.ot
+          ? new JSONPatchOTAgent(
+              JSONPatchOT.transform,
+              [options.localVersionPath, options.remoteVersionPath],
+              this.validateAndApplySequence.bind(this),
+              options.purity
+            )
+          : new JSONPatchQueue(
+              [options.localVersionPath, options.remoteVersionPath],
+              this.validateAndApplySequence.bind(this),
+              options.purity
+            ); // full or noop OT
+      }
+    } else {
+      // no queue - just api
+      this.queue = new NoQueue(this.validateAndApplySequence.bind(this));
+    }
+
+    makeInitialConnection(this);
+  }
+
+  Palindrom.prototype.jsonpatch = jsonpatch;
+
+  Palindrom.prototype.ping = function() {
+    sendPatches(this, []); // sends empty message to server
+  };
+
+  Palindrom.prototype.observe = function(obj) {
+    /* if we haven't ever proxified our object,
+    this means it's the first observe call,
+    let's proxify it then! */
+    if (!this.isObjectProxified) {
+
+      /* wrap the given object with a proxy observer */
+      this.jsonPatcherProxy = new JSONPatcherProxy(obj);
+
+      /* make exposed object read only */
+      const proxifiedObj = this.jsonPatcherProxy.observe(
+        true,
+        this.filterChangedCallback.bind(this)
+      );
+      Object.defineProperty(this, 'obj', {
+        get: function() {
+          return proxifiedObj;
+        },
+        set: function() {
+          throw new Error('palindrom.obj is readonly');
+        }
+      });
+      this.isObjectProxified = true;
+    } else {
+      /* we are already observing, just enable event emitting. */
+      this.jsonPatcherProxy.switchObserverOn();
+    }
+    this.isObserving = true;
+  };
+  Palindrom.prototype.unobserve = function() {
+    this.jsonPatcherProxy && this.jsonPatcherProxy.switchObserverOff();
+    this.isObserving = false;
+  };
+
+  Palindrom.prototype.filterChangedCallback = function(patch) {
+    /*
+    because JSONPatcherProxy is synchronous,
+    it passes a single patch to the callback instantly after the change,
+    to make this review process easier, I'll convert this single patch
+    to an array to keep the logic change minimal,
+    once approved, I can enhance this.
+    Or we can also keep it, in case we decided to introduce batching/delaying 
+    at one point.
+    */
+    var patches = [patch];
+    this.filterIgnoredPatches(patches);
+    if (patches.length) {
+      this.handleLocalChange(patches);
+    }
+  };
+
+  function isIgnored(pattern, ignoreCache, path, op) {
+    if (op === 'add' && pattern.test(path)) {
+      ignoreCache[path] = true;
+      return true;
+    }
+    var arr = path.split('/');
+    var joined = '';
+    for (var i = 1, ilen = arr.length; i < ilen; i++) {
+      joined += '/' + arr[i];
+      if (ignoreCache[joined]) {
+        return true; //once we decided to ignore something that was added, other operations (replace, remove, ...) are ignored as well
+      }
+    }
+    return false;
+  }
+
+  //ignores private member changes
+  Palindrom.prototype.filterIgnoredPatches = function(patches) {
+    if (this.ignoreAdd) {
+      for (var i = 0, ilen = patches.length; i < ilen; i++) {
+        if (
+          isIgnored(
+            this.ignoreAdd,
+            this.ignoreCache,
+            patches[i].path,
+            patches[i].op
+          )
+        ) {
+          //if it is ignored, remove patch
+          patches.splice(i, 1); //ignore changes to properties that start with PRIVATE_PREFIX
+          ilen--;
+          i--;
+        }
+      }
+    }
+    return patches;
+  };
+
+  function sendPatches(palindrom, patches) {
+    var txt = JSON.stringify(patches);
+    palindrom.unobserve();
+    palindrom.heartbeat.notifySend();
+    palindrom.network.send(txt);
+    palindrom.observe();
+  }
+
+  Palindrom.prototype.handleLocalChange = function(patches) {
+    if (this.debug) {
+      this.validateSequence(this.remoteObj, patches);
+    }
+
+    sendPatches(this, this.queue.send(patches));
+    if (this.onLocalChange) {
+      this.onLocalChange(patches);
+    }
+  };
+
+  Palindrom.prototype.validateAndApplySequence = function(tree, sequence) {
+    // we don't want this changes to generate patches since they originate from server, not client
+    this.unobserve();
+    try {
+      var results = this.jsonpatch.apply(tree, sequence, this.debug);
+    } catch (error) {
+      if (this.debug) {
+        this.onIncomingPatchValidationError(error);
+        return;
+      } else {
+        throw error;
+      }
+    }
+
+    var that = this;
+    sequence.forEach(function(patch) {
+      if (patch.path === '') {
+        var desc = JSON.stringify(sequence);
+        if (desc.length > 103) {
+          desc = desc.substring(0, 100) + '...';
+        }
+        //TODO Error
+        that.showWarning(
+          'Server pushed patch that replaces the object root',
+          desc
+        );
+      }
+    });
+
+    // notifications have to happen only where observe has been re-enabled
+    // otherwise some listener might produce changes that would go unnoticed
+    this.observe();
+
+    // until notifications are converged to single method (events vs. callbacks, #74)
+    if (this.onRemoteChange) {
+      this.onRemoteChange(sequence, results);
+    }
+  };
+
+  Palindrom.prototype.validateSequence = function(tree, sequence) {
+    var error = this.jsonpatch.validate(sequence, tree);
+    if (error) {
+      this.onOutgoingPatchValidationError(error);
+    }
+  };
+
+  /**
+   * Handle an error which is probably caused by random disconnection
+   */
+  Palindrom.prototype.handleConnectionError = function() {
+    this.heartbeat.stop();
+    this.reconnector.triggerReconnection();
+  };
+
+  /**
+   * Handle an error which probably won't go away on itself (basically forward upstream)
+   */
+  Palindrom.prototype.handleFatalError = function(data, url, method) {
+    this.heartbeat.stop();
+    this.reconnector.stopReconnecting();
+    if (this.onConnectionError) {
+      this.onConnectionError(data, url, method);
+    }
+  };
+
+  Palindrom.prototype.reconnectNow = function() {
+    this.reconnector.reconnectNow();
+  };
+
+  Palindrom.prototype.showWarning = function(heading, description) {
+    if (this.debug && global.console && console.warn) {
+      if (description) {
+        heading += ' (' + description + ')';
+      }
+      console.warn('Palindrom warning: ' + heading);
+    }
+  };
+
+  Palindrom.prototype.handleRemoteChange = function(data, url, method) {
+    this.heartbeat.notifyReceive();
+    var patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
+
+    if (patches.length === 0) {
+      // ping message
+      return;
+    }
+
+    if (this.onPatchReceived) {
+      this.onPatchReceived(data, url, method);
+    }
+
+    // apply only if we're still watching
+    if (!this.isObserving) {
+      return;
+    }
+
+    this.queue.receive(this.obj, patches);
+
+    if (
+      this.queue.pending &&
+      this.queue.pending.length &&
+      this.queue.pending.length > this.retransmissionThreshold
+    ) {
+      // remote counterpart probably failed to receive one of earlier messages, because it has been receiving
+      // (but not acknowledging messages for some time
+      this.queue.pending.forEach(sendPatches.bind(null, this));
+    }
+
+    if (this.debug) {
+      this.remoteObj = JSON.parse(JSON.stringify(this.obj));
+    }
+  };
+
+  /* backward compatibility */
+  global.Puppet = Palindrom;
+
+  /* Since we have jsonpatch bundled,
+  let's expose it in case anyone needs it */
+  global.jsonpatch = jsonpatch;
+
+  return Palindrom;
+})();
+
+if (true) {
+  module.exports = Palindrom;
+  module.exports.default = Palindrom;
+  module.exports.__esModule = true;
+}
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports) {
+
+/*!
+ * Chai - flag utility
+ * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
+ * MIT Licensed
+ */
+
+/**
+ * ### flag(object, key, [value])
+ *
+ * Get or set a flag value on an object. If a
+ * value is provided it will be set, else it will
+ * return the currently set value or `undefined` if
+ * the value is not set.
+ *
+ *     utils.flag(this, 'foo', 'bar'); // setter
+ *     utils.flag(this, 'foo'); // getter, returns `bar`
+ *
+ * @param {Object} object constructed Assertion
+ * @param {String} key
+ * @param {Mixed} value (optional)
+ * @namespace Utils
+ * @name flag
+ * @api private
+ */
+
+module.exports = function (obj, key, value) {
+  var flags = obj.__flags || (obj.__flags = Object.create(null));
+  if (arguments.length === 3) {
+    flags[key] = value;
+  } else {
+    return flags[key];
+  }
+};
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var div = typeof document !== "undefined" && document.createElement("div");
+
+function isReallyNaN(val) {
+    return val !== val;
+}
+
+function isDOMNode(obj) {
+    var success = false;
+
+    try {
+        obj.appendChild(div);
+        success = div.parentNode === obj;
+    } catch (e) {
+        return false;
+    } finally {
+        try {
+            obj.removeChild(div);
+        } catch (e) {
+            // Remove failed, not much we can do about that
+        }
+    }
+
+    return success;
+}
+
+function isElement(obj) {
+    return div && obj && obj.nodeType === 1 && isDOMNode(obj);
+}
+
+var deepEqual = module.exports = function deepEqual(a, b) {
+    if (typeof a !== "object" || typeof b !== "object") {
+        return isReallyNaN(a) && isReallyNaN(b) || a === b;
+    }
+
+    if (isElement(a) || isElement(b)) {
+        return a === b;
+    }
+
+    if (a === b) {
+        return true;
+    }
+
+    if ((a === null && b !== null) || (a !== null && b === null)) {
+        return false;
+    }
+
+    if (a instanceof RegExp && b instanceof RegExp) {
+        return (a.source === b.source) && (a.global === b.global) &&
+            (a.ignoreCase === b.ignoreCase) && (a.multiline === b.multiline);
+    }
+
+    if (a instanceof Error && b instanceof Error) {
+        return a === b;
+    }
+
+    var aString = Object.prototype.toString.call(a);
+    if (aString !== Object.prototype.toString.call(b)) {
+        return false;
+    }
+
+    if (aString === "[object Date]") {
+        return a.valueOf() === b.valueOf();
+    }
+
+    var prop;
+    var aLength = 0;
+    var bLength = 0;
+
+    if (aString === "[object Array]" && a.length !== b.length) {
+        return false;
+    }
+
+    for (prop in a) {
+        if (Object.prototype.hasOwnProperty.call(a, prop)) {
+            aLength += 1;
+
+            if (!(prop in b)) {
+                return false;
+            }
+
+            // allow alternative function for recursion
+            if (!(arguments[2] || deepEqual)(a[prop], b[prop])) {
+                return false;
+            }
+        }
+    }
+
+    for (prop in b) {
+        if (Object.prototype.hasOwnProperty.call(b, prop)) {
+            bLength += 1;
+        }
+    }
+
+    return aLength === bLength;
+};
+
+deepEqual.use = function (match) {
+    return function deepEqual$matcher(a, b) {
+        // If both are matchers they must be the same instance in order to be considered equal
+        // If we didn't do that we would end up running one matcher against the other
+        if (match.isMatcher(a)) {
+            if (match.isMatcher(b)) {
+                return a === b;
+            }
+
+            return a.test(b);
+        }
+
+        return deepEqual(a, b, deepEqual$matcher);
+    };
+};
+
+
+/***/ }),
 /* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var formatio = __webpack_require__(119);
+
+var formatter = formatio.configure({
+    quoteStrings: false,
+    limitChildrenCount: 250
+});
+
+module.exports = function format() {
+    return formatter.ascii.apply(formatter, arguments);
+};
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports) {
+
+module.exports = {
+
+  /**
+   * ### config.includeStack
+   *
+   * User configurable property, influences whether stack trace
+   * is included in Assertion error message. Default of false
+   * suppresses stack trace in the error message.
+   *
+   *     chai.config.includeStack = true;  // enable stack on error
+   *
+   * @param {Boolean}
+   * @api public
+   */
+
+   includeStack: false,
+
+  /**
+   * ### config.showDiff
+   *
+   * User configurable property, influences whether or not
+   * the `showDiff` flag should be included in the thrown
+   * AssertionErrors. `false` will always be `false`; `true`
+   * will be true when the assertion has requested a diff
+   * be shown.
+   *
+   * @param {Boolean}
+   * @api public
+   */
+
+  showDiff: true,
+
+  /**
+   * ### config.truncateThreshold
+   *
+   * User configurable property, sets length threshold for actual and
+   * expected values in assertion errors. If this threshold is exceeded, for
+   * example for large data structures, the value is replaced with something
+   * like `[ Array(3) ]` or `{ Object (prop1, prop2) }`.
+   *
+   * Set it to zero if you want to disable truncating altogether.
+   *
+   * This is especially userful when doing assertions on arrays: having this
+   * set to a reasonable large value makes the failure messages readily
+   * inspectable.
+   *
+   *     chai.config.truncateThreshold = 0;  // disable truncating
+   *
+   * @param {Number}
+   * @api public
+   */
+
+  truncateThreshold: 40
+
+};
+
+
+/***/ }),
+/* 15 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -4935,85 +5897,7 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var match = __webpack_require__(2);
-var deepEqual = __webpack_require__(8);
-var deprecated = __webpack_require__(59);
-
-function exposeCoreUtils(target, utils) {
-    var keys = Object.keys(utils);
-
-    keys.forEach(function (key) {
-        var value = utils[key];
-
-        // allow deepEqual to check equality of matchers through dependency injection. Otherwise we get a circular
-        // dependency
-        if (key === "deepEqual") {
-            value = deepEqual.use(match);
-        }
-        if (typeof value === "function") {
-            value = deprecated.wrap(value, deprecated.defaultMsg(key));
-        }
-        target[key] = value;
-    });
-}
-
-function exposeEventTarget(target, eventTarget) {
-    var keys = Object.keys(eventTarget);
-
-    keys.forEach(function (key) {
-        target[key] = deprecated.wrap(eventTarget[key], deprecated.defaultMsg("EventTarget"));
-    });
-}
-
-// Expose internal utilities on `sinon` global for backwards compatibility.
-exposeCoreUtils(exports, __webpack_require__(137));
-
-exports.assert = __webpack_require__(27);
-exports.collection = __webpack_require__(53);
-exports.match = match;
-exports.spy = __webpack_require__(17);
-exports.spyCall = __webpack_require__(20);
-exports.stub = __webpack_require__(21);
-exports.mock = __webpack_require__(55);
-exports.sandbox = __webpack_require__(131);
-exports.expectation = __webpack_require__(54);
-exports.createStubInstance = __webpack_require__(21).createStubInstance;
-
-var fakeTimers = __webpack_require__(32);
-exports.useFakeTimers = fakeTimers.useFakeTimers;
-exports.clock = fakeTimers.clock;
-exports.timers = fakeTimers.timers;
-
-var event = __webpack_require__(63);
-exports.Event = deprecated.wrap(event.Event, deprecated.defaultMsg("Event"));
-exports.CustomEvent = deprecated.wrap(event.CustomEvent, deprecated.defaultMsg("CustomEvent"));
-exports.ProgressEvent = deprecated.wrap(event.ProgressEvent, deprecated.defaultMsg("ProgressEvent"));
-exports.EventTarget = {};
-exposeEventTarget(exports.EventTarget, event.EventTarget);
-
-var fakeXhr = __webpack_require__(33);
-exports.xhr = fakeXhr.xhr;
-exports.FakeXMLHttpRequest = fakeXhr.FakeXMLHttpRequest;
-exports.useFakeXMLHttpRequest = fakeXhr.useFakeXMLHttpRequest;
-
-exports.fakeServer = __webpack_require__(31);
-exports.fakeServerWithClock = __webpack_require__(64);
-
-var behavior = __webpack_require__(52);
-
-exports.addBehavior = function (name, fn) {
-    behavior.addBehavior(exports.stub, name, fn);
-};
-
-
-/***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5031,826 +5915,22 @@ module.exports = function getPropertyDescriptor(object, property) {
 
 
 /***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(global) {/*! palindrom.js version: 2.4.0
- * (c) 2013 Joachim Wester
- * MIT license
- */
-
-if(true) {
-  var jsonpatch = __webpack_require__(116); /* include only apply and validate */
-  var JSONPatcherProxy = __webpack_require__(124);
-  var JSONPatchQueueSynchronous = __webpack_require__(26).JSONPatchQueueSynchronous;
-  var JSONPatchQueue = __webpack_require__(26).JSONPatchQueue;
-  var JSONPatchOT = __webpack_require__(121);
-  var JSONPatchOTAgent = __webpack_require__(120);
-  var URL = __webpack_require__(163);
-  var axios = __webpack_require__(38);
-
-  /* We are going to hand `websocket` lib as an external to webpack
-  (see: https://webpack.js.org/configuration/externals/), 
-  this will make `w3cwebsocket` property `undefined`, 
-  and this will lead Palindrom to use Browser's WebSocket when it is used 
-  from the bundle. And use `websocket` lib in Node environment */
-  var NodeWebSocket = __webpack_require__(164).w3cwebsocket;
-
-  /* this allows us to stub WebSockets */
-  if(!global.WebSocket && NodeWebSocket) { /* we are in production env */
-    var WebSocket = NodeWebSocket;
-  }
-  else if(global.WebSocket) { /* we are in testing env */
-    var WebSocket = global.WebSocket;
-  }
-  /* else {
-    we are using Browser's WebSocket
-  } */
-}
-var Palindrom = (function () {
-  
-  if(typeof global === 'undefined') {
-    if(typeof window !== 'undefined') { /* incase neither window nor global existed, e.g React Native */
-      var global = window;
-    }
-    else { var global = {}; }
-  }
-
-  /**
-   * Replaces http and https to ws and wss in a URL and returns it as a string.
-   * @param  {String} remoteUrl HTTP remote address
-   * @return {String}           WS address
-   */
-  function toWebSocketURL(remoteUrl){
-    /* replace 'http' strictly in the beginning of the string,
-    this covers http and https */
-    return remoteUrl.replace(/^http/i, 'ws');
-  }
-
-  /**
-   * @callback reconnectionCallback called when reconnection attempt is scheduled.
-   * It's called every second until reconnection attempt is made (`milliseconds` reaches 0)
-   * @param {number} milliseconds - number of milliseconds to next reconnection attempt. >= 0
-   */
-  /**
-   * @param {Function} reconnect used to perform reconnection. No arguments
-   * @param {reconnectionCallback} onReconnectionCountdown called to notify that reconnection attempt is scheduled
-   * @param {Function} onReconnectionEnd called to notify that reconnection attempt is not longer scheduled
-   * @constructor
-   */
-  function Reconnector(reconnect, onReconnectionCountdown, onReconnectionEnd) {
-    var intervalMs,
-        timeToCurrentReconnectionMs,
-        reconnectionPending,
-        reconnection,
-        defaultIntervalMs = 1000;
-
-    function reset() {
-      intervalMs = defaultIntervalMs;
-      timeToCurrentReconnectionMs = 0;
-      reconnectionPending = false;
-      clearTimeout(reconnection);
-      reconnection = null;
-    }
-
-    var step = (function () {
-      if(timeToCurrentReconnectionMs == 0) {
-        onReconnectionCountdown(0);
-        reconnectionPending = false;
-        intervalMs *= 2;
-        reconnect();
-      } else {
-        onReconnectionCountdown(timeToCurrentReconnectionMs);
-        timeToCurrentReconnectionMs -= 1000;
-        setTimeout(step, 1000);
-      }
-    });
-
-    /**
-     * Notify Reconnector that connection error occurred and automatic reconnection should be scheduled.
-     */
-    this.triggerReconnection = function () {
-      if(reconnectionPending) {
-        return;
-      }
-      timeToCurrentReconnectionMs = intervalMs;
-      reconnectionPending = true;
-      step();
-    };
-
-    /**
-     * Reconnect immediately and reset all reconnection timers.
-     */
-    this.reconnectNow = function () {
-      timeToCurrentReconnectionMs = 0;
-      intervalMs = defaultIntervalMs;
-    };
-
-    /**
-     * Notify Reconnector that there's no need to do further actions (either connection has been established or a fatal error occured).
-     * Resets state of Reconnector
-     */
-    this.stopReconnecting = function() {
-      reset();
-      onReconnectionEnd();
-    };
-
-    // remember, we're still in constructor
-    reset();
-  }
-
-  /**
-   * Guarantees some communication to server and monitors responses for timeouts.
-   * @param sendHeartbeatAction will be called to send a heartbeat
-   * @param onError will be called if no response will arrive after `timeoutMs` since a message has been sent
-   * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
-   * @param timeoutMs should a response fail to arrive in this time, `onError` will be called
-   * @constructor
-     */
-  function Heartbeat(sendHeartbeatAction, onError, intervalMs, timeoutMs) {
-    var scheduledSend,
-        scheduledError;
-
-    /**
-     * Call this function at the beginning of operation and after successful reconnection.
-     */
-    this.start = function() {
-      if(scheduledSend) {
-        return;
-      }
-      scheduledSend = setTimeout((function () {
-        this.notifySend();
-        sendHeartbeatAction();
-      }).bind(this), intervalMs);
-    };
-
-    /**
-     * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
-     */
-    this.notifySend = function() {
-      clearTimeout(scheduledSend); // sending heartbeat will not be necessary until our response arrives
-      scheduledSend = null;
-      if(scheduledError) {
-        return;
-      }
-      scheduledError = setTimeout((function () {
-        scheduledError = null;
-        onError(); // timeout has passed and response hasn't arrived
-      }).bind(this), timeoutMs);
-    };
-
-    /**
-     * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
-     */
-    this.notifyReceive = function() {
-      clearTimeout(scheduledError);
-      scheduledError = null;
-      this.start();
-    };
-
-    /**
-     * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
-     */
-    this.stop = function () {
-      clearTimeout(scheduledSend);
-      scheduledSend = null;
-      clearTimeout(scheduledError);
-      scheduledError = null;
-    };
-  }
-
-  function NoHeartbeat() {
-    this.start = this.stop = this.notifySend = this.notifyReceive = function () {};
-  }
-
-  function PalindromNetworkChannel(palindrom, remoteUrl, useWebSocket, onReceive, onSend, onConnectionError, onFatalError, onStateChange) {
-    // TODO(tomalec): to be removed once we will achieve better separation of concerns
-    this.palindrom = palindrom;
-
-    if(typeof window !== 'undefined' && window.location) {
-        this.remoteUrl = new URL(remoteUrl, window.location.href);
-    }
-    else { // in Node, URL is absolute
-        this.remoteUrl = new URL(remoteUrl);
-    }
-
-    
-    onReceive && (this.onReceive = onReceive);
-    onSend && (this.onSend = onSend);
-    onConnectionError && (this.onConnectionError = onConnectionError);
-    onFatalError && (this.onFatalError = onFatalError);
-    onStateChange && (this.onStateChange = onStateChange);
-
-    //useWebSocket = useWebSocket || false;
-    var that = this;
-    Object.defineProperty(this, "useWebSocket", {
-      get: function () {
-        return useWebSocket;
-      },
-      set: function (newValue) {
-        useWebSocket = newValue;
-
-        if(newValue == false) {
-          if(that._ws) {
-            that._ws.onclose = function() { //overwrites the previous onclose
-              that._ws = null;
-            };
-            that._ws.close();
-          }
-        // define wsUrl if needed
-        } else if(!that.wsUrl) {
-          that.wsUrl = toWebSocketURL(that.remoteUrl.href);
-        }
-        return useWebSocket;
-      }
-    });
-  }
-  PalindromNetworkChannel.prototype.establish = function(bootstrap){
-    establish(this, this.remoteUrl.href, null, bootstrap);
-  };
-  PalindromNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
-    establish(this, this.remoteUrl.href + "/reconnect", JSON.stringify(pending), bootstrap);
-  };
-
-  // TODO: auto-configure here #38 (tomalec)
-  function establish(network, url, body, bootstrap){
-    return network.xhr(
-        url,
-        'application/json',
-        body,
-        function (res) {
-          bootstrap(res.data);
-          if (network.useWebSocket){
-            network.webSocketUpgrade();
-          }
-        }
-      );
-  }
-  /**
-   * Send any text message by currently established channel
-   * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
-   * @param  {String} msg message to be sent
-   * @return {PalindromNetworkChannel}     self
-   */
-  PalindromNetworkChannel.prototype.send = function(msg){
-    var that = this;
-    // send message only if there is a working ws connection
-    if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
-        this._ws.send(msg);
-        that.onSend(msg, that._ws.url, "WS");
-    } else {
-      var url = this.remoteUrl.href;
-      this.xhr(url, 'application/json-patch+json', msg, function (res, method) {
-          that.onReceive(res.data, url, method);
-        });
-    }
-    return this;
-  };
-  /**
-   * Callback function that will be called once message from remote comes.
-   * @param {String} [JSONPatch_sequences] message with Array of JSONPatches that were send by remote.
-   * @return {[type]} [description]
-   */
-  PalindromNetworkChannel.prototype.onReceive = function(/*String_with_JSONPatch_sequences*/){};
-  PalindromNetworkChannel.prototype.onSend = function () { };
-  PalindromNetworkChannel.prototype.onStateChange = function () { };
-  PalindromNetworkChannel.prototype.upgrade = function(msg){
-  };
-
-  function closeWsIfNeeded(network) {
-    if(network._ws) {
-      network._ws.onclose = function () {};
-      network._ws.close();
-      network._ws = null;
-    }
-  }
-
-  /**
-   * Send a WebSocket upgrade request to the server.
-   * For testing purposes WS upgrade url is hardcoded now in Palindrom (replace __default/ID with __default/ID)
-   * In future, server should suggest the WebSocket upgrade URL
-   * @TODO:(tomalec)[cleanup] hide from public API.
-   * @param {Function} [callback] Function to be called once connection gets opened.
-   * @returns {WebSocket} created WebSocket
-   */
-  PalindromNetworkChannel.prototype.webSocketUpgrade = function (callback) {
-    var that = this;
-  
-    this.wsUrl = toWebSocketURL(this.remoteUrl.href);
-    var upgradeURL = this.wsUrl;
-
-    closeWsIfNeeded(that);
-    that._ws = new WebSocket(upgradeURL);
-    that._ws.onopen = function (event) {
-      that.onStateChange(that._ws.readyState, upgradeURL);
-      callback && callback(event);
-      //TODO: trigger on-ready event (tomalec)
-    };
-    that._ws.onmessage = function (event) {
-      that.onReceive(JSON.parse(event.data), that._ws.url, "WS");
-    };
-    that._ws.onerror = function (event) {
-      that.onStateChange(that._ws.readyState, upgradeURL, event.data);
-
-      if (!that.useWebSocket) {
-          return;
-      }
-
-      var m = {
-          statusText: "WebSocket connection could not be made.",
-          readyState: that._ws.readyState,
-          url: upgradeURL
-      };
-
-      that.onFatalError(m, upgradeURL, "WS");
-    };
-    that._ws.onclose = function (event) {
-      that.onStateChange(that._ws.readyState, upgradeURL, null, event.code, event.reason);
-
-      var m = {
-          statusText: "WebSocket connection closed.",
-          readyState: that._ws.readyState,
-          url: upgradeURL,
-          statusCode: event.code,
-          reason: event.reason
-      };
-
-      if(event.reason) {
-        that.onFatalError(m, upgradeURL, "WS");
-      } else {
-        that.onConnectionError();
-      }
-    };
-  };
-  PalindromNetworkChannel.prototype.changeState = function (href) {
-    var that = this;
-    return this.xhr(href, 'application/json-patch+json', null, function (res, method) {
-      that.onReceive(res.data, href, method);
-    }, true);
-  };
-
-  // TODO:(tomalec)[cleanup] hide from public API.
-  PalindromNetworkChannel.prototype.setRemoteUrl = function (remoteUrl) {
-    if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
-        throw new Error("Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.remoteUrl + "\nNew session ID: " + remoteUrl);
-    }
-    this.remoteUrlSet = true;
-    this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
-  };
-
-  PalindromNetworkChannel.prototype.handleResponseHeader = function (res) {
-        /* Axios always returns lowercase headers */
-        var location = res.headers['x-location'] || res.headers['location'];
-        if (location) {
-            this.setRemoteUrl(location);
-        }
-  };
-
-  /**
-   * Internal method to perform XMLHttpRequest
-   * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
-   * @param accept (Optional) HTTP accept header
-   * @param data (Optional) Data payload
-   * @param [callback(response)] callback to be called in context of palindrom with response as argument
-   * @returns {XMLHttpRequest} performed XHR
-   */
-  PalindromNetworkChannel.prototype.xhr = function (url, accept, data, callback, setReferer) {
-
-        const method = data ? 'PATCH' : 'GET';
-        const headers = {};
-        const that = this;
-        var requestPromise;
-
-        if (data) {
-            headers['Content-Type'] = 'application/json-patch+json';
-        }
-        if (accept) {
-            headers['Accept'] = accept;
-        }
-        if (this.remoteUrl && setReferer) {
-            headers['X-Referer'] = this.remoteUrl.pathname;
-        }
-        if (method === "GET") {
-            requestPromise = axios.get(url, {
-              headers: headers
-            })
-        }
-        else {
-            requestPromise = axios.patch(url, data, {
-                headers: headers
-            })
-        }
-        requestPromise.then(function (res) {
-            that.handleResponseHeader(res);
-            callback && callback.call(that.palindrom, res, method);
-        }).catch(function (res) {
-            that.onFatalError({ statusCode: res.status, statusText: res.statusText, reason: res.data }, url, method);
-        });
-
-        this.onSend(data, url, method);
-    };
-
-  /**
-   * Non-queuing object that conforms JSON-Patch-Queue API
-   * @param {Function} apply function to apply received patch
-   */
-  function NoQueue(apply){
-    this.apply = apply;
-  }
-  /** just forward message */
-  NoQueue.prototype.send = function(msg){
-    return msg;
-  };
-  /** Apply given JSON Patch sequence immediately */
-  NoQueue.prototype.receive = function(obj, sequence){
-    this.apply(obj, sequence);
-  };
-  NoQueue.prototype.reset = function(obj, newState) {
-    var patch = [{ op: "replace", path: "", value: newState }];
-    this.apply(obj, patch);
-  };
-
-  function connectToRemote(palindrom, reconnectionFn) {
-    // if we lose connection at this point, the connection we're trying to establish should trigger onError
-    palindrom.heartbeat.stop();
-    
-    reconnectionFn(function bootstrap(json){
-      palindrom.reconnector.stopReconnecting();
-
-      palindrom.queue.reset(palindrom.obj, json);
-
-      if (palindrom.debug) {
-        palindrom.remoteObj = JSON.parse(JSON.stringify(json));
-      }
-
-      palindrom.observe();
-
-      if (palindrom.onDataReady) {
-        palindrom.onDataReady.call(palindrom, palindrom.obj);
-      }
-
-      palindrom.heartbeat.start();
-    });
-  }
-
-  function makeInitialConnection(palindrom) {
-    connectToRemote(palindrom, palindrom.network.establish.bind(palindrom.network));
-  }
-
-  function makeReconnection(palindrom) {
-    connectToRemote(palindrom, function (bootstrap) {
-      palindrom.network.reestablish(palindrom.queue.pending, bootstrap);
-    });
-  }
-
-
-  /**
-   * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
-   * @param {Object} [options] map of arguments. See README.md for description
-   */
-  function Palindrom(options) {
-    if(typeof options !== "object") {
-      throw new Error('Palindrom constructor requires an object argument.');
-    }
-    if (!options.remoteUrl) {
-          throw new Error('remoteUrl is required');
-    }
-    this.jsonpatch = options.jsonpatch || this.jsonpatch;
-    this.debug = options.debug != undefined ? options.debug : true;
-
-    if ("obj" in options) {
-        if (typeof options.obj != "object") {
-            throw new Error("'options.obj' is not an object");
-        }
-        this.obj = options.obj;
-    }
-    else {
-        this.obj = {};
-    }
-    /* wrap the given object with a proxy observer */
-    this.jsonPatcherProxy = new JSONPatcherProxy(this.obj);
-
-    var noop = function () { };
-
-    this.isObjectProxified = false;
-    this.isObserving = false;
-    this.onLocalChange = options.onLocalChange;
-    this.onRemoteChange = options.onRemoteChange;
-    this.onPatchReceived = options.onPatchReceived || noop;
-    this.onPatchSent = options.onPatchSent || noop;
-    this.onSocketStateChanged = options.onSocketStateChanged || noop;
-    this.onConnectionError = options.onConnectionError || noop;
-    this.retransmissionThreshold = options.retransmissionThreshold || 3;
-    this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
-    this.onReconnectionEnd = options.onReconnectionEnd || noop;
-    this.onIncomingPatchValidationError = options.onIncomingPatchValidationError || noop;
-    this.onOutgoingPatchValidationError = options.onOutgoingPatchValidationError || noop;
-    
-
-    this.reconnector = new Reconnector(function () {
-      makeReconnection(this);
-    }.bind(this),
-    this.onReconnectionCountdown,
-    this.onReconnectionEnd);
-
-    if(options.pingIntervalS) {
-      const intervalMs = options.pingIntervalS*1000;
-      this.heartbeat = new Heartbeat(this.ping.bind(this), this.handleConnectionError.bind(this), intervalMs, intervalMs);
-    } else {
-      this.heartbeat = new NoHeartbeat();
-    }
-
-    this.network = new PalindromNetworkChannel(
-        this, // palindrom instance TODO: to be removed, used for error reporting
-        options.remoteUrl,
-        options.useWebSocket || false, // useWebSocket
-        this.handleRemoteChange.bind(this), //onReceive
-        this.onPatchSent.bind(this), //onSend,
-        this.handleConnectionError.bind(this), //onConnectionError,
-        this.handleFatalError.bind(this), //onFatalError,
-        this.onSocketStateChanged.bind(this) //onStateChange
-      );
-
-    Object.defineProperty(this, "useWebSocket", {
-      get: function () {
-        return this.network.useWebSocket;
-      },
-      set: function (newValue) {
-        this.network.useWebSocket = newValue;
-      }
-    });
-
-    this.ignoreCache = {};
-    this.ignoreAdd = options.ignoreAdd || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
-
-    //usage:
-    //palindrom.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to remote
-    //palindrom.ignoreAdd = /./; //ignore all the "add" operations
-    //palindrom.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
-    //palindrom.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
-
-    this.onDataReady = options.callback;
-
-    // choose queuing engine
-    if(options.localVersionPath){
-      if(!options.remoteVersionPath){
-        // just versioning
-        this.queue = new JSONPatchQueueSynchronous(options.localVersionPath, this.validateAndApplySequence.bind(this), options.purity);
-      } else {
-        // double versioning or OT
-          this.queue = options.ot ?
-            new JSONPatchOTAgent(JSONPatchOT.transform, [options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity) :
-            new JSONPatchQueue([options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity); // full or noop OT
-      }
-    } else {
-      // no queue - just api
-      this.queue = new NoQueue(this.validateAndApplySequence.bind(this));
-    }
-
-    makeInitialConnection(this);
-  }
-
-  Palindrom.prototype.jsonpatch = jsonpatch;
-
-  Palindrom.prototype.ping = function () {
-    sendPatches(this, []); // sends empty message to server
-  };
-
-  Palindrom.prototype.observe = function () {
-    /* if we haven't ever proxified our object,
-    this means it's the first observe call,
-    let's proxify it then! */
-    if (!this.isObjectProxified) {
-      /* make exposed object read only */
-      const proxifiedObj = this.jsonPatcherProxy.observe(true, this.filterChangedCallback.bind(this));
-      Object.defineProperty(this, 'obj', {
-        get: function() {
-          return proxifiedObj
-        },
-        set: function() {
-          throw new Error("palindrom.obj is readonly");
-        }
-      });      
-      this.isObjectProxified = true;
-    }
-    /* we are already observing, just enable event emitting. */
-    else {
-        this.jsonPatcherProxy.switchObserverOn();
-    }
-    this.isObserving = true;
-  };
-  Palindrom.prototype.unobserve = function () {
-        this.jsonPatcherProxy && this.jsonPatcherProxy.switchObserverOff();
-        this.isObserving = false;
-  };
-
-  Palindrom.prototype.filterChangedCallback = function (patch) {
-    /*
-    because JSONPatcherProxy is synchronous,
-    it passes a single patch to the callback instantly after the change,
-    to make this review process easier, I'll convert this single patch
-    to an array to keep the logic change minimal,
-    once approved, I can enhance this.
-    Or we can also keep it, in case we decided to introduce batching/delaying 
-    at one point.
-    */
-    var patches = [patch];
-    this.filterIgnoredPatches(patches);
-    if(patches.length) {
-      this.handleLocalChange(patches);
-    }
-  };
-
-  function isIgnored(pattern, ignoreCache, path, op) {
-    if (op === 'add' && pattern.test(path)) {
-      ignoreCache[path] = true;
-      return true;
-    }
-    var arr = path.split('/');
-    var joined = '';
-    for (var i = 1, ilen = arr.length; i < ilen; i++) {
-      joined += '/' + arr[i];
-      if (ignoreCache[joined]) {
-        return true; //once we decided to ignore something that was added, other operations (replace, remove, ...) are ignored as well
-      }
-    }
-    return false;
-  }
-
-  //ignores private member changes
-  Palindrom.prototype.filterIgnoredPatches = function (patches) {
-    if(this.ignoreAdd){
-      for (var i = 0, ilen = patches.length; i < ilen; i++) {
-        if (isIgnored(this.ignoreAdd, this.ignoreCache, patches[i].path, patches[i].op)) { //if it is ignored, remove patch
-          patches.splice(i, 1); //ignore changes to properties that start with PRIVATE_PREFIX
-          ilen--;
-          i--;
-        }
-      }
-    }
-    return patches;
-  };
-
-  function sendPatches(palindrom, patches) {
-    var txt = JSON.stringify(patches);
-    palindrom.unobserve();
-    palindrom.heartbeat.notifySend();
-    palindrom.network.send(txt);
-    palindrom.observe();
-  }
-
-  Palindrom.prototype.handleLocalChange = function (patches) {
-
-    if(this.debug) {
-      this.validateSequence(this.remoteObj, patches);
-    }
-
-    sendPatches(this, this.queue.send(patches));
-    if (this.onLocalChange) {
-      this.onLocalChange(patches);
-    }
-  };
-
-  Palindrom.prototype.validateAndApplySequence = function (tree, sequence) {
-    // we don't want this changes to generate patches since they originate from server, not client
-    this.unobserve();
-    try {
-      var results = this.jsonpatch.apply(tree, sequence, this.debug);
-    } catch (error) {
-      if(this.debug) {
-        this.onIncomingPatchValidationError(error);
-        return;
-      } else {
-        throw error;
-      }
-    }
-
-    var that = this;
-    sequence.forEach(function (patch) {
-      if (patch.path === "") {
-        var desc = JSON.stringify(sequence);
-        if (desc.length > 103) {
-          desc = desc.substring(0, 100) + "...";
-        }
-        //TODO Error
-        that.showWarning("Server pushed patch that replaces the object root", desc);
-      }
-    });
-
-    // notifications have to happen only where observe has been re-enabled
-    // otherwise some listener might produce changes that would go unnoticed
-    this.observe();
-
-    // until notifications are converged to single method (events vs. callbacks, #74)
-    if (this.onRemoteChange) {
-      this.onRemoteChange(sequence, results);
-    }
-  };
-
-  Palindrom.prototype.validateSequence = function (tree, sequence) {
-    var error = this.jsonpatch.validate(sequence, tree);
-    if (error) {
-      this.onOutgoingPatchValidationError(error);
-    }
-  };
-
-  /**
-   * Handle an error which is probably caused by random disconnection
-   */
-  Palindrom.prototype.handleConnectionError = function () {
-    this.heartbeat.stop();
-    this.reconnector.triggerReconnection();
-  };
-
-  /**
-   * Handle an error which probably won't go away on itself (basically forward upstream)
-   */
-  Palindrom.prototype.handleFatalError = function (data, url, method) {
-    this.heartbeat.stop();
-    this.reconnector.stopReconnecting();
-    if (this.onConnectionError) {
-      this.onConnectionError(data, url, method);
-    }
-  };
-
-  Palindrom.prototype.reconnectNow = function () {
-    this.reconnector.reconnectNow();
-  };
-
-  Palindrom.prototype.showWarning = function (heading, description) {
-    if (this.debug && global.console && console.warn) {
-      if (description) {
-        heading += " (" + description + ")";
-      }
-      console.warn("Palindrom warning: " + heading);
-    }
-  };
-
-  Palindrom.prototype.handleRemoteChange = function (data, url, method) {
-    this.heartbeat.notifyReceive();
-    var patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
-
-    if(patches.length === 0) { // ping message
-      return;
-    }
-
-    if (this.onPatchReceived) {
-      this.onPatchReceived(data, url, method);
-    }
-
-    // apply only if we're still watching
-    if (!this.isObserving) {
-      return;
-    }
-
-    this.queue.receive(this.obj, patches);
-
-    if(this.queue.pending && this.queue.pending.length && this.queue.pending.length > this.retransmissionThreshold) {
-      // remote counterpart probably failed to receive one of earlier messages, because it has been receiving
-      // (but not acknowledging messages for some time
-      this.queue.pending.forEach(sendPatches.bind(null, this));
-    }
-
-    if (this.debug) {
-      this.remoteObj = JSON.parse(JSON.stringify(this.obj));
-    }
-  };
-
-  /* backward compatibility */
-  global.Puppet = Palindrom;
-  
-  /* Since we have jsonpatch bundled,
-  let's expose it in case anyone needs it */
-  global.jsonpatch = jsonpatch;
-
-  return Palindrom;
-})();
-
-if(true) {
-  module.exports = Palindrom;
-  module.exports.default = Palindrom;
-  module.exports.__esModule = true;
-}
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
-
-/***/ }),
 /* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var extend = __webpack_require__(3);
+var extend = __webpack_require__(7);
 var functionName = __webpack_require__(18);
-var functionToString = __webpack_require__(28);
-var getPropertyDescriptor = __webpack_require__(15);
-var sinonMatch = __webpack_require__(2);
-var deepEqual = __webpack_require__(8).use(sinonMatch);
-var spyCall = __webpack_require__(20);
+var functionToString = __webpack_require__(29);
+var getPropertyDescriptor = __webpack_require__(16);
+var sinonMatch = __webpack_require__(6);
+var deepEqual = __webpack_require__(12).use(sinonMatch);
+var spyCall = __webpack_require__(21);
 var wrapMethod = __webpack_require__(19);
-var sinonFormat = __webpack_require__(9);
-var valueToString = __webpack_require__(4);
+var sinonFormat = __webpack_require__(13);
+var valueToString = __webpack_require__(8);
 
 var push = Array.prototype.push;
 var slice = Array.prototype.slice;
@@ -5946,7 +6026,7 @@ var uuid = 0;
 
 // Public API
 var spyApi = {
-    formatters: __webpack_require__(132),
+    formatters: __webpack_require__(134),
 
     reset: function () {
         if (this.invoking) {
@@ -6304,8 +6384,8 @@ module.exports = function functionName(func) {
 "use strict";
 
 
-var getPropertyDescriptor = __webpack_require__(15);
-var valueToString = __webpack_require__(4);
+var getPropertyDescriptor = __webpack_require__(16);
+var valueToString = __webpack_require__(8);
 
 var hasOwn = Object.prototype.hasOwnProperty;
 
@@ -6459,14 +6539,21 @@ module.exports = function wrapMethod(object, property, method) {
 /* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
+module.exports = __webpack_require__(95);
+
+
+/***/ }),
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
 "use strict";
 
 
-var sinonMatch = __webpack_require__(2);
-var deepEqual = __webpack_require__(8).use(sinonMatch);
+var sinonMatch = __webpack_require__(6);
+var deepEqual = __webpack_require__(12).use(sinonMatch);
 var functionName = __webpack_require__(18);
-var sinonFormat = __webpack_require__(9);
-var valueToString = __webpack_require__(4);
+var sinonFormat = __webpack_require__(13);
+var valueToString = __webpack_require__(8);
 var slice = Array.prototype.slice;
 
 function throwYieldError(proxy, text, args) {
@@ -6675,21 +6762,21 @@ module.exports = createSpyCall;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var behavior = __webpack_require__(52);
-var behaviors = __webpack_require__(130);
+var behaviors = __webpack_require__(132);
 var spy = __webpack_require__(17);
-var extend = __webpack_require__(3);
-var functionToString = __webpack_require__(28);
-var getPropertyDescriptor = __webpack_require__(15);
+var extend = __webpack_require__(7);
+var functionToString = __webpack_require__(29);
+var getPropertyDescriptor = __webpack_require__(16);
 var wrapMethod = __webpack_require__(19);
-var stubEntireObject = __webpack_require__(134);
-var stubDescriptor = __webpack_require__(133);
+var stubEntireObject = __webpack_require__(136);
+var stubDescriptor = __webpack_require__(135);
 var throwOnFalsyObject = __webpack_require__(56);
 
 function stub(object, property, descriptor) {
@@ -6845,7 +6932,7 @@ module.exports = stub;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6859,7 +6946,7 @@ module.exports = function timesInWords(count) {
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6911,14 +6998,14 @@ module.exports = function walk(obj, iterator, context) {
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(1);
-var normalizeHeaderName = __webpack_require__(88);
+var normalizeHeaderName = __webpack_require__(90);
 
 var PROTECTION_PREFIX = /^\)\]\}',?\n/;
 var DEFAULT_CONTENT_TYPE = {
@@ -6935,10 +7022,10 @@ function getDefaultAdapter() {
   var adapter;
   if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(39);
+    adapter = __webpack_require__(40);
   } else if (typeof process !== 'undefined') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(39);
+    adapter = __webpack_require__(40);
   }
   return adapter;
 }
@@ -7009,18 +7096,18 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = defaults;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(15)))
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // This is (almost) directly from Node.js utils
 // https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/util.js
 
 var getName = __webpack_require__(46);
-var getProperties = __webpack_require__(106);
-var getEnumerableProperties = __webpack_require__(103);
+var getProperties = __webpack_require__(108);
+var getEnumerableProperties = __webpack_require__(105);
 
 module.exports = inspect;
 
@@ -7353,20 +7440,20 @@ function objectToString(o) {
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
  * version: 2.0.1
  */
-var queue = __webpack_require__(123);
-var sync = __webpack_require__(122);
+var queue = __webpack_require__(125);
+var sync = __webpack_require__(124);
 
 module.exports = { JSONPatchQueue: queue, JSONPatchQueueSynchronous: sync, /* Babel demands this */__esModule:  true };
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7374,9 +7461,9 @@ module.exports = { JSONPatchQueue: queue, JSONPatchQueueSynchronous: sync, /* Ba
 
 var calledInOrder = __webpack_require__(57);
 var orderByFirstCall = __webpack_require__(62);
-var timesInWords = __webpack_require__(22);
-var format = __webpack_require__(9);
-var sinonMatch = __webpack_require__(2);
+var timesInWords = __webpack_require__(23);
+var format = __webpack_require__(13);
+var sinonMatch = __webpack_require__(6);
 
 var slice = Array.prototype.slice;
 
@@ -7577,7 +7664,7 @@ module.exports = assert;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7604,7 +7691,7 @@ module.exports = function toString() {
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7658,13 +7745,13 @@ module.exports = configure;
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var type = __webpack_require__(153);
+var type = __webpack_require__(155);
 
 module.exports = function typeOf(value) {
     return type(value).toLowerCase();
@@ -7672,17 +7759,17 @@ module.exports = function typeOf(value) {
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var fakeXhr = __webpack_require__(33);
+var fakeXhr = __webpack_require__(34);
 var push = [].push;
-var format = __webpack_require__(9);
-var configureLogError = __webpack_require__(29);
-var pathToRegexp = __webpack_require__(152);
+var format = __webpack_require__(13);
+var configureLogError = __webpack_require__(30);
+var pathToRegexp = __webpack_require__(154);
 
 function responseArray(handler) {
     var response = handler;
@@ -7946,13 +8033,13 @@ module.exports = fakeServer;
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {
 
-var llx = __webpack_require__(125);
+var llx = __webpack_require__(127);
 
 exports.useFakeTimers = function () {
     var now;
@@ -7985,20 +8072,20 @@ exports.timers = {
     Date: Date
 };
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(35).setImmediate, __webpack_require__(35).clearImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(36).setImmediate, __webpack_require__(36).clearImmediate))
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {
 
-var TextEncoder = __webpack_require__(154).TextEncoder;
+var TextEncoder = __webpack_require__(156).TextEncoder;
 
-var configureLogError = __webpack_require__(29);
+var configureLogError = __webpack_require__(30);
 var sinonEvent = __webpack_require__(63);
-var extend = __webpack_require__(3);
+var extend = __webpack_require__(7);
 
 function getWorkingXHR(globalScope) {
     var supportsXHR = typeof globalScope.XMLHttpRequest !== "undefined";
@@ -8020,7 +8107,7 @@ var supportsProgress = typeof ProgressEvent !== "undefined";
 var supportsCustomEvent = typeof CustomEvent !== "undefined";
 var supportsFormData = typeof FormData !== "undefined";
 var supportsArrayBuffer = typeof ArrayBuffer !== "undefined";
-var supportsBlob = __webpack_require__(127).isSupported;
+var supportsBlob = __webpack_require__(129).isSupported;
 var isReactNative = global.navigator && global.navigator.product === "ReactNative";
 var sinonXhr = { XMLHttpRequest: global.XMLHttpRequest };
 sinonXhr.GlobalXMLHttpRequest = global.XMLHttpRequest;
@@ -8641,7 +8728,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8652,7 +8739,7 @@ exports.lineDiff = undefined;
 exports. /*istanbul ignore end*/diffLines = diffLines;
 /*istanbul ignore start*/exports. /*istanbul ignore end*/diffTrimmedLines = diffTrimmedLines;
 
-var /*istanbul ignore start*/_base = __webpack_require__(5) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(9) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
@@ -8701,7 +8788,7 @@ function diffTrimmedLines(oldStr, newStr, callback) {
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var apply = Function.prototype.apply;
@@ -8754,20 +8841,20 @@ exports._unrefActive = exports.active = function(item) {
 };
 
 // setimmediate attaches itself to the global object
-__webpack_require__(126);
+__webpack_require__(128);
 exports.setImmediate = setImmediate;
 exports.clearImmediate = clearImmediate;
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(157);
+module.exports = __webpack_require__(159);
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports) {
 
 /*!
@@ -8889,25 +8976,25 @@ AssertionError.prototype.toJSON = function (stack) {
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(74);
+module.exports = __webpack_require__(76);
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(1);
-var settle = __webpack_require__(80);
-var buildURL = __webpack_require__(83);
-var parseHeaders = __webpack_require__(89);
-var isURLSameOrigin = __webpack_require__(87);
-var createError = __webpack_require__(42);
-var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(82);
+var settle = __webpack_require__(82);
+var buildURL = __webpack_require__(85);
+var parseHeaders = __webpack_require__(91);
+var isURLSameOrigin = __webpack_require__(89);
+var createError = __webpack_require__(43);
+var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(84);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -9003,7 +9090,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(85);
+      var cookies = __webpack_require__(87);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -9077,10 +9164,10 @@ module.exports = function xhrAdapter(config) {
   });
 };
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(15)))
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9106,7 +9193,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9118,13 +9205,13 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var enhanceError = __webpack_require__(79);
+var enhanceError = __webpack_require__(81);
 
 /**
  * Create an Error with the specified message, config, error code, and response.
@@ -9142,7 +9229,7 @@ module.exports = function createError(message, config, code, response) {
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9157,13 +9244,6 @@ module.exports = function bind(fn, thisArg) {
     return fn.apply(thisArg, args);
   };
 };
-
-
-/***/ }),
-/* 44 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(93);
 
 
 /***/ }),
@@ -9347,7 +9427,7 @@ function _getPathValue (parsed, obj, index) {
  * MIT Licensed
  */
 
-var type = __webpack_require__(36);
+var type = __webpack_require__(37);
 
 /**
  * ### .hasProperty(object, name)
@@ -9421,8 +9501,8 @@ module.exports = function hasProperty(name, obj) {
  * Module dependancies
  */
 
-var inspect = __webpack_require__(25);
-var config = __webpack_require__(11);
+var inspect = __webpack_require__(26);
+var config = __webpack_require__(14);
 
 /**
  * ### .objDisplay (object)
@@ -9968,9 +10048,9 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(("function" =
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process, setImmediate) {
 
-var extend = __webpack_require__(3);
+var extend = __webpack_require__(7);
 var functionName = __webpack_require__(18);
-var valueToString = __webpack_require__(4);
+var valueToString = __webpack_require__(8);
 
 var slice = Array.prototype.slice;
 var join = Array.prototype.join;
@@ -10168,7 +10248,7 @@ proto.addBehavior = addBehavior;
 proto.createBehavior = createBehavior;
 module.exports = proto;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13), __webpack_require__(35).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(15), __webpack_require__(36).setImmediate))
 
 /***/ }),
 /* 53 */
@@ -10178,11 +10258,11 @@ module.exports = proto;
 
 
 var sinonSpy = __webpack_require__(17);
-var sinonStub = __webpack_require__(21);
+var sinonStub = __webpack_require__(22);
 var sinonMock = __webpack_require__(55);
 var throwOnFalsyObject = __webpack_require__(56);
-var collectOwnMethods = __webpack_require__(128);
-var stubNonFunctionProperty = __webpack_require__(135);
+var collectOwnMethods = __webpack_require__(130);
+var stubNonFunctionProperty = __webpack_require__(137);
 
 var push = [].push;
 
@@ -10304,15 +10384,15 @@ module.exports = collection;
 
 
 var spyInvoke = __webpack_require__(17).invoke;
-var spyCallToString = __webpack_require__(20).toString;
-var timesInWords = __webpack_require__(22);
-var extend = __webpack_require__(3);
-var match = __webpack_require__(2);
-var stub = __webpack_require__(21);
-var assert = __webpack_require__(27);
-var deepEqual = __webpack_require__(8).use(match);
-var format = __webpack_require__(9);
-var valueToString = __webpack_require__(4);
+var spyCallToString = __webpack_require__(21).toString;
+var timesInWords = __webpack_require__(23);
+var extend = __webpack_require__(7);
+var match = __webpack_require__(6);
+var stub = __webpack_require__(22);
+var assert = __webpack_require__(28);
+var deepEqual = __webpack_require__(12).use(match);
+var format = __webpack_require__(13);
+var valueToString = __webpack_require__(8);
 
 var slice = Array.prototype.slice;
 var push = Array.prototype.push;
@@ -10599,10 +10679,10 @@ module.exports = mockExpectation;
 
 
 var mockExpectation = __webpack_require__(54);
-var spyCallToString = __webpack_require__(20).toString;
-var extend = __webpack_require__(3);
-var match = __webpack_require__(2);
-var deepEqual = __webpack_require__(8).use(match);
+var spyCallToString = __webpack_require__(21).toString;
+var extend = __webpack_require__(7);
+var match = __webpack_require__(6);
+var deepEqual = __webpack_require__(12).use(match);
 var wrapMethod = __webpack_require__(19);
 
 var push = Array.prototype.push;
@@ -10780,7 +10860,7 @@ module.exports = mock;
 
 "use strict";
 
-var valueToString = __webpack_require__(4);
+var valueToString = __webpack_require__(8);
 
 function throwOnFalsyObject(object, property) {
     if (property && !object) {
@@ -10901,7 +10981,7 @@ module.exports = function every(obj, fn) {
 
 "use strict";
 
-var typeOf = __webpack_require__(30);
+var typeOf = __webpack_require__(31);
 
 module.exports = function iterableToString(obj) {
     var representation = "";
@@ -11054,8 +11134,8 @@ module.exports = {
 "use strict";
 
 
-var fakeServer = __webpack_require__(31);
-var fakeTimers = __webpack_require__(32);
+var fakeServer = __webpack_require__(32);
+var fakeTimers = __webpack_require__(33);
 
 function Server() {}
 Server.prototype = fakeServer;
@@ -11310,11 +11390,11 @@ module.exports = __webpack_amd_options__;
 
 /** only run DOM tests in browsers */
 if (typeof window !== "undefined") {
-  const PalindromDOM = __webpack_require__(161);
-  const assert = __webpack_require__(10);
-  const moxios = __webpack_require__(12);
-  const sinon = __webpack_require__(14);
-  const expect = __webpack_require__(44).expect;
+  const PalindromDOM = __webpack_require__(163);
+  const assert = __webpack_require__(3);
+  const moxios = __webpack_require__(4);
+  const sinon = __webpack_require__(5);
+  const expect = __webpack_require__(20).expect;
 
   function createAndClickOnLink(href, parent) {
     parent = parent || document.body;
@@ -11816,13 +11896,13 @@ if (typeof window !== "undefined") {
 /* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(7).WebSocket;
+/* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
 
-const MockSocketServer = __webpack_require__(7).Server;
-const Palindrom = __webpack_require__(16);
-const assert = __webpack_require__(10);
-const moxios = __webpack_require__(12);
-const sinon = __webpack_require__(14);
+const MockSocketServer = __webpack_require__(2).Server;
+const Palindrom = __webpack_require__(10);
+const assert = __webpack_require__(3);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
 
 describe("Callbacks, onPatchSent and onPatchReceived", () => {
   beforeEach(() => {
@@ -11972,12 +12052,12 @@ describe("Callbacks, onPatchSent and onPatchReceived", () => {
 /* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(7).WebSocket;
+/* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
 
-const Palindrom = __webpack_require__(16);
-const assert = __webpack_require__(10);
-const moxios = __webpack_require__(12);
-const sinon = __webpack_require__(14);
+const Palindrom = __webpack_require__(10);
+const assert = __webpack_require__(3);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
 
 describe("Callbacks", () => {
   beforeEach(() => {
@@ -12059,268 +12139,36 @@ describe("Callbacks", () => {
 /* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(7).WebSocket;
+/* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
 
-const Palindrom = __webpack_require__(16);
-const assert = __webpack_require__(10);
-const moxios = __webpack_require__(12);
-const sinon = __webpack_require__(14);
-const expect = __webpack_require__(44).expect;
+const Palindrom = __webpack_require__(10);
+const assert = __webpack_require__(3);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
+const expect = __webpack_require__(20).expect;
 
-describe("Palindrom", () => {
-  describe("#constructor", () => {
+describe('Palindrom', () => {
+  describe('#error responses', () => {
     beforeEach(() => {
       moxios.install();
     });
     afterEach(() => {
       moxios.uninstall();
     });
-    it("should initiate an ajax request when initiated, and call the callback function", function(done) {
-      moxios.stubRequest("http://localhost/testURL", {
-        status: 200,
-        headers: { Location: "http://localhost/testURL" },
-        responseText: '{"hello": "world"}'
-      });
-      const spy = sinon.spy();
-      const palindrom = new Palindrom({
-        remoteUrl: "http://localhost/testURL",
-        callback: spy
-      });
-      setTimeout(
-        () => {
-          assert(spy.called);
-          assert.deepEqual(spy.getCall(0).args[0], { hello: "world" });
-          done();
-        },
-        5
-      );
-    });
-    it("should accept a JSON that has an empty string as a key", function(done) {
-      moxios.stubRequest("http://localhost/testURL", {
-        status: 200,
-        headers: { Location: "http://localhost/testURL" },
-        responseText: '{"hello": "world","": {"hola": "mundo"}}'
-      });
-      const spy = sinon.spy();
-      let palindrom = new Palindrom({
-        remoteUrl: "http://localhost/testURL",
-        callback: spy
-      });
-      setTimeout(
-        () => {
-          assert.deepEqual(spy.getCall(0).args[0], {
-            hello: "world",
-            "": { hola: "mundo" }
-          });
-          assert.equal("mundo", palindrom.obj[""].hola);
-          done();
-        },
-        5
-      );
-    });
-  });
-});
-describe("Palindrom", () => {
-  describe("obj", () => {
-    beforeEach(() => {
-      moxios.install();
-    });
-    afterEach(() => {
-      moxios.uninstall();
-    });
-    it("palindrom.obj should be readonly", function(done) {
-      moxios.stubRequest("http://localhost/testURL", {
-        status: 200,
-        headers: { contentType: "application/json" },
-        responseText: '{"hello": "world"}'
-      });
-
-      const palindrom = new Palindrom({
-        remoteUrl: "http://localhost/testURL"
-      });
-
-      setTimeout(() => {
-        /* setting the object should throw an error */
-        assert.throws(() => palindrom.obj = {}, Error, "palindrom.obj is readonly");
-        done();
-      }, 10);
-    });
-  });
-});
-describe("Palindrom", () => {
-  describe("#patching", () => {
-    beforeEach(() => {
-      moxios.install();
-    });
-    afterEach(() => {
-      moxios.uninstall();
-    });
-    it("should patch changes", function(done) {
-      moxios.stubRequest("http://localhost/testURL", {
-        status: 200,
-        headers: { contentType: "application/json" },
-        responseText: '{"hello": "world"}'
-      });
-
-      const palindrom = new Palindrom({
-        remoteUrl: "http://localhost/testURL",
-        callback: function(tempObject) {
-          assert.equal(tempObject.hello, "world");
-          tempObject.hello = "galaxy";
-
-          /* now two ajax requests should had happened,
-                    the initial one, and the patch one (hello = world => hello = galaxy)*/
-          setTimeout(
-            () => {
-              assert.equal(2, moxios.requests.count());
-              let request = moxios.requests.mostRecent();
-
-              assert.equal(
-                '[{"op":"replace","path":"/hello","value":"galaxy"}]',
-                request.config.data
-              );
-              done();
-            },
-            5
-          );
-        }
-      });
-    });
-    it("should not patch changes after unobserve() was called", function(done) {
-      moxios.stubRequest("http://localhost/testURL", {
-        status: 200,
-        headers: { contentType: "application/json" },
-        responseText: '{"unwatched": "object"}'
-      });
-      let tempObject;
-      const palindrom = new Palindrom({
-        remoteUrl: "http://localhost/testURL",
-        callback: function(obj) {
-          tempObject = obj;
-        }
-      });
-      setTimeout(
-        () => {
-          assert.equal(1, moxios.requests.count());
-          assert.equal(tempObject.unwatched, "object");
-          tempObject.unwatched = "objecto";
-        },
-        5
-      );
-
-      /* now two ajax requests should have happened, 
-            the initial one, and the patch one */
-      setTimeout(
-        () => {
-          assert.equal(2, moxios.requests.count());
-          let request = moxios.requests.mostRecent();
-          assert.equal(
-            '[{"op":"replace","path":"/unwatched","value":"objecto"}]',
-            request.config.data
-          );
-          palindrom.unobserve();
-          tempObject.hello = "a change that shouldn't be considered";
-        },
-        10
-      );
-
-      /* now palindrom is unobserved, requests should stay 2 */
-      setTimeout(
-        () => {
-          assert.equal(2, moxios.requests.count());
-          done();
-        },
-        15
-      );
-    });
-    it("should patch changes after observe() was called", function(done) {
-      moxios.stubRequest("http://localhost/testURL", {
-        status: 200,
-        headers: { contentType: "application/json" },
-        responseText: '{"unwatched": "object"}'
-      });
-      let tempObject;
-      const palindrom = new Palindrom({
-        remoteUrl: "http://localhost/testURL",
-        callback: function(obj) {
-          tempObject = obj;
-        }
-      });
-      setTimeout(
-        () => {
-          assert.equal(tempObject.unwatched, "object");
-          assert.equal(1, moxios.requests.count());
-          tempObject.unwatched = "objecto";
-        },
-        13
-      );
-
-      /* now two ajax requests should had happened, 
-            the initial one, and the patch one */
-      setTimeout(
-        () => {
-          assert.equal(2, moxios.requests.count());
-          let request = moxios.requests.mostRecent();
-          assert.equal(
-            '[{"op":"replace","path":"/unwatched","value":"objecto"}]',
-            request.config.data
-          );
-          palindrom.unobserve();
-          tempObject.unwatched = "a change that should NOT be considered";
-        },
-        14
-      );
-
-      /* now palindrom is unobserved, requests should stay 2 */
-      setTimeout(
-        () => {
-          assert.equal(2, moxios.requests.count());
-
-          /* let's observe again */
-          palindrom.observe();
-          tempObject.unwatched = "a change that SHOULD be considered";
-        },
-        15
-      );
-
-      /* now palindrom is observed, requests should become 3  */
-      setTimeout(
-        () => {
-          let request = moxios.requests.mostRecent();
-          assert.equal(3, moxios.requests.count());
-          assert.equal(
-            '[{"op":"replace","path":"/unwatched","value":"a change that SHOULD be considered"}]',
-            request.config.data
-          );
-          done();
-        },
-        16
-      );
-    });
-  });
-});
-describe("Palindrom", () => {
-  describe("#error responses", () => {
-    beforeEach(() => {
-      moxios.install();
-    });
-    afterEach(() => {
-      moxios.uninstall();
-    });
-    it("should call onConnectionError on HTTP 400 response", function(done) {
+    it('should call onConnectionError on HTTP 400 response', function(done) {
       const spy = sinon.spy();
 
-      moxios.stubRequest("http://localhost/testURL", {
+      moxios.stubRequest('http://localhost/testURL', {
         status: 400,
-        headers: { contentType: "application/json" },
-        responseText: "Custom message"
+        headers: { contentType: 'application/json' },
+        responseText: 'Custom message'
       });
 
       let tempObject;
       const that = this;
 
       const palindrom = new Palindrom({
-        remoteUrl: "http://localhost/testURL",
+        remoteUrl: 'http://localhost/testURL',
         onConnectionError: spy
       });
 
@@ -12334,20 +12182,20 @@ describe("Palindrom", () => {
       );
     });
 
-    it("should call onConnectionError on HTTP 599 response", function(done) {
+    it('should call onConnectionError on HTTP 599 response', function(done) {
       const spy = sinon.spy();
 
-      moxios.stubRequest("http://localhost/testURL", {
+      moxios.stubRequest('http://localhost/testURL', {
         status: 599,
-        headers: { contentType: "application/json" },
-        responseText: "Custom message"
+        headers: { contentType: 'application/json' },
+        responseText: 'Custom message'
       });
 
       let tempObject;
       const that = this;
 
       const palindrom = new Palindrom({
-        remoteUrl: "http://localhost/testURL",
+        remoteUrl: 'http://localhost/testURL',
         onConnectionError: spy
       });
 
@@ -12361,77 +12209,87 @@ describe("Palindrom", () => {
       );
     });
 
-    it("should call onConnectionError on HTTP 400 response (patch)", function(done) {
+    it('should call onConnectionError on HTTP 400 response (patch)', function(done) {
       const spy = sinon.spy();
 
-      moxios.stubRequest("http://localhost/testURL", {
+      moxios.stubRequest('http://localhost/testURL', {
         status: 200,
-        headers: { contentType: "application/json" },
+        headers: { contentType: 'application/json' },
         responseText: '{"hello": "world"}'
       });
 
       const palindrom = new Palindrom({
-        remoteUrl: "http://localhost/testURL",
+        remoteUrl: 'http://localhost/testURL',
         onConnectionError: spy
       });
-
-      moxios.withMock(() => {
-        setTimeout(
-          () => {
-            palindrom.obj.hello = "galaxy";
-            let request = moxios.requests.mostRecent();
-            request
-              .respondWith({
-                status: 400,
-                headers: { contentType: "application/json" },
-                response: "Custom message"
-              })
-              .then(() => {
-                /* onConnectionError should be called once now */
-                assert(spy.calledOnce);
-                done();
-              });
-          },
-          5
-        );
-      });
+      setTimeout(
+        () => {
+          palindrom.obj.hello = 'galaxy';
+          let request = moxios.requests.mostRecent();
+          request
+            .respondWith({
+              status: 400,
+              headers: { contentType: 'application/json' },
+              response: 'Custom message'
+            })
+            .then(() => {
+              /* onConnectionError should be called once now */
+              assert(spy.calledOnce);
+              done();
+            });
+        },
+        5
+      );
     });
-    it("should call onConnectionError on HTTP 599 response (patch)", function(done) {
+    it('should call onConnectionError on HTTP 599 response (patch)', function(done) {
       const spy = sinon.spy();
 
-      moxios.stubRequest("http://localhost/testURL", {
+      moxios.stubRequest('http://localhost/testURL', {
         status: 200,
-        headers: { contentType: "application/json" },
+        headers: { contentType: 'application/json' },
         responseText: '{"hello": "world"}'
       });
 
       const palindrom = new Palindrom({
-        remoteUrl: "http://localhost/testURL",
+        remoteUrl: 'http://localhost/testURL',
         onConnectionError: spy
       });
 
-      moxios.withMock(() => {
-        setTimeout(
-          () => {
-            palindrom.obj.hello = "galaxy";
-            let request = moxios.requests.mostRecent();
-            request
-              .respondWith({
-                status: 599,
-                headers: { contentType: "application/json" },
-                response: "Custom message"
-              })
-              .then(() => {
-                assert(spy.calledOnce);
-                done();
-              });
-          },
-          5
-        );
-      });
+      setTimeout(
+        () => {
+          palindrom.obj.hello = 'galaxy';
+          let request = moxios.requests.mostRecent();
+          request
+            .respondWith({
+              status: 599,
+              headers: { contentType: 'application/json' },
+              response: 'Custom message'
+            })
+            .then(() => {
+              assert(spy.calledOnce);
+              done();
+            });
+        },
+        5
+      );
     });
   });
 });
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 72 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
+
+const Palindrom = __webpack_require__(10);
+const assert = __webpack_require__(3);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
+const expect = __webpack_require__(20).expect;
+
 describe("Palindrom", () => {
   describe("#IgnoreAdd", () => {
     beforeEach(() => {
@@ -12691,174 +12549,519 @@ describe("Palindrom", () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 72 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(7).WebSocket;
+/* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
 
-const Palindrom = __webpack_require__(16);
-const assert = __webpack_require__(10);
-const moxios = __webpack_require__(12);
-const sinon = __webpack_require__(14);
+const Palindrom = __webpack_require__(10);
+const assert = __webpack_require__(3);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
+const expect = __webpack_require__(20).expect;
 
-describe('Palindrom', () => {
-    describe('#ValidatePatches', () => {
-        beforeEach(() => {
-            moxios.install();
-        })
-        afterEach(() => {
-            moxios.uninstall();
-        });
-        it('should pass empty sequence', done => {
+describe("Palindrom", () => {
+  describe("#constructor", () => {
+    beforeEach(() => {
+      moxios.install();
+    });
+    afterEach(() => {
+      moxios.uninstall();
+    });
+    it("should initiate an ajax request when initiated, and call the callback function", function(done) {
+      moxios.stubRequest("http://localhost/testURL", {
+        status: 200,
+        headers: { Location: "http://localhost/testURL" },
+        responseText: '{"hello": "world"}'
+      });
+      const spy = sinon.spy();
+      const palindrom = new Palindrom({
+        remoteUrl: "http://localhost/testURL",
+        callback: spy
+      });
+      setTimeout(
+        () => {
+          assert(spy.called);
+          assert.deepEqual(spy.getCall(0).args[0], { hello: "world" });
+          done();
+        },
+        5
+      );
+    });
+    it("should accept a JSON that has an empty string as a key", function(done) {
+      moxios.stubRequest("http://localhost/testURL", {
+        status: 200,
+        headers: { Location: "http://localhost/testURL" },
+        responseText: '{"hello": "world","": {"hola": "mundo"}}'
+      });
+      const spy = sinon.spy();
+      let palindrom = new Palindrom({
+        remoteUrl: "http://localhost/testURL",
+        callback: spy
+      });
+      setTimeout(
+        () => {
+          assert.deepEqual(spy.getCall(0).args[0], {
+            hello: "world",
+            "": { hola: "mundo" }
+          });
+          assert.equal("mundo", palindrom.obj[""].hola);
+          done();
+        },
+        5
+      );
+    });
+  });
+});
+describe("Palindrom", () => {
+  describe("obj", () => {
+    beforeEach(() => {
+      moxios.install();
+    });
+    afterEach(() => {
+      moxios.uninstall();
+    });
+    it("palindrom.obj should be readonly", function(done) {
+      moxios.stubRequest("http://localhost/testURL", {
+        status: 200,
+        headers: { contentType: "application/json" },
+        responseText: '{"hello": "world"}'
+      });
 
-            moxios.stubRequest('http://localhost/testURL', {
-                status: 200,
-                headers: { Location: 'http://localhost/testURL' },
-                responseText: '{"hello": "world"}'
-            });
-            const tree = {
-                name: {
-                    first$: "Elvis",
-                    last$: "Presley"
-                }
-            };
-            const sequence = [];
-            const spy = sinon.spy();
+      const palindrom = new Palindrom({
+        remoteUrl: "http://localhost/testURL"
+      });
 
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy });
+      setTimeout(() => {
+        /* setting the object should throw an error */
+        assert.throws(() => palindrom.obj = {}, Error, "palindrom.obj is readonly");
+        done();
+      }, 10);
+    });
+  });
+});
+describe("Palindrom", () => {
+  describe("#patching", () => {
+    beforeEach(() => {
+      moxios.install();
+    });
+    afterEach(() => {
+      moxios.uninstall();
+    });
+    it("should patch changes", function(done) {
+      moxios.stubRequest("http://localhost/testURL", {
+        status: 200,
+        headers: { contentType: "application/json" },
+        responseText: '{"hello": "world"}'
+      });
 
-            palindrom.validateAndApplySequence(tree, sequence);
+      const palindrom = new Palindrom({
+        remoteUrl: "http://localhost/testURL",
+        callback: function(tempObject) {
+          assert.equal(tempObject.hello, "world");
+          tempObject.hello = "galaxy";
 
-            setTimeout(() => {
-                assert(spy.notCalled);
-                done();
-            }, 10);
-        });
+          /* now two ajax requests should had happened,
+                    the initial one, and the patch one (hello = world => hello = galaxy)*/
+          setTimeout(
+            () => {
+              assert.equal(2, moxios.requests.count());
+              let request = moxios.requests.mostRecent();
 
-        it('replacing a nonexisting property should cause OPERATION_PATH_UNRESOLVABLE (test built into Fast-JSON-Patch)', done => {
+              assert.equal(
+                '[{"op":"replace","path":"/hello","value":"galaxy"}]',
+                request.config.data
+              );
+              done();
+            },
+            5
+          );
+        }
+      });
+    });
+    it("should not patch changes after unobserve() was called", function(done) {
+      moxios.stubRequest("http://localhost/testURL", {
+        status: 200,
+        headers: { contentType: "application/json" },
+        responseText: '{"unwatched": "object"}'
+      });
+      let tempObject;
+      const palindrom = new Palindrom({
+        remoteUrl: "http://localhost/testURL",
+        callback: function(obj) {
+          tempObject = obj;
+        }
+      });
+      setTimeout(
+        () => {
+          assert.equal(1, moxios.requests.count());
+          assert.equal(tempObject.unwatched, "object");
+          tempObject.unwatched = "objecto";
+        },
+        5
+      );
 
-            moxios.stubRequest('http://localhost/testURL', {
-                status: 200,
-                headers: { Location: 'http://localhost/testURL' },
-                responseText: '{"hello": "world"}'
-            });
-            const tree = {
-                name: {
-                    first$: "Elvis",
-                    last$: "Presley"
-                }
-            };
-            const sequence = [{ op: "replace", path: "/address$", value: "" }];
-            const spy = sinon.spy();
+      /* now two ajax requests should have happened, 
+            the initial one, and the patch one */
+      setTimeout(
+        () => {
+          assert.equal(2, moxios.requests.count());
+          let request = moxios.requests.mostRecent();
+          assert.equal(
+            '[{"op":"replace","path":"/unwatched","value":"objecto"}]',
+            request.config.data
+          );
+          palindrom.unobserve();
+          tempObject.hello = "a change that shouldn't be considered";
+        },
+        10
+      );
 
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy });
+      /* now palindrom is unobserved, requests should stay 2 */
+      setTimeout(
+        () => {
+          assert.equal(2, moxios.requests.count());
+          done();
+        },
+        15
+      );
+    });
+    it("should patch changes after observe() was called", function(done) {
+      moxios.stubRequest("http://localhost/testURL", {
+        status: 200,
+        headers: { contentType: "application/json" },
+        responseText: '{"unwatched": "object"}'
+      });
+      let tempObject;
+      const palindrom = new Palindrom({
+        remoteUrl: "http://localhost/testURL",
+        callback: function(obj) {
+          tempObject = obj;
+        }
+      });
+      setTimeout(
+        () => {
+          assert.equal(tempObject.unwatched, "object");
+          assert.equal(1, moxios.requests.count());
+          tempObject.unwatched = "objecto";
+        },
+        13
+      );
 
-            palindrom.validateAndApplySequence(tree, sequence);
+      /* now two ajax requests should had happened, 
+            the initial one, and the patch one */
+      setTimeout(
+        () => {
+          assert.equal(2, moxios.requests.count());
+          let request = moxios.requests.mostRecent();
+          assert.equal(
+            '[{"op":"replace","path":"/unwatched","value":"objecto"}]',
+            request.config.data
+          );
+          palindrom.unobserve();
+          tempObject.unwatched = "a change that should NOT be considered";
+        },
+        14
+      );
 
-            setTimeout(() => {
-                assert(spy.calledOnce);
-                assert.equal('OPERATION_PATH_UNRESOLVABLE', spy.lastCall.args[0].name);
-                done();
-            }, 10);
-        });
+      /* now palindrom is unobserved, requests should stay 2 */
+      setTimeout(
+        () => {
+          assert.equal(2, moxios.requests.count());
 
-        it('undefined value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', done => {
+          /* let's observe again */
+          palindrom.observe();
+          tempObject.unwatched = "a change that SHOULD be considered";
+        },
+        15
+      );
 
-            moxios.stubRequest('http://localhost/testURL', {
-                status: 200,
-                headers: { Location: 'http://localhost/testURL' },
-                responseText: '{"hello": "world"}'
-            });
-            const tree = {
-                name: {
-                    first$: "Elvis",
-                    last$: "Presley"
-                }
-            };
-            const sequence = [{ op: "replace", path: "/address$", value: undefined }];
-            const spy = sinon.spy();
-
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy});
-
-            palindrom.validateAndApplySequence(tree, sequence);
-
-            setTimeout(() => {
-                assert(spy.calledOnce);
-                assert.equal('OPERATION_VALUE_REQUIRED', spy.lastCall.args[0].name);
-                done();
-            }, 10);
-        });
-
-        it('no value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', done => {
-
-            moxios.stubRequest('http://localhost/testURL', {
-                status: 200,
-                headers: { Location: 'http://localhost/testURL' },
-                responseText: '{"hello": "world"}'
-            });
-            const tree = {
-                name: {
-                    first$: "Elvis",
-                    last$: "Presley"
-                }
-            };
-            const sequence = [{ op: "replace", path: "/address$" }];
-            const spy = sinon.spy();
-
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy });
-
-            palindrom.validateAndApplySequence(tree, sequence);
-
-            setTimeout(() => {
-                assert(spy.calledOnce);
-                assert.equal('OPERATION_VALUE_REQUIRED', spy.lastCall.args[0].name);
-                done();
-            }, 10);
-        });
-
-        it('object with undefined value should cause OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED (test built into Fast-JSON-Patch)', done => {
-
-            moxios.stubRequest('http://localhost/testURL', {
-                status: 200,
-                headers: { Location: 'http://localhost/testURL' },
-                responseText: '{"hello": "world"}'
-            });
-            const tree = {
-                name: {
-                    first$: "Elvis",
-                    last$: "Presley"
-                }
-            };
-            const sequence = [{ op: "replace", path: "/name", value: { first$: [undefined], last$: "Presley" } }];
-            const spy = sinon.spy();
-
-            const palindrom = new Palindrom({ remoteUrl: '/testURL', onIncomingPatchValidationError: spy});
-
-            palindrom.validateAndApplySequence(tree, sequence);
-
-            setTimeout(() => {
-                assert(spy.calledOnce);
-                assert.equal('OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED', spy.lastCall.args[0].name);
-                done();
-            }, 10);
-        });
-    })
+      /* now palindrom is observed, requests should become 3  */
+      setTimeout(
+        () => {
+          let request = moxios.requests.mostRecent();
+          assert.equal(3, moxios.requests.count());
+          assert.equal(
+            '[{"op":"replace","path":"/unwatched","value":"a change that SHOULD be considered"}]',
+            request.config.data
+          );
+          done();
+        },
+        16
+      );
+    });
+  });
 });
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 73 */
+/* 74 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(7).WebSocket;
+/* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
 
-const MockSocketServer = __webpack_require__(7).Server;
-const Palindrom = __webpack_require__(16);
-const assert = __webpack_require__(10);
-const moxios = __webpack_require__(12);
-const sinon = __webpack_require__(14);
+const Palindrom = __webpack_require__(10);
+const assert = __webpack_require__(3);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
 
-describe("Sockets", () => {
+describe('Palindrom', () => {
+  describe('#ValidatePatches', () => {
+    beforeEach(() => {
+      moxios.install();
+    });
+    afterEach(() => {
+      moxios.uninstall();
+    });
+    it('should pass empty sequence', done => {
+      moxios.stubRequest('http://localhost/testURL', {
+        status: 200,
+        headers: { Location: 'http://localhost/testURL' },
+        responseText: '{"hello": "world"}'
+      });
+      const tree = {
+        name: {
+          first$: 'Elvis',
+          last$: 'Presley'
+        }
+      };
+      const sequence = [];
+      const spy = sinon.spy();
+
+      const palindrom = new Palindrom({
+        remoteUrl: '/testURL',
+        onIncomingPatchValidationError: spy
+      });
+
+      palindrom.validateAndApplySequence(tree, sequence);
+
+      setTimeout(
+        () => {
+          assert(spy.notCalled);
+          done();
+        },
+        10
+      );
+    });
+
+    it('replacing a nonexisting property should cause OPERATION_PATH_UNRESOLVABLE (test built into Fast-JSON-Patch)', done => {
+      moxios.stubRequest('http://localhost/testURL', {
+        status: 200,
+        headers: { Location: 'http://localhost/testURL' },
+        responseText: '{"hello": "world"}'
+      });
+      const tree = {
+        name: {
+          first$: 'Elvis',
+          last$: 'Presley'
+        }
+      };
+      const sequence = [{ op: 'replace', path: '/address$', value: '' }];
+      const spy = sinon.spy();
+
+      const palindrom = new Palindrom({
+        remoteUrl: '/testURL',
+        onIncomingPatchValidationError: spy
+      });
+
+      palindrom.validateAndApplySequence(tree, sequence);
+
+      setTimeout(
+        () => {
+          assert(spy.calledOnce);
+          assert.equal(
+            'OPERATION_PATH_UNRESOLVABLE',
+            spy.lastCall.args[0].name
+          );
+          done();
+        },
+        10
+      );
+    });
+
+    it('undefined value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', done => {
+      moxios.stubRequest('http://localhost/testURL', {
+        status: 200,
+        headers: { Location: 'http://localhost/testURL' },
+        responseText: '{"hello": "world"}'
+      });
+      const tree = {
+        name: {
+          first$: 'Elvis',
+          last$: 'Presley'
+        }
+      };
+      const sequence = [{ op: 'replace', path: '/address$', value: undefined }];
+      const spy = sinon.spy();
+
+      const palindrom = new Palindrom({
+        remoteUrl: '/testURL',
+        onIncomingPatchValidationError: spy
+      });
+
+      palindrom.validateAndApplySequence(tree, sequence);
+
+      setTimeout(
+        () => {
+          assert(spy.calledOnce);
+          assert.equal('OPERATION_VALUE_REQUIRED', spy.lastCall.args[0].name);
+          done();
+        },
+        10
+      );
+    });
+
+    it('no value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', done => {
+      moxios.stubRequest('http://localhost/testURL', {
+        status: 200,
+        headers: { Location: 'http://localhost/testURL' },
+        responseText: '{"hello": "world"}'
+      });
+      const tree = {
+        name: {
+          first$: 'Elvis',
+          last$: 'Presley'
+        }
+      };
+      const sequence = [{ op: 'replace', path: '/address$' }];
+      const spy = sinon.spy();
+
+      const palindrom = new Palindrom({
+        remoteUrl: '/testURL',
+        onIncomingPatchValidationError: spy
+      });
+
+      palindrom.validateAndApplySequence(tree, sequence);
+
+      setTimeout(
+        () => {
+          assert(spy.calledOnce);
+          assert.equal('OPERATION_VALUE_REQUIRED', spy.lastCall.args[0].name);
+          done();
+        },
+        10
+      );
+    });
+
+    it('object with undefined value should cause OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED (test built into Fast-JSON-Patch)', done => {
+      moxios.stubRequest('http://localhost/testURL', {
+        status: 200,
+        headers: { Location: 'http://localhost/testURL' },
+        responseText: '{"hello": "world"}'
+      });
+      const tree = {
+        name: {
+          first$: 'Elvis',
+          last$: 'Presley'
+        }
+      };
+      const sequence = [
+        {
+          op: 'replace',
+          path: '/name',
+          value: { first$: [undefined], last$: 'Presley' }
+        }
+      ];
+      const spy = sinon.spy();
+
+      const palindrom = new Palindrom({
+        remoteUrl: '/testURL',
+        onIncomingPatchValidationError: spy
+      });
+
+      palindrom.validateAndApplySequence(tree, sequence);
+
+      setTimeout(
+        () => {
+          assert(spy.calledOnce);
+          assert.equal(
+            'OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED',
+            spy.lastCall.args[0].name
+          );
+          done();
+        },
+        10
+      );
+    });
+  });
+  describe('Overriding validation logic', function() {
+    it('should be possible to override validatePatches to add custom validation', function(done) {
+      var tree = {
+        name: {
+          first: 'Elvis',
+          last: 'Presley'
+        }
+      };
+      var sequence = [{ op: 'replace', path: '/name/first', value: 'Albert' }];
+      var jsonpatch = new Palindrom({
+        remoteUrl: '/testURL'
+      }).jsonpatch;
+      var outgoingJsonpatch = Object.create(jsonpatch);
+      outgoingJsonpatch.validator = function polyjuicePatchValidator(
+        operation,
+        index,
+        tree,
+        existingPathFragment
+      ) {
+        jsonpatch.validator.call(
+          outgoingJsonpatch,
+          operation,
+          index,
+          tree,
+          existingPathFragment
+        );
+
+        if (operation.op === 'replace') {
+          if (operation.path.substr(operation.path.length - 1, 1) !== '$') {
+            throw new outgoingJsonpatch.JsonPatchError(
+              'Cannot replace a property which name finishes with $ character',
+              'Palindrom_CANNOT_REPLACE_READONLY',
+              index,
+              operation,
+              tree
+            );
+          }
+        }
+      };
+
+      var customPalindrom = function() {
+        Palindrom.apply(this, arguments);
+      };
+      customPalindrom.prototype = Object.create(Palindrom.prototype);
+      customPalindrom.prototype.validateSequence = function(tree, sequence) {
+        var error = outgoingJsonpatch.validate(sequence, tree);
+        if (error) {
+          this.onOutgoingPatchValidationError(error);
+        }
+      };
+
+      var palindromMock = Object.create(customPalindrom.prototype);
+      palindromMock.debug = true;
+      palindromMock.onOutgoingPatchValidationError = function(error) {
+        assert(error.name === 'Palindrom_CANNOT_REPLACE_READONLY');
+        done();
+      };
+
+      palindromMock.validateSequence(tree, sequence);
+    });
+  });
+});
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 75 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
+
+const MockSocketServer = __webpack_require__(2).Server;
+const Palindrom = __webpack_require__(10);
+const assert = __webpack_require__(3);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
+
+describe('Sockets', () => {
   beforeEach(() => {
     moxios.install();
   });
@@ -12866,53 +13069,53 @@ describe("Sockets", () => {
     moxios.uninstall();
   });
 
-  describe("Palindrom constructor", () => {
-    describe("if `useWebSocket` flag is provided", () => {
-      it("should try to open WebSocket connection ", function(done) {
-        const server = new MockSocketServer("ws://localhost/testURL");
+  describe('Palindrom constructor', () => {
+    describe('if `useWebSocket` flag is provided', () => {
+      it('should try to open WebSocket connection ', function(done) {
+        const server = new MockSocketServer('ws://localhost/testURL');
 
-        moxios.stubRequest("http://localhost/testURL", {
+        moxios.stubRequest('http://localhost/testURL', {
           status: 200,
-          headers: { location: "http://localhost/testURL" },
+          headers: { location: 'http://localhost/testURL' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "http://localhost/testURL",
+          remoteUrl: 'http://localhost/testURL',
           useWebSocket: true
         });
         /* socket should be undefined before XHR delay */
-        assert(typeof palindrom.network._ws === "undefined");
+        assert(typeof palindrom.network._ws === 'undefined');
 
         setTimeout(
           () => {
             /* socket should NOT be undefined after XHR delay */
-            assert(typeof palindrom.network._ws !== "undefined");
+            assert(typeof palindrom.network._ws !== 'undefined');
             server.stop(done);
           },
           5
         );
       });
 
-      it("should calculate WebSocket URL correctly", function(done) {
-        const server = new MockSocketServer("ws://localhost/testURL");
+      it('should calculate WebSocket URL correctly', function(done) {
+        const server = new MockSocketServer('ws://localhost/testURL');
 
-        moxios.stubRequest("http://localhost/testURL", {
+        moxios.stubRequest('http://localhost/testURL', {
           status: 200,
-          headers: { location: "http://localhost/testURL" },
+          headers: { location: 'http://localhost/testURL' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "http://localhost/testURL",
+          remoteUrl: 'http://localhost/testURL',
           useWebSocket: true
         });
 
         setTimeout(
           () => {
-            assert(palindrom.network._ws.url === "ws://localhost/testURL");
+            assert(palindrom.network._ws.url === 'ws://localhost/testURL');
 
             /* stop server async then call done */
             server.stop(done);
@@ -12921,20 +13124,20 @@ describe("Sockets", () => {
         );
       });
 
-      it("should resolve to correct WebSocket URL from location header, with root slash /", function(done) {
+      it('should resolve to correct WebSocket URL from location header, with root slash /', function(done) {
         const server = new MockSocketServer(
-          "ws://localhost/default/this_is_a_nice_url"
+          'ws://localhost/default/this_is_a_nice_url'
         );
 
-        moxios.stubRequest("http://localhost/testURL", {
+        moxios.stubRequest('http://localhost/testURL', {
           status: 200,
-          headers: { location: "/default/this_is_a_nice_url" },
+          headers: { location: '/default/this_is_a_nice_url' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "http://localhost/testURL",
+          remoteUrl: 'http://localhost/testURL',
           useWebSocket: true
         });
 
@@ -12942,7 +13145,7 @@ describe("Sockets", () => {
           () => {
             assert(
               palindrom.network._ws.url ===
-                "ws://localhost/default/this_is_a_nice_url"
+                'ws://localhost/default/this_is_a_nice_url'
             );
             /* stop server async then call done */
             server.stop(done);
@@ -12951,20 +13154,20 @@ describe("Sockets", () => {
         );
       });
 
-      it("should resolve to correct WebSocket URL from location header, relatively", function(done) {
+      it('should resolve to correct WebSocket URL from location header, relatively', function(done) {
         const server = new MockSocketServer(
-          "ws://localhost/default/this_is_a_nice_url"
+          'ws://localhost/default/this_is_a_nice_url'
         );
 
-        moxios.stubRequest("http://localhost/testURL", {
+        moxios.stubRequest('http://localhost/testURL', {
           status: 200,
-          headers: { location: "default/this_is_a_nice_url" },
+          headers: { location: 'default/this_is_a_nice_url' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "http://localhost/testURL",
+          remoteUrl: 'http://localhost/testURL',
           useWebSocket: true
         });
 
@@ -12972,7 +13175,7 @@ describe("Sockets", () => {
           () => {
             assert(
               palindrom.network._ws.url ===
-                "ws://localhost/default/this_is_a_nice_url"
+                'ws://localhost/default/this_is_a_nice_url'
             );
             /* stop server async then call done */
             server.stop(done);
@@ -12981,20 +13184,20 @@ describe("Sockets", () => {
         );
       });
 
-      it("should resolve to correct WebSocket URL from location header, with root slash and extra pathname", function(done) {
+      it('should resolve to correct WebSocket URL from location header, with root slash and extra pathname', function(done) {
         const server = new MockSocketServer(
-          "ws://localhost/default/this_is_a_nice_url"
+          'ws://localhost/default/this_is_a_nice_url'
         );
 
-        moxios.stubRequest("http://localhost/testURL/koko", {
+        moxios.stubRequest('http://localhost/testURL/koko', {
           status: 200,
-          headers: { location: "/default/this_is_a_nice_url" },
+          headers: { location: '/default/this_is_a_nice_url' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "http://localhost/testURL/koko",
+          remoteUrl: 'http://localhost/testURL/koko',
           useWebSocket: true
         });
 
@@ -13002,7 +13205,7 @@ describe("Sockets", () => {
           () => {
             assert(
               palindrom.network._ws.url ===
-                "ws://localhost/default/this_is_a_nice_url"
+                'ws://localhost/default/this_is_a_nice_url'
             );
             /* stop server async then call done */
             server.stop(done);
@@ -13011,20 +13214,20 @@ describe("Sockets", () => {
         );
       });
 
-      it("should resolve to correct WebSocket URL from location header, without root slash and extra pathname", function(done) {
+      it('should resolve to correct WebSocket URL from location header, without root slash and extra pathname', function(done) {
         const server = new MockSocketServer(
-          "ws://localhost/testURL/default/this_is_a_nice_url"
+          'ws://localhost/testURL/default/this_is_a_nice_url'
         );
 
-        moxios.stubRequest("http://localhost/testURL/koko", {
+        moxios.stubRequest('http://localhost/testURL/koko', {
           status: 200,
-          headers: { location: "default/this_is_a_nice_url" },
+          headers: { location: 'default/this_is_a_nice_url' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "http://localhost/testURL/koko",
+          remoteUrl: 'http://localhost/testURL/koko',
           useWebSocket: true
         });
 
@@ -13032,7 +13235,7 @@ describe("Sockets", () => {
           () => {
             assert(
               palindrom.network._ws.url ===
-                "ws://localhost/testURL/default/this_is_a_nice_url"
+                'ws://localhost/testURL/default/this_is_a_nice_url'
             );
             /* stop server async then call done */
             server.stop(done);
@@ -13040,20 +13243,20 @@ describe("Sockets", () => {
           5
         );
       });
-      it("should use wss for https remote URL", function(done) {
+      it('should use wss for https remote URL', function(done) {
         const server = new MockSocketServer(
-          "wss://localhost/testURL/default/this_is_a_nice_url"
+          'wss://localhost/testURL/default/this_is_a_nice_url'
         );
 
-        moxios.stubRequest("https://localhost/testURL/koko", {
+        moxios.stubRequest('https://localhost/testURL/koko', {
           status: 200,
-          headers: { location: "default/this_is_a_nice_url" },
+          headers: { location: 'default/this_is_a_nice_url' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "https://localhost/testURL/koko",
+          remoteUrl: 'https://localhost/testURL/koko',
           useWebSocket: true
         });
 
@@ -13061,7 +13264,7 @@ describe("Sockets", () => {
           () => {
             assert(
               palindrom.network._ws.url ===
-                "wss://localhost/testURL/default/this_is_a_nice_url"
+                'wss://localhost/testURL/default/this_is_a_nice_url'
             );
             /* stop server async then call done */
             server.stop(done);
@@ -13070,16 +13273,16 @@ describe("Sockets", () => {
         );
       });
 
-      it("should use same host, port, username, and password as provided in remoteUrl", function(done) {
+      it('should use same host, port, username, and password as provided in remoteUrl', function(done) {
         const server = new MockSocketServer(
-          "ws://localhost/test/this_is_a_nice_url"
+          'ws://localhost/test/this_is_a_nice_url'
         );
 
-        const remoteUrl = "http://localhost/testURL/koko";
+        const remoteUrl = 'http://localhost/testURL/koko';
 
         moxios.stubRequest(remoteUrl, {
           status: 200,
-          headers: { location: "/test/this_is_a_nice_url" },
+          headers: { location: '/test/this_is_a_nice_url' },
           responseText: '{"hello": "world"}'
         });
 
@@ -13092,7 +13295,7 @@ describe("Sockets", () => {
           () => {
             assert(
               palindrom.network._ws.url ===
-                "ws://localhost/test/this_is_a_nice_url"
+                'ws://localhost/test/this_is_a_nice_url'
             );
             /* stop server async then call done */
             server.stop(done);
@@ -13100,22 +13303,22 @@ describe("Sockets", () => {
           5
         );
       });
-      describe("Before connection is established", () => {
+      describe('Before connection is established', () => {
         it("shouldn't start a socket connection", function(done) {
           const server = new MockSocketServer(
-            "ws://localhost/test/this_is_a_nice_url"
+            'ws://localhost/test/this_is_a_nice_url'
           );
 
-          const remoteUrl = "http://localhost/testURL/koko";
+          const remoteUrl = 'http://localhost/testURL/koko';
           let everConnected = false;
 
           moxios.stubRequest(remoteUrl, {
             status: 200,
-            headers: { location: "/test/this_is_a_nice_url" },
+            headers: { location: '/test/this_is_a_nice_url' },
             responseText: '{"hello": "world"}'
           });
 
-          server.on("connection", server => {
+          server.on('connection', server => {
             everConnected = true;
           });
 
@@ -13141,25 +13344,25 @@ describe("Sockets", () => {
 
         it("shouldn't send any change patches", function(done) {
           const server = new MockSocketServer(
-            "ws://localhost/test/this_is_a_cool_url"
+            'ws://localhost/test/this_is_a_cool_url'
           );
 
-          const remoteUrl = "http://localhost/testURL/koko";
+          const remoteUrl = 'http://localhost/testURL/koko';
 
           moxios.stubRequest(remoteUrl, {
             status: 200,
-            headers: { location: "/test/this_is_a_cool_url" },
+            headers: { location: '/test/this_is_a_cool_url' },
             responseText: '{"hello": "world"}'
           });
 
           let everConnected = false;
           const messages = [];
 
-          server.on("connection", server => {
+          server.on('connection', server => {
             everConnected = true;
           });
 
-          server.on("message", patches => {
+          server.on('message', patches => {
             let patchesParsed = JSON.parse(patches);
             messages.push(...patchesParsed);
           });
@@ -13169,7 +13372,12 @@ describe("Sockets", () => {
             useWebSocket: true
           });
 
-          palindrom.obj.firstName = "Omar";
+          setTimeout(
+            () => {
+              palindrom.obj.firstName = 'Omar';
+            },
+            3
+          );
 
           setTimeout(
             () => {
@@ -13180,28 +13388,28 @@ describe("Sockets", () => {
           );
         });
       });
-      describe("After connection is established", () => {
-        it("should send new changes over WebSocket", function(done) {
+      describe('After connection is established', () => {
+        it('should send new changes over WebSocket', function(done) {
           const server = new MockSocketServer(
-            "ws://localhost/test/this_is_a_nicer_url"
+            'ws://localhost/test/this_is_a_nicer_url'
           );
 
-          const remoteUrl = "http://localhost/testURL/koko";
+          const remoteUrl = 'http://localhost/testURL/koko';
 
           moxios.stubRequest(remoteUrl, {
             status: 200,
-            headers: { location: "/test/this_is_a_nicer_url" },
+            headers: { location: '/test/this_is_a_nicer_url' },
             responseText: '{"hello": "world"}'
           });
 
           let everConnected = false;
           const messages = [];
 
-          server.on("connection", server => {
+          server.on('connection', server => {
             everConnected = true;
           });
 
-          server.on("message", patches => {
+          server.on('message', patches => {
             let patchesParsed = JSON.parse(patches);
             messages.push(...patchesParsed);
           });
@@ -13213,14 +13421,14 @@ describe("Sockets", () => {
 
           setTimeout(
             () => {
-              palindrom.obj.firstName = "Omar";
+              palindrom.obj.firstName = 'Omar';
               setTimeout(
                 () => {
                   assert(messages.length === 1);
                   assert.deepEqual(messages[0], {
-                    op: "add",
-                    path: "/firstName",
-                    value: "Omar"
+                    op: 'add',
+                    path: '/firstName',
+                    value: 'Omar'
                   });
                   server.stop(done);
                 },
@@ -13231,27 +13439,27 @@ describe("Sockets", () => {
           );
         });
 
-        it("should send patches over HTTP before ws.readyState is OPENED, and over WebSocket after ws.readyState is OPENED", function(done) {
+        it('should send patches over HTTP before ws.readyState is OPENED, and over WebSocket after ws.readyState is OPENED', function(done) {
           const server = new MockSocketServer(
-            "ws://localhost/test/this_is_a_fast_url"
+            'ws://localhost/test/this_is_a_fast_url'
           );
 
-          const remoteUrl = "http://localhost/testURL/koko";
+          const remoteUrl = 'http://localhost/testURL/koko';
 
           moxios.stubRequest(remoteUrl, {
             status: 200,
-            headers: { location: "/test/this_is_a_fast_url" },
+            headers: { location: '/test/this_is_a_fast_url' },
             responseText: '{"hello": "world"}'
           });
 
           let everConnected = false;
           const messages = [];
 
-          server.on("connection", server => {
+          server.on('connection', server => {
             everConnected = true;
           });
 
-          server.on("message", patches => {
+          server.on('message', patches => {
             let patchesParsed = JSON.parse(patches);
             messages.push(...patchesParsed);
           });
@@ -13260,13 +13468,13 @@ describe("Sockets", () => {
             remoteUrl,
             useWebSocket: true,
             callback: function(obj) {
-              moxios.stubRequest("http://localhost/test/this_is_a_fast_url", {
+              moxios.stubRequest('http://localhost/test/this_is_a_fast_url', {
                 status: 200,
-                responseText: "[]"
+                responseText: '[]'
               });
 
               /* here, socket connection isn't established yet, let's issue a change */
-              obj.name = "Mark";
+              obj.name = 'Mark';
 
               setTimeout(
                 () => {
@@ -13284,7 +13492,7 @@ describe("Sockets", () => {
               /* now socket is connected, let's issue a change */
               setTimeout(
                 () => {
-                  palindrom.obj.firstName = "Omar";
+                  palindrom.obj.firstName = 'Omar';
 
                   assert(messages.length === 1);
                   assert(
@@ -13298,7 +13506,7 @@ describe("Sockets", () => {
               /* now socket is connected, let's issue another change */
               setTimeout(
                 () => {
-                  palindrom.obj.firstName = "Hanan";
+                  palindrom.obj.firstName = 'Hanan';
 
                   assert(messages.length === 2);
                   assert(
@@ -13320,16 +13528,16 @@ describe("Sockets", () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 74 */
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(1);
-var bind = __webpack_require__(43);
-var Axios = __webpack_require__(76);
-var defaults = __webpack_require__(24);
+var bind = __webpack_require__(44);
+var Axios = __webpack_require__(78);
+var defaults = __webpack_require__(25);
 
 /**
  * Create an instance of Axios
@@ -13362,15 +13570,15 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(40);
-axios.CancelToken = __webpack_require__(75);
-axios.isCancel = __webpack_require__(41);
+axios.Cancel = __webpack_require__(41);
+axios.CancelToken = __webpack_require__(77);
+axios.isCancel = __webpack_require__(42);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(90);
+axios.spread = __webpack_require__(92);
 
 module.exports = axios;
 
@@ -13379,13 +13587,13 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 75 */
+/* 77 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Cancel = __webpack_require__(40);
+var Cancel = __webpack_require__(41);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -13443,18 +13651,18 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 76 */
+/* 78 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var defaults = __webpack_require__(24);
+var defaults = __webpack_require__(25);
 var utils = __webpack_require__(1);
-var InterceptorManager = __webpack_require__(77);
-var dispatchRequest = __webpack_require__(78);
-var isAbsoluteURL = __webpack_require__(86);
-var combineURLs = __webpack_require__(84);
+var InterceptorManager = __webpack_require__(79);
+var dispatchRequest = __webpack_require__(80);
+var isAbsoluteURL = __webpack_require__(88);
+var combineURLs = __webpack_require__(86);
 
 /**
  * Create a new instance of Axios
@@ -13535,7 +13743,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 77 */
+/* 79 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13594,16 +13802,16 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 78 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(1);
-var transformData = __webpack_require__(81);
-var isCancel = __webpack_require__(41);
-var defaults = __webpack_require__(24);
+var transformData = __webpack_require__(83);
+var isCancel = __webpack_require__(42);
+var defaults = __webpack_require__(25);
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -13680,7 +13888,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 79 */
+/* 81 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13706,13 +13914,13 @@ module.exports = function enhanceError(error, config, code, response) {
 
 
 /***/ }),
-/* 80 */
+/* 82 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var createError = __webpack_require__(42);
+var createError = __webpack_require__(43);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -13738,7 +13946,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 81 */
+/* 83 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13765,7 +13973,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 82 */
+/* 84 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13808,7 +14016,7 @@ module.exports = btoa;
 
 
 /***/ }),
-/* 83 */
+/* 85 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13883,7 +14091,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 84 */
+/* 86 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13902,7 +14110,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 85 */
+/* 87 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13962,7 +14170,7 @@ module.exports = (
 
 
 /***/ }),
-/* 86 */
+/* 88 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13983,7 +14191,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 87 */
+/* 89 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14058,7 +14266,7 @@ module.exports = (
 
 
 /***/ }),
-/* 88 */
+/* 90 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14077,7 +14285,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 89 */
+/* 91 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14121,7 +14329,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 90 */
+/* 92 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14155,7 +14363,7 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 91 */
+/* 93 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14276,7 +14484,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 92 */
+/* 94 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14290,9 +14498,9 @@ function fromByteArray (uint8) {
 
 
 
-var base64 = __webpack_require__(91)
-var ieee754 = __webpack_require__(118)
-var isArray = __webpack_require__(119)
+var base64 = __webpack_require__(93)
+var ieee754 = __webpack_require__(120)
+var isArray = __webpack_require__(121)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -16073,7 +16281,7 @@ function isnan (val) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 93 */
+/* 95 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -16095,13 +16303,13 @@ exports.version = '3.5.0';
  * Assertion Error
  */
 
-exports.AssertionError = __webpack_require__(37);
+exports.AssertionError = __webpack_require__(38);
 
 /*!
  * Utils for plugins (not exported)
  */
 
-var util = __webpack_require__(107);
+var util = __webpack_require__(109);
 
 /**
  * # .use(function)
@@ -16132,47 +16340,47 @@ exports.util = util;
  * Configuration
  */
 
-var config = __webpack_require__(11);
+var config = __webpack_require__(14);
 exports.config = config;
 
 /*!
  * Primary `Assertion` prototype
  */
 
-var assertion = __webpack_require__(94);
+var assertion = __webpack_require__(96);
 exports.use(assertion);
 
 /*!
  * Core Assertions
  */
 
-var core = __webpack_require__(95);
+var core = __webpack_require__(97);
 exports.use(core);
 
 /*!
  * Expect interface
  */
 
-var expect = __webpack_require__(97);
+var expect = __webpack_require__(99);
 exports.use(expect);
 
 /*!
  * Should interface
  */
 
-var should = __webpack_require__(98);
+var should = __webpack_require__(100);
 exports.use(should);
 
 /*!
  * Assert interface
  */
 
-var assert = __webpack_require__(96);
+var assert = __webpack_require__(98);
 exports.use(assert);
 
 
 /***/ }),
-/* 94 */
+/* 96 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -16182,7 +16390,7 @@ exports.use(assert);
  * MIT Licensed
  */
 
-var config = __webpack_require__(11);
+var config = __webpack_require__(14);
 
 module.exports = function (_chai, util) {
   /*!
@@ -16309,7 +16517,7 @@ module.exports = function (_chai, util) {
 
 
 /***/ }),
-/* 95 */
+/* 97 */
 /***/ (function(module, exports) {
 
 /*!
@@ -18175,7 +18383,7 @@ module.exports = function (chai, _) {
 
 
 /***/ }),
-/* 96 */
+/* 98 */
 /***/ (function(module, exports) {
 
 /*!
@@ -19826,7 +20034,7 @@ module.exports = function (chai, util) {
 
 
 /***/ }),
-/* 97 */
+/* 99 */
 /***/ (function(module, exports) {
 
 /*!
@@ -19866,7 +20074,7 @@ module.exports = function (chai, util) {
 
 
 /***/ }),
-/* 98 */
+/* 100 */
 /***/ (function(module, exports) {
 
 /*!
@@ -20073,7 +20281,7 @@ module.exports = function (chai, util) {
 
 
 /***/ }),
-/* 99 */
+/* 101 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -20087,8 +20295,8 @@ module.exports = function (chai, util) {
  */
 
 var transferFlags = __webpack_require__(50);
-var flag = __webpack_require__(6);
-var config = __webpack_require__(11);
+var flag = __webpack_require__(11);
+var config = __webpack_require__(14);
 
 /*!
  * Module variables
@@ -20191,7 +20399,7 @@ module.exports = function (ctx, name, method, chainingBehavior) {
 
 
 /***/ }),
-/* 100 */
+/* 102 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -20200,7 +20408,7 @@ module.exports = function (ctx, name, method, chainingBehavior) {
  * MIT Licensed
  */
 
-var config = __webpack_require__(11);
+var config = __webpack_require__(14);
 
 /**
  * ### .addMethod (ctx, name, method)
@@ -20227,7 +20435,7 @@ var config = __webpack_require__(11);
  * @name addMethod
  * @api public
  */
-var flag = __webpack_require__(6);
+var flag = __webpack_require__(11);
 
 module.exports = function (ctx, name, method) {
   ctx[name] = function () {
@@ -20241,7 +20449,7 @@ module.exports = function (ctx, name, method) {
 
 
 /***/ }),
-/* 101 */
+/* 103 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -20250,8 +20458,8 @@ module.exports = function (ctx, name, method) {
  * MIT Licensed
  */
 
-var config = __webpack_require__(11);
-var flag = __webpack_require__(6);
+var config = __webpack_require__(14);
+var flag = __webpack_require__(11);
 
 /**
  * ### addProperty (ctx, name, getter)
@@ -20295,7 +20503,7 @@ module.exports = function (ctx, name, getter) {
 
 
 /***/ }),
-/* 102 */
+/* 104 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -20318,9 +20526,9 @@ module.exports = function (ctx, name, getter) {
  * @api public
  */
 
-var AssertionError = __webpack_require__(37);
-var flag = __webpack_require__(6);
-var type = __webpack_require__(36);
+var AssertionError = __webpack_require__(38);
+var flag = __webpack_require__(11);
+var type = __webpack_require__(37);
 
 module.exports = function (obj, types) {
   var obj = flag(obj, 'object');
@@ -20343,7 +20551,7 @@ module.exports = function (obj, types) {
 
 
 /***/ }),
-/* 103 */
+/* 105 */
 /***/ (function(module, exports) {
 
 /*!
@@ -20375,7 +20583,7 @@ module.exports = function getEnumerableProperties(object) {
 
 
 /***/ }),
-/* 104 */
+/* 106 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -20388,9 +20596,9 @@ module.exports = function getEnumerableProperties(object) {
  * Module dependancies
  */
 
-var flag = __webpack_require__(6)
+var flag = __webpack_require__(11)
   , getActual = __webpack_require__(45)
-  , inspect = __webpack_require__(25)
+  , inspect = __webpack_require__(26)
   , objDisplay = __webpack_require__(49);
 
 /**
@@ -20432,7 +20640,7 @@ module.exports = function (obj, args) {
 
 
 /***/ }),
-/* 105 */
+/* 107 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -20481,7 +20689,7 @@ module.exports = function(path, obj) {
 
 
 /***/ }),
-/* 106 */
+/* 108 */
 /***/ (function(module, exports) {
 
 /*!
@@ -20523,7 +20731,7 @@ module.exports = function getProperties(object) {
 
 
 /***/ }),
-/* 107 */
+/* 109 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -20542,24 +20750,24 @@ var exports = module.exports = {};
  * test utility
  */
 
-exports.test = __webpack_require__(111);
+exports.test = __webpack_require__(113);
 
 /*!
  * type utility
  */
 
-exports.type = __webpack_require__(36);
+exports.type = __webpack_require__(37);
 
 /*!
  * expectTypes utility
  */
-exports.expectTypes = __webpack_require__(102);
+exports.expectTypes = __webpack_require__(104);
 
 /*!
  * message utility
  */
 
-exports.getMessage = __webpack_require__(104);
+exports.getMessage = __webpack_require__(106);
 
 /*!
  * actual utility
@@ -20571,7 +20779,7 @@ exports.getActual = __webpack_require__(45);
  * Inspect util
  */
 
-exports.inspect = __webpack_require__(25);
+exports.inspect = __webpack_require__(26);
 
 /*!
  * Object Display util
@@ -20583,7 +20791,7 @@ exports.objDisplay = __webpack_require__(49);
  * Flag utility
  */
 
-exports.flag = __webpack_require__(6);
+exports.flag = __webpack_require__(11);
 
 /*!
  * Flag transferring utility
@@ -20595,13 +20803,13 @@ exports.transferFlags = __webpack_require__(50);
  * Deep equal utility
  */
 
-exports.eql = __webpack_require__(112);
+exports.eql = __webpack_require__(114);
 
 /*!
  * Deep path value
  */
 
-exports.getPathValue = __webpack_require__(105);
+exports.getPathValue = __webpack_require__(107);
 
 /*!
  * Deep path info
@@ -20625,41 +20833,41 @@ exports.getName = __webpack_require__(46);
  * add Property
  */
 
-exports.addProperty = __webpack_require__(101);
+exports.addProperty = __webpack_require__(103);
 
 /*!
  * add Method
  */
 
-exports.addMethod = __webpack_require__(100);
+exports.addMethod = __webpack_require__(102);
 
 /*!
  * overwrite Property
  */
 
-exports.overwriteProperty = __webpack_require__(110);
+exports.overwriteProperty = __webpack_require__(112);
 
 /*!
  * overwrite Method
  */
 
-exports.overwriteMethod = __webpack_require__(109);
+exports.overwriteMethod = __webpack_require__(111);
 
 /*!
  * Add a chainable method
  */
 
-exports.addChainableMethod = __webpack_require__(99);
+exports.addChainableMethod = __webpack_require__(101);
 
 /*!
  * Overwrite chainable method
  */
 
-exports.overwriteChainableMethod = __webpack_require__(108);
+exports.overwriteChainableMethod = __webpack_require__(110);
 
 
 /***/ }),
-/* 108 */
+/* 110 */
 /***/ (function(module, exports) {
 
 /*!
@@ -20719,7 +20927,7 @@ module.exports = function (ctx, name, method, chainingBehavior) {
 
 
 /***/ }),
-/* 109 */
+/* 111 */
 /***/ (function(module, exports) {
 
 /*!
@@ -20777,7 +20985,7 @@ module.exports = function (ctx, name, method) {
 
 
 /***/ }),
-/* 110 */
+/* 112 */
 /***/ (function(module, exports) {
 
 /*!
@@ -20838,7 +21046,7 @@ module.exports = function (ctx, name, getter) {
 
 
 /***/ }),
-/* 111 */
+/* 113 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -20851,7 +21059,7 @@ module.exports = function (ctx, name, getter) {
  * Module dependancies
  */
 
-var flag = __webpack_require__(6);
+var flag = __webpack_require__(11);
 
 /**
  * # test(object, expression)
@@ -20872,14 +21080,14 @@ module.exports = function (obj, args) {
 
 
 /***/ }),
-/* 112 */
+/* 114 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(113);
+module.exports = __webpack_require__(115);
 
 
 /***/ }),
-/* 113 */
+/* 115 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -20892,14 +21100,14 @@ module.exports = __webpack_require__(113);
  * Module dependencies
  */
 
-var type = __webpack_require__(114);
+var type = __webpack_require__(116);
 
 /*!
  * Buffer.isBuffer browser shim
  */
 
 var Buffer;
-try { Buffer = __webpack_require__(92).Buffer; }
+try { Buffer = __webpack_require__(94).Buffer; }
 catch(ex) {
   Buffer = {};
   Buffer.isBuffer = function() { return false; }
@@ -21142,14 +21350,14 @@ function objectEqual(a, b, m) {
 
 
 /***/ }),
-/* 114 */
+/* 116 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(115);
+module.exports = __webpack_require__(117);
 
 
 /***/ }),
-/* 115 */
+/* 117 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21297,7 +21505,7 @@ Library.prototype.test = function (obj, type) {
 
 
 /***/ }),
-/* 116 */
+/* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21711,7 +21919,7 @@ if (isBrowser) {
 
 
 /***/ }),
-/* 117 */
+/* 119 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(("function" === "function" && __webpack_require__(67) && function (m) {
@@ -21950,7 +22158,7 @@ if (isBrowser) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 118 */
+/* 120 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -22040,7 +22248,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 119 */
+/* 121 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -22051,12 +22259,12 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 120 */
+/* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
 if(typeof JSONPatchQueue === 'undefined') {
 	if(true) {
-		var JSONPatchQueue = __webpack_require__(26).JSONPatchQueue;
+		var JSONPatchQueue = __webpack_require__(27).JSONPatchQueue;
 	}
 	else {
 		throw new Error('You need to reference JSONPatchQueue before JSONPatchOTAgent');
@@ -22163,7 +22371,7 @@ if(true) {
 }
 
 /***/ }),
-/* 121 */
+/* 123 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -22324,7 +22532,7 @@ if(true) {
 }
 
 /***/ }),
-/* 122 */
+/* 124 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -22455,7 +22663,7 @@ if(true) {
 
 
 /***/ }),
-/* 123 */
+/* 125 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -22603,7 +22811,7 @@ if(true) {
 
 
 /***/ }),
-/* 124 */
+/* 126 */
 /***/ (function(module, exports) {
 
 /*!
@@ -22831,7 +23039,7 @@ module.exports = JSONPatcherProxy;
 module.exports.default = JSONPatcherProxy;
 
 /***/ }),
-/* 125 */
+/* 127 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23495,7 +23703,7 @@ exports.install = function install(target, now, toFake, loopLimit) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 126 */
+/* 128 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -23685,10 +23893,10 @@ exports.install = function install(target, now, toFake, loopLimit) {
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(13)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(15)))
 
 /***/ }),
-/* 127 */
+/* 129 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23705,14 +23913,14 @@ exports.isSupported = (function () {
 
 
 /***/ }),
-/* 128 */
+/* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var walk = __webpack_require__(23);
-var getPropertyDescriptor = __webpack_require__(15);
+var walk = __webpack_require__(24);
+var getPropertyDescriptor = __webpack_require__(16);
 
 function collectMethod(methods, object, prop, propOwner) {
     if (
@@ -23736,7 +23944,7 @@ module.exports = collectOwnMethods;
 
 
 /***/ }),
-/* 129 */
+/* 131 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23760,10 +23968,10 @@ exports.green = function (str) {
     return colorize(str, 32);
 };
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(15)))
 
 /***/ }),
-/* 130 */
+/* 132 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23973,19 +24181,19 @@ Object.keys(module.exports).forEach(function (method) {
 
 
 /***/ }),
-/* 131 */
+/* 133 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var extend = __webpack_require__(3);
+var extend = __webpack_require__(7);
 var sinonCollection = __webpack_require__(53);
-var sinonMatch = __webpack_require__(2);
-var sinonAssert = __webpack_require__(27);
-var sinonClock = __webpack_require__(32);
-var fakeServer = __webpack_require__(31);
-var fakeXhr = __webpack_require__(33);
+var sinonMatch = __webpack_require__(6);
+var sinonAssert = __webpack_require__(28);
+var sinonClock = __webpack_require__(33);
+var fakeServer = __webpack_require__(32);
+var fakeXhr = __webpack_require__(34);
 var fakeServerWithClock = __webpack_require__(64);
 
 var push = [].push;
@@ -24125,17 +24333,17 @@ module.exports = sinonSandbox;
 
 
 /***/ }),
-/* 132 */
+/* 134 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var color = __webpack_require__(129);
-var timesInWords = __webpack_require__(22);
-var sinonFormat = __webpack_require__(9);
-var sinonMatch = __webpack_require__(2);
-var jsDiff = __webpack_require__(147);
+var color = __webpack_require__(131);
+var timesInWords = __webpack_require__(23);
+var sinonFormat = __webpack_require__(13);
+var sinonMatch = __webpack_require__(6);
+var jsDiff = __webpack_require__(149);
 var push = Array.prototype.push;
 
 function colorSinonMatchText(matcher, calledArg, calledArgMessage) {
@@ -24232,7 +24440,7 @@ module.exports = {
 
 
 /***/ }),
-/* 133 */
+/* 135 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24280,14 +24488,14 @@ module.exports = stubDescriptor;
 
 
 /***/ }),
-/* 134 */
+/* 136 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var getPropertyDescriptor = __webpack_require__(15);
-var walk = __webpack_require__(23);
+var getPropertyDescriptor = __webpack_require__(16);
+var walk = __webpack_require__(24);
 
 function stubEntireObject(stub, object) {
     walk(object || {}, function (prop, propOwner) {
@@ -24309,13 +24517,13 @@ module.exports = stubEntireObject;
 
 
 /***/ }),
-/* 135 */
+/* 137 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var valueToString = __webpack_require__(4);
+var valueToString = __webpack_require__(8);
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function stubNonFunctionProperty(object, property, value) {
@@ -24338,7 +24546,7 @@ module.exports = stubNonFunctionProperty;
 
 
 /***/ }),
-/* 136 */
+/* 138 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24363,7 +24571,7 @@ module.exports = function getConfig(custom) {
 
 
 /***/ }),
-/* 137 */
+/* 139 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24371,34 +24579,34 @@ module.exports = function getConfig(custom) {
 
 module.exports = {
     calledInOrder: __webpack_require__(57),
-    configureLogError: __webpack_require__(29),
+    configureLogError: __webpack_require__(30),
     defaultConfig: __webpack_require__(58),
-    deepEqual: __webpack_require__(8),
+    deepEqual: __webpack_require__(12),
     every: __webpack_require__(60),
-    extend: __webpack_require__(3),
-    format: __webpack_require__(9),
+    extend: __webpack_require__(7),
+    format: __webpack_require__(13),
     functionName: __webpack_require__(18),
-    functionToString: __webpack_require__(28),
-    getConfig: __webpack_require__(136),
-    getPropertyDescriptor: __webpack_require__(15),
+    functionToString: __webpack_require__(29),
+    getConfig: __webpack_require__(138),
+    getPropertyDescriptor: __webpack_require__(16),
     iterableToString: __webpack_require__(61),
     orderByFirstCall: __webpack_require__(62),
-    restore: __webpack_require__(138),
-    timesInWords: __webpack_require__(22),
-    typeOf: __webpack_require__(30),
-    walk: __webpack_require__(23),
+    restore: __webpack_require__(140),
+    timesInWords: __webpack_require__(23),
+    typeOf: __webpack_require__(31),
+    walk: __webpack_require__(24),
     wrapMethod: __webpack_require__(19)
 };
 
 
 /***/ }),
-/* 138 */
+/* 140 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var walk = __webpack_require__(23);
+var walk = __webpack_require__(24);
 
 function isRestorable(obj) {
     return typeof obj === "function" && typeof obj.restore === "function" && obj.restore.sinon;
@@ -24418,7 +24626,7 @@ module.exports = function restore(object) {
 
 
 /***/ }),
-/* 139 */
+/* 141 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24449,7 +24657,7 @@ function convertChangesToDMP(changes) {
 
 
 /***/ }),
-/* 140 */
+/* 142 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24491,7 +24699,7 @@ function escapeHTML(s) {
 
 
 /***/ }),
-/* 141 */
+/* 143 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24501,7 +24709,7 @@ exports.__esModule = true;
 exports.arrayDiff = undefined;
 exports. /*istanbul ignore end*/diffArrays = diffArrays;
 
-var /*istanbul ignore start*/_base = __webpack_require__(5) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(9) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
@@ -24520,7 +24728,7 @@ function diffArrays(oldArr, newArr, callback) {
 
 
 /***/ }),
-/* 142 */
+/* 144 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24530,7 +24738,7 @@ exports.__esModule = true;
 exports.characterDiff = undefined;
 exports. /*istanbul ignore end*/diffChars = diffChars;
 
-var /*istanbul ignore start*/_base = __webpack_require__(5) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(9) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
@@ -24545,7 +24753,7 @@ function diffChars(oldStr, newStr, callback) {
 
 
 /***/ }),
-/* 143 */
+/* 145 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24555,7 +24763,7 @@ exports.__esModule = true;
 exports.cssDiff = undefined;
 exports. /*istanbul ignore end*/diffCss = diffCss;
 
-var /*istanbul ignore start*/_base = __webpack_require__(5) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(9) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
@@ -24574,7 +24782,7 @@ function diffCss(oldStr, newStr, callback) {
 
 
 /***/ }),
-/* 144 */
+/* 146 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24588,13 +24796,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 exports. /*istanbul ignore end*/diffJson = diffJson;
 /*istanbul ignore start*/exports. /*istanbul ignore end*/canonicalize = canonicalize;
 
-var /*istanbul ignore start*/_base = __webpack_require__(5) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(9) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
 
 /*istanbul ignore end*/
-var /*istanbul ignore start*/_line = __webpack_require__(34) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_line = __webpack_require__(35) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -24690,7 +24898,7 @@ function canonicalize(obj, stack, replacementStack) {
 
 
 /***/ }),
-/* 145 */
+/* 147 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24700,7 +24908,7 @@ exports.__esModule = true;
 exports.sentenceDiff = undefined;
 exports. /*istanbul ignore end*/diffSentences = diffSentences;
 
-var /*istanbul ignore start*/_base = __webpack_require__(5) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(9) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
@@ -24719,7 +24927,7 @@ function diffSentences(oldStr, newStr, callback) {
 
 
 /***/ }),
-/* 146 */
+/* 148 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24730,7 +24938,7 @@ exports.wordDiff = undefined;
 exports. /*istanbul ignore end*/diffWords = diffWords;
 /*istanbul ignore start*/exports. /*istanbul ignore end*/diffWordsWithSpace = diffWordsWithSpace;
 
-var /*istanbul ignore start*/_base = __webpack_require__(5) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(9) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
@@ -24796,7 +25004,7 @@ function diffWordsWithSpace(oldStr, newStr, callback) {
 
 
 /***/ }),
-/* 147 */
+/* 149 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24805,35 +25013,35 @@ function diffWordsWithSpace(oldStr, newStr, callback) {
 exports.__esModule = true;
 exports.canonicalize = exports.convertChangesToXML = exports.convertChangesToDMP = exports.parsePatch = exports.applyPatches = exports.applyPatch = exports.createPatch = exports.createTwoFilesPatch = exports.structuredPatch = exports.diffArrays = exports.diffJson = exports.diffCss = exports.diffSentences = exports.diffTrimmedLines = exports.diffLines = exports.diffWordsWithSpace = exports.diffWords = exports.diffChars = exports.Diff = undefined;
 /*istanbul ignore end*/
-var /*istanbul ignore start*/_base = __webpack_require__(5) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(9) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
 
 /*istanbul ignore end*/
-var /*istanbul ignore start*/_character = __webpack_require__(142) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_character = __webpack_require__(144) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_word = __webpack_require__(146) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_word = __webpack_require__(148) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_line = __webpack_require__(34) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_line = __webpack_require__(35) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_sentence = __webpack_require__(145) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_sentence = __webpack_require__(147) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_css = __webpack_require__(143) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_css = __webpack_require__(145) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_json = __webpack_require__(144) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_json = __webpack_require__(146) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_array = __webpack_require__(141) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_array = __webpack_require__(143) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_apply = __webpack_require__(148) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_apply = __webpack_require__(150) /*istanbul ignore end*/;
 
 var /*istanbul ignore start*/_parse = __webpack_require__(65) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_create = __webpack_require__(149) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_create = __webpack_require__(151) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_dmp = __webpack_require__(139) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_dmp = __webpack_require__(141) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_xml = __webpack_require__(140) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_xml = __webpack_require__(142) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -24876,7 +25084,7 @@ exports. /*istanbul ignore end*/Diff = _base2['default'];
 
 
 /***/ }),
-/* 148 */
+/* 150 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24888,7 +25096,7 @@ exports. /*istanbul ignore end*/applyPatch = applyPatch;
 
 var /*istanbul ignore start*/_parse = __webpack_require__(65) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_distanceIterator = __webpack_require__(150) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_distanceIterator = __webpack_require__(152) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _distanceIterator2 = _interopRequireDefault(_distanceIterator);
@@ -25060,7 +25268,7 @@ function applyPatches(uniDiff, options) {
 
 
 /***/ }),
-/* 149 */
+/* 151 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25071,7 +25279,7 @@ exports. /*istanbul ignore end*/structuredPatch = structuredPatch;
 /*istanbul ignore start*/exports. /*istanbul ignore end*/createTwoFilesPatch = createTwoFilesPatch;
 /*istanbul ignore start*/exports. /*istanbul ignore end*/createPatch = createPatch;
 
-var /*istanbul ignore start*/_line = __webpack_require__(34) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_line = __webpack_require__(35) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -25223,7 +25431,7 @@ function createPatch(fileName, oldStr, newStr, oldHeader, newHeader, options) {
 
 
 /***/ }),
-/* 150 */
+/* 152 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25277,7 +25485,7 @@ exports["default"] = /*istanbul ignore end*/function (start, minLine, maxLine) {
 
 
 /***/ }),
-/* 151 */
+/* 153 */
 /***/ (function(module, exports) {
 
 module.exports = Array.isArray || function (arr) {
@@ -25286,10 +25494,10 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 152 */
+/* 154 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isarray = __webpack_require__(151)
+var isarray = __webpack_require__(153)
 
 /**
  * Expose `pathToRegexp`.
@@ -25718,7 +25926,7 @@ function pathToRegexp (path, keys, options) {
 
 
 /***/ }),
-/* 153 */
+/* 155 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26092,13 +26300,13 @@ module.exports.typeDetect = module.exports;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 154 */
+/* 156 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // This is free and unencumbered software released into the public domain.
 // See LICENSE.md for more information.
 
-var encoding = __webpack_require__(156);
+var encoding = __webpack_require__(158);
 
 module.exports = {
   TextEncoder: encoding.TextEncoder,
@@ -26107,7 +26315,7 @@ module.exports = {
 
 
 /***/ }),
-/* 155 */
+/* 157 */
 /***/ (function(module, exports) {
 
 (function(global) {
@@ -26159,7 +26367,7 @@ module.exports = {
 }(this || {}));
 
 /***/ }),
-/* 156 */
+/* 158 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // This is free and unencumbered software released into the public domain.
@@ -26176,7 +26384,7 @@ module.exports = {
   if (typeof module !== "undefined" && module.exports &&
     !global["encoding-indexes"]) {
     global["encoding-indexes"] =
-      __webpack_require__(155)["encoding-indexes"];
+      __webpack_require__(157)["encoding-indexes"];
   }
 
   //
@@ -29477,7 +29685,7 @@ module.exports = {
 }(this || {}));
 
 /***/ }),
-/* 157 */
+/* 159 */
 /***/ (function(module, exports) {
 
 /*!
@@ -29617,7 +29825,7 @@ Library.prototype.test = function(obj, type) {
 
 
 /***/ }),
-/* 158 */
+/* 160 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -29646,7 +29854,7 @@ if (typeof Object.create === 'function') {
 
 
 /***/ }),
-/* 159 */
+/* 161 */
 /***/ (function(module, exports) {
 
 module.exports = function isBuffer(arg) {
@@ -29657,7 +29865,7 @@ module.exports = function isBuffer(arg) {
 }
 
 /***/ }),
-/* 160 */
+/* 162 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -30185,7 +30393,7 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-exports.isBuffer = __webpack_require__(159);
+exports.isBuffer = __webpack_require__(161);
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
@@ -30229,7 +30437,7 @@ exports.log = function() {
  *     prototype.
  * @param {function} superCtor Constructor function to inherit prototype from.
  */
-exports.inherits = __webpack_require__(158);
+exports.inherits = __webpack_require__(160);
 
 exports._extend = function(origin, add) {
   // Don't do anything if add isn't an object
@@ -30247,72 +30455,92 @@ function hasOwnProperty(obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(13)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(15)))
 
 /***/ }),
-/* 161 */
+/* 163 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/*! palindrom-dom.js version: 2.4.0
  * (c) 2013 Joachim Wester
  * MIT license
  */
-if(true) {
-  var Palindrom = __webpack_require__(16);
+if (true) {
+  var Palindrom = __webpack_require__(10);
 }
 
-var PalindromDOM = (function () {
+var PalindromDOM = (function() {
   /**
    * PalindromDOM
    * @extends {Palindrom}
    * @param {Object} [options] map of arguments. See README.md for description
    */
-  var PalindromDOM = function (options){
-    if(typeof options !== "object") {
+  var PalindromDOM = function(options) {
+    if (typeof options !== 'object') {
       throw new Error('PalindromDOM constructor requires an object argument.');
     }
     if (!options.remoteUrl) {
-          throw new Error('remoteUrl is required');
+      throw new Error('remoteUrl is required');
     }
     var onDataReady = options.callback;
     this.element = options.listenTo || document.body;
     var clickHandler = this.clickHandler.bind(this);
     this.historyHandler = this.historyHandler.bind(this);
 
-    this.historyHandlerDeprecated = function () {
-      console.warn("`puppet-redirect-pushstate` event is deprecated, please use `palindrom-redirect-pushstate`, if you're using `puppet-redirect`, please upgrade to `palindrom-redirect`");
+    this.historyHandlerDeprecated = function() {
+      console.warn(
+        "`puppet-redirect-pushstate` event is deprecated, please use `palindrom-redirect-pushstate`, if you're using `puppet-redirect`, please upgrade to `palindrom-redirect`"
+      );
       this.historyHandler();
     }.bind(this);
 
     /* in some cases, people emit redirect requests before `listen` is called */
-    this.element.addEventListener('palindrom-redirect-pushstate', this.historyHandler);
+    this.element.addEventListener(
+      'palindrom-redirect-pushstate',
+      this.historyHandler
+    );
     /* backward compatibility: for people using old puppet-redirect */
-    this.element.addEventListener('puppet-redirect-pushstate', this.historyHandlerDeprecated);
+    this.element.addEventListener(
+      'puppet-redirect-pushstate',
+      this.historyHandlerDeprecated
+    );
 
-    options.callback = function addDOMListeners(obj){
+    options.callback = function addDOMListeners(obj) {
       this.listen();
       onDataReady && onDataReady.call(this, obj);
     };
 
-    this.listen = function(){
+    this.listen = function() {
       this.listening = true;
       this.element.addEventListener('click', clickHandler);
       window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
 
-      this.element.addEventListener('palindrom-redirect-pushstate', this.historyHandler);
+      this.element.addEventListener(
+        'palindrom-redirect-pushstate',
+        this.historyHandler
+      );
 
       /* backward compatibility: for people using old puppet-redirect */
-      this.element.addEventListener('puppet-redirect-pushstate', this.historyHandlerDeprecated);
+      this.element.addEventListener(
+        'puppet-redirect-pushstate',
+        this.historyHandlerDeprecated
+      );
     };
-    this.unlisten = function(){
+    this.unlisten = function() {
       this.listening = false;
 
       this.element.removeEventListener('click', clickHandler);
       window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
-      this.element.removeEventListener('palindrom-redirect-pushstate', this.historyHandler);
+      this.element.removeEventListener(
+        'palindrom-redirect-pushstate',
+        this.historyHandler
+      );
 
       /* backward compatibility: for people using old puppet-redirect */
-      this.element.removeEventListener('puppet-redirect-pushstate', this.historyHandlerDeprecated);
+      this.element.removeEventListener(
+        'puppet-redirect-pushstate',
+        this.historyHandlerDeprecated
+      );
     };
 
     //TODO move fallback to window.location.href from PalindromNetworkChannel to here (PalindromDOM)
@@ -30326,12 +30554,12 @@ var PalindromDOM = (function () {
    * so that the URL handlers can be executed on the remote
    * @param url
    */
-  PalindromDOM.prototype.morphUrl = function (url) {
+  PalindromDOM.prototype.morphUrl = function(url) {
     history.pushState(null, null, url);
     this.network.changeState(url);
   };
 
-  PalindromDOM.prototype.clickHandler = function (event) {
+  PalindromDOM.prototype.clickHandler = function(event) {
     //Don't morph ctrl/cmd + click & middle mouse button
     if (event.ctrlKey || event.metaKey || event.which == 2) {
       return;
@@ -30345,30 +30573,29 @@ var PalindromDOM = (function () {
     var target = event.target;
 
     if (target.nodeName !== 'A') {
-        for (var i = 0; i < event.path.length; i++) {
-            if (event.path[i].nodeName == "A") {
-                target = event.path[i];
-                break;
-            }
+      for (var i = 0; i < event.path.length; i++) {
+        if (event.path[i].nodeName == 'A') {
+          target = event.path[i];
+          break;
         }
+      }
     }
 
     //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
     //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
     //while target.getAttribute("href") returns desired href (as string)
-    var href = target.href || target.getAttribute("href");
+    var href = target.href || target.getAttribute('href');
 
     if (href && PalindromDOM.isApplicationLink(href)) {
       event.preventDefault();
       event.stopPropagation();
       this.morphUrl(href);
-    }
-    else if (target.type === 'submit') {
+    } else if (target.type === 'submit') {
       event.preventDefault();
     }
   };
 
-  PalindromDOM.prototype.historyHandler = function (/*event*/) {
+  PalindromDOM.prototype.historyHandler = function(/*event*/) {
     this.network.changeState(location.href);
   };
 
@@ -30377,7 +30604,7 @@ var PalindromDOM = (function () {
    * @param elem HTMLElement or String
    * @returns {boolean}
    */
-  PalindromDOM.isApplicationLink = function (elem) {
+  PalindromDOM.isApplicationLink = function(elem) {
     if (typeof elem === 'string') {
       //type string is reported in Polymer / Canary (Web Platform features disabled)
       var parser = document.createElement('A');
@@ -30387,33 +30614,36 @@ var PalindromDOM = (function () {
       // IE doesn't populate all link properties when setting .href with a relative URL,
       // however .href will return an absolute URL which then can be used on itself
       // to populate these additional fields.
-      if (parser.host == "") {
+      if (parser.host == '') {
         parser.href = parser.href;
       }
 
       elem = parser;
     }
-    return (elem.protocol == window.location.protocol && elem.host == window.location.host);
+    return elem.protocol == window.location.protocol &&
+      elem.host == window.location.host;
   };
 
   /* backward compatibility, not sure if this is good practice */
-  if(typeof global === 'undefined') {
-    if(typeof window !== 'undefined') { /* incase neither window nor global existed, e.g React Native */
+  if (typeof global === 'undefined') {
+    if (typeof window !== 'undefined') {
+      /* incase neither window nor global existed, e.g React Native */
       var global = window;
+    } else {
+      var global = {};
     }
-    else { var global = {}; }
   }
   global.PuppetDOM = PalindromDOM;
-  
+
   /* Since we have Palindrom bundled,
   let's expose it in case anyone needs it */
   global.Puppet = Palindrom;
-  global.Palindrom = Palindrom;  
+  global.Palindrom = Palindrom;
 
   return PalindromDOM;
 })();
 
-if(true) {
+if (true) {
   module.exports = PalindromDOM;
   module.exports.default = PalindromDOM;
   module.exports.__esModule = true;
@@ -30422,26 +30652,28 @@ if(true) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 162 */
+/* 164 */
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(70);
+__webpack_require__(73);
+__webpack_require__(74);
+__webpack_require__(75);
+__webpack_require__(69);
 __webpack_require__(71);
 __webpack_require__(72);
-__webpack_require__(73);
-__webpack_require__(69);
 
 __webpack_require__(68);
 
 
 /***/ }),
-/* 163 */
+/* 165 */
 /***/ (function(module, exports) {
 
 module.exports = URL;
 
 /***/ }),
-/* 164 */
+/* 166 */
 /***/ (function(module, exports) {
 
 module.exports = WebSocket;

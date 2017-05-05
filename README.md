@@ -71,7 +71,9 @@ var palindrom = new Palindrom({remoteUrl: window.location.href});
 // use palindrom.obj
 palindrom.obj.someProperty = "new value";
 ```
-*Please make sure you pass the correct PATCH server URL.*
+* *Note 1: Please make sure you pass the correct PATCH server URL.*
+* *Note 2: `palindrom.obj` is only available after `options.callback` is called.*
+
 
 ### Demo
 
@@ -89,7 +91,6 @@ Attribute              | Type          | Default                | Description
 ---                    | ---           | ---                    | ---
 `remoteUrl`            | *String*      |  **Required**          | PATCH server URL
 `callback`             | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established)
-`obj [readonly]`      | *Object*      | `{}`                    | Your initial state object, **please read notes below**.
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
 `ignoreAdd`            | *RegExp*      |                        | Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
 `debug`                | *Boolean*     | `true`                 | Toggle debugging mode
@@ -110,10 +111,6 @@ Attribute              | Type          | Default                | Description
 `onReconnectionCountdown`| *Function*  |                        | Triggered when palindrom detected connection problem and reconnection is scheduled. Accepts number of milliseconds to scheduled reconnection. Called every second until countdown reaches 0 (inclusive)
 `onReconnectionEnd`    | *Function*    |                        | Triggered when palindrom successfully reconnected
 `jsonpatch`            | *Object*      | `window.jsonpatch`       | The provider object for jsonpatch `apply` and  `validate`. By default it uses Starcounter-Jack/JSON-Patch library.
-
-**_ Note 1: the object you pass to Palindrom constructor in `options.obj` is deep cloned as the initial state, make sure to use `palindrom.obj` to issue patches and have server patches applied, the object you pass will not be observed_**.
-
-**_ Note 2: `palindrom.obj` is a constant (as in `const`) property, you can modify its properties but you can't assign it again or `delete` it. `palindrom.obj = {}` would throw an error._**
 
 most of the properties are accessible also in runtime:
 
@@ -136,6 +133,9 @@ Attribute             | Type       | Default                | Description
 `onConnectionError`   | *Function* |                        | See above
 `onIncomingPatchValidationError`   | *Function* |           | See above
 `onOutgoingPatchValidationError`   | *Function* |           | See above
+
+* **_ Note 1: `palindrom.obj` becomes only available after `options.callback` is called._**
+* **_ Note 2: `palindrom.obj` is a constant (as in `const`) property, you can modify its properties but you can't assign it again or `delete` it. `palindrom.obj = {}` would throw an error._**
 
 
 ### Binding object once is ready (`callback`)
@@ -270,7 +270,6 @@ bower install Palindrom --save
 Then add source to your HTML:
 
 ```html
-
 <!-- include Palindrom bundle -->
 <script src="bower_components/Palindrom/dist/palindrom-dom.js"></script>
 ```
@@ -307,7 +306,8 @@ After DOM is ready, initialize with the constructor:
 var palindrom = new PalindromDOM({remoteUrl: window.location.href});
 ```
 
-*Please make sure you pass the correct PATCH server URL.*
+* *Note 1: Please make sure you pass the correct PATCH server URL.*
+* *Note 2: `palindrom.obj` is only available after `options.callback` is called.*
 
 Now any changes to `palindrom.obj` will trigger a HTTP PATCH request. And any received will be applied.
 

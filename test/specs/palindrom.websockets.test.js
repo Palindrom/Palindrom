@@ -1,12 +1,12 @@
-global.WebSocket = require("mock-socket").WebSocket;
+global.WebSocket = require('mock-socket').WebSocket;
 
-const MockSocketServer = require("mock-socket").Server;
-const Palindrom = require("../../src/palindrom");
-const assert = require("assert");
-const moxios = require("moxios");
-const sinon = require("sinon");
+const MockSocketServer = require('mock-socket').Server;
+const Palindrom = require('../../src/palindrom');
+const assert = require('assert');
+const moxios = require('moxios');
+const sinon = require('sinon');
 
-describe("Sockets", () => {
+describe('Sockets', () => {
   beforeEach(() => {
     moxios.install();
   });
@@ -14,53 +14,53 @@ describe("Sockets", () => {
     moxios.uninstall();
   });
 
-  describe("Palindrom constructor", () => {
-    describe("if `useWebSocket` flag is provided", () => {
-      it("should try to open WebSocket connection ", function(done) {
-        const server = new MockSocketServer("ws://localhost/testURL");
+  describe('Palindrom constructor', () => {
+    describe('if `useWebSocket` flag is provided', () => {
+      it('should try to open WebSocket connection ', function(done) {
+        const server = new MockSocketServer('ws://localhost/testURL');
 
-        moxios.stubRequest("http://localhost/testURL", {
+        moxios.stubRequest('http://localhost/testURL', {
           status: 200,
-          headers: { location: "http://localhost/testURL" },
+          headers: { location: 'http://localhost/testURL' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "http://localhost/testURL",
+          remoteUrl: 'http://localhost/testURL',
           useWebSocket: true
         });
         /* socket should be undefined before XHR delay */
-        assert(typeof palindrom.network._ws === "undefined");
+        assert(typeof palindrom.network._ws === 'undefined');
 
         setTimeout(
           () => {
             /* socket should NOT be undefined after XHR delay */
-            assert(typeof palindrom.network._ws !== "undefined");
+            assert(typeof palindrom.network._ws !== 'undefined');
             server.stop(done);
           },
           5
         );
       });
 
-      it("should calculate WebSocket URL correctly", function(done) {
-        const server = new MockSocketServer("ws://localhost/testURL");
+      it('should calculate WebSocket URL correctly', function(done) {
+        const server = new MockSocketServer('ws://localhost/testURL');
 
-        moxios.stubRequest("http://localhost/testURL", {
+        moxios.stubRequest('http://localhost/testURL', {
           status: 200,
-          headers: { location: "http://localhost/testURL" },
+          headers: { location: 'http://localhost/testURL' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "http://localhost/testURL",
+          remoteUrl: 'http://localhost/testURL',
           useWebSocket: true
         });
 
         setTimeout(
           () => {
-            assert(palindrom.network._ws.url === "ws://localhost/testURL");
+            assert(palindrom.network._ws.url === 'ws://localhost/testURL');
 
             /* stop server async then call done */
             server.stop(done);
@@ -69,20 +69,20 @@ describe("Sockets", () => {
         );
       });
 
-      it("should resolve to correct WebSocket URL from location header, with root slash /", function(done) {
+      it('should resolve to correct WebSocket URL from location header, with root slash /', function(done) {
         const server = new MockSocketServer(
-          "ws://localhost/default/this_is_a_nice_url"
+          'ws://localhost/default/this_is_a_nice_url'
         );
 
-        moxios.stubRequest("http://localhost/testURL", {
+        moxios.stubRequest('http://localhost/testURL', {
           status: 200,
-          headers: { location: "/default/this_is_a_nice_url" },
+          headers: { location: '/default/this_is_a_nice_url' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "http://localhost/testURL",
+          remoteUrl: 'http://localhost/testURL',
           useWebSocket: true
         });
 
@@ -90,7 +90,7 @@ describe("Sockets", () => {
           () => {
             assert(
               palindrom.network._ws.url ===
-                "ws://localhost/default/this_is_a_nice_url"
+                'ws://localhost/default/this_is_a_nice_url'
             );
             /* stop server async then call done */
             server.stop(done);
@@ -99,20 +99,20 @@ describe("Sockets", () => {
         );
       });
 
-      it("should resolve to correct WebSocket URL from location header, relatively", function(done) {
+      it('should resolve to correct WebSocket URL from location header, relatively', function(done) {
         const server = new MockSocketServer(
-          "ws://localhost/default/this_is_a_nice_url"
+          'ws://localhost/default/this_is_a_nice_url'
         );
 
-        moxios.stubRequest("http://localhost/testURL", {
+        moxios.stubRequest('http://localhost/testURL', {
           status: 200,
-          headers: { location: "default/this_is_a_nice_url" },
+          headers: { location: 'default/this_is_a_nice_url' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "http://localhost/testURL",
+          remoteUrl: 'http://localhost/testURL',
           useWebSocket: true
         });
 
@@ -120,7 +120,7 @@ describe("Sockets", () => {
           () => {
             assert(
               palindrom.network._ws.url ===
-                "ws://localhost/default/this_is_a_nice_url"
+                'ws://localhost/default/this_is_a_nice_url'
             );
             /* stop server async then call done */
             server.stop(done);
@@ -129,20 +129,20 @@ describe("Sockets", () => {
         );
       });
 
-      it("should resolve to correct WebSocket URL from location header, with root slash and extra pathname", function(done) {
+      it('should resolve to correct WebSocket URL from location header, with root slash and extra pathname', function(done) {
         const server = new MockSocketServer(
-          "ws://localhost/default/this_is_a_nice_url"
+          'ws://localhost/default/this_is_a_nice_url'
         );
 
-        moxios.stubRequest("http://localhost/testURL/koko", {
+        moxios.stubRequest('http://localhost/testURL/koko', {
           status: 200,
-          headers: { location: "/default/this_is_a_nice_url" },
+          headers: { location: '/default/this_is_a_nice_url' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "http://localhost/testURL/koko",
+          remoteUrl: 'http://localhost/testURL/koko',
           useWebSocket: true
         });
 
@@ -150,7 +150,7 @@ describe("Sockets", () => {
           () => {
             assert(
               palindrom.network._ws.url ===
-                "ws://localhost/default/this_is_a_nice_url"
+                'ws://localhost/default/this_is_a_nice_url'
             );
             /* stop server async then call done */
             server.stop(done);
@@ -159,20 +159,20 @@ describe("Sockets", () => {
         );
       });
 
-      it("should resolve to correct WebSocket URL from location header, without root slash and extra pathname", function(done) {
+      it('should resolve to correct WebSocket URL from location header, without root slash and extra pathname', function(done) {
         const server = new MockSocketServer(
-          "ws://localhost/testURL/default/this_is_a_nice_url"
+          'ws://localhost/testURL/default/this_is_a_nice_url'
         );
 
-        moxios.stubRequest("http://localhost/testURL/koko", {
+        moxios.stubRequest('http://localhost/testURL/koko', {
           status: 200,
-          headers: { location: "default/this_is_a_nice_url" },
+          headers: { location: 'default/this_is_a_nice_url' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "http://localhost/testURL/koko",
+          remoteUrl: 'http://localhost/testURL/koko',
           useWebSocket: true
         });
 
@@ -180,7 +180,7 @@ describe("Sockets", () => {
           () => {
             assert(
               palindrom.network._ws.url ===
-                "ws://localhost/testURL/default/this_is_a_nice_url"
+                'ws://localhost/testURL/default/this_is_a_nice_url'
             );
             /* stop server async then call done */
             server.stop(done);
@@ -188,20 +188,20 @@ describe("Sockets", () => {
           5
         );
       });
-      it("should use wss for https remote URL", function(done) {
+      it('should use wss for https remote URL', function(done) {
         const server = new MockSocketServer(
-          "wss://localhost/testURL/default/this_is_a_nice_url"
+          'wss://localhost/testURL/default/this_is_a_nice_url'
         );
 
-        moxios.stubRequest("https://localhost/testURL/koko", {
+        moxios.stubRequest('https://localhost/testURL/koko', {
           status: 200,
-          headers: { location: "default/this_is_a_nice_url" },
+          headers: { location: 'default/this_is_a_nice_url' },
           responseText: '{"hello": "world"}'
         });
 
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-          remoteUrl: "https://localhost/testURL/koko",
+          remoteUrl: 'https://localhost/testURL/koko',
           useWebSocket: true
         });
 
@@ -209,7 +209,7 @@ describe("Sockets", () => {
           () => {
             assert(
               palindrom.network._ws.url ===
-                "wss://localhost/testURL/default/this_is_a_nice_url"
+                'wss://localhost/testURL/default/this_is_a_nice_url'
             );
             /* stop server async then call done */
             server.stop(done);
@@ -218,16 +218,16 @@ describe("Sockets", () => {
         );
       });
 
-      it("should use same host, port, username, and password as provided in remoteUrl", function(done) {
+      it('should use same host, port, username, and password as provided in remoteUrl', function(done) {
         const server = new MockSocketServer(
-          "ws://localhost/test/this_is_a_nice_url"
+          'ws://localhost/test/this_is_a_nice_url'
         );
 
-        const remoteUrl = "http://localhost/testURL/koko";
+        const remoteUrl = 'http://localhost/testURL/koko';
 
         moxios.stubRequest(remoteUrl, {
           status: 200,
-          headers: { location: "/test/this_is_a_nice_url" },
+          headers: { location: '/test/this_is_a_nice_url' },
           responseText: '{"hello": "world"}'
         });
 
@@ -240,7 +240,7 @@ describe("Sockets", () => {
           () => {
             assert(
               palindrom.network._ws.url ===
-                "ws://localhost/test/this_is_a_nice_url"
+                'ws://localhost/test/this_is_a_nice_url'
             );
             /* stop server async then call done */
             server.stop(done);
@@ -248,22 +248,22 @@ describe("Sockets", () => {
           5
         );
       });
-      describe("Before connection is established", () => {
+      describe('Before connection is established', () => {
         it("shouldn't start a socket connection", function(done) {
           const server = new MockSocketServer(
-            "ws://localhost/test/this_is_a_nice_url"
+            'ws://localhost/test/this_is_a_nice_url'
           );
 
-          const remoteUrl = "http://localhost/testURL/koko";
+          const remoteUrl = 'http://localhost/testURL/koko';
           let everConnected = false;
 
           moxios.stubRequest(remoteUrl, {
             status: 200,
-            headers: { location: "/test/this_is_a_nice_url" },
+            headers: { location: '/test/this_is_a_nice_url' },
             responseText: '{"hello": "world"}'
           });
 
-          server.on("connection", server => {
+          server.on('connection', server => {
             everConnected = true;
           });
 
@@ -289,25 +289,25 @@ describe("Sockets", () => {
 
         it("shouldn't send any change patches", function(done) {
           const server = new MockSocketServer(
-            "ws://localhost/test/this_is_a_cool_url"
+            'ws://localhost/test/this_is_a_cool_url'
           );
 
-          const remoteUrl = "http://localhost/testURL/koko";
+          const remoteUrl = 'http://localhost/testURL/koko';
 
           moxios.stubRequest(remoteUrl, {
             status: 200,
-            headers: { location: "/test/this_is_a_cool_url" },
+            headers: { location: '/test/this_is_a_cool_url' },
             responseText: '{"hello": "world"}'
           });
 
           let everConnected = false;
           const messages = [];
 
-          server.on("connection", server => {
+          server.on('connection', server => {
             everConnected = true;
           });
 
-          server.on("message", patches => {
+          server.on('message', patches => {
             let patchesParsed = JSON.parse(patches);
             messages.push(...patchesParsed);
           });
@@ -317,7 +317,12 @@ describe("Sockets", () => {
             useWebSocket: true
           });
 
-          palindrom.obj.firstName = "Omar";
+          setTimeout(
+            () => {
+              palindrom.obj.firstName = 'Omar';
+            },
+            3
+          );
 
           setTimeout(
             () => {
@@ -328,28 +333,28 @@ describe("Sockets", () => {
           );
         });
       });
-      describe("After connection is established", () => {
-        it("should send new changes over WebSocket", function(done) {
+      describe('After connection is established', () => {
+        it('should send new changes over WebSocket', function(done) {
           const server = new MockSocketServer(
-            "ws://localhost/test/this_is_a_nicer_url"
+            'ws://localhost/test/this_is_a_nicer_url'
           );
 
-          const remoteUrl = "http://localhost/testURL/koko";
+          const remoteUrl = 'http://localhost/testURL/koko';
 
           moxios.stubRequest(remoteUrl, {
             status: 200,
-            headers: { location: "/test/this_is_a_nicer_url" },
+            headers: { location: '/test/this_is_a_nicer_url' },
             responseText: '{"hello": "world"}'
           });
 
           let everConnected = false;
           const messages = [];
 
-          server.on("connection", server => {
+          server.on('connection', server => {
             everConnected = true;
           });
 
-          server.on("message", patches => {
+          server.on('message', patches => {
             let patchesParsed = JSON.parse(patches);
             messages.push(...patchesParsed);
           });
@@ -361,14 +366,14 @@ describe("Sockets", () => {
 
           setTimeout(
             () => {
-              palindrom.obj.firstName = "Omar";
+              palindrom.obj.firstName = 'Omar';
               setTimeout(
                 () => {
                   assert(messages.length === 1);
                   assert.deepEqual(messages[0], {
-                    op: "add",
-                    path: "/firstName",
-                    value: "Omar"
+                    op: 'add',
+                    path: '/firstName',
+                    value: 'Omar'
                   });
                   server.stop(done);
                 },
@@ -379,27 +384,27 @@ describe("Sockets", () => {
           );
         });
 
-        it("should send patches over HTTP before ws.readyState is OPENED, and over WebSocket after ws.readyState is OPENED", function(done) {
+        it('should send patches over HTTP before ws.readyState is OPENED, and over WebSocket after ws.readyState is OPENED', function(done) {
           const server = new MockSocketServer(
-            "ws://localhost/test/this_is_a_fast_url"
+            'ws://localhost/test/this_is_a_fast_url'
           );
 
-          const remoteUrl = "http://localhost/testURL/koko";
+          const remoteUrl = 'http://localhost/testURL/koko';
 
           moxios.stubRequest(remoteUrl, {
             status: 200,
-            headers: { location: "/test/this_is_a_fast_url" },
+            headers: { location: '/test/this_is_a_fast_url' },
             responseText: '{"hello": "world"}'
           });
 
           let everConnected = false;
           const messages = [];
 
-          server.on("connection", server => {
+          server.on('connection', server => {
             everConnected = true;
           });
 
-          server.on("message", patches => {
+          server.on('message', patches => {
             let patchesParsed = JSON.parse(patches);
             messages.push(...patchesParsed);
           });
@@ -408,13 +413,13 @@ describe("Sockets", () => {
             remoteUrl,
             useWebSocket: true,
             callback: function(obj) {
-              moxios.stubRequest("http://localhost/test/this_is_a_fast_url", {
+              moxios.stubRequest('http://localhost/test/this_is_a_fast_url', {
                 status: 200,
-                responseText: "[]"
+                responseText: '[]'
               });
 
               /* here, socket connection isn't established yet, let's issue a change */
-              obj.name = "Mark";
+              obj.name = 'Mark';
 
               setTimeout(
                 () => {
@@ -432,7 +437,7 @@ describe("Sockets", () => {
               /* now socket is connected, let's issue a change */
               setTimeout(
                 () => {
-                  palindrom.obj.firstName = "Omar";
+                  palindrom.obj.firstName = 'Omar';
 
                   assert(messages.length === 1);
                   assert(
@@ -446,7 +451,7 @@ describe("Sockets", () => {
               /* now socket is connected, let's issue another change */
               setTimeout(
                 () => {
-                  palindrom.obj.firstName = "Hanan";
+                  palindrom.obj.firstName = 'Hanan';
 
                   assert(messages.length === 2);
                   assert(
