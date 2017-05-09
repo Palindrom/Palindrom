@@ -5084,11 +5084,17 @@ var Palindrom = (function() {
         palindrom.remoteObj = JSON.parse(JSON.stringify(json));
       }
 
-      palindrom.observe(json);
-
-      if(palindrom.onRemoteChange) {
-        palindrom.onRemoteChange([{op: 'replace', path: '', value: palindrom.obj}]);
+      if(!palindrom.isObjectProxified) { // first time the state is being set
+        palindrom.observe(json);
       }
+      palindrom.unobserve();
+
+      if(!palindrom.isObjectProxified) { // first time the state is being set, just set the versioning correctly
+        palindrom.queue.reset(palindrom.obj, palindrom.obj);
+      } else {
+         palindrom.queue.reset(palindrom.obj, json) // it's a reconnection, reset the state
+      }
+      palindrom.observe();
 
       if (palindrom.onDataReady) {
         palindrom.onDataReady.call(palindrom, palindrom.obj);
@@ -5125,7 +5131,7 @@ var Palindrom = (function() {
     this.jsonpatch = options.jsonpatch || this.jsonpatch;
     this.debug = options.debug != undefined ? options.debug : true;
 
-    var noop = function() {};
+    var noop = function noOpFunction() {};
 
     this.isObjectProxified = false;
     this.isObserving = false;
@@ -5236,8 +5242,8 @@ var Palindrom = (function() {
     /* if we haven't ever proxified our object,
     this means it's the first observe call,
     let's proxify it then! */
-    if (!this.isObjectProxified) {
 
+    if (!this.isObjectProxified) {
       /* wrap the given object with a proxy observer */
       this.jsonPatcherProxy = new JSONPatcherProxy(obj);
 
@@ -5344,7 +5350,7 @@ var Palindrom = (function() {
     // we don't want this changes to generate patches since they originate from server, not client
     this.unobserve();
     try {
-      var results = this.jsonpatch.apply(tree, sequence, this.debug);
+       var results = this.jsonpatch.apply(tree, sequence, this.debug);
     } catch (error) {
       if (this.debug) {
         this.onIncomingPatchValidationError(error);
@@ -5368,6 +5374,16 @@ var Palindrom = (function() {
         );
       }
     });
+    /* when patches are applied, and their `value`s are objects, make sure to pass the proxified version */
+    sequence
+      .filter(
+        el => ['replace', 'add'].includes(el.op) && typeof el.value === 'object'
+      )
+      .map(patch => {
+        const newPatch = { op: '_get', path: patch.path };
+        jsonpatch.apply(this.obj, [newPatch]);
+        patch.value = newPatch.value;
+      });
 
     // notifications have to happen only where observe has been re-enabled
     // otherwise some listener might produce changes that would go unnoticed
