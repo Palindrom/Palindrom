@@ -122,7 +122,7 @@ palindrom.property
 Attribute             | Type       | Default                | Description
 ---                   | ---        | ---                    | ---
 `remoteUrl`           | *String*   | **Required**           | See above
-`obj [readonly]`      | *Object*   | `{}`                   | See above
+`obj [readonly]`      | *Object*   | `{}`                   | Your initial state object, _**please read notes below**_.
 `useWebSocket`        | *Boolean*  | `false`                | See above
 `ignoreAdd`           | *RegExp*   |                        | See above
 `debug`               | *Boolean*  | `true`                 | See above
