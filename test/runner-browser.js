@@ -5084,16 +5084,8 @@ var Palindrom = (function() {
         palindrom.remoteObj = JSON.parse(JSON.stringify(json));
       }
 
-      if(!palindrom.isObjectProxified) { // first time the state is being set
-        palindrom.observe(json);
-      }
       palindrom.unobserve();
-
-      if(!palindrom.isObjectProxified) { // first time the state is being set, just set the versioning correctly
-        palindrom.queue.reset(palindrom.obj, palindrom.obj);
-      } else {
-         palindrom.queue.reset(palindrom.obj, json) // it's a reconnection, reset the state
-      }
+      palindrom.queue.reset(palindrom.obj, json);
       palindrom.observe();
 
       if (palindrom.onDataReady) {
@@ -5128,6 +5120,8 @@ var Palindrom = (function() {
     if (!options.remoteUrl) {
       throw new Error('remoteUrl is required');
     }
+    this.prepareProxifiedObject();
+
     this.jsonpatch = options.jsonpatch || this.jsonpatch;
     this.debug = options.debug != undefined ? options.debug : true;
 
@@ -5228,7 +5222,6 @@ var Palindrom = (function() {
       // no queue - just api
       this.queue = new NoQueue(this.validateAndApplySequence.bind(this));
     }
-
     makeInitialConnection(this);
   }
 
@@ -5238,33 +5231,28 @@ var Palindrom = (function() {
     sendPatches(this, []); // sends empty message to server
   };
 
-  Palindrom.prototype.observe = function(obj) {
-    /* if we haven't ever proxified our object,
-    this means it's the first observe call,
-    let's proxify it then! */
+  Palindrom.prototype.prepareProxifiedObject = function() {
+    /* wrap a new object with a proxy observer */
+    this.jsonPatcherProxy = new JSONPatcherProxy({});
 
-    if (!this.isObjectProxified) {
-      /* wrap the given object with a proxy observer */
-      this.jsonPatcherProxy = new JSONPatcherProxy(obj);
+    const proxifiedObj = this.jsonPatcherProxy.observe(
+      true,
+      this.filterChangedCallback.bind(this)
+    );
 
-      /* make exposed object read only */
-      const proxifiedObj = this.jsonPatcherProxy.observe(
-        true,
-        this.filterChangedCallback.bind(this)
-      );
-      Object.defineProperty(this, 'obj', {
-        get: function() {
-          return proxifiedObj;
-        },
-        set: function() {
-          throw new Error('palindrom.obj is readonly');
-        }
-      });
-      this.isObjectProxified = true;
-    } else {
-      /* we are already observing, just enable event emitting. */
-      this.jsonPatcherProxy.switchObserverOn();
-    }
+    /* make it read-only and expose it as `obj` */
+    Object.defineProperty(this, 'obj', {
+      get: function() {
+        return proxifiedObj;
+      },
+      set: function() {
+        throw new Error('palindrom.obj is readonly');
+      }
+    });
+  };
+
+  Palindrom.prototype.observe = function() {
+    this.jsonPatcherProxy && this.jsonPatcherProxy.switchObserverOn();
     this.isObserving = true;
   };
   Palindrom.prototype.unobserve = function() {
@@ -5451,9 +5439,9 @@ var Palindrom = (function() {
     if (!this.isObserving) {
       return;
     }
-
+    debugger;
     this.queue.receive(this.obj, patches);
-
+debugger
     if (
       this.queue.pending &&
       this.queue.pending.length &&
