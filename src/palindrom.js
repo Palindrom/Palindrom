@@ -846,9 +846,7 @@ var Palindrom = (function() {
     if (!this.isObserving) {
       return;
     }
-    debugger;
     this.queue.receive(this.obj, patches);
-debugger
     if (
       this.queue.pending &&
       this.queue.pending.length &&
