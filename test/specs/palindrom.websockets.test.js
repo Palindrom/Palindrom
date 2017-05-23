@@ -317,6 +317,7 @@ describe('Sockets', () => {
             useWebSocket: true
           });
 
+          // Wait for XHR to finish
           setTimeout(
             () => {
               palindrom.obj.firstName = 'Omar';
