@@ -54,7 +54,7 @@
     "jsdom": "^9.5.0",
     "json-loader": "^0.5.4",
     "mocha": "^3.2.0",
-    "mock-socket": "^6.0.4",
+    "mock-socket": "6.0.4",
     "moxios": "^0.3.0",
     "polyserve": "^0.16.0",
     "saucelabs": "^1.4.0",
