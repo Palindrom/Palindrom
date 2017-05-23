@@ -422,18 +422,14 @@ describe('Sockets', () => {
               /* here, socket connection isn't established yet, let's issue a change */
               obj.name = 'Mark';
 
-              setTimeout(
-                () => {
-                  assert(
-                    '[{"op":"add","path":"/name","value":"Mark"}]' ===
-                      moxios.requests.mostRecent().config.data
-                  );
-
-                  /* make sure there is no socket messages */
-                  assert(messages.length === 0);
-                },
-                5
+              assert(
+                '[{"op":"add","path":"/name","value":"Mark"}]' ===
+                  moxios.requests.mostRecent().config.data
               );
+
+              /* make sure there is no socket messages */
+              assert(messages.length === 0);
+
 
               /* now socket is connected, let's issue a change */
               setTimeout(
