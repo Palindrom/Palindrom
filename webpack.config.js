@@ -24,14 +24,7 @@ module.exports = [
     resolve: {
       extensions: [".js"]
     },
-    externals: { websocket: "WebSocket", './URL': 'URL' },
-    plugins: [
-      new webpack.optimize.UglifyJsPlugin({
-        compress: {
-          warnings: false
-        }
-      })
-    ]
+    externals: { websocket: "WebSocket", './URL': 'URL' }
   },
   {
     entry: "./src/palindrom-dom.js",
@@ -55,14 +48,7 @@ module.exports = [
     resolve: {
       extensions: [".js"]
     },
-    externals: { websocket: "WebSocket", './URL': 'URL' },
-    plugins: [
-      new webpack.optimize.UglifyJsPlugin({
-        compress: {
-          warnings: false
-        }
-      })
-    ]
+    externals: { websocket: "WebSocket", './URL': 'URL' }
   },
   /* bundle tests for browser */
   {
