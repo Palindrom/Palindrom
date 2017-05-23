@@ -4595,7 +4595,6 @@ function clonePath(path) {
  * (c) 2013 Joachim Wester
  * MIT license
  */
-
 if (true) {
   var jsonpatch = __webpack_require__(118); /* include only apply and validate */
   var JSONPatcherProxy = __webpack_require__(126);
@@ -5362,16 +5361,6 @@ var Palindrom = (function() {
         );
       }
     });
-    /* when patches are applied, and their `value`s are objects, make sure to pass the proxified version */
-    sequence
-      .filter(
-        el => ['replace', 'add'].includes(el.op) && typeof el.value === 'object'
-      )
-      .map(patch => {
-        const newPatch = { op: '_get', path: patch.path };
-        jsonpatch.apply(this.obj, [newPatch]);
-        patch.value = newPatch.value;
-      });
 
     // notifications have to happen only where observe has been re-enabled
     // otherwise some listener might produce changes that would go unnoticed
@@ -5439,9 +5428,7 @@ var Palindrom = (function() {
     if (!this.isObserving) {
       return;
     }
-    debugger;
     this.queue.receive(this.obj, patches);
-debugger
     if (
       this.queue.pending &&
       this.queue.pending.length &&
@@ -13376,6 +13363,7 @@ describe('Sockets', () => {
             useWebSocket: true
           });
 
+          // Wait for XHR to finish
           setTimeout(
             () => {
               palindrom.obj.firstName = 'Omar';
@@ -13490,7 +13478,7 @@ describe('Sockets', () => {
                   /* make sure there is no socket messages */
                   assert(messages.length === 0);
                 },
-                5
+                20
               );
 
               /* now socket is connected, let's issue a change */
@@ -13504,7 +13492,7 @@ describe('Sockets', () => {
                       '{"op":"add","path":"/firstName","value":"Omar"}'
                   );
                 },
-                10
+                30
               );
 
               /* now socket is connected, let's issue another change */
@@ -13519,7 +13507,7 @@ describe('Sockets', () => {
                   );
                   server.stop(done);
                 },
-                15
+                40
               );
             }
           });
