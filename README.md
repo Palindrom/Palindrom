@@ -72,7 +72,7 @@ var palindrom = new Palindrom({remoteUrl: window.location.href});
 palindrom.obj.someProperty = "new value";
 ```
 * *Note 1: Please make sure you pass the correct PATCH server URL.*
-* *Note 2: `palindrom.obj` is only available after `options.callback` is called.*
+* *Note 2: `palindrom.obj` is only available after `options.onStateReset` is called.*
 
 
 ### Demo
@@ -90,7 +90,7 @@ var palindrom = new Palindrom({attribute: value});
 Attribute              | Type          | Default                | Description
 ---                    | ---           | ---                    | ---
 `remoteUrl`            | *String*      |  **Required**          | PATCH server URL
-`callback`             | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established)
+`onStateReset`         | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established), **it can be called again if the state reset by a root-replacing patch**.
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
 `ignoreAdd`            | *RegExp*      |                        | Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
 `debug`                | *Boolean*     | `true`                 | Toggle debugging mode
@@ -134,14 +134,14 @@ Attribute             | Type       | Default                | Description
 `onIncomingPatchValidationError`   | *Function* |           | See above
 `onOutgoingPatchValidationError`   | *Function* |           | See above
 
-* **_ Note 1: `palindrom.obj` becomes only available after `options.callback` is called._**
+* **_ Note 1: `palindrom.obj` becomes only available after `options.onStateReset` is called._**
 * **_ Note 2: `palindrom.obj` is a constant (as in `const`) property, you can modify its properties but you can't assign it again or `delete` it. `palindrom.obj = {}` would throw an error._**
 
 
-### Binding object once is ready (`callback`)
-To bind object where you need once it will be fetched from remote you can use define `callback` in constructor:
+### Binding object once is ready (`onStateReset`)
+To bind object where you need once it will be fetched from remote you can use define `onStateReset` in constructor:
 ```js
-var palindrom = new Palindrom({remoteUrl: url, callback: function (obj) {
+var palindrom = new Palindrom({remoteUrl: url, onStateReset: function (obj) {
   document.getElementById('test').model = obj;
 }});
 ```
@@ -307,7 +307,7 @@ var palindrom = new PalindromDOM({remoteUrl: window.location.href});
 ```
 
 * *Note 1: Please make sure you pass the correct PATCH server URL.*
-* *Note 2: `palindrom.obj` is only available after `options.callback` is called.*
+* *Note 2: `palindrom.obj` is only available after `options.onStateReset` is called.*
 
 Now any changes to `palindrom.obj` will trigger a HTTP PATCH request. And any received will be applied.
 

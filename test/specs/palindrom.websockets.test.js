@@ -270,7 +270,7 @@ describe('Sockets', () => {
           var palindrom = new Palindrom({
             remoteUrl,
             useWebSocket: true,
-            callback: () => {
+            onStateReset: () => {
               /* shouldn't connect before XHR */
               assert(everConnected === false);
             }
@@ -413,7 +413,7 @@ describe('Sockets', () => {
           var palindrom = new Palindrom({
             remoteUrl,
             useWebSocket: true,
-            callback: function(obj) {
+            onStateReset: function(obj) {
               moxios.stubRequest('http://localhost/test/this_is_a_fast_url', {
                 status: 200,
                 responseText: '[]'

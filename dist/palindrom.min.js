@@ -7,9 +7,9 @@ var Palindrom =
 /******/ 	function __webpack_require__(moduleId) {
 /******/
 /******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId])
+/******/ 		if(installedModules[moduleId]) {
 /******/ 			return installedModules[moduleId].exports;
-/******/
+/******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			i: moduleId,
@@ -926,6 +926,10 @@ process.off = noop;
 process.removeListener = noop;
 process.removeAllListeners = noop;
 process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
 
 process.binding = function (name) {
     throw new Error('process.binding is not supported');
@@ -946,11 +950,11 @@ module.exports = __webpack_require__(17);
 
 /***/ }),
 /* 10 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
 /*!
  * https://github.com/Starcounter-Jack/JSON-Patch
- * json-patch-duplex.js version: 1.1.8
+ * json-patch-duplex.js version: 1.2.0
  * (c) 2013 Joachim Wester
  * MIT license
  */
@@ -977,7 +981,7 @@ var jsonpatch;
     };
     function _equals(a, b) {
         switch (typeof a) {
-            case 'undefined': //backward compatibility, but really I think we should return false
+            case 'undefined':
             case 'boolean':
             case 'string':
             case 'number':
@@ -989,20 +993,45 @@ var jsonpatch;
                     if (!_isArray(b) || a.length !== b.length)
                         return false;
                     for (var i = 0, l = a.length; i < l; i++)
-                        if (!_equals(a[i], b[i]))
+                        if (!_equals(a[i], b[i])) {
                             return false;
+                        }
                     return true;
                 }
+                var aKeys = _objectKeys(a);
                 var bKeys = _objectKeys(b);
-                var bLength = bKeys.length;
-                if (_objectKeys(a).length !== bLength)
-                    return false;
-                for (var i = 0; i < bLength; i++)
-                    if (!_equals(a[i], b[i]))
+                for (var i_1 = 0; i_1 < aKeys.length; i_1++) {
+                    var key_1 = aKeys[i_1];
+                    // check all properties of `a` to equal their `b` counterpart
+                    if (!_equals(a[key_1], b[key_1])) {
                         return false;
+                    }
+                    // remove the key from consideration in next step since we know it's "equal"
+                    var bKeysIdx = bKeys.indexOf(key_1);
+                    if (bKeysIdx >= 0) {
+                        bKeys.splice(bKeysIdx, 1);
+                    }
+                }
+                for (var i_2 = 0; i_2 < bKeys.length; i_2++) {
+                    var key = bKeys[i_2];
+                    // lastly, test any untested properties of `b`
+                    if (!_equals(a[key], b[key])) {
+                        return false;
+                    }
+                }
                 return true;
             default:
                 return false;
+        }
+    }
+    function deepClone(obj) {
+        switch (typeof obj) {
+            case "object":
+                return JSON.parse(JSON.stringify(obj)); //Faster than ES5 clone - http://jsperf.com/deep-cloning-of-objects/5
+            case "undefined":
+                return null; //this is how JSON.stringify behaves for array items
+            default:
+                return obj; //no need to clone primitives
         }
     }
     /* We use a Javascript hash to store each
@@ -1013,107 +1042,65 @@ var jsonpatch;
      */
     /* The operations applicable to an object */
     var objOps = {
-        add: function (obj, key) {
+        add: function (obj, key, document) {
             obj[key] = this.value;
+            return { newDocument: document };
         },
-        remove: function (obj, key) {
+        remove: function (obj, key, document) {
             var removed = obj[key];
             delete obj[key];
-            return removed;
+            return { newDocument: document, removed: removed };
         },
-        replace: function (obj, key) {
+        replace: function (obj, key, document) {
             var removed = obj[key];
             obj[key] = this.value;
-            return removed;
+            return { newDocument: document, removed: removed };
         },
-        move: function (obj, key, tree) {
-            var getOriginalDestination = { op: "_get", path: this.path };
-            apply(tree, [getOriginalDestination]);
-            // In case value is moved up and overwrites its ancestor
-            var original = getOriginalDestination.value === undefined ?
-                undefined : JSON.parse(JSON.stringify(getOriginalDestination.value));
-            var temp = { op: "_get", path: this.from };
-            apply(tree, [temp]);
-            apply(tree, [
-                { op: "remove", path: this.from }
-            ]);
-            apply(tree, [
-                { op: "add", path: this.path, value: temp.value }
-            ]);
-            return original;
+        move: function (obj, key, document) {
+            /* in case move target overwrites an existing value,
+            return the removed value, this can be taxing performance-wise,
+            and is potentially unneeded */
+            var removed = getValueByPointer(document, this.path);
+            if (removed) {
+                removed = deepClone(removed);
+            }
+            var originalValue = applyOperation(document, { op: "remove", path: this.from }).removed;
+            applyOperation(document, { op: "add", path: this.path, value: originalValue });
+            return { newDocument: document, removed: removed };
         },
-        copy: function (obj, key, tree) {
-            var temp = { op: "_get", path: this.from };
-            apply(tree, [temp]);
-            apply(tree, [
-                { op: "add", path: this.path, value: temp.value }
-            ]);
+        copy: function (obj, key, document) {
+            var valueToCopy = getValueByPointer(document, this.from);
+            applyOperation(document, { op: "add", path: this.path, value: valueToCopy });
+            return { newDocument: document };
         },
-        test: function (obj, key) {
-            return _equals(obj[key], this.value);
+        test: function (obj, key, document) {
+            return { newDocument: document, test: _equals(obj[key], this.value) };
         },
-        _get: function (obj, key) {
+        _get: function (obj, key, document) {
             this.value = obj[key];
+            return { newDocument: document };
         }
     };
     /* The operations applicable to an array. Many are the same as for the object */
     var arrOps = {
-        add: function (arr, i) {
+        add: function (arr, i, document) {
             arr.splice(i, 0, this.value);
             // this may be needed when using '-' in an array
-            return i;
+            return { newDocument: document, index: i };
         },
-        remove: function (arr, i) {
+        remove: function (arr, i, document) {
             var removedList = arr.splice(i, 1);
-            return removedList[0];
+            return { newDocument: document, removed: removedList[0] };
         },
-        replace: function (arr, i) {
+        replace: function (arr, i, document) {
             var removed = arr[i];
             arr[i] = this.value;
-            return removed;
+            return { newDocument: document, removed: removed };
         },
         move: objOps.move,
         copy: objOps.copy,
         test: objOps.test,
         _get: objOps._get
-    };
-    /* The operations applicable to object root. Many are the same as for the object */
-    var rootOps = {
-        add: function (obj) {
-            rootOps.remove.call(this, obj);
-            for (var key in this.value) {
-                if (this.value.hasOwnProperty(key)) {
-                    obj[key] = this.value[key];
-                }
-            }
-        },
-        remove: function (obj) {
-            var removed = {};
-            for (var key in obj) {
-                if (obj.hasOwnProperty(key)) {
-                    removed[key] = obj[key];
-                    objOps.remove.call(this, obj, key);
-                }
-            }
-            return removed;
-        },
-        replace: function (obj) {
-            var removed = apply(obj, [
-                { op: "remove", path: this.path }
-            ]);
-            apply(obj, [
-                { op: "add", path: this.path, value: this.value }
-            ]);
-            return removed[0];
-        },
-        move: objOps.move,
-        copy: objOps.copy,
-        test: function (obj) {
-            return (JSON.stringify(obj) === JSON.stringify(this.value));
-        },
-        _get: function (obj) {
-            this.value = obj;
-        }
     };
     var _isArray;
     if (Array.isArray) {
@@ -1140,78 +1127,249 @@ var jsonpatch;
         return true;
     }
     /**
-     * Apply a json-patch operation on an object tree
-     * Returns an array of results of operations.
-     * Each element can either be a boolean (if op == 'test') or
-     * the removed object (operations that remove things)
-     * or just be undefined
+    * Escapes a json pointer path
+    * @param path The raw pointer
+    * @return the Escaped path
+    */
+    function escapePathComponent(path) {
+        if (path.indexOf('/') === -1 && path.indexOf('~') === -1)
+            return path;
+        return path.replace(/~/g, '~0').replace(/\//g, '~1');
+    }
+    jsonpatch.escapePathComponent = escapePathComponent;
+    /**
+     * Unescapes a json pointer path
+     * @param path The escaped pointer
+     * @return The unescaped path
      */
-    function apply(tree, patches, validate) {
-        var results = new Array(patches.length), p = 0, plen = patches.length, patch, key;
-        while (p < plen) {
-            patch = patches[p];
-            p++;
-            // Find the object
-            var path = patch.path || "";
+    function unescapePathComponent(path) {
+        return path.replace(/~1/g, '/').replace(/~0/g, '~');
+    }
+    jsonpatch.unescapePathComponent = unescapePathComponent;
+    /**
+     * Retrieves a value from a JSON document by a JSON pointer.
+     * Returns the value.
+     *
+     * @param document The document to get the value from
+     * @param pointer an escaped JSON pointer
+     * @return The retrieved value
+     */
+    function getValueByPointer(document, pointer) {
+        var getOriginalDestination = { op: "_get", path: pointer };
+        applyOperation(document, getOriginalDestination);
+        return getOriginalDestination.value;
+    }
+    jsonpatch.getValueByPointer = getValueByPointer;
+    /**
+     * Apply a single JSON Patch Operation on a JSON document.
+     * Returns the {newDocument, result} of the operation.
+     *
+     * @param document The document to patch
+     * @param operation The operation to apply
+     * @param validateOperation `false` is without validation, `true` to use default jsonpatch's validation, or you can pass a `validateOperation` callback to be used for validation.
+     * @param mutateDocument Whether to mutate the original document or clone it before applying
+     * @return `{newDocument, result}` after the operation
+     */
+    function applyOperation(document, operation, validateOperation, mutateDocument) {
+        if (validateOperation === void 0) { validateOperation = false; }
+        if (mutateDocument === void 0) { mutateDocument = true; }
+        if (validateOperation) {
+            if (typeof validateOperation == 'function') {
+                validateOperation(operation, 0, document, operation.path);
+            }
+            else {
+                validator(operation, 0);
+            }
+        }
+        /* ROOT OPERATIONS */
+        if (operation.path === "") {
+            var returnValue = { newDocument: document };
+            if (operation.op === 'add') {
+                returnValue.newDocument = operation.value;
+                return returnValue;
+            }
+            else if (operation.op === 'replace') {
+                returnValue.newDocument = operation.value;
+                returnValue.removed = document; //document we removed
+                return returnValue;
+            }
+            else if (operation.op === 'move' || operation.op === 'copy') {
+                returnValue.newDocument = getValueByPointer(document, operation.from); // get the value by json-pointer in `from` field
+                if (operation.op === 'move') {
+                    returnValue.removed = document;
+                }
+                return returnValue;
+            }
+            else if (operation.op === 'test') {
+                returnValue.test = _equals(document, operation.value);
+                if (returnValue.test === false) {
+                    throw new JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+                }
+                returnValue.newDocument = document;
+                return returnValue;
+            }
+            else if (operation.op === 'remove') {
+                returnValue.removed = document;
+                returnValue.newDocument = null;
+                return returnValue;
+            }
+            else {
+                if (validateOperation) {
+                    throw new JsonPatchError('Operation `op` property is not one of operations defined in RFC-6902', 'OPERATION_OP_INVALID', 0, operation, document);
+                }
+                else {
+                    return returnValue;
+                }
+            }
+        } /* END ROOT OPERATIONS */
+        else {
+            if (!mutateDocument) {
+                document = deepClone(document);
+            }
+            var path = operation.path || "";
             var keys = path.split('/');
-            var obj = tree;
+            var obj = document;
             var t = 1; //skip empty element - http://jsperf.com/to-shift-or-not-to-shift
             var len = keys.length;
             var existingPathFragment = undefined;
+            var key = void 0;
+            var validateFunction = void 0;
+            if (typeof validateOperation == 'function') {
+                validateFunction = validateOperation;
+            }
+            else {
+                validateFunction = validator;
+            }
             while (true) {
                 key = keys[t];
-                if (validate) {
+                if (validateOperation) {
                     if (existingPathFragment === undefined) {
                         if (obj[key] === undefined) {
                             existingPathFragment = keys.slice(0, t).join('/');
                         }
                         else if (t == len - 1) {
-                            existingPathFragment = patch.path;
+                            existingPathFragment = operation.path;
                         }
                         if (existingPathFragment !== undefined) {
-                            this.validator(patch, p - 1, tree, existingPathFragment);
+                            validateFunction(operation, 0, document, existingPathFragment);
                         }
                     }
                 }
                 t++;
-                if (key === undefined) {
-                    if (t >= len) {
-                        results[p - 1] = rootOps[patch.op].call(patch, obj, key, tree); // Apply patch
-                        break;
-                    }
-                }
                 if (_isArray(obj)) {
                     if (key === '-') {
                         key = obj.length;
                     }
                     else {
-                        if (validate && !isInteger(key)) {
-                            throw new JsonPatchError("Expected an unsigned base-10 integer value, making the new referenced value the array element with the zero-based index", "OPERATION_PATH_ILLEGAL_ARRAY_INDEX", p - 1, patch.path, patch);
+                        if (validateOperation && !isInteger(key)) {
+                            throw new JsonPatchError("Expected an unsigned base-10 integer value, making the new referenced value the array element with the zero-based index", "OPERATION_PATH_ILLEGAL_ARRAY_INDEX", 0, operation.path, operation);
                         }
-                        key = parseInt(key, 10);
+                        key = ~~key;
                     }
                     if (t >= len) {
-                        if (validate && patch.op === "add" && key > obj.length) {
-                            throw new JsonPatchError("The specified index MUST NOT be greater than the number of elements in the array", "OPERATION_VALUE_OUT_OF_BOUNDS", p - 1, patch.path, patch);
+                        if (validateOperation && operation.op === "add" && key > obj.length) {
+                            throw new JsonPatchError("The specified index MUST NOT be greater than the number of elements in the array", "OPERATION_VALUE_OUT_OF_BOUNDS", 0, operation.path, operation);
                         }
-                        results[p - 1] = arrOps[patch.op].call(patch, obj, key, tree); // Apply patch
-                        break;
+                        var returnValue = arrOps[operation.op].call(operation, obj, key, document); // Apply patch
+                        if (returnValue.test === false) {
+                            throw new JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+                        }
+                        return returnValue;
                     }
                 }
                 else {
-                    if (key && key.indexOf('~') != -1)
-                        key = key.replace(/~1/g, '/').replace(/~0/g, '~'); // escape chars
+                    if (key && key.indexOf('~') != -1) {
+                        key = unescapePathComponent(key);
+                    }
                     if (t >= len) {
-                        results[p - 1] = objOps[patch.op].call(patch, obj, key, tree); // Apply patch
-                        break;
+                        var returnValue = objOps[operation.op].call(operation, obj, key, document); // Apply patch
+                        if (returnValue.test === false) {
+                            throw new JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+                        }
+                        return returnValue;
                     }
                 }
                 obj = obj[key];
             }
         }
+    }
+    jsonpatch.applyOperation = applyOperation;
+    /**
+     * Apply a full JSON Patch array on a JSON document.
+     * Returns the {newDocument, result} of the patch.
+     *
+     * @param document The document to patch
+     * @param patch The patch to apply
+     * @param validateOperation `false` is without validation, `true` to use default jsonpatch's validation, or you can pass a `validateOperation` callback to be used for validation.
+     * @return An array of `{newDocument, result}` after the patch, with a `newDocument` property for accessing the final state with ease.
+     */
+    function applyPatch(document, patch, validateOperation) {
+        var results = new Array(patch.length);
+        for (var i = 0, length_1 = patch.length; i < length_1; i++) {
+            results[i] = applyOperation(document, patch[i], validateOperation);
+            document = results[i].newDocument; // in case root was replaced
+        }
+        results.newDocument = document;
+        return results;
+    }
+    jsonpatch.applyPatch = applyPatch;
+    /**
+     * Apply a JSON Patch on a JSON document.
+     * Returns an array of results of operations.
+     * Each element can either be a boolean (if op == 'test') or
+     * the removed object (operations that remove things)
+     * or just be undefined
+     * @deprecated
+     */
+    function apply(document, patch, validateOperation) {
+        console.warn('jsonpatch.apply is deprecated, please use `applyPatch` for applying patch sequences, or `applyOperation` to apply individual operations.');
+        var results = new Array(patch.length);
+        /* this code might be overkill, but will be removed soon, it is to prevent the breaking change of root operations */
+        var _loop_1 = function(i, length_2) {
+            if (patch[i].path == "" && patch[i].op != "remove" && patch[i].op != "test") {
+                var value_1;
+                if (patch[i].op == "replace" || patch[i].op == "move") {
+                    results[i] = deepClone(document);
+                }
+                if (patch[i].op == "copy" || patch[i].op == "move") {
+                    value_1 = getValueByPointer(document, patch[i].from);
+                }
+                if (patch[i].op == "replace" || patch[i].op == "add") {
+                    value_1 = patch[i].value;
+                }
+                // empty the object
+                Object.keys(document).forEach(function (key) { return delete document[key]; });
+                //copy everything from value
+                Object.keys(value_1).forEach(function (key) { return document[key] = value_1[key]; });
+            }
+            else {
+                results[i] = applyOperation(document, patch[i], validateOperation);
+                results[i] = results[i].removed || results[i].test;
+            }
+        };
+        for (var i = 0, length_2 = patch.length; i < length_2; i++) {
+            _loop_1(i, length_2);
+        }
         return results;
     }
     jsonpatch.apply = apply;
+    /**
+     * Apply a single JSON Patch Operation on a JSON document.
+     * Returns the updated document.
+     * Suitable as a reducer.
+     *
+     * @param document The document to patch
+     * @param operation The operation to apply
+     * @return The updated document
+     */
+    function applyReducer(document, operation) {
+        var operationResult = applyOperation(document, operation);
+        if (operationResult.test === false) {
+            throw new JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+        }
+        return operationResult.newDocument;
+    }
+    jsonpatch.applyReducer = applyReducer;
     // provide scoped __extends for TypeScript's `extend` keyword so it will not provide global one during compilation
     function __extends(d, b) {
         for (var p in b)
@@ -1240,10 +1398,21 @@ var jsonpatch;
         if (obj === undefined) {
             return true;
         }
-        if (typeof obj == "array" || typeof obj == "object") {
-            for (var i in obj) {
-                if (hasUndefined(obj[i])) {
-                    return true;
+        if (obj) {
+            if (_isArray(obj)) {
+                for (var i = 0, len = obj.length; i < len; i++) {
+                    if (hasUndefined(obj[i])) {
+                        return true;
+                    }
+                }
+            }
+            else if (typeof obj === "object") {
+                var objKeys = _objectKeys(obj);
+                var objKeysLength = objKeys.length;
+                for (var i = 0; i < objKeysLength; i++) {
+                    if (hasUndefined(obj[objKeys[i]])) {
+                        return true;
+                    }
                 }
             }
         }
@@ -1253,74 +1422,75 @@ var jsonpatch;
      * Validates a single operation. Called from `jsonpatch.validate`. Throws `JsonPatchError` in case of an error.
      * @param {object} operation - operation object (patch)
      * @param {number} index - index of operation in the sequence
-     * @param {object} [tree] - object where the operation is supposed to be applied
-     * @param {string} [existingPathFragment] - comes along with `tree`
+     * @param {object} [document] - object where the operation is supposed to be applied
+     * @param {string} [existingPathFragment] - comes along with `document`
      */
-    function validator(operation, index, tree, existingPathFragment) {
+    function validator(operation, index, document, existingPathFragment) {
         if (typeof operation !== 'object' || operation === null || _isArray(operation)) {
-            throw new JsonPatchError('Operation is not an object', 'OPERATION_NOT_AN_OBJECT', index, operation, tree);
+            throw new JsonPatchError('Operation is not an object', 'OPERATION_NOT_AN_OBJECT', index, operation, document);
         }
         else if (!objOps[operation.op]) {
-            throw new JsonPatchError('Operation `op` property is not one of operations defined in RFC-6902', 'OPERATION_OP_INVALID', index, operation, tree);
+            throw new JsonPatchError('Operation `op` property is not one of operations defined in RFC-6902', 'OPERATION_OP_INVALID', index, operation, document);
         }
         else if (typeof operation.path !== 'string') {
-            throw new JsonPatchError('Operation `path` property is not a string', 'OPERATION_PATH_INVALID', index, operation, tree);
+            throw new JsonPatchError('Operation `path` property is not a string', 'OPERATION_PATH_INVALID', index, operation, document);
         }
         else if (operation.path.indexOf('/') !== 0 && operation.path.length > 0) {
-            // paths that aren't emptystring should start with "/"
-            throw new JsonPatchError('Operation `path` property must start with "/"', 'OPERATION_PATH_INVALID', index, operation, tree);
+            // paths that aren't empty string should start with "/"
+            throw new JsonPatchError('Operation `path` property must start with "/"', 'OPERATION_PATH_INVALID', index, operation, document);
         }
         else if ((operation.op === 'move' || operation.op === 'copy') && typeof operation.from !== 'string') {
-            throw new JsonPatchError('Operation `from` property is not present (applicable in `move` and `copy` operations)', 'OPERATION_FROM_REQUIRED', index, operation, tree);
+            throw new JsonPatchError('Operation `from` property is not present (applicable in `move` and `copy` operations)', 'OPERATION_FROM_REQUIRED', index, operation, document);
         }
         else if ((operation.op === 'add' || operation.op === 'replace' || operation.op === 'test') && operation.value === undefined) {
-            throw new JsonPatchError('Operation `value` property is not present (applicable in `add`, `replace` and `test` operations)', 'OPERATION_VALUE_REQUIRED', index, operation, tree);
+            throw new JsonPatchError('Operation `value` property is not present (applicable in `add`, `replace` and `test` operations)', 'OPERATION_VALUE_REQUIRED', index, operation, document);
         }
         else if ((operation.op === 'add' || operation.op === 'replace' || operation.op === 'test') && hasUndefined(operation.value)) {
-            throw new JsonPatchError('Operation `value` property is not present (applicable in `add`, `replace` and `test` operations)', 'OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED', index, operation, tree);
+            throw new JsonPatchError('Operation `value` property is not present (applicable in `add`, `replace` and `test` operations)', 'OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED', index, operation, document);
         }
-        else if (tree) {
+        else if (document) {
             if (operation.op == "add") {
                 var pathLen = operation.path.split("/").length;
                 var existingPathLen = existingPathFragment.split("/").length;
                 if (pathLen !== existingPathLen + 1 && pathLen !== existingPathLen) {
-                    throw new JsonPatchError('Cannot perform an `add` operation at the desired path', 'OPERATION_PATH_CANNOT_ADD', index, operation, tree);
+                    throw new JsonPatchError('Cannot perform an `add` operation at the desired path', 'OPERATION_PATH_CANNOT_ADD', index, operation, document);
                 }
             }
             else if (operation.op === 'replace' || operation.op === 'remove' || operation.op === '_get') {
                 if (operation.path !== existingPathFragment) {
-                    throw new JsonPatchError('Cannot perform the operation at a path that does not exist', 'OPERATION_PATH_UNRESOLVABLE', index, operation, tree);
+                    throw new JsonPatchError('Cannot perform the operation at a path that does not exist', 'OPERATION_PATH_UNRESOLVABLE', index, operation, document);
                 }
             }
             else if (operation.op === 'move' || operation.op === 'copy') {
                 var existingValue = { op: "_get", path: operation.from, value: undefined };
-                var error = jsonpatch.validate([existingValue], tree);
+                var error = validate([existingValue], document);
                 if (error && error.name === 'OPERATION_PATH_UNRESOLVABLE') {
-                    throw new JsonPatchError('Cannot perform the operation from a path that does not exist', 'OPERATION_FROM_UNRESOLVABLE', index, operation, tree);
+                    throw new JsonPatchError('Cannot perform the operation from a path that does not exist', 'OPERATION_FROM_UNRESOLVABLE', index, operation, document);
                 }
             }
         }
     }
     jsonpatch.validator = validator;
     /**
-     * Validates a sequence of operations. If `tree` parameter is provided, the sequence is additionally validated against the object tree.
+     * Validates a sequence of operations. If `document` parameter is provided, the sequence is additionally validated against the object document.
      * If error is encountered, returns a JsonPatchError object
      * @param sequence
-     * @param tree
+     * @param document
      * @returns {JsonPatchError|undefined}
      */
-    function validate(sequence, tree) {
+    function validate(sequence, document, externalValidator) {
         try {
             if (!_isArray(sequence)) {
                 throw new JsonPatchError('Patch sequence must be an array', 'SEQUENCE_NOT_AN_ARRAY');
             }
-            if (tree) {
-                tree = JSON.parse(JSON.stringify(tree)); //clone tree so that we can safely try applying operations
-                apply.call(this, tree, sequence, true);
+            if (document) {
+                document = JSON.parse(JSON.stringify(document)); //clone document so that we can safely try applying operations
+                applyPatch(document, sequence, externalValidator || true);
             }
             else {
+                externalValidator = externalValidator || validator;
                 for (var i = 0; i < sequence.length; i++) {
-                    this.validator(sequence[i], i);
+                    externalValidator(sequence[i], i, document, undefined);
                 }
             }
         }
@@ -1335,8 +1505,14 @@ var jsonpatch;
     }
     jsonpatch.validate = validate;
 })(jsonpatch || (jsonpatch = {}));
-if (true) {
+if (typeof exports !== "undefined") {
     exports.apply = jsonpatch.apply;
+    exports.applyPatch = jsonpatch.applyPatch;
+    exports.applyOperation = jsonpatch.applyOperation;
+    exports.applyReducer = jsonpatch.applyReducer;
+    exports.getValueByPointer = jsonpatch.getValueByPointer;
+    exports.escapePathComponent = jsonpatch.escapePathComponent;
+    exports.unescapePathComponent = jsonpatch.unescapePathComponent;
     exports.validate = jsonpatch.validate;
     exports.validator = jsonpatch.validator;
     exports.JsonPatchError = jsonpatch.JsonPatchError;
@@ -1351,7 +1527,7 @@ exports.default = jsonpatch;
 When in browser, setting `exports = {}`
 fools other modules into thinking they're
 running in a node environment, which breaks
-some of them. Here is super light wieght fix.
+some of them. Here is super light weight fix.
 */
 if (isBrowser) {
     exports = undefined;
@@ -3023,7 +3199,8 @@ if(true) {
 if (true) {
   var jsonpatch = __webpack_require__(10); /* include only apply and validate */
   var JSONPatcherProxy = __webpack_require__(13);
-  var JSONPatchQueueSynchronous = __webpack_require__(1).JSONPatchQueueSynchronous;
+  var JSONPatchQueueSynchronous = __webpack_require__(1)
+    .JSONPatchQueueSynchronous;
   var JSONPatchQueue = __webpack_require__(1).JSONPatchQueue;
   var JSONPatchOT = __webpack_require__(12);
   var JSONPatchOTAgent = __webpack_require__(11);
@@ -3208,7 +3385,7 @@ var Palindrom = (function() {
   }
 
   function NoHeartbeat() {
-    this.start = (this.stop = (this.notifySend = (this.notifyReceive = function() {})));
+    this.start = this.stop = this.notifySend = this.notifyReceive = function() {};
   }
 
   function PalindromNetworkChannel(
@@ -3508,13 +3685,7 @@ var Palindrom = (function() {
         palindrom.remoteObj = JSON.parse(JSON.stringify(json));
       }
 
-      palindrom.unobserve();
-      palindrom.queue.reset(palindrom.obj, json);
-      palindrom.observe();
-
-      if (palindrom.onDataReady) {
-        palindrom.onDataReady.call(palindrom, palindrom.obj);
-      }
+      palindrom.handleStateReset(json)
 
       palindrom.heartbeat.start();
     });
@@ -3553,8 +3724,14 @@ var Palindrom = (function() {
 
     this.isObjectProxified = false;
     this.isObserving = false;
-    this.onLocalChange = options.onLocalChange;
-    this.onRemoteChange = options.onRemoteChange;
+    this.onLocalChange = options.onLocalChange || noop;
+    this.onRemoteChange = options.onRemoteChange || noop;
+    this.onStateReset = options.onStateReset || options.callback || noop;
+
+    if(options.callback) {
+      console.warn('Palindrom: options.callback is deprecated. Please use `onStateReset` instead');
+    }
+    
     this.onPatchReceived = options.onPatchReceived || noop;
     this.onPatchSent = options.onPatchSent || noop;
     this.onSocketStateChanged = options.onSocketStateChanged || noop;
@@ -3562,10 +3739,10 @@ var Palindrom = (function() {
     this.retransmissionThreshold = options.retransmissionThreshold || 3;
     this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
     this.onReconnectionEnd = options.onReconnectionEnd || noop;
-    this.onIncomingPatchValidationError = options.onIncomingPatchValidationError ||
-      noop;
-    this.onOutgoingPatchValidationError = options.onOutgoingPatchValidationError ||
-      noop;
+    this.onIncomingPatchValidationError =
+      options.onIncomingPatchValidationError || noop;
+    this.onOutgoingPatchValidationError =
+      options.onOutgoingPatchValidationError || noop;
 
     this.reconnector = new Reconnector(
       function() {
@@ -3654,10 +3831,20 @@ var Palindrom = (function() {
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
   };
+  Palindrom.prototype.handleStateReset = function(newObj) {
+    /* wrap the new state in a proxy object */
+    this.prepareProxifiedObject(newObj);
 
-  Palindrom.prototype.prepareProxifiedObject = function() {
+    /* send the new proxified object
+      to whoever needs it e.g: palindrom-client */
+    this.onStateReset(this.obj);
+  };
+  Palindrom.prototype.prepareProxifiedObject = function(obj) {
+    if (!obj) {
+      obj = {};
+    }
     /* wrap a new object with a proxy observer */
-    this.jsonPatcherProxy = new JSONPatcherProxy({});
+    this.jsonPatcherProxy = new JSONPatcherProxy(obj);
 
     const proxifiedObj = this.jsonPatcherProxy.observe(
       true,
@@ -3671,7 +3858,9 @@ var Palindrom = (function() {
       },
       set: function() {
         throw new Error('palindrom.obj is readonly');
-      }
+      },
+      /* so that we can redefine it */
+      configurable: true
     });
   };
 
@@ -3753,16 +3942,21 @@ var Palindrom = (function() {
     }
 
     sendPatches(this, this.queue.send(patches));
-    if (this.onLocalChange) {
-      this.onLocalChange(patches);
-    }
+    this.onLocalChange(patches);
   };
 
   Palindrom.prototype.validateAndApplySequence = function(tree, sequence) {
     // we don't want this changes to generate patches since they originate from server, not client
     this.unobserve();
+
     try {
-       var results = this.jsonpatch.apply(tree, sequence, this.debug);
+      var results = this.jsonpatch.applyPatch(tree, sequence, this.debug);
+      // the state was reset
+      if (results.newDocument !== tree) {
+        this.handleStateReset(result.newDocument);
+      } else {
+        this.onRemoteChange(sequence, results);
+      }
     } catch (error) {
       if (this.debug) {
         this.onIncomingPatchValidationError(error);
@@ -3771,30 +3965,9 @@ var Palindrom = (function() {
         throw error;
       }
     }
-
-    var that = this;
-    sequence.forEach(function(patch) {
-      if (patch.path === '') {
-        var desc = JSON.stringify(sequence);
-        if (desc.length > 103) {
-          desc = desc.substring(0, 100) + '...';
-        }
-        //TODO Error
-        that.showWarning(
-          'Server pushed patch that replaces the object root',
-          desc
-        );
-      }
-    });
-
     // notifications have to happen only where observe has been re-enabled
     // otherwise some listener might produce changes that would go unnoticed
     this.observe();
-
-    // until notifications are converged to single method (events vs. callbacks, #74)
-    if (this.onRemoteChange) {
-      this.onRemoteChange(sequence, results);
-    }
   };
 
   Palindrom.prototype.validateSequence = function(tree, sequence) {

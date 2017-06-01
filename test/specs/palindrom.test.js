@@ -23,7 +23,7 @@ describe("Palindrom", () => {
       const spy = sinon.spy();
       const palindrom = new Palindrom({
         remoteUrl: "http://localhost/testURL",
-        callback: spy
+        onStateReset: spy
       });
       setTimeout(
         () => {
@@ -43,7 +43,7 @@ describe("Palindrom", () => {
       const spy = sinon.spy();
       let palindrom = new Palindrom({
         remoteUrl: "http://localhost/testURL",
-        callback: spy
+        onStateReset: spy
       });
       setTimeout(
         () => {
@@ -103,7 +103,7 @@ describe("Palindrom", () => {
 
       const palindrom = new Palindrom({
         remoteUrl: "http://localhost/testURL",
-        callback: function(tempObject) {
+        onStateReset: function(tempObject) {
           assert.equal(tempObject.hello, "world");
           tempObject.hello = "galaxy";
 
@@ -134,7 +134,7 @@ describe("Palindrom", () => {
       let tempObject;
       const palindrom = new Palindrom({
         remoteUrl: "http://localhost/testURL",
-        callback: function(obj) {
+        onStateReset: function(obj) {
           tempObject = obj;
         }
       });
@@ -181,7 +181,7 @@ describe("Palindrom", () => {
       let tempObject;
       const palindrom = new Palindrom({
         remoteUrl: "http://localhost/testURL",
-        callback: function(obj) {
+        onStateReset: function(obj) {
           tempObject = obj;
         }
       });

@@ -57,7 +57,7 @@
     <script type="text/babel">
         var palindrom = new PalindromDOM({
             remoteUrl: window.location.href,
-            callback: function (obj) {
+            onStateReset: function (obj) {
                 class MyComponent extends React.Component {
                     constructor() {
                         super();

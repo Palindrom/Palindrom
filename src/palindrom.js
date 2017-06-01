@@ -5,7 +5,8 @@
 if (typeof require !== 'undefined') {
   var jsonpatch = require('fast-json-patch/src/json-patch'); /* include only apply and validate */
   var JSONPatcherProxy = require('jsonpatcherproxy');
-  var JSONPatchQueueSynchronous = require('json-patch-queue').JSONPatchQueueSynchronous;
+  var JSONPatchQueueSynchronous = require('json-patch-queue')
+    .JSONPatchQueueSynchronous;
   var JSONPatchQueue = require('json-patch-queue').JSONPatchQueue;
   var JSONPatchOT = require('json-patch-ot');
   var JSONPatchOTAgent = require('json-patch-ot-agent');
@@ -190,7 +191,7 @@ var Palindrom = (function() {
   }
 
   function NoHeartbeat() {
-    this.start = (this.stop = (this.notifySend = (this.notifyReceive = function() {})));
+    this.start = this.stop = this.notifySend = this.notifyReceive = function() {};
   }
 
   function PalindromNetworkChannel(
@@ -490,13 +491,7 @@ var Palindrom = (function() {
         palindrom.remoteObj = JSON.parse(JSON.stringify(json));
       }
 
-      palindrom.unobserve();
-      palindrom.queue.reset(palindrom.obj, json);
-      palindrom.observe();
-
-      if (palindrom.onDataReady) {
-        palindrom.onDataReady.call(palindrom, palindrom.obj);
-      }
+      palindrom.handleStateReset(json)
 
       palindrom.heartbeat.start();
     });
@@ -535,8 +530,14 @@ var Palindrom = (function() {
 
     this.isObjectProxified = false;
     this.isObserving = false;
-    this.onLocalChange = options.onLocalChange;
-    this.onRemoteChange = options.onRemoteChange;
+    this.onLocalChange = options.onLocalChange || noop;
+    this.onRemoteChange = options.onRemoteChange || noop;
+    this.onStateReset = options.onStateReset || options.callback || noop;
+
+    if(options.callback) {
+      console.warn('Palindrom: options.callback is deprecated. Please use `onStateReset` instead');
+    }
+    
     this.onPatchReceived = options.onPatchReceived || noop;
     this.onPatchSent = options.onPatchSent || noop;
     this.onSocketStateChanged = options.onSocketStateChanged || noop;
@@ -544,10 +545,10 @@ var Palindrom = (function() {
     this.retransmissionThreshold = options.retransmissionThreshold || 3;
     this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
     this.onReconnectionEnd = options.onReconnectionEnd || noop;
-    this.onIncomingPatchValidationError = options.onIncomingPatchValidationError ||
-      noop;
-    this.onOutgoingPatchValidationError = options.onOutgoingPatchValidationError ||
-      noop;
+    this.onIncomingPatchValidationError =
+      options.onIncomingPatchValidationError || noop;
+    this.onOutgoingPatchValidationError =
+      options.onOutgoingPatchValidationError || noop;
 
     this.reconnector = new Reconnector(
       function() {
@@ -636,10 +637,20 @@ var Palindrom = (function() {
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
   };
+  Palindrom.prototype.handleStateReset = function(newObj) {
+    /* wrap the new state in a proxy object */
+    this.prepareProxifiedObject(newObj);
 
-  Palindrom.prototype.prepareProxifiedObject = function() {
+    /* send the new proxified object
+      to whoever needs it e.g: palindrom-client */
+    this.onStateReset(this.obj);
+  };
+  Palindrom.prototype.prepareProxifiedObject = function(obj) {
+    if (!obj) {
+      obj = {};
+    }
     /* wrap a new object with a proxy observer */
-    this.jsonPatcherProxy = new JSONPatcherProxy({});
+    this.jsonPatcherProxy = new JSONPatcherProxy(obj);
 
     const proxifiedObj = this.jsonPatcherProxy.observe(
       true,
@@ -653,7 +664,9 @@ var Palindrom = (function() {
       },
       set: function() {
         throw new Error('palindrom.obj is readonly');
-      }
+      },
+      /* so that we can redefine it */
+      configurable: true
     });
   };
 
@@ -735,16 +748,21 @@ var Palindrom = (function() {
     }
 
     sendPatches(this, this.queue.send(patches));
-    if (this.onLocalChange) {
-      this.onLocalChange(patches);
-    }
+    this.onLocalChange(patches);
   };
 
   Palindrom.prototype.validateAndApplySequence = function(tree, sequence) {
     // we don't want this changes to generate patches since they originate from server, not client
     this.unobserve();
+
     try {
-       var results = this.jsonpatch.apply(tree, sequence, this.debug);
+      var results = this.jsonpatch.applyPatch(tree, sequence, this.debug);
+      // the state was reset
+      if (results.newDocument !== tree) {
+        this.handleStateReset(result.newDocument);
+      } else {
+        this.onRemoteChange(sequence, results);
+      }
     } catch (error) {
       if (this.debug) {
         this.onIncomingPatchValidationError(error);
@@ -753,30 +771,9 @@ var Palindrom = (function() {
         throw error;
       }
     }
-
-    var that = this;
-    sequence.forEach(function(patch) {
-      if (patch.path === '') {
-        var desc = JSON.stringify(sequence);
-        if (desc.length > 103) {
-          desc = desc.substring(0, 100) + '...';
-        }
-        //TODO Error
-        that.showWarning(
-          'Server pushed patch that replaces the object root',
-          desc
-        );
-      }
-    });
-
     // notifications have to happen only where observe has been re-enabled
     // otherwise some listener might produce changes that would go unnoticed
     this.observe();
-
-    // until notifications are converged to single method (events vs. callbacks, #74)
-    if (this.onRemoteChange) {
-      this.onRemoteChange(sequence, results);
-    }
   };
 
   Palindrom.prototype.validateSequence = function(tree, sequence) {

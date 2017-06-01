@@ -193,27 +193,20 @@ describe('Palindrom', () => {
         }
       };
       var sequence = [{ op: 'replace', path: '/name/first', value: 'Albert' }];
-      var jsonpatch = new Palindrom({
-        remoteUrl: '/testURL'
-      }).jsonpatch;
-      var outgoingJsonpatch = Object.create(jsonpatch);
-      outgoingJsonpatch.validator = function polyjuicePatchValidator(
+
+      var customPalindrom = function() {
+        Palindrom.apply(this, arguments);
+      };
+
+      const validator = function polyjuicePatchValidator(
         operation,
         index,
         tree,
         existingPathFragment
       ) {
-        jsonpatch.validator.call(
-          outgoingJsonpatch,
-          operation,
-          index,
-          tree,
-          existingPathFragment
-        );
-
         if (operation.op === 'replace') {
           if (operation.path.substr(operation.path.length - 1, 1) !== '$') {
-            throw new outgoingJsonpatch.JsonPatchError(
+            throw new this.jsonpatch.JsonPatchError(
               'Cannot replace a property which name finishes with $ character',
               'Palindrom_CANNOT_REPLACE_READONLY',
               index,
@@ -222,14 +215,10 @@ describe('Palindrom', () => {
             );
           }
         }
-      };
-
-      var customPalindrom = function() {
-        Palindrom.apply(this, arguments);
-      };
+      };      
       customPalindrom.prototype = Object.create(Palindrom.prototype);
       customPalindrom.prototype.validateSequence = function(tree, sequence) {
-        var error = outgoingJsonpatch.validate(sequence, tree);
+        var error = this.jsonpatch.validate(sequence, tree, validator.bind(this));
         if (error) {
           this.onOutgoingPatchValidationError(error);
         }
