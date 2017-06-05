@@ -491,7 +491,7 @@ var Palindrom = (function() {
         palindrom.remoteObj = JSON.parse(JSON.stringify(json));
       }
 
-      palindrom.handleStateReset(json)
+      palindrom.queue.reset(palindrom.obj, json)
 
       palindrom.heartbeat.start();
     });
@@ -521,23 +521,23 @@ var Palindrom = (function() {
     if (!options.remoteUrl) {
       throw new Error('remoteUrl is required');
     }
-    this.prepareProxifiedObject();
 
     this.jsonpatch = options.jsonpatch || this.jsonpatch;
     this.debug = options.debug != undefined ? options.debug : true;
 
     var noop = function noOpFunction() {};
 
-    this.isObjectProxified = false;
     this.isObserving = false;
     this.onLocalChange = options.onLocalChange || noop;
     this.onRemoteChange = options.onRemoteChange || noop;
     this.onStateReset = options.onStateReset || options.callback || noop;
 
-    if(options.callback) {
-      console.warn('Palindrom: options.callback is deprecated. Please use `onStateReset` instead');
+    if (options.callback) {
+      console.warn(
+        'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
+      );
     }
-    
+
     this.onPatchReceived = options.onPatchReceived || noop;
     this.onPatchSent = options.onPatchSent || noop;
     this.onSocketStateChanged = options.onSocketStateChanged || noop;
@@ -599,8 +599,6 @@ var Palindrom = (function() {
     //palindrom.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
     //palindrom.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
 
-    this.onDataReady = options.callback;
-
     // choose queuing engine
     if (options.localVersionPath) {
       if (!options.remoteVersionPath) {
@@ -637,14 +635,7 @@ var Palindrom = (function() {
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
   };
-  Palindrom.prototype.handleStateReset = function(newObj) {
-    /* wrap the new state in a proxy object */
-    this.prepareProxifiedObject(newObj);
-
-    /* send the new proxified object
-      to whoever needs it e.g: palindrom-client */
-    this.onStateReset(this.obj);
-  };
+  
   Palindrom.prototype.prepareProxifiedObject = function(obj) {
     if (!obj) {
       obj = {};
@@ -668,14 +659,16 @@ var Palindrom = (function() {
       /* so that we can redefine it */
       configurable: true
     });
+    /* JSONPatcherProxy default state is observing */
+    this.isObserving = true;
   };
 
   Palindrom.prototype.observe = function() {
-    this.jsonPatcherProxy && this.jsonPatcherProxy.switchObserverOn();
+    this.jsonPatcherProxy && this.jsonPatcherProxy.resume();
     this.isObserving = true;
   };
   Palindrom.prototype.unobserve = function() {
-    this.jsonPatcherProxy && this.jsonPatcherProxy.switchObserverOff();
+    this.jsonPatcherProxy && this.jsonPatcherProxy.pause();
     this.isObserving = false;
   };
 
@@ -753,16 +746,21 @@ var Palindrom = (function() {
 
   Palindrom.prototype.validateAndApplySequence = function(tree, sequence) {
     // we don't want this changes to generate patches since they originate from server, not client
-    this.unobserve();
-
     try {
+      this.unobserve();
       var results = this.jsonpatch.applyPatch(tree, sequence, this.debug);
-      // the state was reset
+      // notifications have to happen only where observe has been re-enabled
+      // otherwise some listener might produce changes that would go unnoticed
+      this.observe();
+      // the state was fully replaced
       if (results.newDocument !== tree) {
-        this.handleStateReset(result.newDocument);
-      } else {
-        this.onRemoteChange(sequence, results);
+        // object was reset, proxify it again
+        this.prepareProxifiedObject(results.newDocument);
+
+        //notify people about it
+        this.onStateReset(this.obj);
       }
+      this.onRemoteChange(sequence, results);
     } catch (error) {
       if (this.debug) {
         this.onIncomingPatchValidationError(error);
@@ -771,9 +769,6 @@ var Palindrom = (function() {
         throw error;
       }
     }
-    // notifications have to happen only where observe has been re-enabled
-    // otherwise some listener might produce changes that would go unnoticed
-    this.observe();
   };
 
   Palindrom.prototype.validateSequence = function(tree, sequence) {

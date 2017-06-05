@@ -36,7 +36,7 @@
     "json-patch-ot": "^1.0.1",
     "json-patch-ot-agent": "^1.1.2",
     "json-patch-queue": "^2.0.1",
-    "jsonpatcherproxy": "0.0.4",
+    "jsonpatcherproxy": "^0.0.5",
     "url": "^0.11.0",
     "websocket": "^1.0.24"
   },

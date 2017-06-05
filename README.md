@@ -90,7 +90,7 @@ var palindrom = new Palindrom({attribute: value});
 Attribute              | Type          | Default                | Description
 ---                    | ---           | ---                    | ---
 `remoteUrl`            | *String*      |  **Required**          | PATCH server URL
-`onStateReset`         | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established), **it can be called again if the state reset by a root-replacing patch**.
+`onStateReset`         | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established), **it can be called again if the state was reset by a root-replacing patch**.
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
 `ignoreAdd`            | *RegExp*      |                        | Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
 `debug`                | *Boolean*     | `true`                 | Toggle debugging mode

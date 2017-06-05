@@ -81,24 +81,24 @@ describe('Palindrom', () => {
           headers: { contentType: 'application/json' },
           responseText: '{"hello": "world"}'
         });
-
-        //issue a patch
-        palindrom.obj.hello = 'galaxy';
-
-
         setTimeout(() => {
-          let request = moxios.requests.mostRecent();
-          //respond with an error
-          request.respondWith({
-            status: 400,
-            responseText: 'error'
-          });
+          //issue a patch
+          palindrom.obj.hello = 'galaxy';
+
           setTimeout(() => {
-            /* onConnectionError should be called once now */
-            assert(spy.calledOnce);
-            done();
+            let request = moxios.requests.mostRecent();
+            //respond with an error
+            request.respondWith({
+              status: 400,
+              responseText: 'error'
+            });
+            setTimeout(() => {
+              /* onConnectionError should be called once now */
+              assert(spy.calledOnce);
+              done();
+            }, 5);
           }, 5);
-        }, 5);
+        }, 100);
       }, 5);
     });
     it('should call onConnectionError on HTTP 599 response (patch)', function(
@@ -120,25 +120,25 @@ describe('Palindrom', () => {
           headers: { contentType: 'application/json' },
           responseText: '{"hello": "world"}'
         });
-
-        //issue a patch
-        palindrom.obj.hello = 'galaxy';
-
-
         setTimeout(() => {
-          let request = moxios.requests.mostRecent();
-          //respond with an error
-          request.respondWith({
-            status: 599,
-            responseText: 'error'
-          });
+          //issue a patch
+          palindrom.obj.hello = 'galaxy';
+
           setTimeout(() => {
-            /* onConnectionError should be called once now */
-            assert(spy.calledOnce);
-            done();
+            let request = moxios.requests.mostRecent();
+            //respond with an error
+            request.respondWith({
+              status: 599,
+              responseText: 'error'
+            });
+            setTimeout(() => {
+              /* onConnectionError should be called once now */
+              assert(spy.calledOnce);
+              done();
+            }, 5);
           }, 5);
-        }, 5);
+        }, 50);
       }, 5);
     });
-  })
-})
+  });
+});
