@@ -1,4 +1,4 @@
-/*! puppet.js version: 2.4.1
+/*! puppet.js version: 2.5.0
  * (c) 2013 Joachim Wester
  * MIT license
  */
@@ -581,7 +581,9 @@
 
     this.ignoreCache = {};
     this.ignoreAdd = options.ignoreAdd || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
-
+    if(options.ignoreAdd) {      
+      console.warn("Puppet: ignoreAdd is deprecated and will be removed soon.");
+    }
     //usage:
     //puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to remote
     //puppet.ignoreAdd = /./; //ignore all the "add" operations
@@ -668,6 +670,7 @@
     if(this.ignoreAdd){
       for (var i = 0, ilen = patches.length; i < ilen; i++) {
         if (isIgnored(this.ignoreAdd, this.ignoreCache, patches[i].path, patches[i].op)) { //if it is ignored, remove patch
+          console.warn("Puppet: a patch was ignored due to existence of ignoreAdd, and ignoreAdd is deprecated and will be removed soon.");
           patches.splice(i, 1); //ignore changes to properties that start with PRIVATE_PREFIX
           ilen--;
           i--;
