@@ -14,7 +14,7 @@ describe('Palindrom', () => {
     afterEach(() => {
       moxios.uninstall();
     });
-    it('should call onConnectionError on HTTP 400 response', function(done) {
+    it('should call onConnectionError on HTTP 400 response', function (done) {
       const spy = sinon.spy();
 
       moxios.stubRequest('http://localhost/testURL', {
@@ -38,7 +38,7 @@ describe('Palindrom', () => {
       }, 5);
     });
 
-    it('should call onConnectionError on HTTP 599 response', function(done) {
+    it('should call onConnectionError on HTTP 599 response', function (done) {
       const spy = sinon.spy();
 
       moxios.stubRequest('http://localhost/testURL', {
@@ -62,9 +62,7 @@ describe('Palindrom', () => {
       }, 5);
     });
 
-    it('should call onConnectionError on HTTP 400 response (patch)', function(
-      done
-    ) {
+    it('should call onConnectionError on HTTP 400 response (patch)', function (done) {
       const spy = sinon.spy();
 
       const palindrom = new Palindrom({
@@ -101,9 +99,7 @@ describe('Palindrom', () => {
         }, 100);
       }, 5);
     });
-    it('should call onConnectionError on HTTP 599 response (patch)', function(
-      done
-    ) {
+    it('should call onConnectionError on HTTP 599 response (patch)', function (done) {
       const spy = sinon.spy();
 
       const palindrom = new Palindrom({

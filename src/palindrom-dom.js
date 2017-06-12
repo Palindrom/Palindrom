@@ -19,7 +19,7 @@ var PalindromDOM = (function() {
     if (!options.remoteUrl) {
       throw new Error('remoteUrl is required');
     }
-    var onDataReady = options.onStateReset || options.callback;
+    var onStateReset = options.onStateReset || options.callback;
     if(options.callback) {
       console.warn('Palindrom: options.callback is deprecated. Please use `onStateReset` instead');
     }
@@ -47,7 +47,7 @@ var PalindromDOM = (function() {
 
     options.onStateReset = function addDOMListeners(obj) {
       this.listen();
-      onDataReady && onDataReady.call(this, obj);
+      onStateReset && onStateReset.call(this, obj);
     };
 
     this.listen = function() {
