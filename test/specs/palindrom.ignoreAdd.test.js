@@ -27,7 +27,7 @@ describe("Palindrom", () => {
       const palindrom = new Palindrom({
         remoteUrl: "http://localhost/testURL",
         onConnectionError: spy,
-        callback: function(myObj) {
+        onStateReset: function(myObj) {
           tempObject = myObj;
         }
       });
@@ -85,7 +85,7 @@ describe("Palindrom", () => {
       const palindrom = new Palindrom({
         remoteUrl: "http://localhost/testURL",
         onConnectionError: spy,
-        callback: function(myObj) {
+        onStateReset: function(myObj) {
           tempObject = myObj;
         }
       });
@@ -133,7 +133,7 @@ describe("Palindrom", () => {
       const palindrom = new Palindrom({
         remoteUrl: "http://localhost/testURL",
         onConnectionError: spy,
-        callback: function(tempObject) {
+        onStateReset: function(tempObject) {
           tempObject.publicProp = [1, 2, 3];
 
           setTimeout(
@@ -189,7 +189,7 @@ describe("Palindrom", () => {
       const palindrom = new Palindrom({
         remoteUrl: "http://localhost/testURL",
         onConnectionError: spy,
-        callback: function(myObj) {
+        onStateReset: function(myObj) {
           tempObject = myObj;
 
           tempObject.$privateProp = 1;
@@ -231,7 +231,7 @@ describe("Palindrom", () => {
       const palindrom = new Palindrom({
         remoteUrl: "http://localhost/testURL",
         onConnectionError: spy,
-        callback: function(myObj) {
+        onStateReset: function(myObj) {
           tempObject = myObj;
         }
       });

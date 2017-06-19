@@ -7,9 +7,9 @@ var PalindromDOM =
 /******/ 	function __webpack_require__(moduleId) {
 /******/
 /******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId])
+/******/ 		if(installedModules[moduleId]) {
 /******/ 			return installedModules[moduleId].exports;
-/******/
+/******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			i: moduleId,
@@ -74,7 +74,7 @@ var PalindromDOM =
 "use strict";
 
 
-var bind = __webpack_require__(8);
+var bind = __webpack_require__(7);
 
 /*global toString:true*/
 
@@ -381,7 +381,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(0);
-var normalizeHeaderName = __webpack_require__(26);
+var normalizeHeaderName = __webpack_require__(25);
 
 var PROTECTION_PREFIX = /^\)\]\}',?\n/;
 var DEFAULT_CONTENT_TYPE = {
@@ -398,10 +398,10 @@ function getDefaultAdapter() {
   var adapter;
   if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(4);
+    adapter = __webpack_require__(3);
   } else if (typeof process !== 'undefined') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(4);
+    adapter = __webpack_require__(3);
   }
   return adapter;
 }
@@ -472,7 +472,7 @@ utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
 
 module.exports = defaults;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8)))
 
 /***/ }),
 /* 2 */
@@ -481,53 +481,26 @@ module.exports = defaults;
 /**
  * version: 2.0.1
  */
-var queue = __webpack_require__(33);
-var sync = __webpack_require__(32);
+var queue = __webpack_require__(32);
+var sync = __webpack_require__(31);
 
 module.exports = { JSONPatchQueue: queue, JSONPatchQueueSynchronous: sync, /* Babel demands this */__esModule:  true };
 
 
 /***/ }),
 /* 3 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(18);
-var buildURL = __webpack_require__(21);
-var parseHeaders = __webpack_require__(27);
-var isURLSameOrigin = __webpack_require__(25);
-var createError = __webpack_require__(7);
-var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(20);
+var settle = __webpack_require__(17);
+var buildURL = __webpack_require__(20);
+var parseHeaders = __webpack_require__(26);
+var isURLSameOrigin = __webpack_require__(24);
+var createError = __webpack_require__(6);
+var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(19);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -623,7 +596,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(23);
+      var cookies = __webpack_require__(22);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -697,10 +670,10 @@ module.exports = function xhrAdapter(config) {
   });
 };
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8)))
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -726,7 +699,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -738,13 +711,13 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var enhanceError = __webpack_require__(17);
+var enhanceError = __webpack_require__(16);
 
 /**
  * Create an Error with the specified message, config, error code, and response.
@@ -762,7 +735,7 @@ module.exports = function createError(message, config, code, response) {
 
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -780,7 +753,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -953,6 +926,10 @@ process.off = noop;
 process.removeListener = noop;
 process.removeAllListeners = noop;
 process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
 
 process.binding = function (name) {
     throw new Error('process.binding is not supported');
@@ -966,7 +943,7 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/*! palindrom.js version: 2.4.0
@@ -974,14 +951,15 @@ process.umask = function() { return 0; };
  * MIT license
  */
 if (true) {
-  var jsonpatch = __webpack_require__(29); /* include only apply and validate */
-  var JSONPatcherProxy = __webpack_require__(34);
-  var JSONPatchQueueSynchronous = __webpack_require__(2).JSONPatchQueueSynchronous;
+  var jsonpatch = __webpack_require__(28); /* include only apply and validate */
+  var JSONPatcherProxy = __webpack_require__(33);
+  var JSONPatchQueueSynchronous = __webpack_require__(2)
+    .JSONPatchQueueSynchronous;
   var JSONPatchQueue = __webpack_require__(2).JSONPatchQueue;
-  var JSONPatchOT = __webpack_require__(31);
-  var JSONPatchOTAgent = __webpack_require__(30);
+  var JSONPatchOT = __webpack_require__(30);
+  var JSONPatchOTAgent = __webpack_require__(29);
   var URL = __webpack_require__(36);
-  var axios = __webpack_require__(11);
+  var axios = __webpack_require__(10);
 
   /* We are going to hand `websocket` lib as an external to webpack
   (see: https://webpack.js.org/configuration/externals/), 
@@ -1161,7 +1139,7 @@ var Palindrom = (function() {
   }
 
   function NoHeartbeat() {
-    this.start = (this.stop = (this.notifySend = (this.notifyReceive = function() {})));
+    this.start = this.stop = this.notifySend = this.notifyReceive = function() {};
   }
 
   function PalindromNetworkChannel(
@@ -1461,13 +1439,7 @@ var Palindrom = (function() {
         palindrom.remoteObj = JSON.parse(JSON.stringify(json));
       }
 
-      palindrom.unobserve();
-      palindrom.queue.reset(palindrom.obj, json);
-      palindrom.observe();
-
-      if (palindrom.onDataReady) {
-        palindrom.onDataReady.call(palindrom, palindrom.obj);
-      }
+      palindrom.queue.reset(palindrom.obj, json)
 
       palindrom.heartbeat.start();
     });
@@ -1497,17 +1469,23 @@ var Palindrom = (function() {
     if (!options.remoteUrl) {
       throw new Error('remoteUrl is required');
     }
-    this.prepareProxifiedObject();
 
     this.jsonpatch = options.jsonpatch || this.jsonpatch;
     this.debug = options.debug != undefined ? options.debug : true;
 
     var noop = function noOpFunction() {};
 
-    this.isObjectProxified = false;
     this.isObserving = false;
-    this.onLocalChange = options.onLocalChange;
-    this.onRemoteChange = options.onRemoteChange;
+    this.onLocalChange = options.onLocalChange || noop;
+    this.onRemoteChange = options.onRemoteChange || noop;
+    this.onStateReset = options.onStateReset || options.callback || noop;
+
+    if (options.callback) {
+      console.warn(
+        'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
+      );
+    }
+
     this.onPatchReceived = options.onPatchReceived || noop;
     this.onPatchSent = options.onPatchSent || noop;
     this.onSocketStateChanged = options.onSocketStateChanged || noop;
@@ -1515,10 +1493,10 @@ var Palindrom = (function() {
     this.retransmissionThreshold = options.retransmissionThreshold || 3;
     this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
     this.onReconnectionEnd = options.onReconnectionEnd || noop;
-    this.onIncomingPatchValidationError = options.onIncomingPatchValidationError ||
-      noop;
-    this.onOutgoingPatchValidationError = options.onOutgoingPatchValidationError ||
-      noop;
+    this.onIncomingPatchValidationError =
+      options.onIncomingPatchValidationError || noop;
+    this.onOutgoingPatchValidationError =
+      options.onOutgoingPatchValidationError || noop;
 
     this.reconnector = new Reconnector(
       function() {
@@ -1569,8 +1547,6 @@ var Palindrom = (function() {
     //palindrom.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
     //palindrom.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
 
-    this.onDataReady = options.callback;
-
     // choose queuing engine
     if (options.localVersionPath) {
       if (!options.remoteVersionPath) {
@@ -1607,10 +1583,13 @@ var Palindrom = (function() {
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
   };
-
-  Palindrom.prototype.prepareProxifiedObject = function() {
+  
+  Palindrom.prototype.prepareProxifiedObject = function(obj) {
+    if (!obj) {
+      obj = {};
+    }
     /* wrap a new object with a proxy observer */
-    this.jsonPatcherProxy = new JSONPatcherProxy({});
+    this.jsonPatcherProxy = new JSONPatcherProxy(obj);
 
     const proxifiedObj = this.jsonPatcherProxy.observe(
       true,
@@ -1624,16 +1603,20 @@ var Palindrom = (function() {
       },
       set: function() {
         throw new Error('palindrom.obj is readonly');
-      }
+      },
+      /* so that we can redefine it */
+      configurable: true
     });
+    /* JSONPatcherProxy default state is observing */
+    this.isObserving = true;
   };
 
   Palindrom.prototype.observe = function() {
-    this.jsonPatcherProxy && this.jsonPatcherProxy.switchObserverOn();
+    this.jsonPatcherProxy && this.jsonPatcherProxy.resume();
     this.isObserving = true;
   };
   Palindrom.prototype.unobserve = function() {
-    this.jsonPatcherProxy && this.jsonPatcherProxy.switchObserverOff();
+    this.jsonPatcherProxy && this.jsonPatcherProxy.pause();
     this.isObserving = false;
   };
 
@@ -1706,16 +1689,26 @@ var Palindrom = (function() {
     }
 
     sendPatches(this, this.queue.send(patches));
-    if (this.onLocalChange) {
-      this.onLocalChange(patches);
-    }
+    this.onLocalChange(patches);
   };
 
   Palindrom.prototype.validateAndApplySequence = function(tree, sequence) {
     // we don't want this changes to generate patches since they originate from server, not client
-    this.unobserve();
     try {
-       var results = this.jsonpatch.apply(tree, sequence, this.debug);
+      this.unobserve();
+      var results = this.jsonpatch.applyPatch(tree, sequence, this.debug);
+      // notifications have to happen only where observe has been re-enabled
+      // otherwise some listener might produce changes that would go unnoticed
+      this.observe();
+      // the state was fully replaced
+      if (results.newDocument !== tree) {
+        // object was reset, proxify it again
+        this.prepareProxifiedObject(results.newDocument);
+
+        //notify people about it
+        this.onStateReset(this.obj);
+      }
+      this.onRemoteChange(sequence, results);
     } catch (error) {
       if (this.debug) {
         this.onIncomingPatchValidationError(error);
@@ -1723,30 +1716,6 @@ var Palindrom = (function() {
       } else {
         throw error;
       }
-    }
-
-    var that = this;
-    sequence.forEach(function(patch) {
-      if (patch.path === '') {
-        var desc = JSON.stringify(sequence);
-        if (desc.length > 103) {
-          desc = desc.substring(0, 100) + '...';
-        }
-        //TODO Error
-        that.showWarning(
-          'Server pushed patch that replaces the object root',
-          desc
-        );
-      }
-    });
-
-    // notifications have to happen only where observe has been re-enabled
-    // otherwise some listener might produce changes that would go unnoticed
-    this.observe();
-
-    // until notifications are converged to single method (events vs. callbacks, #74)
-    if (this.onRemoteChange) {
-      this.onRemoteChange(sequence, results);
     }
   };
 
@@ -1838,24 +1807,24 @@ if (true) {
   module.exports.__esModule = true;
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(34)))
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(11);
 
 /***/ }),
 /* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(12);
-
-/***/ }),
-/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var bind = __webpack_require__(8);
-var Axios = __webpack_require__(14);
+var bind = __webpack_require__(7);
+var Axios = __webpack_require__(13);
 var defaults = __webpack_require__(1);
 
 /**
@@ -1889,15 +1858,15 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(5);
-axios.CancelToken = __webpack_require__(13);
-axios.isCancel = __webpack_require__(6);
+axios.Cancel = __webpack_require__(4);
+axios.CancelToken = __webpack_require__(12);
+axios.isCancel = __webpack_require__(5);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(28);
+axios.spread = __webpack_require__(27);
 
 module.exports = axios;
 
@@ -1906,13 +1875,13 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Cancel = __webpack_require__(5);
+var Cancel = __webpack_require__(4);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -1970,7 +1939,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1978,10 +1947,10 @@ module.exports = CancelToken;
 
 var defaults = __webpack_require__(1);
 var utils = __webpack_require__(0);
-var InterceptorManager = __webpack_require__(15);
-var dispatchRequest = __webpack_require__(16);
-var isAbsoluteURL = __webpack_require__(24);
-var combineURLs = __webpack_require__(22);
+var InterceptorManager = __webpack_require__(14);
+var dispatchRequest = __webpack_require__(15);
+var isAbsoluteURL = __webpack_require__(23);
+var combineURLs = __webpack_require__(21);
 
 /**
  * Create a new instance of Axios
@@ -2062,7 +2031,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2121,15 +2090,15 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var transformData = __webpack_require__(19);
-var isCancel = __webpack_require__(6);
+var transformData = __webpack_require__(18);
+var isCancel = __webpack_require__(5);
 var defaults = __webpack_require__(1);
 
 /**
@@ -2207,7 +2176,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2233,13 +2202,13 @@ module.exports = function enhanceError(error, config, code, response) {
 
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var createError = __webpack_require__(7);
+var createError = __webpack_require__(6);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -2265,7 +2234,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2292,7 +2261,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2335,7 +2304,7 @@ module.exports = btoa;
 
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2410,7 +2379,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2429,7 +2398,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2489,7 +2458,7 @@ module.exports = (
 
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2510,7 +2479,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2585,7 +2554,7 @@ module.exports = (
 
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2604,7 +2573,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2648,7 +2617,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2682,12 +2651,12 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 29 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 28 */
+/***/ (function(module, exports) {
 
 /*!
  * https://github.com/Starcounter-Jack/JSON-Patch
- * json-patch-duplex.js version: 1.1.8
+ * json-patch-duplex.js version: 1.2.2
  * (c) 2013 Joachim Wester
  * MIT license
  */
@@ -2714,7 +2683,7 @@ var jsonpatch;
     };
     function _equals(a, b) {
         switch (typeof a) {
-            case 'undefined': //backward compatibility, but really I think we should return false
+            case 'undefined':
             case 'boolean':
             case 'string':
             case 'number':
@@ -2726,17 +2695,32 @@ var jsonpatch;
                     if (!_isArray(b) || a.length !== b.length)
                         return false;
                     for (var i = 0, l = a.length; i < l; i++)
-                        if (!_equals(a[i], b[i]))
+                        if (!_equals(a[i], b[i])) {
                             return false;
+                        }
                     return true;
                 }
+                var aKeys = _objectKeys(a);
                 var bKeys = _objectKeys(b);
-                var bLength = bKeys.length;
-                if (_objectKeys(a).length !== bLength)
-                    return false;
-                for (var i = 0; i < bLength; i++)
-                    if (!_equals(a[i], b[i]))
+                for (var i_1 = 0; i_1 < aKeys.length; i_1++) {
+                    var key_1 = aKeys[i_1];
+                    // check all properties of `a` to equal their `b` counterpart
+                    if (!_equals(a[key_1], b[key_1])) {
                         return false;
+                    }
+                    // remove the key from consideration in next step since we know it's "equal"
+                    var bKeysIdx = bKeys.indexOf(key_1);
+                    if (bKeysIdx >= 0) {
+                        bKeys.splice(bKeysIdx, 1);
+                    }
+                }
+                for (var i_2 = 0; i_2 < bKeys.length; i_2++) {
+                    var key = bKeys[i_2];
+                    // lastly, test any untested properties of `b`
+                    if (!_equals(a[key], b[key])) {
+                        return false;
+                    }
+                }
                 return true;
             default:
                 return false;
@@ -2750,107 +2734,66 @@ var jsonpatch;
      */
     /* The operations applicable to an object */
     var objOps = {
-        add: function (obj, key) {
+        add: function (obj, key, document) {
             obj[key] = this.value;
+            return { newDocument: document };
         },
-        remove: function (obj, key) {
+        remove: function (obj, key, document) {
             var removed = obj[key];
             delete obj[key];
-            return removed;
+            return { newDocument: document, removed: removed };
         },
-        replace: function (obj, key) {
+        replace: function (obj, key, document) {
             var removed = obj[key];
             obj[key] = this.value;
-            return removed;
+            return { newDocument: document, removed: removed };
         },
-        move: function (obj, key, tree) {
-            var getOriginalDestination = { op: "_get", path: this.path };
-            apply(tree, [getOriginalDestination]);
-            // In case value is moved up and overwrites its ancestor
-            var original = getOriginalDestination.value === undefined ?
-                undefined : JSON.parse(JSON.stringify(getOriginalDestination.value));
-            var temp = { op: "_get", path: this.from };
-            apply(tree, [temp]);
-            apply(tree, [
-                { op: "remove", path: this.from }
-            ]);
-            apply(tree, [
-                { op: "add", path: this.path, value: temp.value }
-            ]);
-            return original;
+        move: function (obj, key, document) {
+            /* in case move target overwrites an existing value,
+            return the removed value, this can be taxing performance-wise,
+            and is potentially unneeded */
+            var removed = getValueByPointer(document, this.path);
+            if (removed) {
+                removed = deepClone(removed);
+            }
+            var originalValue = applyOperation(document, { op: "remove", path: this.from }).removed;
+            applyOperation(document, { op: "add", path: this.path, value: originalValue });
+            return { newDocument: document, removed: removed };
         },
-        copy: function (obj, key, tree) {
-            var temp = { op: "_get", path: this.from };
-            apply(tree, [temp]);
-            apply(tree, [
-                { op: "add", path: this.path, value: temp.value }
-            ]);
+        copy: function (obj, key, document) {
+            var valueToCopy = getValueByPointer(document, this.from);
+            // enforce copy by value so further operations don't affect source (see issue #177)
+            applyOperation(document, { op: "add", path: this.path, value: deepClone(valueToCopy) });
+            return { newDocument: document };
         },
-        test: function (obj, key) {
-            return _equals(obj[key], this.value);
+        test: function (obj, key, document) {
+            return { newDocument: document, test: _equals(obj[key], this.value) };
         },
-        _get: function (obj, key) {
+        _get: function (obj, key, document) {
             this.value = obj[key];
+            return { newDocument: document };
         }
     };
     /* The operations applicable to an array. Many are the same as for the object */
     var arrOps = {
-        add: function (arr, i) {
+        add: function (arr, i, document) {
             arr.splice(i, 0, this.value);
             // this may be needed when using '-' in an array
-            return i;
+            return { newDocument: document, index: i };
         },
-        remove: function (arr, i) {
+        remove: function (arr, i, document) {
             var removedList = arr.splice(i, 1);
-            return removedList[0];
+            return { newDocument: document, removed: removedList[0] };
         },
-        replace: function (arr, i) {
+        replace: function (arr, i, document) {
             var removed = arr[i];
             arr[i] = this.value;
-            return removed;
+            return { newDocument: document, removed: removed };
         },
         move: objOps.move,
         copy: objOps.copy,
         test: objOps.test,
         _get: objOps._get
-    };
-    /* The operations applicable to object root. Many are the same as for the object */
-    var rootOps = {
-        add: function (obj) {
-            rootOps.remove.call(this, obj);
-            for (var key in this.value) {
-                if (this.value.hasOwnProperty(key)) {
-                    obj[key] = this.value[key];
-                }
-            }
-        },
-        remove: function (obj) {
-            var removed = {};
-            for (var key in obj) {
-                if (obj.hasOwnProperty(key)) {
-                    removed[key] = obj[key];
-                    objOps.remove.call(this, obj, key);
-                }
-            }
-            return removed;
-        },
-        replace: function (obj) {
-            var removed = apply(obj, [
-                { op: "remove", path: this.path }
-            ]);
-            apply(obj, [
-                { op: "add", path: this.path, value: this.value }
-            ]);
-            return removed[0];
-        },
-        move: objOps.move,
-        copy: objOps.copy,
-        test: function (obj) {
-            return (JSON.stringify(obj) === JSON.stringify(this.value));
-        },
-        _get: function (obj) {
-            this.value = obj;
-        }
     };
     var _isArray;
     if (Array.isArray) {
@@ -2877,78 +2820,283 @@ var jsonpatch;
         return true;
     }
     /**
-     * Apply a json-patch operation on an object tree
-     * Returns an array of results of operations.
-     * Each element can either be a boolean (if op == 'test') or
-     * the removed object (operations that remove things)
-     * or just be undefined
+     * Deeply clone the object.
+     * https://jsperf.com/deep-copy-vs-json-stringify-json-parse/25 (recursiveDeepCopy)
+     * @param  {any} obj value to clone
+     * @return {any}       cloned obj
      */
-    function apply(tree, patches, validate) {
-        var results = new Array(patches.length), p = 0, plen = patches.length, patch, key;
-        while (p < plen) {
-            patch = patches[p];
-            p++;
-            // Find the object
-            var path = patch.path || "";
+    function deepClone(obj) {
+        switch (typeof obj) {
+            case "object":
+                return JSON.parse(JSON.stringify(obj)); //Faster than ES5 clone - http://jsperf.com/deep-cloning-of-objects/5
+            case "undefined":
+                return null; //this is how JSON.stringify behaves for array items
+            default:
+                return obj; //no need to clone primitives
+        }
+    }
+    jsonpatch.deepClone = deepClone;
+    /**
+    * Escapes a json pointer path
+    * @param path The raw pointer
+    * @return the Escaped path
+    */
+    function escapePathComponent(path) {
+        if (path.indexOf('/') === -1 && path.indexOf('~') === -1)
+            return path;
+        return path.replace(/~/g, '~0').replace(/\//g, '~1');
+    }
+    jsonpatch.escapePathComponent = escapePathComponent;
+    /**
+     * Unescapes a json pointer path
+     * @param path The escaped pointer
+     * @return The unescaped path
+     */
+    function unescapePathComponent(path) {
+        return path.replace(/~1/g, '/').replace(/~0/g, '~');
+    }
+    jsonpatch.unescapePathComponent = unescapePathComponent;
+    /**
+     * Retrieves a value from a JSON document by a JSON pointer.
+     * Returns the value.
+     *
+     * @param document The document to get the value from
+     * @param pointer an escaped JSON pointer
+     * @return The retrieved value
+     */
+    function getValueByPointer(document, pointer) {
+        if (pointer == '') {
+            return document;
+        }
+        var getOriginalDestination = { op: "_get", path: pointer };
+        applyOperation(document, getOriginalDestination);
+        return getOriginalDestination.value;
+    }
+    jsonpatch.getValueByPointer = getValueByPointer;
+    /**
+     * Apply a single JSON Patch Operation on a JSON document.
+     * Returns the {newDocument, result} of the operation.
+     * It modifies the `document` object and `operation` - it gets the values by reference.
+     * If you would like to avoid touching your values, clone them:
+     * `jsonpatch.applyOperation(document, jsonpatch.deepClone(operation))`.
+     *
+     * @param document The document to patch
+     * @param operation The operation to apply
+     * @param validateOperation `false` is without validation, `true` to use default jsonpatch's validation, or you can pass a `validateOperation` callback to be used for validation.
+     * @param mutateDocument Whether to mutate the original document or clone it before applying
+     * @return `{newDocument, result}` after the operation
+     */
+    function applyOperation(document, operation, validateOperation, mutateDocument) {
+        if (validateOperation === void 0) { validateOperation = false; }
+        if (mutateDocument === void 0) { mutateDocument = true; }
+        if (validateOperation) {
+            if (typeof validateOperation == 'function') {
+                validateOperation(operation, 0, document, operation.path);
+            }
+            else {
+                validator(operation, 0);
+            }
+        }
+        /* ROOT OPERATIONS */
+        if (operation.path === "") {
+            var returnValue = { newDocument: document };
+            if (operation.op === 'add') {
+                returnValue.newDocument = operation.value;
+                return returnValue;
+            }
+            else if (operation.op === 'replace') {
+                returnValue.newDocument = operation.value;
+                returnValue.removed = document; //document we removed
+                return returnValue;
+            }
+            else if (operation.op === 'move' || operation.op === 'copy') {
+                returnValue.newDocument = getValueByPointer(document, operation.from); // get the value by json-pointer in `from` field
+                if (operation.op === 'move') {
+                    returnValue.removed = document;
+                }
+                return returnValue;
+            }
+            else if (operation.op === 'test') {
+                returnValue.test = _equals(document, operation.value);
+                if (returnValue.test === false) {
+                    throw new JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+                }
+                returnValue.newDocument = document;
+                return returnValue;
+            }
+            else if (operation.op === 'remove') {
+                returnValue.removed = document;
+                returnValue.newDocument = null;
+                return returnValue;
+            }
+            else if (operation.op === '_get') {
+                operation.value = document;
+                return returnValue;
+            }
+            else {
+                if (validateOperation) {
+                    throw new JsonPatchError('Operation `op` property is not one of operations defined in RFC-6902', 'OPERATION_OP_INVALID', 0, operation, document);
+                }
+                else {
+                    return returnValue;
+                }
+            }
+        } /* END ROOT OPERATIONS */
+        else {
+            if (!mutateDocument) {
+                document = deepClone(document);
+            }
+            var path = operation.path || "";
             var keys = path.split('/');
-            var obj = tree;
+            var obj = document;
             var t = 1; //skip empty element - http://jsperf.com/to-shift-or-not-to-shift
             var len = keys.length;
             var existingPathFragment = undefined;
+            var key = void 0;
+            var validateFunction = void 0;
+            if (typeof validateOperation == 'function') {
+                validateFunction = validateOperation;
+            }
+            else {
+                validateFunction = validator;
+            }
             while (true) {
                 key = keys[t];
-                if (validate) {
+                if (validateOperation) {
                     if (existingPathFragment === undefined) {
                         if (obj[key] === undefined) {
                             existingPathFragment = keys.slice(0, t).join('/');
                         }
                         else if (t == len - 1) {
-                            existingPathFragment = patch.path;
+                            existingPathFragment = operation.path;
                         }
                         if (existingPathFragment !== undefined) {
-                            this.validator(patch, p - 1, tree, existingPathFragment);
+                            validateFunction(operation, 0, document, existingPathFragment);
                         }
                     }
                 }
                 t++;
-                if (key === undefined) {
-                    if (t >= len) {
-                        results[p - 1] = rootOps[patch.op].call(patch, obj, key, tree); // Apply patch
-                        break;
-                    }
-                }
                 if (_isArray(obj)) {
                     if (key === '-') {
                         key = obj.length;
                     }
                     else {
-                        if (validate && !isInteger(key)) {
-                            throw new JsonPatchError("Expected an unsigned base-10 integer value, making the new referenced value the array element with the zero-based index", "OPERATION_PATH_ILLEGAL_ARRAY_INDEX", p - 1, patch.path, patch);
+                        if (validateOperation && !isInteger(key)) {
+                            throw new JsonPatchError("Expected an unsigned base-10 integer value, making the new referenced value the array element with the zero-based index", "OPERATION_PATH_ILLEGAL_ARRAY_INDEX", 0, operation.path, operation);
                         }
-                        key = parseInt(key, 10);
+                        key = ~~key;
                     }
                     if (t >= len) {
-                        if (validate && patch.op === "add" && key > obj.length) {
-                            throw new JsonPatchError("The specified index MUST NOT be greater than the number of elements in the array", "OPERATION_VALUE_OUT_OF_BOUNDS", p - 1, patch.path, patch);
+                        if (validateOperation && operation.op === "add" && key > obj.length) {
+                            throw new JsonPatchError("The specified index MUST NOT be greater than the number of elements in the array", "OPERATION_VALUE_OUT_OF_BOUNDS", 0, operation.path, operation);
                         }
-                        results[p - 1] = arrOps[patch.op].call(patch, obj, key, tree); // Apply patch
-                        break;
+                        var returnValue = arrOps[operation.op].call(operation, obj, key, document); // Apply patch
+                        if (returnValue.test === false) {
+                            throw new JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+                        }
+                        return returnValue;
                     }
                 }
                 else {
-                    if (key && key.indexOf('~') != -1)
-                        key = key.replace(/~1/g, '/').replace(/~0/g, '~'); // escape chars
+                    if (key && key.indexOf('~') != -1) {
+                        key = unescapePathComponent(key);
+                    }
                     if (t >= len) {
-                        results[p - 1] = objOps[patch.op].call(patch, obj, key, tree); // Apply patch
-                        break;
+                        var returnValue = objOps[operation.op].call(operation, obj, key, document); // Apply patch
+                        if (returnValue.test === false) {
+                            throw new JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+                        }
+                        return returnValue;
                     }
                 }
                 obj = obj[key];
             }
         }
+    }
+    jsonpatch.applyOperation = applyOperation;
+    /**
+     * Apply a full JSON Patch array on a JSON document.
+     * Returns the {newDocument, result} of the patch.
+     * It modifies the `document` object and `patch` - it gets the values by reference.
+     * If you would like to avoid touching your values, clone them:
+     * `jsonpatch.applyPatch(document, jsonpatch.deepClone(patch))`.
+     *
+     * @param document The document to patch
+     * @param patch The patch to apply
+     * @param validateOperation `false` is without validation, `true` to use default jsonpatch's validation, or you can pass a `validateOperation` callback to be used for validation.
+     * @return An array of `{newDocument, result}` after the patch, with a `newDocument` property for accessing the final state with ease.
+     */
+    function applyPatch(document, patch, validateOperation) {
+        var results = new Array(patch.length);
+        for (var i = 0, length_1 = patch.length; i < length_1; i++) {
+            results[i] = applyOperation(document, patch[i], validateOperation);
+            document = results[i].newDocument; // in case root was replaced
+        }
+        results.newDocument = document;
+        return results;
+    }
+    jsonpatch.applyPatch = applyPatch;
+    /**
+     * Apply a JSON Patch on a JSON document.
+     * Returns an array of results of operations.
+     * Each element can either be a boolean (if op == 'test') or
+     * the removed object (operations that remove things)
+     * or just be undefined
+     * @deprecated
+     */
+    function apply(document, patch, validateOperation) {
+        console.warn('jsonpatch.apply is deprecated, please use `applyPatch` for applying patch sequences, or `applyOperation` to apply individual operations.');
+        var results = new Array(patch.length);
+        /* this code might be overkill, but will be removed soon, it is to prevent the breaking change of root operations */
+        var _loop_1 = function(i, length_2) {
+            if (patch[i].path == "" && patch[i].op != "remove" && patch[i].op != "test") {
+                var value_1;
+                if (patch[i].op == '_get') {
+                    patch[i].value = document;
+                    return "continue";
+                }
+                if (patch[i].op == "replace" || patch[i].op == "move") {
+                    results[i] = deepClone(document);
+                }
+                if (patch[i].op == "copy" || patch[i].op == "move") {
+                    value_1 = getValueByPointer(document, patch[i].from);
+                }
+                if (patch[i].op == "replace" || patch[i].op == "add") {
+                    value_1 = patch[i].value;
+                }
+                // empty the object
+                Object.keys(document).forEach(function (key) { return delete document[key]; });
+                //copy everything from value
+                Object.keys(value_1).forEach(function (key) { return document[key] = value_1[key]; });
+            }
+            else {
+                results[i] = applyOperation(document, patch[i], validateOperation);
+                results[i] = results[i].removed || results[i].test;
+            }
+        };
+        for (var i = 0, length_2 = patch.length; i < length_2; i++) {
+            _loop_1(i, length_2);
+        }
         return results;
     }
     jsonpatch.apply = apply;
+    /**
+     * Apply a single JSON Patch Operation on a JSON document.
+     * Returns the updated document.
+     * Suitable as a reducer.
+     *
+     * @param document The document to patch
+     * @param operation The operation to apply
+     * @return The updated document
+     */
+    function applyReducer(document, operation) {
+        var operationResult = applyOperation(document, operation);
+        if (operationResult.test === false) {
+            throw new JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+        }
+        return operationResult.newDocument;
+    }
+    jsonpatch.applyReducer = applyReducer;
     // provide scoped __extends for TypeScript's `extend` keyword so it will not provide global one during compilation
     function __extends(d, b) {
         for (var p in b)
@@ -2977,10 +3125,21 @@ var jsonpatch;
         if (obj === undefined) {
             return true;
         }
-        if (typeof obj == "array" || typeof obj == "object") {
-            for (var i in obj) {
-                if (hasUndefined(obj[i])) {
-                    return true;
+        if (obj) {
+            if (_isArray(obj)) {
+                for (var i = 0, len = obj.length; i < len; i++) {
+                    if (hasUndefined(obj[i])) {
+                        return true;
+                    }
+                }
+            }
+            else if (typeof obj === "object") {
+                var objKeys = _objectKeys(obj);
+                var objKeysLength = objKeys.length;
+                for (var i = 0; i < objKeysLength; i++) {
+                    if (hasUndefined(obj[objKeys[i]])) {
+                        return true;
+                    }
                 }
             }
         }
@@ -2990,74 +3149,75 @@ var jsonpatch;
      * Validates a single operation. Called from `jsonpatch.validate`. Throws `JsonPatchError` in case of an error.
      * @param {object} operation - operation object (patch)
      * @param {number} index - index of operation in the sequence
-     * @param {object} [tree] - object where the operation is supposed to be applied
-     * @param {string} [existingPathFragment] - comes along with `tree`
+     * @param {object} [document] - object where the operation is supposed to be applied
+     * @param {string} [existingPathFragment] - comes along with `document`
      */
-    function validator(operation, index, tree, existingPathFragment) {
+    function validator(operation, index, document, existingPathFragment) {
         if (typeof operation !== 'object' || operation === null || _isArray(operation)) {
-            throw new JsonPatchError('Operation is not an object', 'OPERATION_NOT_AN_OBJECT', index, operation, tree);
+            throw new JsonPatchError('Operation is not an object', 'OPERATION_NOT_AN_OBJECT', index, operation, document);
         }
         else if (!objOps[operation.op]) {
-            throw new JsonPatchError('Operation `op` property is not one of operations defined in RFC-6902', 'OPERATION_OP_INVALID', index, operation, tree);
+            throw new JsonPatchError('Operation `op` property is not one of operations defined in RFC-6902', 'OPERATION_OP_INVALID', index, operation, document);
         }
         else if (typeof operation.path !== 'string') {
-            throw new JsonPatchError('Operation `path` property is not a string', 'OPERATION_PATH_INVALID', index, operation, tree);
+            throw new JsonPatchError('Operation `path` property is not a string', 'OPERATION_PATH_INVALID', index, operation, document);
         }
         else if (operation.path.indexOf('/') !== 0 && operation.path.length > 0) {
-            // paths that aren't emptystring should start with "/"
-            throw new JsonPatchError('Operation `path` property must start with "/"', 'OPERATION_PATH_INVALID', index, operation, tree);
+            // paths that aren't empty string should start with "/"
+            throw new JsonPatchError('Operation `path` property must start with "/"', 'OPERATION_PATH_INVALID', index, operation, document);
         }
         else if ((operation.op === 'move' || operation.op === 'copy') && typeof operation.from !== 'string') {
-            throw new JsonPatchError('Operation `from` property is not present (applicable in `move` and `copy` operations)', 'OPERATION_FROM_REQUIRED', index, operation, tree);
+            throw new JsonPatchError('Operation `from` property is not present (applicable in `move` and `copy` operations)', 'OPERATION_FROM_REQUIRED', index, operation, document);
         }
         else if ((operation.op === 'add' || operation.op === 'replace' || operation.op === 'test') && operation.value === undefined) {
-            throw new JsonPatchError('Operation `value` property is not present (applicable in `add`, `replace` and `test` operations)', 'OPERATION_VALUE_REQUIRED', index, operation, tree);
+            throw new JsonPatchError('Operation `value` property is not present (applicable in `add`, `replace` and `test` operations)', 'OPERATION_VALUE_REQUIRED', index, operation, document);
         }
         else if ((operation.op === 'add' || operation.op === 'replace' || operation.op === 'test') && hasUndefined(operation.value)) {
-            throw new JsonPatchError('Operation `value` property is not present (applicable in `add`, `replace` and `test` operations)', 'OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED', index, operation, tree);
+            throw new JsonPatchError('Operation `value` property is not present (applicable in `add`, `replace` and `test` operations)', 'OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED', index, operation, document);
         }
-        else if (tree) {
+        else if (document) {
             if (operation.op == "add") {
                 var pathLen = operation.path.split("/").length;
                 var existingPathLen = existingPathFragment.split("/").length;
                 if (pathLen !== existingPathLen + 1 && pathLen !== existingPathLen) {
-                    throw new JsonPatchError('Cannot perform an `add` operation at the desired path', 'OPERATION_PATH_CANNOT_ADD', index, operation, tree);
+                    throw new JsonPatchError('Cannot perform an `add` operation at the desired path', 'OPERATION_PATH_CANNOT_ADD', index, operation, document);
                 }
             }
             else if (operation.op === 'replace' || operation.op === 'remove' || operation.op === '_get') {
                 if (operation.path !== existingPathFragment) {
-                    throw new JsonPatchError('Cannot perform the operation at a path that does not exist', 'OPERATION_PATH_UNRESOLVABLE', index, operation, tree);
+                    throw new JsonPatchError('Cannot perform the operation at a path that does not exist', 'OPERATION_PATH_UNRESOLVABLE', index, operation, document);
                 }
             }
             else if (operation.op === 'move' || operation.op === 'copy') {
                 var existingValue = { op: "_get", path: operation.from, value: undefined };
-                var error = jsonpatch.validate([existingValue], tree);
+                var error = validate([existingValue], document);
                 if (error && error.name === 'OPERATION_PATH_UNRESOLVABLE') {
-                    throw new JsonPatchError('Cannot perform the operation from a path that does not exist', 'OPERATION_FROM_UNRESOLVABLE', index, operation, tree);
+                    throw new JsonPatchError('Cannot perform the operation from a path that does not exist', 'OPERATION_FROM_UNRESOLVABLE', index, operation, document);
                 }
             }
         }
     }
     jsonpatch.validator = validator;
     /**
-     * Validates a sequence of operations. If `tree` parameter is provided, the sequence is additionally validated against the object tree.
+     * Validates a sequence of operations. If `document` parameter is provided, the sequence is additionally validated against the object document.
      * If error is encountered, returns a JsonPatchError object
      * @param sequence
-     * @param tree
+     * @param document
      * @returns {JsonPatchError|undefined}
      */
-    function validate(sequence, tree) {
+    function validate(sequence, document, externalValidator) {
         try {
             if (!_isArray(sequence)) {
                 throw new JsonPatchError('Patch sequence must be an array', 'SEQUENCE_NOT_AN_ARRAY');
             }
-            if (tree) {
-                tree = JSON.parse(JSON.stringify(tree)); //clone tree so that we can safely try applying operations
-                apply.call(this, tree, sequence, true);
+            if (document) {
+                //clone document so that we can safely try applying operations
+                applyPatch(deepClone(document), deepClone(sequence), externalValidator || true);
             }
             else {
+                externalValidator = externalValidator || validator;
                 for (var i = 0; i < sequence.length; i++) {
-                    this.validator(sequence[i], i);
+                    externalValidator(sequence[i], i, document, undefined);
                 }
             }
         }
@@ -3072,8 +3232,15 @@ var jsonpatch;
     }
     jsonpatch.validate = validate;
 })(jsonpatch || (jsonpatch = {}));
-if (true) {
+if (typeof exports !== "undefined") {
     exports.apply = jsonpatch.apply;
+    exports.applyPatch = jsonpatch.applyPatch;
+    exports.applyOperation = jsonpatch.applyOperation;
+    exports.applyReducer = jsonpatch.applyReducer;
+    exports.getValueByPointer = jsonpatch.getValueByPointer;
+    exports.deepClone = jsonpatch.deepClone;
+    exports.escapePathComponent = jsonpatch.escapePathComponent;
+    exports.unescapePathComponent = jsonpatch.unescapePathComponent;
     exports.validate = jsonpatch.validate;
     exports.validator = jsonpatch.validator;
     exports.JsonPatchError = jsonpatch.JsonPatchError;
@@ -3088,7 +3255,7 @@ exports.default = jsonpatch;
 When in browser, setting `exports = {}`
 fools other modules into thinking they're
 running in a node environment, which breaks
-some of them. Here is super light wieght fix.
+some of them. Here is super light weight fix.
 */
 if (isBrowser) {
     exports = undefined;
@@ -3096,7 +3263,7 @@ if (isBrowser) {
 
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 if(typeof JSONPatchQueue === 'undefined') {
@@ -3208,7 +3375,7 @@ if(true) {
 }
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -3369,7 +3536,7 @@ if(true) {
 }
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -3500,7 +3667,7 @@ if(true) {
 
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -3648,44 +3815,54 @@ if(true) {
 
 
 /***/ }),
-/* 34 */
-/***/ (function(module, exports) {
+/* 33 */
+/***/ (function(module, exports, __webpack_require__) {
 
 /*!
  * https://github.com/PuppetJS/JSONPatcherProxy
- * JSONPatcherProxy version: 0.0.3
+ * JSONPatcherProxy version: 0.0.5
  * (c) 2017 Starcounter 
  * MIT license
  */
 
 /** Class representing a JS Object observer  */
-var JSONPatcherProxy = (function() {
-  function JSONPatcherProxy(root) {
+const JSONPatcherProxy = (function() {
+  const proxifiedObjectsMap = new Map();
+
+  /**
+    * Creates an instance of JSONPatcherProxy around your object of interest `root`. 
+    * @param {Object|Array} root - the object you want to wrap
+    * @param {Boolean} [showDetachedWarning] - whether to log a warning when a detached sub-object is modified @see {@link https://github.com/Palindrom/JSONPatcherProxy#detached-objects} 
+    * @returns {JSONPatcherProxy}
+    * @constructor
+    */
+  function JSONPatcherProxy(root, showDetachedWarning) {
+    // default to true
+    if (typeof showDetachedWarning !== 'boolean') {
+      showDetachedWarning = true;
+    }
+
+    this.showDetachedWarning = showDetachedWarning;
     this.originalObject = root;
     this.cachedProxy = null;
     this.isRecording = false;
     this.userCallback;
-    var sender = this;
     /**
      * @memberof JSONPatcherProxy
-     * Disables patches omitting (to both callback and patches array). However, the object will be updated if you change it.
+     * Restores callback back to the original one provided to `observe`.
      */
-    this.switchObserverOn = function() {
-      sender.defaultCallback = function(event) {
-        if (sender.isRecording) {
-          sender.patches.push(event);
-        }
-        if (sender.userCallback) {
-          sender.userCallback(event);
-        }
+    this.resume = () => {
+      this.defaultCallback = operation => {
+        this.isRecording && this.patches.push(operation);
+        this.userCallback && this.userCallback(operation);
       };
     };
     /**
      * @memberof JSONPatcherProxy
-     * Enables patches omitting (to both callback and patches array). Starting from the moment you call it. Any changes before that go unnoticed.
+     * Replaces your callback with a noop function.
      */
-    this.switchObserverOff = function() {
-      sender.defaultCallback = function() {};
+    this.pause = () => {
+      this.defaultCallback = function() {};
     };
   }
   /**
@@ -3693,54 +3870,53 @@ var JSONPatcherProxy = (function() {
   */
   JSONPatcherProxy.deepClone = function(obj) {
     switch (typeof obj) {
-      case "object":
+      case 'object':
         return JSON.parse(JSON.stringify(obj)); //Faster than ES5 clone - http://jsperf.com/deep-cloning-of-objects/5
-      case "undefined":
+      case 'undefined':
         return null; //this is how JSON.stringify behaves for array items
       default:
         return obj; //no need to clone primitives
     }
   };
   JSONPatcherProxy.escapePathComponent = function(str) {
-    if (str.indexOf("/") === -1 && str.indexOf("~") === -1) return str;
-    return str.replace(/~/g, "~0").replace(/\//g, "~1");
+    if (str.indexOf('/') === -1 && str.indexOf('~') === -1) return str;
+    return str.replace(/~/g, '~0').replace(/\//g, '~1');
   };
   JSONPatcherProxy.prototype.generateProxyAtPath = function(obj, path) {
     if (!obj) {
       return obj;
     }
-    var instance = this;
-    var proxy = new Proxy(obj, {
+    const instance = this;
+    const traps = {
       get: function(target, propKey, receiver) {
-        if (propKey.toString() === "_isProxified") {
+        if (propKey.toString() === '_isProxified') {
           return true; //to distinguish proxies
         }
         return Reflect.get(target, propKey, receiver);
       },
       set: function(target, key, receiver) {
-        var distPath = path +
-          "/" +
-          JSONPatcherProxy.escapePathComponent(key.toString());
+        const distPath =
+          path + '/' + JSONPatcherProxy.escapePathComponent(key.toString());
         // if the new value is an object, make sure to watch it
         if (
           receiver /* because `null` is in object */ &&
-          typeof receiver === "object" &&
+          typeof receiver === 'object' &&
           receiver._isProxified !== true
         ) {
           receiver = instance._proxifyObjectTreeRecursively(receiver, distPath);
         }
-        if (typeof receiver === "undefined") {
+        if (typeof receiver === 'undefined') {
           if (target.hasOwnProperty(key)) {
             // when array element is set to `undefined`, should generate replace to `null`
             if (Array.isArray(target)) {
               //undefined array elements are JSON.stringified to `null`
               instance.defaultCallback({
-                op: "replace",
+                op: 'replace',
                 path: distPath,
                 value: null
               });
             } else {
-              instance.defaultCallback({ op: "remove", path: distPath });
+              instance.defaultCallback({ op: 'remove', path: distPath });
             }
             return Reflect.set(target, key, receiver);
           } else if (!Array.isArray(target)) {
@@ -3751,16 +3927,16 @@ var JSONPatcherProxy = (function() {
           return Reflect.set(target, key, receiver);
         }
         if (target.hasOwnProperty(key)) {
-          if (typeof target[key] === "undefined") {
+          if (typeof target[key] === 'undefined') {
             if (Array.isArray(target)) {
               instance.defaultCallback({
-                op: "replace",
+                op: 'replace',
                 path: distPath,
                 value: receiver
               });
             } else {
               instance.defaultCallback({
-                op: "add",
+                op: 'add',
                 path: distPath,
                 value: receiver
               });
@@ -3768,7 +3944,7 @@ var JSONPatcherProxy = (function() {
             return Reflect.set(target, key, receiver);
           } else {
             instance.defaultCallback({
-              op: "replace",
+              op: 'replace',
               path: distPath,
               value: receiver
             });
@@ -3776,7 +3952,7 @@ var JSONPatcherProxy = (function() {
           }
         } else {
           instance.defaultCallback({
-            op: "add",
+            op: 'add',
             path: distPath,
             value: receiver
           });
@@ -3784,29 +3960,39 @@ var JSONPatcherProxy = (function() {
         }
       },
       deleteProperty: function(target, key) {
-        if (typeof target[key] !== "undefined") {
+        if (typeof target[key] !== 'undefined') {
           instance.defaultCallback({
-            op: "remove",
-            path: (
-              path + "/" + JSONPatcherProxy.escapePathComponent(key.toString())
-            )
+            op: 'remove',
+            path: path +
+              '/' +
+              JSONPatcherProxy.escapePathComponent(key.toString())
           });
+          const proxyInstance = proxifiedObjectsMap.get(target[key]);
+          if (proxyInstance) {
+            instance.disableTrapsForProxy(proxyInstance);
+          }
         }
         // else {
         return Reflect.deleteProperty(target, key);
       }
-    });
-    return proxy;
+    };
+    const proxy = Proxy.revocable(obj, traps);
+    // cache traps object to disable them later.
+    proxy.trapsInstance = traps;
+    /* keeping track of all the proxies to be able to revoke them later */
+    proxifiedObjectsMap.set(proxy.proxy, proxy);
+    return proxy.proxy;
   };
   //grab tree's leaves one by one, encapsulate them into a proxy and return
   JSONPatcherProxy.prototype._proxifyObjectTreeRecursively = function(
     root,
     path
   ) {
-    for (var key in root) {
+    for (let key in root) {
       if (root.hasOwnProperty(key)) {
-        if (typeof root[key] === "object") {
-          var distPath = path + "/" + JSONPatcherProxy.escapePathComponent(key);
+        if (typeof root[key] === 'object') {
+          const distPath =
+            path + '/' + JSONPatcherProxy.escapePathComponent(key);
           root[key] = this.generateProxyAtPath(root[key], distPath);
           this._proxifyObjectTreeRecursively(root[key], distPath);
         }
@@ -3823,22 +4009,46 @@ var JSONPatcherProxy = (function() {
         that's why we disable recording through this
         initial process;
         */
-    this.switchObserverOff();
-    var proxifiedObject = this._proxifyObjectTreeRecursively(root, "");
+    this.pause();
+    const proxifiedObject = this._proxifyObjectTreeRecursively(root, '');
     /* OK you can record now */
-    this.switchObserverOn();
+    this.resume();
     return proxifiedObject;
   };
   /**
-     * Proxifies the object that was passed in the constructor and returns a proxified mirror of it.
-     * @param {Boolean} record - whether to record object changes to a later-retrievable patches array.
-     * @param {Function} [callback] - this will be synchronously called with every object change with a single `patch` as the only parameter.
-     */
+   * Turns a proxified object into a forward-proxy object; doesn't emit any patches anymore, like a normal object
+   * @param {Proxy} proxy - The target proxy object
+   */
+  JSONPatcherProxy.prototype.disableTrapsForProxy = function(proxyInstance) {
+    if (this.showDetachedWarning) {
+      const message =
+        "You're accessing an object that is detached from the observedObject tree, see https://github.com/Palindrom/JSONPatcherProxy#detached-objects";
+      proxyInstance.trapsInstance.get = (a, b, c) => {
+        console.warn(message);
+        return Reflect.get(a, b, c);
+      };
+      proxyInstance.trapsInstance.set = (a, b, c) => {
+        console.warn(message);
+        return Reflect.set(a, b, c);
+      };
+      proxyInstance.trapsInstance.deleteProperty = (a, b, c) => {
+        console.warn(message);
+        return Reflect.deleteProperty(a, b, c);
+      };
+    } else {
+      delete proxyInstance.trapsInstance.set;
+      delete proxyInstance.trapsInstance.get;
+      delete proxyInstance.trapsInstance.deleteProperty;
+    }
+  };
+  /**
+   * Proxifies the object that was passed in the constructor and returns a proxified mirror of it. Even though both parameters are options. You need to pass at least one of them.
+   * @param {Boolean} [record] - whether to record object changes to a later-retrievable patches array.
+   * @param {Function} [callback] - this will be synchronously called with every object change with a single `patch` as the only parameter.
+   */
   JSONPatcherProxy.prototype.observe = function(record, callback) {
     if (!record && !callback) {
-      throw new Error(
-        "You need to either record changes or pass a callback"
-      );
+      throw new Error('You need to either record changes or pass a callback');
     }
     this.isRecording = record;
     if (callback) this.userCallback = callback;
@@ -3849,42 +4059,77 @@ var JSONPatcherProxy = (function() {
     They might need to use only a callback.
     */
     if (record) this.patches = [];
-    return this.cachedProxy = this.proxifyObjectTree(
+    return (this.cachedProxy = this.proxifyObjectTree(
       JSONPatcherProxy.deepClone(this.originalObject)
-    );
+    ));
   };
   /**
-     * If the observed is set to record, it will synchronously return all the patches and empties patches array.
-     */
+   * If the observed is set to record, it will synchronously return all the patches and empties patches array.
+   */
   JSONPatcherProxy.prototype.generate = function() {
     if (!this.isRecording) {
-      throw new Error("You should set record to true to get patches later");
+      throw new Error('You should set record to true to get patches later');
     }
     return this.patches.splice(0, this.patches.length);
   };
   /**
-     * Synchronously de-proxifies the last state of the object and returns it unobserved.
-     */
-  JSONPatcherProxy.prototype.unobserve = function() {
-    //return a normal, non-proxified object
-    return JSONPatcherProxy.deepClone(this.cachedProxy);
+   * Revokes all proxies rendering the observed object useless and good for garbage collection @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/revocable}
+   */
+  JSONPatcherProxy.prototype.revoke = function() {
+    proxifiedObjectsMap.forEach(el => el.revoke());
+  };
+  /**
+   * Disables all proxies' traps, turning the observed object into a forward-proxy object, like a normal object that you can modify silently.
+   */
+  JSONPatcherProxy.prototype.disableTraps = function() {
+    proxifiedObjectsMap.forEach(this.disableTrapsForProxy, this);
   };
   return JSONPatcherProxy;
 })();
 
-module.exports = JSONPatcherProxy;
-module.exports.default = JSONPatcherProxy;
+if (true) {
+  module.exports = JSONPatcherProxy;
+  module.exports.default = JSONPatcherProxy;
+}
+
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
 
 /***/ }),
 /* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {/*! palindrom-dom.js version: 2.4.0
+/*! palindrom-dom.js version: 2.4.0
  * (c) 2013 Joachim Wester
  * MIT license
  */
 if (true) {
-  var Palindrom = __webpack_require__(10);
+  var Palindrom = __webpack_require__(9);
 }
 
 var PalindromDOM = (function() {
@@ -3900,7 +4145,10 @@ var PalindromDOM = (function() {
     if (!options.remoteUrl) {
       throw new Error('remoteUrl is required');
     }
-    var onDataReady = options.callback;
+    var onStateReset = options.onStateReset || options.callback;
+    if(options.callback) {
+      console.warn('Palindrom: options.callback is deprecated. Please use `onStateReset` instead');
+    }
     this.element = options.listenTo || document.body;
     var clickHandler = this.clickHandler.bind(this);
     this.historyHandler = this.historyHandler.bind(this);
@@ -3923,9 +4171,9 @@ var PalindromDOM = (function() {
       this.historyHandlerDeprecated
     );
 
-    options.callback = function addDOMListeners(obj) {
+    options.onStateReset = function addDOMListeners(obj) {
       this.listen();
-      onDataReady && onDataReady.call(this, obj);
+      onStateReset && onStateReset.call(this, obj);
     };
 
     this.listen = function() {
@@ -4067,7 +4315,6 @@ if (true) {
   module.exports.__esModule = true;
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
 /* 36 */

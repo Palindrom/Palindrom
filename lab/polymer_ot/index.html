@@ -95,7 +95,7 @@
   <script>
     // it's global just for debugging
     var palindrom = new PalindromDOM({
-      callback: function(obj) {
+      onStateReset: function(obj) {
         document.getElementById('test').model = obj;
       },
       debug: false,

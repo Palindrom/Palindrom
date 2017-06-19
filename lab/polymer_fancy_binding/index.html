@@ -70,7 +70,7 @@
     var domBind = document.getElementById("r");
     // it's global just for debugging
     var palindrom = wtf =  new PalindromDOM({
-      callback: function(obj) {
+      onStateReset: function(obj) {
         domBind.model = obj;
       },
       debug: false

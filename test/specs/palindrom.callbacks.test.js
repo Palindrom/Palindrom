@@ -26,7 +26,7 @@ describe("Callbacks", () => {
     const palindrom = new Palindrom({
       remoteUrl: "http://house.of.cards/testURL",
       onLocalChange: sentSpy,
-      callback: function(obj) {
+      onStateReset: function(obj) {
         tempObj = obj;
       }
     });
@@ -49,7 +49,7 @@ describe("Callbacks", () => {
     );
   });
 
-  it("should call onRemoteChange callback for applied patches", done => {
+  it("should call onStateReset callback for applied patches on root (initial state)", done => {
     moxios.stubRequest("http://house.of.cards/testURL", {
       status: 200,
       headers: { Location: "http://house.of.cards/testURL" },
@@ -61,17 +61,15 @@ describe("Callbacks", () => {
 
     const palindrom = new Palindrom({
       remoteUrl: "http://house.of.cards/testURL",
-      callback: function(obj) {
+      onStateReset: function(obj) {
         tempObj = obj;
       },
-      onRemoteChange: receivedSpy
+      onStateReset: receivedSpy
     });
 
     setTimeout(
       () => {
         assert(receivedSpy.calledOnce);
-
-        tempObj.hello = "onRemoteChange callback";
         done();
       },
       10

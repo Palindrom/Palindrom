@@ -101,7 +101,7 @@
     // it's global just for debugging
     var palindrom = new PalindromDOM({
       remoteUrl: window.location.href,
-      callback: function(obj) {        
+      onStateReset: function(obj) {        
         document.getElementById('test').model = obj;
       },
       debug: false,

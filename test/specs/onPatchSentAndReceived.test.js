@@ -28,7 +28,7 @@ describe("Callbacks, onPatchSent and onPatchReceived", () => {
 
       const palindrom = new Palindrom({
         remoteUrl: "http://house.of.cards/testURL",
-        callback: function(obj) {
+        onStateReset: function(obj) {
           tempObj = obj;
         },
         onPatchReceived,
@@ -106,7 +106,7 @@ describe("Callbacks, onPatchSent and onPatchReceived", () => {
 
       const palindrom = new Palindrom({
         remoteUrl: "http://house.of.cards/testURL",
-        callback: function(obj) {
+        onStateReset: function(obj) {
           tempObj = obj;
         },
         useWebSocket: true,
