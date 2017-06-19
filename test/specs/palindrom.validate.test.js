@@ -4,6 +4,10 @@ const Palindrom = require('../../src/palindrom');
 const assert = require('assert');
 const moxios = require('moxios');
 const sinon = require('sinon');
+const {
+  validate,
+  JsonPatchError
+} = require('fast-json-patch'); /* include only apply and validate */
 
 describe('Palindrom', () => {
   describe('#ValidatePatches', () => {
@@ -35,13 +39,10 @@ describe('Palindrom', () => {
 
       palindrom.validateAndApplySequence(tree, sequence);
 
-      setTimeout(
-        () => {
-          assert(spy.notCalled);
-          done();
-        },
-        10
-      );
+      setTimeout(() => {
+        assert(spy.notCalled);
+        done();
+      }, 10);
     });
 
     it('replacing a nonexisting property should cause OPERATION_PATH_UNRESOLVABLE (test built into Fast-JSON-Patch)', done => {
@@ -66,17 +67,11 @@ describe('Palindrom', () => {
 
       palindrom.validateAndApplySequence(tree, sequence);
 
-      setTimeout(
-        () => {
-          assert(spy.calledOnce);
-          assert.equal(
-            'OPERATION_PATH_UNRESOLVABLE',
-            spy.lastCall.args[0].name
-          );
-          done();
-        },
-        10
-      );
+      setTimeout(() => {
+        assert(spy.calledOnce);
+        assert.equal('OPERATION_PATH_UNRESOLVABLE', spy.lastCall.args[0].name);
+        done();
+      }, 10);
     });
 
     it('undefined value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', done => {
@@ -101,14 +96,11 @@ describe('Palindrom', () => {
 
       palindrom.validateAndApplySequence(tree, sequence);
 
-      setTimeout(
-        () => {
-          assert(spy.calledOnce);
-          assert.equal('OPERATION_VALUE_REQUIRED', spy.lastCall.args[0].name);
-          done();
-        },
-        10
-      );
+      setTimeout(() => {
+        assert(spy.calledOnce);
+        assert.equal('OPERATION_VALUE_REQUIRED', spy.lastCall.args[0].name);
+        done();
+      }, 10);
     });
 
     it('no value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', done => {
@@ -133,14 +125,11 @@ describe('Palindrom', () => {
 
       palindrom.validateAndApplySequence(tree, sequence);
 
-      setTimeout(
-        () => {
-          assert(spy.calledOnce);
-          assert.equal('OPERATION_VALUE_REQUIRED', spy.lastCall.args[0].name);
-          done();
-        },
-        10
-      );
+      setTimeout(() => {
+        assert(spy.calledOnce);
+        assert.equal('OPERATION_VALUE_REQUIRED', spy.lastCall.args[0].name);
+        done();
+      }, 10);
     });
 
     it('object with undefined value should cause OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED (test built into Fast-JSON-Patch)', done => {
@@ -171,21 +160,20 @@ describe('Palindrom', () => {
 
       palindrom.validateAndApplySequence(tree, sequence);
 
-      setTimeout(
-        () => {
-          assert(spy.calledOnce);
-          assert.equal(
-            'OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED',
-            spy.lastCall.args[0].name
-          );
-          done();
-        },
-        10
-      );
+      setTimeout(() => {
+        assert(spy.calledOnce);
+        assert.equal(
+          'OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED',
+          spy.lastCall.args[0].name
+        );
+        done();
+      }, 10);
     });
   });
   describe('Overriding validation logic', function() {
-    it('should be possible to override validatePatches to add custom validation', function(done) {
+    it('should be possible to override validatePatches to add custom validation', function(
+      done
+    ) {
       var tree = {
         name: {
           first: 'Elvis',
@@ -206,7 +194,7 @@ describe('Palindrom', () => {
       ) {
         if (operation.op === 'replace') {
           if (operation.path.substr(operation.path.length - 1, 1) !== '$') {
-            throw new this.jsonpatch.JsonPatchError(
+            throw new JsonPatchError(
               'Cannot replace a property which name finishes with $ character',
               'Palindrom_CANNOT_REPLACE_READONLY',
               index,
@@ -215,10 +203,10 @@ describe('Palindrom', () => {
             );
           }
         }
-      };      
+      };
       customPalindrom.prototype = Object.create(Palindrom.prototype);
       customPalindrom.prototype.validateSequence = function(tree, sequence) {
-        var error = this.jsonpatch.validate(sequence, tree, validator.bind(this));
+        var error = validate(sequence, tree, validator.bind(this));
         if (error) {
           this.onOutgoingPatchValidationError(error);
         }

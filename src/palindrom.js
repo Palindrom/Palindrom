@@ -3,7 +3,8 @@
  * MIT license
  */
 if (typeof require !== 'undefined') {
-  var jsonpatch = require('fast-json-patch/src/json-patch'); /* include only apply and validate */
+  /* include only applyPatch and validate */
+  var { applyPatch, validate } = require('fast-json-patch');
   var JSONPatcherProxy = require('jsonpatcherproxy');
   var JSONPatchQueueSynchronous = require('json-patch-queue')
     .JSONPatchQueueSynchronous;
@@ -522,7 +523,6 @@ var Palindrom = (function() {
       throw new Error('remoteUrl is required');
     }
 
-    this.jsonpatch = options.jsonpatch || this.jsonpatch;
     this.debug = options.debug != undefined ? options.debug : true;
 
     var noop = function noOpFunction() {};
@@ -629,8 +629,6 @@ var Palindrom = (function() {
     }
     makeInitialConnection(this);
   }
-
-  Palindrom.prototype.jsonpatch = jsonpatch;
 
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
@@ -748,7 +746,7 @@ var Palindrom = (function() {
     // we don't want this changes to generate patches since they originate from server, not client
     try {
       this.unobserve();
-      var results = this.jsonpatch.applyPatch(tree, sequence, this.debug);
+      var results = applyPatch(tree, sequence, this.debug);
       // notifications have to happen only where observe has been re-enabled
       // otherwise some listener might produce changes that would go unnoticed
       this.observe();
@@ -772,7 +770,7 @@ var Palindrom = (function() {
   };
 
   Palindrom.prototype.validateSequence = function(tree, sequence) {
-    var error = this.jsonpatch.validate(sequence, tree);
+    var error = validate(sequence, tree);
     if (error) {
       this.onOutgoingPatchValidationError(error);
     }
@@ -845,10 +843,6 @@ var Palindrom = (function() {
 
   /* backward compatibility */
   global.Puppet = Palindrom;
-
-  /* Since we have jsonpatch bundled,
-  let's expose it in case anyone needs it */
-  global.jsonpatch = jsonpatch;
 
   return Palindrom;
 })();
