@@ -1,4 +1,4 @@
-/*! palindrom.js version: 2.4.0
+/*! palindrom.js version: 3.0.0-rc.0
  * (c) 2013 Joachim Wester
  * MIT license
  */
