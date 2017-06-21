@@ -492,7 +492,7 @@ var Palindrom = (function() {
         palindrom.remoteObj = JSON.parse(JSON.stringify(json));
       }
 
-      palindrom.queue.reset(palindrom.obj, json)
+      palindrom.queue.reset(palindrom.obj, json);
 
       palindrom.heartbeat.start();
     });
@@ -522,6 +522,19 @@ var Palindrom = (function() {
     if (!options.remoteUrl) {
       throw new Error('remoteUrl is required');
     }
+
+    if (options.ignoreAdd) {
+      throw new TypeError(
+        'Palindrom: `ignoreAdd` is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136'
+      );
+    }
+    Object.defineProperty(this, 'ignoreAdd', {
+      set: function() {
+        throw new TypeError(
+          'Palindrom: Can\'t set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136'
+        );
+      }
+    });
 
     this.debug = options.debug != undefined ? options.debug : true;
 
@@ -590,15 +603,6 @@ var Palindrom = (function() {
       }
     });
 
-    this.ignoreCache = {};
-    this.ignoreAdd = options.ignoreAdd || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
-
-    //usage:
-    //palindrom.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to remote
-    //palindrom.ignoreAdd = /./; //ignore all the "add" operations
-    //palindrom.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
-    //palindrom.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
-
     // choose queuing engine
     if (options.localVersionPath) {
       if (!options.remoteVersionPath) {
@@ -633,7 +637,7 @@ var Palindrom = (function() {
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
   };
-  
+
   Palindrom.prototype.prepareProxifiedObject = function(obj) {
     if (!obj) {
       obj = {};
@@ -681,48 +685,9 @@ var Palindrom = (function() {
     at one point.
     */
     var patches = [patch];
-    this.filterIgnoredPatches(patches);
     if (patches.length) {
       this.handleLocalChange(patches);
     }
-  };
-
-  function isIgnored(pattern, ignoreCache, path, op) {
-    if (op === 'add' && pattern.test(path)) {
-      ignoreCache[path] = true;
-      return true;
-    }
-    var arr = path.split('/');
-    var joined = '';
-    for (var i = 1, ilen = arr.length; i < ilen; i++) {
-      joined += '/' + arr[i];
-      if (ignoreCache[joined]) {
-        return true; //once we decided to ignore something that was added, other operations (replace, remove, ...) are ignored as well
-      }
-    }
-    return false;
-  }
-
-  //ignores private member changes
-  Palindrom.prototype.filterIgnoredPatches = function(patches) {
-    if (this.ignoreAdd) {
-      for (var i = 0, ilen = patches.length; i < ilen; i++) {
-        if (
-          isIgnored(
-            this.ignoreAdd,
-            this.ignoreCache,
-            patches[i].path,
-            patches[i].op
-          )
-        ) {
-          //if it is ignored, remove patch
-          patches.splice(i, 1); //ignore changes to properties that start with PRIVATE_PREFIX
-          ilen--;
-          i--;
-        }
-      }
-    }
-    return patches;
   };
 
   function sendPatches(palindrom, patches) {
