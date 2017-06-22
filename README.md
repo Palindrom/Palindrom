@@ -92,7 +92,6 @@ Attribute              | Type          | Default                | Description
 `remoteUrl`            | *String*      |  **Required**          | PATCH server URL
 `onStateReset`         | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established), **it can be called again if the state was reset by a root-replacing patch**.
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
-`ignoreAdd`            | *RegExp*      |                        | Regular Expression for `add` operations to be ignored (tested against JSON Pointer in JSON Patch)
 `debug`                | *Boolean*     | `true`                 | Toggle debugging mode
 `onLocalChange`        | *Function*    |                        | Helper callback triggered each time a change is observed locally
 `onRemoteChange`       | *Function*    |                        | Helper callback triggered each time a change is received from the server and applied.
@@ -124,7 +123,6 @@ Attribute             | Type       | Default                | Description
 `remoteUrl`           | *String*   | **Required**           | See above
 `obj [readonly]`      | *Object*   | `{}`                   | Your initial state object, _**please read notes below**_.
 `useWebSocket`        | *Boolean*  | `false`                | See above
-`ignoreAdd`           | *RegExp*   |                        | See above
 `debug`               | *Boolean*  | `true`                 | See above
 `onRemoteChange`      | *Function* |                        | See above
 `onPatchReceived`     | *Function* |                        | See above
@@ -163,23 +161,6 @@ If you want to opt-out from such behavior, you need to force your framework to u
 - In Polymer 0.5 it is only possible with a Custom Element that extends the native `<input>`, similarly but not exactly how [`core-input`](https://github.com/Polymer/core-input/blob/master/core-input.html) is dome
 - In Polymer 0.9+, use built-in `<input value="{{bindValue::blur}}">`
 - In Angular 1.3+, use built-in `<input type="text" ng-model="name" ng-model-options="{updateOn: 'blur'}" />`
-
-### Ignoring local changes (`ignoreAdd`)
-
-If you want to create a property in the observed object that will remain local, there is an `ignoreAdd` option and property that
-let's you disregard client-side "add" operations in the object using a regular expression. Sample usage:
-
-```javascript
-// in constructor
-var palindrom = new Palindrom({remoteUrl: url, obj: myObj, ignoreAdd: /\/_.+/});
-// or via property
-palindrom.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to server
-palindrom.ignoreAdd = /./; //ignore all the "add" operations
-palindrom.ignoreAdd = /\/\$.+/; //ignore the "add" operations of properties that start with $
-palindrom.ignoreAdd = /\/_.+/; //ignore the "add" operations of properties that start with _
-// .. later on any
-myObj._somethingNew = 1; // will not be propagated to server
-```
 
 ### Upgrading to WebSocket (`useWebSocket`)
 
