@@ -213,8 +213,7 @@ If you use the bundle, no file dependencies are needed. You can view all the dep
 To release new version run
 
 ```sh
-webpack # to bundle
-grunt uglify bump # to bump the version, commit, and create a git tag
+npm version <patch|minor|major> # to replace version in files and tag the repo
 git push && git push --tags
 ...
 npm publish

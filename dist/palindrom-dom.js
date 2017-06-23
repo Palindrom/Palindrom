@@ -1,3 +1,4 @@
+/*! Palindrom, version: 3.0.0-rc.1 */
 var PalindromDOM =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -1572,8 +1573,9 @@ process.umask = function() { return 0; };
 /* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {/*! palindrom.js version: 3.0.0-rc.0
- * (c) 2013 Joachim Wester
+/* WEBPACK VAR INJECTION */(function(global) {/*! Palindrom 
+ * https://github.com/Palindrom/Palindrom
+ * (c) 2017 Joachim Wester
  * MIT license
  */
 if (true) {
@@ -4650,8 +4652,9 @@ module.exports = g;
 /* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/*! palindrom-dom.js version: 3.0.0-rc.0
- * (c) 2013 Joachim Wester
+/*! Palindrom 
+ * https://github.com/Palindrom/Palindrom
+ * (c) 2017 Joachim Wester
  * MIT license
  */
 if (true) {

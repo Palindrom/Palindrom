@@ -1,3 +1,9 @@
+/*! Palindrom 
+ * https://github.com/Palindrom/Palindrom
+ * (c) 2017 Joachim Wester
+ * MIT license
+ */
+
 /* URL DOM API shim */
 var resolve = require('url').resolve;
 var parse = require('url').parse;
