@@ -1,0 +1,6 @@
+./dist/*
+./lab/*
+./test/*
+bower.json
+.travis.yml
+.gitignore
