@@ -1,0 +1,42 @@
+### Development
+
+1. Make a local clone of this repo: `git clone git@github.com:Palindrom/Palindrom.git`
+2. Go to the directory: `cd Palindrom`
+3. Install the local dependencies: `npm install`
+4. Start the development server: `polyserve -p 8000`
+5. bundle by calling `webpack` in your shell.
+6. Open the demo: [http://localhost:8000/components/Palindrom/lab/polymer/index.html](http://localhost:8000/components/Palindrom/lab/polymer/index.html)
+7. Open the test suite: [http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html](http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html)
+
+#### Updating documentation
+
+Everything in `docs` folder is automatically fetched by the website and each MD file is considered a documentation section. Sections are sorted alphabetically; it's recommended to prefix your file with a numeric ordering index. Eg. (`01-installation.md`, `02-development.md`..etc).
+
+### Releases
+
+To release new version run
+
+```sh
+npm version <patch|minor|major> # to replace version in files and tag the repo
+git push && git push --tags
+...
+npm publish
+
+```
+
+### Testing
+
+Please follow steps 4, 5, 6 and 7 from [Development section](#Development).
+
+#### Testing with CLI and SauceLabs
+
+1. Install [Sauce Connect](https://wiki.saucelabs.com/display/DOCS/Sauce+Connect+Proxy).
+
+2. Add your `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables to your machine.
+
+3. Connect to SauceLabs using the command
+ `sc /u YOUR_SAUCE_USER /k YOUR_SAUCE_ACCESSKEY`
+
+4. Start a web server `polyserve -p 8000`
+
+5. In project's root folder, run `npm test`

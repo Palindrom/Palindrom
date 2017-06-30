@@ -14,14 +14,6 @@
 
 Implements [Server communication](https://github.com/Starcounter-Jack/PuppetJs/wiki/Server-communication).
 
-
-```js
-/**
- * Defines a connection to a remote PATCH server, gives an object that is persistent between browser and server
- */
-var palindrom = new PalindromDOM({remoteUrl: window.location.href});
-```
-
 ### Installation
 
 #### You can install using [bower](http://bower.io/) and [NPM](http://npmjs.com/):
@@ -58,6 +50,30 @@ import Palindrom from 'palindrom'
 ```
 
 ###### Or just download it manually from [github](https://github.com/Palindrom/Palindrom/archive/master.zip).
+
+### Usage
+
+After DOM is ready, initialize with the constructor:
+
+```js
+/**
+ * Defines a connection to a remote PATCH server, gives an object that is persistent between browser and server
+ */
+var palindrom = new Palindrom({remoteUrl: window.location.href});
+
+// ..
+// use palindrom.obj
+palindrom.obj.someProperty = "new value";
+```
+* *Note 1: Please make sure you pass the correct PATCH server URL.*
+* *Note 2: `palindrom.obj` is only available after `options.onStateReset` is called.*
+
+### Demo
+
+- [Example with Polymer's Template Binding and Web Components](http://Palindrom.github.io/lab/polymer/index.html)
+- [Example with Vue](http://Palindrom.github.io/lab/vue/index.html)
+- [Example with React](http://Palindrom.github.io/lab/react/index.html)
+
 
 ### Docs
 
