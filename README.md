@@ -14,6 +14,18 @@
 
 Implements [Server communication](https://github.com/Starcounter-Jack/PuppetJs/wiki/Server-communication).
 
+```js
+/**
+ * Defines a connection to a remote PATCH server, gives an object that is persistent between browser and server
+ */
+var palindrom = new Palindrom({remoteUrl: window.location.href});
+
+// ...
+// use palindrom.obj
+palindrom.obj.someProperty = "new value";
+// Your change gets propagated automatically to the remote, no glue code needed.
+```
+
 ### Installation
 
 #### You can install using [bower](http://bower.io/) and [NPM](http://npmjs.com/):
