@@ -1,0 +1,28 @@
+<!--
+This component shows how Palindrom captures link clicks in Shadow DOM
+and transforms them into PATCH request
+-->
+
+<link rel="import" href="polymer/polymer.html">
+
+<dom-module id="my-menu-button">
+  <style>
+      a {
+        background: aliceblue;
+        border-radius: 3px;
+        padding: 1px 3px;
+        color: darkblue;
+        font-size: 0.96em;
+        border: 1px solid lightsteelblue;
+      }
+    </style>
+  <template>
+    <a href$="{{href}}">ShadowDOM: <content></content></a>
+  </template>
+  <script>
+    Polymer({
+      is: 'my-menu-button',
+      properties: { href: { notify: true } }
+    });
+  </script>
+</dom-module>
