@@ -59,6 +59,9 @@ function CapabilityRunner(caps) {
       retryUntil(checkIfDone, { interval: 15000 }).then(testResults => {
         console.log("Specs finished");
         analyzeResults(testResults);
+      }).catch(error => {
+        console.log(`${caps.name}: ${error}`);
+        process.exit(1);
       });
     });
 
