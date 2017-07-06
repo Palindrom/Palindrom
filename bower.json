@@ -17,7 +17,7 @@
     "node_modules"
   ],
   "dependencies": {
-    "fast-json-patch": ">=1.1.0",
+    "fast-json-patch": "^1.1.0",
     "json-patch-queue": "PuppetJs/JSON-Patch-Queue#master",
     "json-patch-ot-agent": "PuppetJs/JSON-Patch-OT-agent#master",
     "json-patch-ot": "PuppetJs/JSON-Patch-OT#master"
