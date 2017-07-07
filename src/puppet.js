@@ -3,25 +3,25 @@
  * MIT license
  */
 
-(function (global) {
+(function(global) {
   /**
    * https://github.com/mrdoob/eventdispatcher.js
    * MIT license
    * @author mrdoob / http://mrdoob.com/
    */
 
-  var EventDispatcher = function () {
-  };
+  var EventDispatcher = function() {};
 
   EventDispatcher.prototype = {
     constructor: EventDispatcher,
-    apply: function (object) {
+    apply: function(object) {
       object.addEventListener = EventDispatcher.prototype.addEventListener;
       object.hasEventListener = EventDispatcher.prototype.hasEventListener;
-      object.removeEventListener = EventDispatcher.prototype.removeEventListener;
+      object.removeEventListener =
+        EventDispatcher.prototype.removeEventListener;
       object.dispatchEvent = EventDispatcher.prototype.dispatchEvent;
     },
-    addEventListener: function (type, listener) {
+    addEventListener: function(type, listener) {
       if (this._listeners === undefined) this._listeners = {};
       var listeners = this._listeners;
       if (listeners[type] === undefined) {
@@ -31,15 +31,18 @@
         listeners[type].push(listener);
       }
     },
-    hasEventListener: function (type, listener) {
+    hasEventListener: function(type, listener) {
       if (this._listeners === undefined) return false;
       var listeners = this._listeners;
-      if (listeners[type] !== undefined && listeners[type].indexOf(listener) !== -1) {
+      if (
+        listeners[type] !== undefined &&
+        listeners[type].indexOf(listener) !== -1
+      ) {
         return true;
       }
       return false;
     },
-    removeEventListener: function (type, listener) {
+    removeEventListener: function(type, listener) {
       if (this._listeners === undefined) return;
       var listeners = this._listeners;
       var listenerArray = listeners[type];
@@ -50,7 +53,7 @@
         }
       }
     },
-    dispatchEvent: function (event) {
+    dispatchEvent: function(event) {
       if (this._listeners === undefined) return;
       var listeners = this._listeners;
       var listenerArray = listeners[event.type];
@@ -74,19 +77,18 @@
    * @param  {String} remoteUrl HTTP remote address
    * @return {String}           WS address
    */
-  function defineWebSocketURL(obj, remoteUrl){
+  function defineWebSocketURL(obj, remoteUrl) {
     var url;
-    if(remoteUrl){
+    if (remoteUrl) {
       url = new URL(remoteUrl, window.location);
     } else {
       url = new URL(window.location.href);
     }
     // use exactly same URL, switch only protocols
-    url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
     return Object.defineProperty(obj, 'wsURL', {
       value: url
     });
-
   }
 
   /**
@@ -102,10 +104,10 @@
    */
   function Reconnector(reconnect, onReconnectionCountdown, onReconnectionEnd) {
     var intervalMs,
-        timeToCurrentReconnectionMs,
-        reconnectionPending,
-        reconnection,
-        defaultIntervalMs = 1000;
+      timeToCurrentReconnectionMs,
+      reconnectionPending,
+      reconnection,
+      defaultIntervalMs = 1000;
 
     function reset() {
       intervalMs = defaultIntervalMs;
@@ -115,8 +117,8 @@
       reconnection = null;
     }
 
-    var step = (function () {
-      if(timeToCurrentReconnectionMs == 0) {
+    var step = function() {
+      if (timeToCurrentReconnectionMs == 0) {
         onReconnectionCountdown(0);
         reconnectionPending = false;
         intervalMs *= 2;
@@ -126,13 +128,13 @@
         timeToCurrentReconnectionMs -= 1000;
         setTimeout(step, 1000);
       }
-    });
+    };
 
     /**
      * Notify Reconnector that connection error occurred and automatic reconnection should be scheduled.
      */
-    this.triggerReconnection = function () {
-      if(reconnectionPending) {
+    this.triggerReconnection = function() {
+      if (reconnectionPending) {
         return;
       }
       timeToCurrentReconnectionMs = intervalMs;
@@ -143,7 +145,7 @@
     /**
      * Reconnect immediately and reset all reconnection timers.
      */
-    this.reconnectNow = function () {
+    this.reconnectNow = function() {
       timeToCurrentReconnectionMs = 0;
       intervalMs = defaultIntervalMs;
     };
@@ -170,20 +172,22 @@
    * @constructor
      */
   function Heartbeat(sendHeartbeatAction, onError, intervalMs, timeoutMs) {
-    var scheduledSend,
-        scheduledError;
+    var scheduledSend, scheduledError;
 
     /**
      * Call this function at the beginning of operation and after successful reconnection.
      */
     this.start = function() {
-      if(scheduledSend) {
+      if (scheduledSend) {
         return;
       }
-      scheduledSend = setTimeout((function () {
-        this.notifySend();
-        sendHeartbeatAction();
-      }).bind(this), intervalMs);
+      scheduledSend = setTimeout(
+        function() {
+          this.notifySend();
+          sendHeartbeatAction();
+        }.bind(this),
+        intervalMs
+      );
     };
 
     /**
@@ -192,13 +196,16 @@
     this.notifySend = function() {
       clearTimeout(scheduledSend); // sending heartbeat will not be necessary until our response arrives
       scheduledSend = null;
-      if(scheduledError) {
+      if (scheduledError) {
         return;
       }
-      scheduledError = setTimeout((function () {
-        scheduledError = null;
-        onError(); // timeout has passed and response hasn't arrived
-      }).bind(this), timeoutMs);
+      scheduledError = setTimeout(
+        function() {
+          scheduledError = null;
+          onError(); // timeout has passed and response hasn't arrived
+        }.bind(this),
+        timeoutMs
+      );
     };
 
     /**
@@ -213,7 +220,7 @@
     /**
      * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
      */
-    this.stop = function () {
+    this.stop = function() {
       clearTimeout(scheduledSend);
       scheduledSend = null;
       clearTimeout(scheduledError);
@@ -221,25 +228,33 @@
     };
   }
 
-
   function NoHeartbeat() {
-    this.start = this.stop = this.notifySend = this.notifyReceive = function () {};
+    this.start = this.stop = this.notifySend = this.notifyReceive = function() {};
   }
 
-  function PuppetNetworkChannel(puppet, remoteUrl, useWebSocket, onReceive, onSend, onConnectionError, onFatalError, onStateChange) {
+  function PuppetNetworkChannel(
+    puppet,
+    remoteUrl,
+    useWebSocket,
+    onReceive,
+    onSend,
+    onConnectionError,
+    onFatalError,
+    onStateChange
+  ) {
     // TODO(tomalec): to be removed once we will achieve better separation of concerns
     this.puppet = puppet;
 
     if (remoteUrl instanceof URL) {
-    this.remoteUrl = remoteUrl;
+      this.remoteUrl = remoteUrl;
     } else if (remoteUrl) {
-        this.remoteUrl = new URL(remoteUrl, window.location.href);
+      this.remoteUrl = new URL(remoteUrl, window.location.href);
     } else {
-        this.remoteUrl = new URL(window.location.href);
+      this.remoteUrl = new URL(window.location.href);
     }
 
     // define wsURL if needed
-    if(useWebSocket){
+    if (useWebSocket) {
       defineWebSocketURL(this, remoteUrl);
     }
 
@@ -251,48 +266,49 @@
 
     //useWebSocket = useWebSocket || false;
     var that = this;
-    Object.defineProperty(this, "useWebSocket", {
-      get: function () {
+    Object.defineProperty(this, 'useWebSocket', {
+      get: function() {
         return useWebSocket;
       },
-      set: function (newValue) {
+      set: function(newValue) {
         useWebSocket = newValue;
 
-        if(newValue == false) {
-          if(that._ws) {
-            that._ws.onclose = function() { //overwrites the previous onclose
+        if (newValue == false) {
+          if (that._ws) {
+            that._ws.onclose = function() {
+              //overwrites the previous onclose
               that._ws = null;
             };
             that._ws.close();
           }
-        // define wsURL if needed
-        } else if(!that.wsURL) {
+          // define wsURL if needed
+        } else if (!that.wsURL) {
           defineWebSocketURL(this, remoteUrl);
         }
         return useWebSocket;
       }
     });
   }
-  PuppetNetworkChannel.prototype.establish = function(bootstrap){
+  PuppetNetworkChannel.prototype.establish = function(bootstrap) {
     establish(this, this.remoteUrl.href, null, bootstrap);
   };
   PuppetNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
-    establish(this, this.remoteUrl.href + "/reconnect", JSON.stringify(pending), bootstrap);
+    establish(
+      this,
+      this.remoteUrl.href + '/reconnect',
+      JSON.stringify(pending),
+      bootstrap
+    );
   };
 
   // TODO: auto-configure here #38 (tomalec)
-  function establish(network, url, body, bootstrap){
-    return network.xhr(
-        url,
-        'application/json',
-        body,
-        function (res) {
-          bootstrap(res.responseText);
-          if (network.useWebSocket){
-            network.webSocketUpgrade();
-          }
-        }
-      );
+  function establish(network, url, body, bootstrap) {
+    return network.xhr(url, 'application/json', body, function(res) {
+      bootstrap(res.responseText);
+      if (network.useWebSocket) {
+        network.webSocketUpgrade();
+      }
+    });
   }
   /**
    * Send any text message by currently established channel
@@ -300,17 +316,17 @@
    * @param  {String} msg message to be sent
    * @return {PuppetNetworkChannel}     self
    */
-  PuppetNetworkChannel.prototype.send = function(msg){
+  PuppetNetworkChannel.prototype.send = function(msg) {
     var that = this;
     // send message only if there is a working ws connection
     if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
-        this._ws.send(msg);
-        that.onSend(msg, that._ws.url, "WS");
+      this._ws.send(msg);
+      that.onSend(msg, that._ws.url, 'WS');
     } else {
       var url = this.remoteUrl.href;
-      this.xhr(url, 'application/json-patch+json', msg, function (res, method) {
-          that.onReceive(res.responseText, url, method);
-        });
+      this.xhr(url, 'application/json-patch+json', msg, function(res, method) {
+        that.onReceive(res.responseText, url, method);
+      });
     }
     return this;
   };
@@ -319,15 +335,14 @@
    * @param {String} [JSONPatch_sequences] message with Array of JSONPatches that were send by remote.
    * @return {[type]} [description]
    */
-  PuppetNetworkChannel.prototype.onReceive = function(/*String_with_JSONPatch_sequences*/){};
-  PuppetNetworkChannel.prototype.onSend = function () { };
-  PuppetNetworkChannel.prototype.onStateChange = function () { };
-  PuppetNetworkChannel.prototype.upgrade = function(msg){
-  };
+  PuppetNetworkChannel.prototype.onReceive = function(/*String_with_JSONPatch_sequences*/) {};
+  PuppetNetworkChannel.prototype.onSend = function() {};
+  PuppetNetworkChannel.prototype.onStateChange = function() {};
+  PuppetNetworkChannel.prototype.upgrade = function(msg) {};
 
   function closeWsIfNeeded(network) {
-    if(network._ws) {
-      network._ws.onclose = function () {};
+    if (network._ws) {
+      network._ws.onclose = function() {};
       network._ws.close();
       network._ws = null;
     }
@@ -341,79 +356,96 @@
    * @param {Function} [callback] Function to be called once connection gets opened.
    * @returns {WebSocket} created WebSocket
    */
-  PuppetNetworkChannel.prototype.webSocketUpgrade = function (callback) {
+  PuppetNetworkChannel.prototype.webSocketUpgrade = function(callback) {
     var that = this;
     // resolve session path given in referrer in the context of remote WS URL
-    var upgradeURL = (
-      new URL(
-        this.remoteUrl.pathname,
-        this.wsURL
-        )
-      ).href;
+    var upgradeURL = new URL(this.remoteUrl.pathname, this.wsURL).href;
     // ws[s]://[user[:pass]@]remote.host[:port]/__[sessionid]/
 
     closeWsIfNeeded(that);
     that._ws = new WebSocket(upgradeURL);
-    that._ws.onopen = function (event) {
+    that._ws.onopen = function(event) {
       that.onStateChange(that._ws.readyState, upgradeURL);
       callback && callback(event);
       //TODO: trigger on-ready event (tomalec)
     };
-    that._ws.onmessage = function (event) {
-      that.onReceive(event.data, that._ws.url, "WS");
+    that._ws.onmessage = function(event) {
+      that.onReceive(event.data, that._ws.url, 'WS');
     };
-    that._ws.onerror = function (event) {
+    that._ws.onerror = function(event) {
       that.onStateChange(that._ws.readyState, upgradeURL, event.data);
 
       if (!that.useWebSocket) {
-          return;
+        return;
       }
 
       var m = {
-          statusText: "WebSocket connection could not be made.",
-          readyState: that._ws.readyState,
-          url: upgradeURL
+        statusText: 'WebSocket connection could not be made.',
+        readyState: that._ws.readyState,
+        url: upgradeURL
       };
 
-      that.onFatalError(m, upgradeURL, "WS");
+      that.onFatalError(m, upgradeURL, 'WS');
     };
-    that._ws.onclose = function (event) {
-      that.onStateChange(that._ws.readyState, upgradeURL, null, event.code, event.reason);
+    that._ws.onclose = function(event) {
+      that.onStateChange(
+        that._ws.readyState,
+        upgradeURL,
+        null,
+        event.code,
+        event.reason
+      );
 
       var m = {
-          statusText: "WebSocket connection closed.",
-          readyState: that._ws.readyState,
-          url: upgradeURL,
-          statusCode: event.code,
-          reason: event.reason
+        statusText: 'WebSocket connection closed.',
+        readyState: that._ws.readyState,
+        url: upgradeURL,
+        statusCode: event.code,
+        reason: event.reason
       };
 
-      if(event.reason) {
-        that.onFatalError(m, upgradeURL, "WS");
+      if (event.reason) {
+        that.onFatalError(m, upgradeURL, 'WS');
       } else {
         that.onConnectionError();
       }
     };
   };
-  PuppetNetworkChannel.prototype.changeState = function (href) {
+  PuppetNetworkChannel.prototype.changeState = function(href) {
     var that = this;
-    return this.xhr(href, 'application/json-patch+json', null, function (res, method) {
-      that.onReceive(res.responseText, href, method);
-    }, true);
+    return this.xhr(
+      href,
+      'application/json-patch+json',
+      null,
+      function(res, method) {
+        that.onReceive(res.responseText, href, method);
+      },
+      true
+    );
   };
 
   // TODO:(tomalec)[cleanup] hide from public API.
-  PuppetNetworkChannel.prototype.setRemoteUrl = function (remoteUrl) {
-    if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl.href != remoteUrl) {
-        throw new Error("Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: " + this.remoteUrl + "\nNew session ID: " + remoteUrl);
+  PuppetNetworkChannel.prototype.setRemoteUrl = function(remoteUrl) {
+    if (
+      this.remoteUrlSet &&
+      this.remoteUrl &&
+      this.remoteUrl.href != remoteUrl
+    ) {
+      throw new Error(
+        'Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: ' +
+          this.remoteUrl +
+          '\nNew session ID: ' +
+          remoteUrl
+      );
     }
     this.remoteUrlSet = true;
     this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
   };
 
   // TODO:(tomalec)[cleanup] hide from public API.
-  PuppetNetworkChannel.prototype.handleResponseHeader = function (xhr) {
-    var location = xhr.getResponseHeader('X-Location') || xhr.getResponseHeader('Location');
+  PuppetNetworkChannel.prototype.handleResponseHeader = function(xhr) {
+    var location =
+      xhr.getResponseHeader('X-Location') || xhr.getResponseHeader('Location');
     if (location) {
       this.setRemoteUrl(location);
     }
@@ -427,28 +459,40 @@
    * @param [callback(response)] callback to be called in context of puppet with response as argument
    * @returns {XMLHttpRequest} performed XHR
    */
-  PuppetNetworkChannel.prototype.xhr = function (url, accept, data, callback, setReferer) {
+  PuppetNetworkChannel.prototype.xhr = function(
+    url,
+    accept,
+    data,
+    callback,
+    setReferer
+  ) {
     var that = this;
     var req = new XMLHttpRequest();
-    var method = "GET";
-    req.onload = function () {
+    var method = 'GET';
+    req.onload = function() {
       var res = this;
       that.handleResponseHeader(res);
       if (res.status >= 400 && res.status <= 599) {
-        that.onFatalError({ statusCode: res.status, statusText: res.statusText, reason: res.responseText }, url, method);
-      }
-      else {
+        that.onFatalError(
+          {
+            statusCode: res.status,
+            statusText: res.statusText,
+            reason: res.responseText
+          },
+          url,
+          method
+        );
+      } else {
         callback && callback.call(that.puppet, res, method);
       }
     };
     req.onerror = that.onConnectionError.bind(that);
     url = url || window.location.href;
     if (data) {
-      method = "PATCH";
+      method = 'PATCH';
       req.open(method, url, true);
       req.setRequestHeader('Content-Type', 'application/json-patch+json');
-    }
-    else {
+    } else {
       req.open(method, url, true);
     }
     if (accept) {
@@ -467,26 +511,26 @@
    * Non-queuing object that conforms JSON-Patch-Queue API
    * @param {Function} apply function to apply received patch
    */
-  function NoQueue(apply){
+  function NoQueue(apply) {
     this.apply = apply;
   }
   /** just forward message */
-  NoQueue.prototype.send = function(msg){
+  NoQueue.prototype.send = function(msg) {
     return msg;
   };
   /** Apply given JSON Patch sequence immediately */
-  NoQueue.prototype.receive = function(obj, sequence){
+  NoQueue.prototype.receive = function(obj, sequence) {
     this.apply(obj, sequence);
   };
   NoQueue.prototype.reset = function(obj, newState) {
-    var patch = [{ op: "replace", path: "", value: newState }];
+    var patch = [{ op: 'replace', path: '', value: newState }];
     this.apply(obj, patch);
   };
 
   function connectToRemote(puppet, reconnectionFn) {
     // if we lose connection at this point, the connection we're trying to establish should trigger onError
     puppet.heartbeat.stop();
-    reconnectionFn(function bootstrap(responseText){
+    reconnectionFn(function bootstrap(responseText) {
       var json = JSON.parse(responseText);
       puppet.reconnector.stopReconnecting();
       puppet.queue.reset(puppet.obj, json);
@@ -509,7 +553,7 @@
   }
 
   function makeReconnection(puppet) {
-    connectToRemote(puppet, function (bootstrap) {
+    connectToRemote(puppet, function(bootstrap) {
       puppet.network.reestablish(puppet.queue.pending, bootstrap);
     });
   }
@@ -519,21 +563,20 @@
    * @param {Object} [options] map of arguments. See README.md for description
    */
   function Puppet(options) {
-    options || (options={});
+    options || (options = {});
     this.jsonpatch = options.jsonpatch || this.jsonpatch;
     this.debug = options.debug != undefined ? options.debug : true;
 
-    if ("obj" in options) {
-        if (typeof options.obj != "object") {
-            throw new Error("'options.obj' is not an object");
-        }
-        this.obj = options.obj;
-    }
-    else {
-        this.obj = {};
+    if ('obj' in options) {
+      if (typeof options.obj != 'object') {
+        throw new Error("'options.obj' is not an object");
+      }
+      this.obj = options.obj;
+    } else {
+      this.obj = {};
     }
 
-    var noop = function () { };
+    var noop = function() {};
 
     this.observer = null;
     this.onLocalChange = options.onLocalChange;
@@ -546,43 +589,50 @@
     this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
     this.onReconnectionEnd = options.onReconnectionEnd || noop;
 
-    this.reconnector = new Reconnector(function () {
-      makeReconnection(this);
-    }.bind(this),
-    this.onReconnectionCountdown,
-    this.onReconnectionEnd);
+    this.reconnector = new Reconnector(
+      function() {
+        makeReconnection(this);
+      }.bind(this),
+      this.onReconnectionCountdown,
+      this.onReconnectionEnd
+    );
 
-    if(options.pingIntervalS) {
-      const intervalMs = options.pingIntervalS*1000;
-      this.heartbeat = new Heartbeat(this.ping.bind(this), this.handleConnectionError.bind(this), intervalMs, intervalMs);
+    if (options.pingIntervalS) {
+      const intervalMs = options.pingIntervalS * 1000;
+      this.heartbeat = new Heartbeat(
+        this.ping.bind(this),
+        this.handleConnectionError.bind(this),
+        intervalMs,
+        intervalMs
+      );
     } else {
       this.heartbeat = new NoHeartbeat();
     }
 
     this.network = new PuppetNetworkChannel(
-        this, // puppet instance TODO: to be removed, used for error reporting
-        options.remoteUrl,
-        options.useWebSocket || false, // useWebSocket
-        this.handleRemoteChange.bind(this), //onReceive
-        this.onPatchSent.bind(this), //onSend,
-        this.handleConnectionError.bind(this), //onConnectionError,
-        this.handleFatalError.bind(this), //onFatalError,
-        this.onSocketStateChanged.bind(this) //onStateChange
-      );
+      this, // puppet instance TODO: to be removed, used for error reporting
+      options.remoteUrl,
+      options.useWebSocket || false, // useWebSocket
+      this.handleRemoteChange.bind(this), //onReceive
+      this.onPatchSent.bind(this), //onSend,
+      this.handleConnectionError.bind(this), //onConnectionError,
+      this.handleFatalError.bind(this), //onFatalError,
+      this.onSocketStateChanged.bind(this) //onStateChange
+    );
 
-    Object.defineProperty(this, "useWebSocket", {
-      get: function () {
+    Object.defineProperty(this, 'useWebSocket', {
+      get: function() {
         return this.network.useWebSocket;
       },
-      set: function (newValue) {
+      set: function(newValue) {
         this.network.useWebSocket = newValue;
       }
     });
 
     this.ignoreCache = {};
     this.ignoreAdd = options.ignoreAdd || null; //undefined, null or regexp (tested against JSON Pointer in JSON Patch)
-    if(options.ignoreAdd) {      
-      console.warn("Puppet: ignoreAdd is deprecated and will be removed soon.");
+    if (options.ignoreAdd) {
+      console.warn('Puppet: ignoreAdd is deprecated and will be removed soon.');
     }
     //usage:
     //puppet.ignoreAdd = null;  //undefined or null means that all properties added on client will be sent to remote
@@ -593,15 +643,28 @@
     this.onDataReady = options.callback;
 
     // choose queuing engine
-    if(options.localVersionPath){
-      if(!options.remoteVersionPath){
+    if (options.localVersionPath) {
+      if (!options.remoteVersionPath) {
         // just versioning
-        this.queue = new JSONPatchQueueSynchronous(options.localVersionPath, this.validateAndApplySequence.bind(this), options.purity);
+        this.queue = new JSONPatchQueueSynchronous(
+          options.localVersionPath,
+          this.validateAndApplySequence.bind(this),
+          options.purity
+        );
       } else {
         // double versioning or OT
-          this.queue = options.ot ?
-            new JSONPatchOTAgent(JSONPatchOT.transform, [options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity) :
-            new JSONPatchQueue([options.localVersionPath, options.remoteVersionPath], this.validateAndApplySequence.bind(this), options.purity); // full or noop OT
+        this.queue = options.ot
+          ? new JSONPatchOTAgent(
+              JSONPatchOT.transform,
+              [options.localVersionPath, options.remoteVersionPath],
+              this.validateAndApplySequence.bind(this),
+              options.purity
+            )
+          : new JSONPatchQueue(
+              [options.localVersionPath, options.remoteVersionPath],
+              this.validateAndApplySequence.bind(this),
+              options.purity
+            ); // full or noop OT
       }
     } else {
       // no queue - just api
@@ -613,38 +676,46 @@
 
   Puppet.prototype = Object.create(EventDispatcher.prototype); //inherit EventTarget API from EventDispatcher
 
-  var dispatchErrorEvent = function (puppet, error) {
+  var dispatchErrorEvent = function(puppet, error) {
     var errorEvent;
     if (ErrorEvent.prototype.initErrorEvent) {
-      var ev = document.createEvent("ErrorEvent");
-      ev.initErrorEvent('error', true, true, error.message, "", ""); //IE10+
-      Object.defineProperty(ev, 'error', {value: error}); //ev.error is ignored
+      var ev = document.createEvent('ErrorEvent');
+      ev.initErrorEvent('error', true, true, error.message, '', ''); //IE10+
+      Object.defineProperty(ev, 'error', { value: error }); //ev.error is ignored
     } else {
-      errorEvent = new ErrorEvent("error", {bubbles: true, cancelable: true, error: error}); //this works everywhere except IE
+      errorEvent = new ErrorEvent('error', {
+        bubbles: true,
+        cancelable: true,
+        error: error
+      }); //this works everywhere except IE
     }
     puppet.dispatchEvent(errorEvent);
   };
 
   Puppet.prototype.jsonpatch = global.jsonpatch;
 
-  Puppet.prototype.ping = function () {
+  Puppet.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
   };
 
-  Puppet.prototype.observe = function () {
-    this.observer = this.jsonpatch.observe(this.obj, this.filterChangedCallback.bind(this));
+  Puppet.prototype.observe = function() {
+    this.observer = this.jsonpatch.observe(
+      this.obj,
+      this.filterChangedCallback.bind(this)
+    );
   };
 
-  Puppet.prototype.unobserve = function () {
-    if (this.observer) { //there is a bug in JSON-Patch when trying to unobserve something that is already unobserved
+  Puppet.prototype.unobserve = function() {
+    if (this.observer) {
+      //there is a bug in JSON-Patch when trying to unobserve something that is already unobserved
       this.jsonpatch.unobserve(this.obj, this.observer);
       this.observer = null;
     }
   };
 
-  Puppet.prototype.filterChangedCallback = function (patches) {
+  Puppet.prototype.filterChangedCallback = function(patches) {
     this.filterIgnoredPatches(patches);
-    if(patches.length) {
+    if (patches.length) {
       this.handleLocalChange(patches);
     }
   };
@@ -666,15 +737,39 @@
   }
 
   //ignores private member changes
-  Puppet.prototype.filterIgnoredPatches = function (patches) {
-    if(this.ignoreAdd){
+  Puppet.prototype.filterIgnoredPatches = function(patches) {
+    if (this.ignoreAdd) {
+      let everIgnored = false;
+      const patchesCache = patches.slice(0);
       for (var i = 0, ilen = patches.length; i < ilen; i++) {
-        if (isIgnored(this.ignoreAdd, this.ignoreCache, patches[i].path, patches[i].op)) { //if it is ignored, remove patch
-          console.warn("Puppet: a patch was ignored due to existence of ignoreAdd, and ignoreAdd is deprecated and will be removed soon.");
+        if (
+          isIgnored(
+            this.ignoreAdd,
+            this.ignoreCache,
+            patches[i].path,
+            patches[i].op
+          )
+        ) {
+          //if it is ignored, remove patch
+          everIgnored = true;
           patches.splice(i, 1); //ignore changes to properties that start with PRIVATE_PREFIX
           ilen--;
           i--;
         }
+      }
+      if (everIgnored) {
+        const faultyPaths = patchesCache
+          .filter(op => op.op === 'add')
+          .map(op => '\t' + op.path)
+          .join(',\n');
+
+        let errorInformation = `Puppet: a patch was ignored due to existence of ignoreAdd, and ignoreAdd is deprecated and will be removed soon.
+This means that you have added a property to your view model without having it predefined in your JSON view-model schema. The faulty properties most probably are
+  ${faultyPaths},
+The whole patch is:`;
+        let link = `
+Please see https://github.com/Starcounter/RebelsLounge/issues/144 for more information`;
+        console.warn(errorInformation, patchesCache, link);
       }
     }
     return patches;
@@ -688,8 +783,8 @@
     puppet.observe();
   }
 
-  Puppet.prototype.handleLocalChange = function (patches) {
-    if(this.debug) {
+  Puppet.prototype.handleLocalChange = function(patches) {
+    if (this.debug) {
       this.validateSequence(this.remoteObj, patches);
     }
 
@@ -699,14 +794,14 @@
     }
   };
 
-  Puppet.prototype.validateAndApplySequence = function (tree, sequence) {
+  Puppet.prototype.validateAndApplySequence = function(tree, sequence) {
     // we don't want this changes to generate patches since they originate from server, not client
     this.unobserve();
     try {
       var results = this.jsonpatch.apply(tree, sequence, this.debug);
     } catch (error) {
-      if(this.debug) {
-        error.message = "Incoming patch validation error: " + error.message;
+      if (this.debug) {
+        error.message = 'Incoming patch validation error: ' + error.message;
         dispatchErrorEvent(this, error);
         return;
       } else {
@@ -715,14 +810,17 @@
     }
 
     var that = this;
-    sequence.forEach(function (patch) {
-      if (patch.path === "") {
+    sequence.forEach(function(patch) {
+      if (patch.path === '') {
         var desc = JSON.stringify(sequence);
         if (desc.length > 103) {
-          desc = desc.substring(0, 100) + "...";
+          desc = desc.substring(0, 100) + '...';
         }
         //TODO Error
-        that.showWarning("Server pushed patch that replaces the object root", desc);
+        that.showWarning(
+          'Server pushed patch that replaces the object root',
+          desc
+        );
       }
     });
 
@@ -732,16 +830,24 @@
 
     // until notifications are converged to single method (events vs. callbacks, #74)
     if (this.onRemoteChange) {
-      console.warn("PuppetJs.onRemoteChange is deprecated, please use patch-applied event instead.");
+      console.warn(
+        'PuppetJs.onRemoteChange is deprecated, please use patch-applied event instead.'
+      );
       this.onRemoteChange(sequence, results);
     }
-    this.dispatchEvent(new CustomEvent("patch-applied", {bubbles: true, cancelable: true, detail: {patches: sequence, results: results}}));
+    this.dispatchEvent(
+      new CustomEvent('patch-applied', {
+        bubbles: true,
+        cancelable: true,
+        detail: { patches: sequence, results: results }
+      })
+    );
   };
 
-  Puppet.prototype.validateSequence = function (tree, sequence) {
+  Puppet.prototype.validateSequence = function(tree, sequence) {
     var error = this.jsonpatch.validate(sequence, tree);
     if (error) {
-      error.message = "Outgoing patch validation error: " + error.message;
+      error.message = 'Outgoing patch validation error: ' + error.message;
       dispatchErrorEvent(this, error);
     }
   };
@@ -749,7 +855,7 @@
   /**
    * Handle an error which is probably caused by random disconnection
    */
-  Puppet.prototype.handleConnectionError = function () {
+  Puppet.prototype.handleConnectionError = function() {
     this.heartbeat.stop();
     this.reconnector.triggerReconnection();
   };
@@ -757,7 +863,7 @@
   /**
    * Handle an error which probably won't go away on itself (basically forward upstream)
    */
-  Puppet.prototype.handleFatalError = function (data, url, method) {
+  Puppet.prototype.handleFatalError = function(data, url, method) {
     this.heartbeat.stop();
     this.reconnector.stopReconnecting();
     if (this.onConnectionError) {
@@ -765,23 +871,24 @@
     }
   };
 
-  Puppet.prototype.reconnectNow = function () {
+  Puppet.prototype.reconnectNow = function() {
     this.reconnector.reconnectNow();
   };
 
-  Puppet.prototype.showWarning = function (heading, description) {
+  Puppet.prototype.showWarning = function(heading, description) {
     if (this.debug && global.console && console.warn) {
       if (description) {
-        heading += " (" + description + ")";
+        heading += ' (' + description + ')';
       }
-      console.warn("PuppetJs warning: " + heading);
+      console.warn('PuppetJs warning: ' + heading);
     }
   };
 
-  Puppet.prototype.handleRemoteChange = function (data, url, method) {
+  Puppet.prototype.handleRemoteChange = function(data, url, method) {
     this.heartbeat.notifyReceive();
     var patches = JSON.parse(data || '[]'); // fault tolerance - empty response string should be treated as empty patch array
-    if(patches.length === 0) { // ping message
+    if (patches.length === 0) {
+      // ping message
       return;
     }
 
@@ -795,7 +902,11 @@
     }
 
     this.queue.receive(this.obj, patches);
-    if(this.queue.pending && this.queue.pending.length && this.queue.pending.length > this.retransmissionThreshold) {
+    if (
+      this.queue.pending &&
+      this.queue.pending.length &&
+      this.queue.pending.length > this.retransmissionThreshold
+    ) {
       // remote counterpart probably failed to receive one of earlier messages, because it has been receiving
       // (but not acknowledging messages for some time
       this.queue.pending.forEach(sendPatches.bind(null, this));
