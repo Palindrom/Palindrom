@@ -9,6 +9,7 @@ body {
   background: linear-gradient(135deg, rgba(239,239,239,1) 0%,rgba(255,255,255,1) 50%,rgba(239,239,239,1) 94%,rgba(239,239,239,1) 95%,rgba(239,239,239,1) 96%,rgba(191,15,44,1) 96%,rgba(191,15,44,1) 96%,rgba(191,15,44,1) 96%,rgba(170,52,60,1) 100%);
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#efefef', endColorstr='#aa343c',GradientType=1 );
   background-attachment: fixed;
+  margin-bottom: 1000px /* to make it always scrollable, this allows navigation-scroll testing */
 }
 h3 {
   margin: 3%;

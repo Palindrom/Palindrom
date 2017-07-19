@@ -369,6 +369,38 @@ var Palindrom = (function() {
       }
     };
   };
+  /**
+   * we need to scroll asynchronously, because we need the document rendered to search for the anchored element
+   * and even though onReceive + applyPatch are sync, Polymer is not, it renders async-ly
+   */
+  PalindromNetworkChannel.prototype.scrollToAnchorOrTopAsync = function(link) {
+    this.scrollAsyncTimeout && clearTimeout(this.scrollAsyncTimeout);
+    if (window && window.document) {
+      var anchorIndex;
+      var anchor;
+      // does the URL have an anchor
+      if (link && (anchorIndex = link.indexOf('#')) > -1) {
+        anchor = link.substr(anchorIndex);
+      }
+      if (!anchor) {
+        window && window.scrollTo(0, 0);
+      } else {
+        /* 
+        if somehow someone manages to navigate twice in a 100ms,
+        we don't scroll for their first navigation, i.e de-bouncing 
+        */
+        this.scrollAsyncTimeout = setTimeout(() => {
+          // does that anchor exist in the page?
+          const anchorTarget = document.querySelector(anchor); // look for #element-id
+          if (anchorTarget) {
+            anchorTarget.scrollIntoView();
+          } else {
+            window.scrollTo(0, 0);
+          }
+        }, 100);
+      }
+    }
+  };
   PalindromNetworkChannel.prototype.changeCurrentURL = function(href) {
     var that = this;
     return this.xhr(
@@ -377,6 +409,7 @@ var Palindrom = (function() {
       null,
       function(res, method) {
         that.onReceive(res.data, href, method);
+        that.scrollToAnchorOrTopAsync(href);
       },
       true
     );
@@ -532,7 +565,7 @@ var Palindrom = (function() {
     Object.defineProperty(this, 'ignoreAdd', {
       set: function() {
         throw new TypeError(
-          'Palindrom: Can\'t set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136'
+          "Palindrom: Can't set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136"
         );
       }
     });
