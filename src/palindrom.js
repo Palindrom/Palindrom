@@ -369,7 +369,7 @@ var Palindrom = (function() {
       }
     };
   };
-  PalindromNetworkChannel.prototype.changeState = function(href) {
+  PalindromNetworkChannel.prototype.changeCurrentURL = function(href) {
     var that = this;
     return this.xhr(
       href,

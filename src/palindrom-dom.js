@@ -97,7 +97,7 @@ var PalindromDOM = (function() {
    */
   PalindromDOM.prototype.morphUrl = function(url) {
     history.pushState(null, null, url);
-    this.network.changeState(url);
+    this.network.changeCurrentURL(url);
   };
 
   PalindromDOM.prototype.clickHandler = function(event) {
@@ -137,7 +137,7 @@ var PalindromDOM = (function() {
   };
 
   PalindromDOM.prototype.historyHandler = function(/*event*/) {
-    this.network.changeState(location.href);
+    this.network.changeCurrentURL(location.href);
   };
 
   /**
