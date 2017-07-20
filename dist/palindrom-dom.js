@@ -1949,38 +1949,10 @@ var Palindrom = (function() {
       }
     };
   };
-  /**
-   * we need to scroll asynchronously, because even though onReceive => applyPatch are sync, Polymer is not, it renders a sync
-   */
-  PalindromNetworkChannel.prototype.scrollToAnchorOrTopAsync = function(link) {
-    this.scrollAsyncTimeout && clearTimeout(this.scrollAsyncTimeout);
-    if (window && window.document) {
-      var anchorIndex;
-      var anchor;
-      // does the URL have an anchor
-      if (link && (anchorIndex = link.indexOf('#')) > -1) {
-        anchor = link.substr(anchorIndex);
-      }
-      if (!anchor) {
-        window && window.scrollTo(0, 0);
-      } else {
-        /* 
-        if somehow someone manages to navigate twice in a 100ms,
-        we don't scroll for their first navigation, i.e de-bouncing 
-        */
-        this.scrollAsyncTimeout = setTimeout(() => {
-          // does that anchor exist in the page?
-          const anchorTarget = document.querySelector(anchor); // look for #element-id
-          if (anchorTarget) {
-            anchorTarget.scrollIntoView();
-          } else {
-            window.scrollTo(0, 0);
-          }
-        }, 100);
-      }
-    }
-  };
-  PalindromNetworkChannel.prototype.changeCurrentURL = function(href) {
+  PalindromNetworkChannel.prototype.changeCurrentUrl = function(
+    href,
+    callback
+  ) {
     var that = this;
     return this.xhr(
       href,
@@ -1988,12 +1960,17 @@ var Palindrom = (function() {
       null,
       function(res, method) {
         that.onReceive(res.data, href, method);
-        that.scrollToAnchorOrTopAsync(href);
+        callback && callback();
       },
       true
     );
   };
-
+  PalindromNetworkChannel.prototype.changeState = function(href) {
+    console.warn(
+      "Palindrom: changeState is deprecated in favour of changeCurrentUrl, and they're both not recommended to usage, please use `morphUrl` instead"
+    );
+    return this.changeCurrentUrl(href);
+  };
   // TODO:(tomalec)[cleanup] hide from public API.
   PalindromNetworkChannel.prototype.setRemoteUrl = function(remoteUrl) {
     if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
@@ -4420,8 +4397,10 @@ var PalindromDOM = (function() {
       throw new Error('remoteUrl is required');
     }
     var onStateReset = options.onStateReset || options.callback;
-    if(options.callback) {
-      console.warn('Palindrom: options.callback is deprecated. Please use `onStateReset` instead');
+    if (options.callback) {
+      console.warn(
+        'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
+      );
     }
     this.element = options.listenTo || document.body;
     var clickHandler = this.clickHandler.bind(this);
@@ -4490,15 +4469,51 @@ var PalindromDOM = (function() {
   PalindromDOM.prototype = Object.create(Palindrom.prototype);
 
   /**
+   * DISABLED FOR NOW: we don't know when rendering actually finishes.
+   * It's left here for the hope of having synchronous rendering at some point in the future.
+   * ====
+   * we need to scroll asynchronously, because we need the document rendered to search for the anchored element
+   * and even though onReceive + applyPatch are sync, Polymer is not, it renders async-ly
+  PalindromNetworkChannel.prototype.scrollToAnchorOrTopAsync = function(link) {
+    this.scrollAsyncTimeout && clearTimeout(this.scrollAsyncTimeout);
+    if (window && window.document) {
+      var anchorIndex;
+      var anchor;
+      // does the URL have an anchor
+      if (link && (anchorIndex = link.indexOf('#')) > -1) {
+        anchor = link.substr(anchorIndex);
+      }
+      if (!anchor) {
+        window && window.scrollTo(0, 0);
+      } else {
+        // if somehow someone manages to navigate twice in a 100ms,
+        // we don't scroll for their first navigation, i.e de-bouncing 
+        
+        this.scrollAsyncTimeout = setTimeout(() => {
+          // does that anchor exist in the page?
+          const anchorTarget = document.querySelector(anchor); // look for #element-id
+          if (anchorTarget) {
+            anchorTarget.scrollIntoView();
+          } else {
+            window.scrollTo(0, 0);
+          }
+        }, 100);
+      }
+    }
+  };
+  */
+  /**
    * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
    * so that the URL handlers can be executed on the remote
    * @param url
    */
   PalindromDOM.prototype.morphUrl = function(url) {
     history.pushState(null, null, url);
-    this.network.changeCurrentURL(url);
+    this.network.changeCurrentUrl(url, onReceiveFinished);
   };
-
+  function onReceiveFinished() {
+    window && window.scrollTo(0, 0);
+  }
   PalindromDOM.prototype.clickHandler = function(event) {
     //Don't morph ctrl/cmd + click & middle mouse button
     if (event.ctrlKey || event.metaKey || event.which == 2) {
@@ -4536,7 +4551,7 @@ var PalindromDOM = (function() {
   };
 
   PalindromDOM.prototype.historyHandler = function(/*event*/) {
-    this.network.changeCurrentURL(location.href);
+    this.network.changeCurrentUrl(location.href);
   };
 
   /**
@@ -4560,8 +4575,10 @@ var PalindromDOM = (function() {
 
       elem = parser;
     }
-    return elem.protocol == window.location.protocol &&
-      elem.host == window.location.host;
+    return (
+      elem.protocol == window.location.protocol &&
+      elem.host == window.location.host
+    );
   };
 
   /* backward compatibility, not sure if this is good practice */
