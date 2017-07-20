@@ -369,10 +369,7 @@ var Palindrom = (function() {
       }
     };
   };
-  PalindromNetworkChannel.prototype.changeCurrentUrl = function(
-    href,
-    callback
-  ) {
+  PalindromNetworkChannel.prototype.changeCurrentUrl = function(href) {
     var that = this;
     return this.xhr(
       href,
@@ -380,7 +377,6 @@ var Palindrom = (function() {
       null,
       function(res, method) {
         that.onReceive(res.data, href, method);
-        callback && callback();
       },
       true
     );

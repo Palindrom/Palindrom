@@ -133,11 +133,9 @@ var PalindromDOM = (function() {
    */
   PalindromDOM.prototype.morphUrl = function(url) {
     history.pushState(null, null, url);
-    this.network.changeCurrentUrl(url, onReceiveFinished);
-  };
-  function onReceiveFinished() {
+    this.network.changeCurrentUrl(url);
     window && window.scrollTo(0, 0);
-  }
+  };
   PalindromDOM.prototype.clickHandler = function(event) {
     //Don't morph ctrl/cmd + click & middle mouse button
     if (event.ctrlKey || event.metaKey || event.which == 2) {

@@ -1949,10 +1949,7 @@ var Palindrom = (function() {
       }
     };
   };
-  PalindromNetworkChannel.prototype.changeCurrentUrl = function(
-    href,
-    callback
-  ) {
+  PalindromNetworkChannel.prototype.changeCurrentUrl = function(href) {
     var that = this;
     return this.xhr(
       href,
@@ -1960,14 +1957,13 @@ var Palindrom = (function() {
       null,
       function(res, method) {
         that.onReceive(res.data, href, method);
-        callback && callback();
       },
       true
     );
   };
   PalindromNetworkChannel.prototype.changeState = function(href) {
     console.warn(
-      "Palindrom: changeState is deprecated in favour of changeCurrentUrl, and they're both not recommended to usage, please use `morphUrl` instead"
+      "Palindrom: changeState is deprecated in favour of changeCurrentUrl, and they're both not recommended to use, please use `morphUrl` instead"
     );
     return this.changeCurrentUrl(href);
   };
@@ -4509,11 +4505,9 @@ var PalindromDOM = (function() {
    */
   PalindromDOM.prototype.morphUrl = function(url) {
     history.pushState(null, null, url);
-    this.network.changeCurrentUrl(url, onReceiveFinished);
-  };
-  function onReceiveFinished() {
+    this.network.changeCurrentUrl(url);
     window && window.scrollTo(0, 0);
-  }
+  };
   PalindromDOM.prototype.clickHandler = function(event) {
     //Don't morph ctrl/cmd + click & middle mouse button
     if (event.ctrlKey || event.metaKey || event.which == 2) {
