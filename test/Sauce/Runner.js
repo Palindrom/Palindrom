@@ -32,7 +32,7 @@ if (!username) {
     {
       browserName: "MicrosoftEdge",
       platform: "Windows 10",
-      version: "14",
+      version: "15.15063",
       username: username,
       accessKey: accessKey,
       name: "MicrosoftEdge: Running tests",
@@ -42,10 +42,9 @@ if (!username) {
 
   const runTestsInChrome = CapabilityRunner(allCaps[0]);
   const runTestsInFirefox = CapabilityRunner(allCaps[1]);
-  //const runTestsInEdge = CapabilityRunner(allCaps[2]);
+  const runTestsInEdge = CapabilityRunner(allCaps[2]);
 
-  /* disable Edge, https://github.com/Palindrom/Palindrom/pull/130#discussion_r110376869 */
-  Promise.all([runTestsInChrome, runTestsInFirefox /* edgePromise */])
+  Promise.all([runTestsInEdge, runTestsInChrome, runTestsInFirefox])
     .then(() => {
       console.log("Done!");
       process.exit(0);
