@@ -4995,7 +4995,7 @@ var Palindrom = (function() {
   };
   PalindromNetworkChannel.prototype.changeState = function(href) {
     console.warn(
-      "Palindrom: changeState is deprecated in favour of changeCurrentUrl, and they're both not recommended to use, please use `morphUrl` instead"
+      "Palindrom: changeState is deprecated in favour of changeCurrentUrl, and they're both not recommended to use, please use `PalindromDOM.morphUrl` instead"
     );
     return this.changeCurrentUrl(href);
   };
