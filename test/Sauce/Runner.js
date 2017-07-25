@@ -14,7 +14,7 @@ if (!username) {
     {
       browserName: "chrome",
       platform: "Windows 10",
-      version: "57.0",
+      version: "59.0",
       username: username,
       accessKey: accessKey,
       name: "Chrome: Running tests",
@@ -22,8 +22,8 @@ if (!username) {
     },
     {
       browserName: "firefox",
-      platform: "macOS 10.12",
-      version: "52.0",
+      platform: "Windows 10",
+      version: "54.0",
       username: username,
       accessKey: accessKey,
       name: "Firefox: Running tests",
