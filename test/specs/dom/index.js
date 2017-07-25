@@ -1,37 +1,49 @@
 /** only run DOM tests in browsers */
-if (typeof window !== "undefined") {
-  const PalindromDOM = require("../../../src/palindrom-dom");
-  const assert = require("assert");
-  const moxios = require("moxios");
-  const sinon = require("sinon");
-  const expect = require("chai").expect;
+if (typeof window !== 'undefined') {
+  const PalindromDOM = require('../../../src/palindrom-dom');
+  const assert = require('assert');
+  const moxios = require('moxios');
+  const sinon = require('sinon');
+  const expect = require('chai').expect;
 
-  function createAndClickOnLink(href, parent) {
+  function createAndClickOnLinkWithoutPrevention(href, parent, target) {
     parent = parent || document.body;
-    const a = document.createElement("A");
-    a.innerHTML = "Link";
+    const a = document.createElement('A');
+    a.innerHTML = 'Link';
     a.href = href;
+    target && (a.target = target);
     parent.appendChild(a);
-    parent.addEventListener("click", clickHandler);
     clickElement(a);
-    parent.removeEventListener("click", clickHandler);
+    parent.removeChild(a);
+  }
+
+  function createAndClickOnLink(href, parent, target) {
+    parent = parent || document.body;
+    const a = document.createElement('A');
+    a.innerHTML = 'Link';
+    a.href = href;
+    target && (a.target = target);
+    parent.appendChild(a);
+    parent.addEventListener('click', clickHandler);
+    clickElement(a);
+    parent.removeEventListener('click', clickHandler);
     parent.removeChild(a);
   }
   function createAndClickOnLinkNested(href, parent) {
     parent = parent || document.body;
-    const a = document.createElement("A");
-    a.innerHTML = "<strong>Link</strong>";
+    const a = document.createElement('A');
+    a.innerHTML = '<strong>Link</strong>';
     a.href = href;
     parent.appendChild(a);
-    parent.addEventListener("click", clickHandler);
+    parent.addEventListener('click', clickHandler);
     clickElement(a.firstChild);
-    parent.removeEventListener("click", clickHandler);
+    parent.removeEventListener('click', clickHandler);
     parent.removeChild(a);
   }
 
   function clickElement(element) {
     if (window.MouseEvent) {
-      const event = new window.MouseEvent("click", {
+      const event = new window.MouseEvent('click', {
         view: window,
         bubbles: true,
         cancelable: true
@@ -42,21 +54,21 @@ if (typeof window !== "undefined") {
 
   function createAndClickOnLinkNestedShadowDOM(href, parent) {
     parent = parent || document.body;
-    const div = document.createElement("DIV");
+    const div = document.createElement('DIV');
     parent.appendChild(div);
 
-    const a = document.createElement("A");
-    a.innerHTML = "<strong>Link</strong>";
+    const a = document.createElement('A');
+    a.innerHTML = '<strong>Link</strong>';
     a.href = href;
     div.createShadowRoot().appendChild(a);
-    parent.addEventListener("click", clickHandler);
+    parent.addEventListener('click', clickHandler);
     clickElement(a.firstChild);
 
-    parent.removeEventListener("click", clickHandler);
+    parent.removeEventListener('click', clickHandler);
     parent.removeChild(div);
   }
   function createAndClickOnLinkNestedShadowDOMContent() {
-    const btn = document.querySelector("my-menu-button strong");
+    const btn = document.querySelector('my-menu-button strong');
     btn.click();
   }
 
@@ -64,7 +76,7 @@ if (typeof window !== "undefined") {
     event.preventDefault();
   }
 
-  describe("Links", function() {
+  describe('Links', function() {
     let currLoc;
     before(function() {
       currLoc = window.location.href;
@@ -73,23 +85,23 @@ if (typeof window !== "undefined") {
       history.pushState(null, null, currLoc);
     });
 
-    describe("PalindromDOM - Links - ", function() {
-      describe("when attached to default node - `document.body`", function() {
+    describe('PalindromDOM - Links - ', function() {
+      describe('when attached to default node - `document.body`', function() {
         let palindrom;
         let historySpy;
 
-        beforeEach("PalindromDOM - Links", function(done) {
-          historySpy = sinon.spy(window.history, "pushState");
+        beforeEach('PalindromDOM - Links', function(done) {
+          historySpy = sinon.spy(window.history, 'pushState');
 
           moxios.install();
-          moxios.stubRequest("http://localhost/testURL", {
+          moxios.stubRequest('http://localhost/testURL', {
             status: 200,
-            headers: { location: "http://localhost/testURLNew" },
+            headers: { location: 'http://localhost/testURLNew' },
             responseText: '{"hello": "world"}'
           });
 
           palindrom = new PalindromDOM({
-            remoteUrl: "http://localhost/testURL"
+            remoteUrl: 'http://localhost/testURL'
           });
 
           setTimeout(done, 1);
@@ -102,127 +114,130 @@ if (typeof window !== "undefined") {
           moxios.uninstall();
         });
 
-        it("its `.element` should point to `document.body`", function() {
+        it('its `.element` should point to `document.body`', function() {
           assert(palindrom.element === document.body);
         });
-        describe("should intercept links to use History API", function() {
-          it("relative path", function() {
-            const href = "test_a";
+        describe('should intercept links to use History API', function() {
+          it('relative path', function() {
+            const href = 'test_a';
 
             createAndClickOnLink(href);
             expect(historySpy.callCount).to.equal(1);
           });
 
-          it("relative path (nested)", function() {
-            const href = "test_b";
+          it('relative path (nested)', function() {
+            const href = 'test_b';
 
             createAndClickOnLinkNested(href);
             expect(historySpy.callCount).to.equal(1);
           });
-          it("relative path (nested, Shadow DOM)", function() {
-            const href = "test_c";
+          it('relative path (nested, Shadow DOM)', function() {
+            const href = 'test_c';
 
             createAndClickOnLinkNestedShadowDOM(href);
             expect(historySpy.callCount).to.equal(1);
-          });  
-          it("relative path (nested, Shadow DOM content)", function(done) {
-            setTimeout(
-              () => {
-                createAndClickOnLinkNestedShadowDOMContent();
+          });
+          it('relative path (nested, Shadow DOM content)', function(done) {
+            setTimeout(() => {
+              createAndClickOnLinkNestedShadowDOMContent();
 
-                setTimeout(
-                  function() {
-                    expect(historySpy.callCount).to.equal(1);
-                    done();
-                  },
-                  50
-                );
-              },
-              50
-            );
+              setTimeout(function() {
+                expect(historySpy.callCount).to.equal(1);
+                done();
+              }, 50);
+            }, 50);
           });
 
-          it("absolute path", function() {
-            const href = "/test";
+          it('absolute path', function() {
+            const href = '/test';
             createAndClickOnLink(href);
             expect(historySpy.callCount).to.equal(1);
           });
 
-          it("full URL in the same host, same port", function() {
-            const href = window.location.protocol +
-              "//" +
-              window.location.host +
-              "/test"; //http://localhost:8888/test
+          it('full URL in the same host, same port', function() {
+            const href =
+              window.location.protocol + '//' + window.location.host + '/test'; //http://localhost:8888/test
             createAndClickOnLink(href);
             expect(historySpy.callCount).to.equal(1);
           });
         });
+        describe('Links with targets', function() {
+          it('should not intercept links with a set target', function() {
+            const href = '/test';
+            createAndClickOnLinkWithoutPrevention(href, null, '_anything');
 
-        describe("should not intercept external links", function() {
-          it("full URL in the same host, different port", function() {
-            const port = window.location.port === "80" ||
-              window.location.port === ""
-              ? "8080"
-              : "80";
-            const href = window.location.protocol +
-              "//" +
+            expect(historySpy.callCount).to.equal(0);
+          });
+          it('should intercept links with target self', function() {
+            const href = '/test';
+            createAndClickOnLinkWithoutPrevention(href, null, 'self');
+
+            expect(historySpy.callCount).to.equal(1);
+          });
+        });
+        describe('should not intercept external links', function() {
+          it('full URL in the same host, different port', function() {
+            const port =
+              window.location.port === '80' || window.location.port === ''
+                ? '8080'
+                : '80';
+            const href =
+              window.location.protocol +
+              '//' +
               window.location.hostname +
-              ":" +
+              ':' +
               port +
-              "/test"; //http://localhost:88881/test
+              '/test'; //http://localhost:88881/test
             createAndClickOnLink(href);
 
             expect(historySpy.callCount).to.equal(0);
           });
 
-          it("full URL in the same host, different schema", function(done) {
-            const protocol = window.location.protocol === "http:"
-              ? "https:"
-              : "http:";
-            const href = protocol + "//" + window.location.host + "/test"; //https://localhost:8888/test
+          it('full URL in the same host, different schema', function(done) {
+            const protocol =
+              window.location.protocol === 'http:' ? 'https:' : 'http:';
+            const href = protocol + '//' + window.location.host + '/test'; //https://localhost:8888/test
             createAndClickOnLink(href);
             expect(historySpy.callCount).to.equal(0);
             setTimeout(done, 10);
           });
         });
 
-        describe("should be accessible via API", function() {
-          it("should change history state programmatically", function(done) {
-            setTimeout(
-              function() {
-                palindrom.morphUrl("/page2");
+        describe('should be accessible via API', function() {
+          it('should change history state programmatically', function(done) {
+            setTimeout(function() {
+              palindrom.morphUrl('/page2');
 
-                setTimeout(
-                  function() {
-                    expect(historySpy.callCount).to.equal(1);
-                    setTimeout(done, 10);
-                  },
-                  50
-                );
-              },
-              50
-            );
+              setTimeout(function() {
+                expect(historySpy.callCount).to.equal(1);
+                setTimeout(done, 10);
+              }, 50);
+            }, 50);
           });
         });
 
-        it("should stop listening to DOM changes after `.unlisten()` was called", function(done) {
+        it('should stop listening to DOM changes after `.unlisten()` was called', function(
+          done
+        ) {
           palindrom.unlisten();
-          createAndClickOnLink("#will_not_get_caught_by_palindrom");
+          createAndClickOnLink('#will_not_get_caught_by_palindrom');
           expect(historySpy.callCount).to.equal(0);
           setTimeout(done, 50);
         });
 
-        it("should start listening to DOM changes after `.listen()` was called", function(done) {
+        it('should start listening to DOM changes after `.listen()` was called', function(
+          done
+        ) {
           palindrom.unlisten();
           palindrom.listen();
-          createAndClickOnLink("#will_get_caught_by_palindrom");
+          createAndClickOnLink('#will_get_caught_by_palindrom');
           expect(historySpy.callCount).to.equal(1);
           setTimeout(done, 50);
         });
       });
     });
 
-    describe("when attached to specific node", function() {
+    describe('when attached to specific node', function() {
       let palindrom, palindromB, palindromNode, nodeB, historySpy, currLoc;
 
       before(function() {
@@ -232,22 +247,22 @@ if (typeof window !== "undefined") {
         history.pushState(null, null, currLoc);
       });
 
-      beforeEach("when attached to specific node", function(done) {
-        historySpy = sinon.spy(window.history, "pushState");
+      beforeEach('when attached to specific node', function(done) {
+        historySpy = sinon.spy(window.history, 'pushState');
 
         moxios.install();
-        moxios.stubRequest("http://localhost/testURL", {
+        moxios.stubRequest('http://localhost/testURL', {
           status: 200,
-          headers: { Location: "http://localhost/testURL" },
+          headers: { Location: 'http://localhost/testURL' },
           responseText: '{"hello": "world"}'
         });
 
-        palindromNode = document.createElement("DIV");
+        palindromNode = document.createElement('DIV');
         document.body.appendChild(palindromNode);
-        nodeB = document.createElement("DIV");
+        nodeB = document.createElement('DIV');
         document.body.appendChild(nodeB);
         palindrom = new PalindromDOM({
-          remoteUrl: "http://localhost/testURL",
+          remoteUrl: 'http://localhost/testURL',
           listenTo: palindromNode
         });
 
@@ -261,159 +276,145 @@ if (typeof window !== "undefined") {
         palindrom.unlisten();
         historySpy = null;
       });
-      describe("should intercept child links to use History API", function() {
-        it("relative path", function() {
-          const href = "test_a";
+      describe('should intercept child links to use History API', function() {
+        it('relative path', function() {
+          const href = 'test_a';
 
           createAndClickOnLink(href, palindromNode);
           expect(historySpy.callCount).to.equal(1);
         });
 
-        it("relative path (nested)", function() {
-          const href = "test_b";
+        it('relative path (nested)', function() {
+          const href = 'test_b';
           createAndClickOnLinkNested(href, palindromNode);
           expect(historySpy.callCount).to.equal(1);
         });
-        it("relative path (nested, Shadow DOM)", function() {
-          const href = "test_c";
+        it('relative path (nested, Shadow DOM)', function() {
+          const href = 'test_c';
 
           createAndClickOnLinkNestedShadowDOM(href, palindromNode);
           expect(historySpy.callCount).to.equal(1);
         });
-        it("absolute path", function() {
-          const href = "/test";
+        it('absolute path', function() {
+          const href = '/test';
           createAndClickOnLink(href, palindromNode);
           expect(historySpy.callCount).to.equal(1);
         });
 
-        it("full URL in the same host, same port", function() {
-          const href = window.location.protocol +
-            "//" +
-            window.location.host +
-            "/test"; //http://localhost:8888/test
+        it('full URL in the same host, same port', function() {
+          const href =
+            window.location.protocol + '//' + window.location.host + '/test'; //http://localhost:8888/test
 
           createAndClickOnLink(href, palindromNode);
           expect(historySpy.callCount).to.equal(1);
         });
       });
 
-      describe("should not intercept links from outside of `.element` tree to use History API", function() {
-        it("relative path", function() {
-          const href = "test_a";
+      describe('should not intercept links from outside of `.element` tree to use History API', function() {
+        it('relative path', function() {
+          const href = 'test_a';
           createAndClickOnLink(href, nodeB);
           expect(historySpy.callCount).to.equal(0);
         });
 
-        it("relative path (nested)", function() {
-          const href = "test_b";
+        it('relative path (nested)', function() {
+          const href = 'test_b';
           createAndClickOnLinkNested(href, nodeB);
           expect(historySpy.callCount).to.equal(0);
         });
-        it("relative path (nested, Shadow DOM)", function() {
-          const href = "test_c";
+        it('relative path (nested, Shadow DOM)', function() {
+          const href = 'test_c';
           createAndClickOnLinkNestedShadowDOM(href, nodeB);
           expect(historySpy.callCount).to.equal(0);
         });
-        it("absolute path", function() {
-          const href = "/test";
+        it('absolute path', function() {
+          const href = '/test';
           createAndClickOnLink(href, nodeB);
           expect(historySpy.callCount).to.equal(0);
         });
 
-        it("full URL in the same host, same port", function() {
-          const href = window.location.protocol +
-            "//" +
-            window.location.host +
-            "/test";
+        it('full URL in the same host, same port', function() {
+          const href =
+            window.location.protocol + '//' + window.location.host + '/test';
 
           createAndClickOnLink(href, nodeB);
           expect(historySpy.callCount).to.equal(0);
         });
       });
 
-      describe("should not intercept external links", function() {
-        it("full URL in the same host, different port", function() {
-          const port = window.location.port === "80" ||
-            window.location.port === ""
-            ? "8080"
-            : "80";
-          const href = window.location.protocol +
-            "//" +
+      describe('should not intercept external links', function() {
+        it('full URL in the same host, different port', function() {
+          const port =
+            window.location.port === '80' || window.location.port === ''
+              ? '8080'
+              : '80';
+          const href =
+            window.location.protocol +
+            '//' +
             window.location.hostname +
-            ":" +
+            ':' +
             port +
-            "/test"; //http://localhost:88881/test
+            '/test'; //http://localhost:88881/test
 
           createAndClickOnLink(href, palindromNode);
           assert(historySpy.callCount === 0);
         });
 
-        it("full URL in the same host, different schema", function() {
-          const protocol = window.location.protocol === "http:"
-            ? "https:"
-            : "http:";
-          const href = protocol + "//" + window.location.host + "/test"; //https://localhost:8888/test
+        it('full URL in the same host, different schema', function() {
+          const protocol =
+            window.location.protocol === 'http:' ? 'https:' : 'http:';
+          const href = protocol + '//' + window.location.host + '/test'; //https://localhost:8888/test
           createAndClickOnLink(href, palindromNode);
           assert(historySpy.callCount === 0);
         });
       });
 
-      describe("should be accessible via API", function() {
-        it("should change history state programmatically", function(done) {
-          setTimeout(
-            function() {
-              palindrom.morphUrl("/page2");
+      describe('should be accessible via API', function() {
+        it('should change history state programmatically', function(done) {
+          setTimeout(function() {
+            palindrom.morphUrl('/page2');
 
-              setTimeout(
-                function() {
-                  assert(historySpy.callCount === 1);
+            setTimeout(function() {
+              assert(historySpy.callCount === 1);
 
-                  done();
-                },
-                50
-              );
-            },
-            50
-          );
+              done();
+            }, 50);
+          }, 50);
         });
       });
 
-      it("should stop listening to DOM changes after `.unlisten()` was called", function(done) {
-        setTimeout(
-          function() {
-            palindrom.unlisten();
-            setTimeout(
-              function() {
-                createAndClickOnLink(
-                  "#will_not_get_caught_by_palindrom",
-                  palindromNode
-                );
-                setTimeout(
-                  function() {
-                    expect(historySpy.callCount).to.equal(0);
-                    done();
-                  },
-                  50
-                );
-              },
-              50
+      it('should stop listening to DOM changes after `.unlisten()` was called', function(
+        done
+      ) {
+        setTimeout(function() {
+          palindrom.unlisten();
+          setTimeout(function() {
+            createAndClickOnLink(
+              '#will_not_get_caught_by_palindrom',
+              palindromNode
             );
-          },
-          50
-        );
+            setTimeout(function() {
+              expect(historySpy.callCount).to.equal(0);
+              done();
+            }, 50);
+          }, 50);
+        }, 50);
       });
 
-      it("should start listening to DOM changes after `.listen()` was called", function() {
+      it('should start listening to DOM changes after `.listen()` was called', function() {
         palindrom.unlisten();
         palindrom.listen();
 
-        createAndClickOnLink("#will_not_get_caught_by_palindrom", palindromNode);
+        createAndClickOnLink(
+          '#will_not_get_caught_by_palindrom',
+          palindromNode
+        );
         expect(historySpy.callCount).to.equal(1);
       });
     });
   });
 
-  describe("History", function() {
+  describe('History', function() {
     let wsSpy, palindrom, currLoc;
 
     before(function() {
@@ -425,13 +426,13 @@ if (typeof window !== "undefined") {
 
     beforeEach(function() {
       moxios.install();
-      moxios.stubRequest("http://localhost/testURL", {
+      moxios.stubRequest('http://localhost/testURL', {
         status: 200,
-        headers: { location: "http://localhost/testURL" },
+        headers: { location: 'http://localhost/testURL' },
         responseText: '{"hello": "world"}'
       });
 
-      palindrom = new PalindromDOM({ remoteUrl: "http://localhost/testURL" });
+      palindrom = new PalindromDOM({ remoteUrl: 'http://localhost/testURL' });
     });
     afterEach(function() {
       palindrom.unobserve();
@@ -439,63 +440,57 @@ if (typeof window !== "undefined") {
     });
 
     /// init
-    describe("should send JSON Patch HTTP request once history state get changed", function() {
-      it("by `palindrom.morphURL(url)` method", function(done) {
-        palindrom.morphUrl("/newUrl");
-        setTimeout(
-          function() {
-            const request = moxios.requests.mostRecent();
-            expect(request.url).to.equal("/newUrl");
-            expect(window.location.pathname).to.equal("/newUrl");
+    describe('should send JSON Patch HTTP request once history state get changed', function() {
+      it('by `palindrom.morphURL(url)` method', function(done) {
+        palindrom.morphUrl('/newUrl');
+        setTimeout(function() {
+          const request = moxios.requests.mostRecent();
+          expect(request.url).to.equal('/newUrl');
+          expect(window.location.pathname).to.equal('/newUrl');
 
-            done();
-          },
-          50
-        );
+          done();
+        }, 50);
       });
     });
-    describe("should send JSON Patch HTTP request once history state get changed", function() {
+    describe('should send JSON Patch HTTP request once history state get changed', function() {
       beforeEach(function() {
         moxios.install();
-        moxios.stubRequest("http://localhost/testURL", {
+        moxios.stubRequest('http://localhost/testURL', {
           status: 200,
-          headers: { location: "http://localhost/testURL" },
+          headers: { location: 'http://localhost/testURL' },
           responseText: '{"hello": "world"}'
         });
 
-        palindrom = new PalindromDOM({ remoteUrl: "http://localhost/testURL" });
+        palindrom = new PalindromDOM({ remoteUrl: 'http://localhost/testURL' });
       });
       afterEach(function() {
         palindrom.unobserve();
         moxios.uninstall();
       });
 
-      it("by dispatching `palindrom-redirect-pushstate` event", function(done) {
-        history.pushState(null, null, "/newUrl-palindrom");
+      it('by dispatching `palindrom-redirect-pushstate` event', function(done) {
+        history.pushState(null, null, '/newUrl-palindrom');
 
         moxios.stubRequest(/.+/, {
           status: 200,
-          headers: { location: "http://localhost/testURL" },
-          responseText: "[]"
+          headers: { location: 'http://localhost/testURL' },
+          responseText: '[]'
         });
 
         document.body.dispatchEvent(
-          new CustomEvent("palindrom-redirect-pushstate", {
-            detail: { url: "/newUrl-palindrom" },
+          new CustomEvent('palindrom-redirect-pushstate', {
+            detail: { url: '/newUrl-palindrom' },
             bubbles: true
           })
         );
 
-        setTimeout(
-          function() {
-            const request = moxios.requests.mostRecent();
+        setTimeout(function() {
+          const request = moxios.requests.mostRecent();
 
-            expect(new URL(request.url).pathname).to.equal("/newUrl-palindrom");
-            expect(window.location.pathname).to.equal("/newUrl-palindrom");
-            done();
-          },
-          50
-        );
+          expect(new URL(request.url).pathname).to.equal('/newUrl-palindrom');
+          expect(window.location.pathname).to.equal('/newUrl-palindrom');
+          done();
+        }, 50);
       });
     });
   });

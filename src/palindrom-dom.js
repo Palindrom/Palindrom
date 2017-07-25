@@ -1,4 +1,4 @@
-/*! Palindrom 
+/*! Palindrom
  * https://github.com/Palindrom/Palindrom
  * (c) 2017 Joachim Wester
  * MIT license
@@ -21,8 +21,10 @@ var PalindromDOM = (function() {
       throw new Error('remoteUrl is required');
     }
     var onStateReset = options.onStateReset || options.callback;
-    if(options.callback) {
-      console.warn('Palindrom: options.callback is deprecated. Please use `onStateReset` instead');
+    if (options.callback) {
+      console.warn(
+        'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
+      );
     }
     this.element = options.listenTo || document.body;
     var clickHandler = this.clickHandler.bind(this);
@@ -121,18 +123,20 @@ var PalindromDOM = (function() {
         }
       }
     }
+    var anchorTarget = target.target || target.getAttribute('target');
 
-    //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
-    //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
-    //while target.getAttribute("href") returns desired href (as string)
-    var href = target.href || target.getAttribute('href');
-
-    if (href && PalindromDOM.isApplicationLink(href)) {
-      event.preventDefault();
-      event.stopPropagation();
-      this.morphUrl(href);
-    } else if (target.type === 'submit') {
-      event.preventDefault();
+    if (!anchorTarget || anchorTarget === 'self') {
+      //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
+      //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
+      //while target.getAttribute("href") returns desired href (as string)
+      var href = target.href || target.getAttribute('href');
+      if (href && PalindromDOM.isApplicationLink(href)) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.morphUrl(href);
+      } else if (target.type === 'submit') {
+        event.preventDefault();
+      }
     }
   };
 
@@ -161,8 +165,10 @@ var PalindromDOM = (function() {
 
       elem = parser;
     }
-    return elem.protocol == window.location.protocol &&
-      elem.host == window.location.host;
+    return (
+      elem.protocol == window.location.protocol &&
+      elem.host == window.location.host
+    );
   };
 
   /* backward compatibility, not sure if this is good practice */
