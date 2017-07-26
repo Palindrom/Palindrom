@@ -4102,7 +4102,7 @@ var Palindrom = (function() {
     this.onLocalChange = options.onLocalChange || noop;
     this.onRemoteChange = options.onRemoteChange || noop;
     this.onStateReset = options.onStateReset || options.callback || noop;
-
+    this.filter = options.filter || (operation => operation);
     if (options.callback) {
       console.warn(
         'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
@@ -4195,7 +4195,6 @@ var Palindrom = (function() {
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
   };
-
   Palindrom.prototype.prepareProxifiedObject = function(obj) {
     if (!obj) {
       obj = {};
@@ -4205,7 +4204,11 @@ var Palindrom = (function() {
 
     const proxifiedObj = this.jsonPatcherProxy.observe(
       true,
-      this.filterChangedCallback.bind(this)
+      // JSONPatcherProxy passes a single operation, and handleLocalChange expect a patch (array)
+      operation => {
+        const filtered = this.filter(operation);
+        filtered && this.handleLocalChange(filtered)
+      }
     );
 
     /* make it read-only and expose it as `obj` */
@@ -4232,22 +4235,6 @@ var Palindrom = (function() {
     this.isObserving = false;
   };
 
-  Palindrom.prototype.filterChangedCallback = function(patch) {
-    /*
-    because JSONPatcherProxy is synchronous,
-    it passes a single patch to the callback instantly after the change,
-    to make this review process easier, I'll convert this single patch
-    to an array to keep the logic change minimal,
-    once approved, I can enhance this.
-    Or we can also keep it, in case we decided to introduce batching/delaying 
-    at one point.
-    */
-    var patches = [patch];
-    if (patches.length) {
-      this.handleLocalChange(patches);
-    }
-  };
-
   function sendPatches(palindrom, patches) {
     var txt = JSON.stringify(patches);
     palindrom.unobserve();
@@ -4256,11 +4243,11 @@ var Palindrom = (function() {
     palindrom.observe();
   }
 
-  Palindrom.prototype.handleLocalChange = function(patches) {
+  Palindrom.prototype.handleLocalChange = function(operation) {
+    const patches = [operation];
     if (this.debug) {
       this.validateSequence(this.remoteObj, patches);
     }
-
     sendPatches(this, this.queue.send(patches));
     this.onLocalChange(patches);
   };
