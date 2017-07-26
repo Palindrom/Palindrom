@@ -369,7 +369,7 @@ var Palindrom = (function() {
       }
     };
   };
-  PalindromNetworkChannel.prototype.changeState = function(href) {
+  PalindromNetworkChannel.prototype.getPatchUsingHTTP = function(href) {
     var that = this;
     return this.xhr(
       href,
@@ -381,7 +381,12 @@ var Palindrom = (function() {
       true
     );
   };
-
+  PalindromNetworkChannel.prototype.changeState = function(href) {
+    console.warn(
+      "Palindrom: changeState was renamed to `getPatchUsingHTTP`, and they're both not recommended to use, please use `PalindromDOM.morphUrl` instead"
+    );
+    return this.getPatchUsingHTTP(href);
+  };
   // TODO:(tomalec)[cleanup] hide from public API.
   PalindromNetworkChannel.prototype.setRemoteUrl = function(remoteUrl) {
     if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
@@ -532,7 +537,7 @@ var Palindrom = (function() {
     Object.defineProperty(this, 'ignoreAdd', {
       set: function() {
         throw new TypeError(
-          'Palindrom: Can\'t set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136'
+          "Palindrom: Can't set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136"
         );
       }
     });

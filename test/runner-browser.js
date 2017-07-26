@@ -4981,7 +4981,7 @@ var Palindrom = (function() {
       }
     };
   };
-  PalindromNetworkChannel.prototype.changeState = function(href) {
+  PalindromNetworkChannel.prototype.getPatchUsingHTTP = function(href) {
     var that = this;
     return this.xhr(
       href,
@@ -4993,7 +4993,12 @@ var Palindrom = (function() {
       true
     );
   };
-
+  PalindromNetworkChannel.prototype.changeState = function(href) {
+    console.warn(
+      "Palindrom: changeState was renamed to `getPatchUsingHTTP`, and they're both not recommended to use, please use `PalindromDOM.morphUrl` instead"
+    );
+    return this.getPatchUsingHTTP(href);
+  };
   // TODO:(tomalec)[cleanup] hide from public API.
   PalindromNetworkChannel.prototype.setRemoteUrl = function(remoteUrl) {
     if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
@@ -5144,7 +5149,7 @@ var Palindrom = (function() {
     Object.defineProperty(this, 'ignoreAdd', {
       set: function() {
         throw new TypeError(
-          'Palindrom: Can\'t set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136'
+          "Palindrom: Can't set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136"
         );
       }
     });
@@ -12406,12 +12411,14 @@ if (typeof window !== 'undefined') {
   }
 
   describe('Links', function() {
-    let currLoc;
+    let currLoc, currScrollY;
     before(function() {
       currLoc = window.location.href;
+      currScrollY = document.documentElement.scrollTop;
     });
     after(function() {
       history.pushState(null, null, currLoc);
+      window.scrollTo(0, currScrollY);
     });
 
     describe('PalindromDOM - Links - ', function() {
@@ -12580,12 +12587,15 @@ if (typeof window !== 'undefined') {
 
     describe('when attached to specific node', function() {
       let palindrom, palindromB, palindromNode, nodeB, historySpy, currLoc;
+      currScrollY;
 
       before(function() {
         currLoc = window.location.href;
+        currScrollY = document.documentElement.scrollTop;
       });
       after(function() {
         history.pushState(null, null, currLoc);
+        window.scrollTo(0, currScrollY);
       });
 
       beforeEach('when attached to specific node', function(done) {
@@ -12756,13 +12766,15 @@ if (typeof window !== 'undefined') {
   });
 
   describe('History', function() {
-    let wsSpy, palindrom, currLoc;
+    let wsSpy, palindrom, currLoc, currScrollY;
 
     before(function() {
       currLoc = window.location.href;
+      currScrollY = document.documentElement.scrollTop;
     });
     after(function() {
       history.pushState(null, null, currLoc);
+      window.scrollTo(0, currScrollY);
     });
 
     beforeEach(function() {
@@ -12788,11 +12800,63 @@ if (typeof window !== 'undefined') {
           const request = moxios.requests.mostRecent();
           expect(request.url).to.equal('/newUrl');
           expect(window.location.pathname).to.equal('/newUrl');
-
           done();
         }, 50);
       });
     });
+
+    describe('Scroll When navigation occurs', function() {
+      let currLoc, currScrollY;
+      before(function() {
+        currLoc = window.location.href;
+        currScrollY = document.documentElement.scrollTop;
+      });
+      after(function() {
+        history.pushState(null, null, currLoc);
+        window.scrollTo(0, currScrollY);
+      });
+
+      beforeEach(function() {
+        moxios.install();
+        moxios.stubRequest('http://localhost/testURL', {
+          status: 200,
+          headers: { location: 'http://localhost/testURL' },
+          responseText: '{"hello": "world"}'
+        });
+
+        palindrom = new PalindromDOM({ remoteUrl: 'http://localhost/testURL' });
+      });
+      afterEach(function() {
+        palindrom.unobserve();
+        moxios.uninstall();
+      });
+      it('should scroll to top', function(done) {
+        window.scrollTo(0, document.body.scrollHeight); // scroll to bottom
+        const currScrollY = document.body.scrollTop;
+
+        moxios.stubRequest(/.+/, {
+          status: 200,
+          headers: { location: 'http://localhost/testURL' },
+          responseText: '[]'
+        });
+
+        palindrom.morphUrl('/newUrl-palindrom-scroll');
+
+        setTimeout(function() {
+          const request = moxios.requests.mostRecent();
+          expect(request.url).to.equal('/newUrl-palindrom-scroll');
+          expect(window.location.pathname + location.hash).to.equal(
+            '/newUrl-palindrom-scroll'
+          );
+          const newCurrScrollY = document.body.scrollTop;
+          expect(newCurrScrollY).to.not.equal(currScrollY);
+          expect(currScrollY).to.not.equal(0);
+
+          done();
+        }, 20);
+      });
+    });
+
     describe('should send JSON Patch HTTP request once history state get changed', function() {
       beforeEach(function() {
         moxios.install();
@@ -31019,15 +31083,49 @@ var PalindromDOM = (function() {
   PalindromDOM.prototype = Object.create(Palindrom.prototype);
 
   /**
+   * DISABLED FOR NOW: we don't know when rendering actually finishes.
+   * It's left here for the hope of having synchronous rendering at some point in the future.
+   * ====
+   * we need to scroll asynchronously, because we need the document rendered to search for the anchored element
+   * and even though onReceive + applyPatch are sync, Polymer is not, it renders async-ly
+  PalindromDOM.prototype.scrollToAnchorOrTopAsync = function(link) {
+    this.scrollAsyncTimeout && clearTimeout(this.scrollAsyncTimeout);
+    if (window && window.document) {
+      var anchorIndex;
+      var anchor;
+      // does the URL have an anchor
+      if (link && (anchorIndex = link.indexOf('#')) > -1) {
+        anchor = link.substr(anchorIndex);
+      }
+      if (!anchor) {
+        window.scrollTo(0, 0);
+      } else {
+        // if somehow someone manages to navigate twice in a 100ms,
+        // we don't scroll for their first navigation, i.e de-bouncing 
+        
+        this.scrollAsyncTimeout = setTimeout(() => {
+          // does that anchor exist in the page?
+          const anchorTarget = document.querySelector(anchor); // look for #element-id
+          if (anchorTarget) {
+            anchorTarget.scrollIntoView();
+          } else {
+            window.scrollTo(0, 0);
+          }
+        }, 100);
+      }
+    }
+  };
+  */
+  /**
    * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
    * so that the URL handlers can be executed on the remote
    * @param url
    */
   PalindromDOM.prototype.morphUrl = function(url) {
     history.pushState(null, null, url);
-    this.network.changeState(url);
+    this.network.getPatchUsingHTTP(url);
+    window && window.scrollTo(0, 0);
   };
-
   PalindromDOM.prototype.clickHandler = function(event) {
     //Don't morph ctrl/cmd + click & middle mouse button
     if (event.ctrlKey || event.metaKey || event.which == 2) {
@@ -31067,7 +31165,7 @@ var PalindromDOM = (function() {
   };
 
   PalindromDOM.prototype.historyHandler = function(/*event*/) {
-    this.network.changeState(location.href);
+    this.network.getPatchUsingHTTP(location.href);
   };
 
   /**

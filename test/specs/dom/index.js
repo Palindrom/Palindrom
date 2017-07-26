@@ -77,12 +77,14 @@ if (typeof window !== 'undefined') {
   }
 
   describe('Links', function() {
-    let currLoc;
+    let currLoc, currScrollY;
     before(function() {
       currLoc = window.location.href;
+      currScrollY = document.documentElement.scrollTop;
     });
     after(function() {
       history.pushState(null, null, currLoc);
+      window.scrollTo(0, currScrollY);
     });
 
     describe('PalindromDOM - Links - ', function() {
@@ -251,12 +253,15 @@ if (typeof window !== 'undefined') {
 
     describe('when attached to specific node', function() {
       let palindrom, palindromB, palindromNode, nodeB, historySpy, currLoc;
+      currScrollY;
 
       before(function() {
         currLoc = window.location.href;
+        currScrollY = document.documentElement.scrollTop;
       });
       after(function() {
         history.pushState(null, null, currLoc);
+        window.scrollTo(0, currScrollY);
       });
 
       beforeEach('when attached to specific node', function(done) {
@@ -427,13 +432,15 @@ if (typeof window !== 'undefined') {
   });
 
   describe('History', function() {
-    let wsSpy, palindrom, currLoc;
+    let wsSpy, palindrom, currLoc, currScrollY;
 
     before(function() {
       currLoc = window.location.href;
+      currScrollY = document.documentElement.scrollTop;
     });
     after(function() {
       history.pushState(null, null, currLoc);
+      window.scrollTo(0, currScrollY);
     });
 
     beforeEach(function() {
@@ -459,11 +466,63 @@ if (typeof window !== 'undefined') {
           const request = moxios.requests.mostRecent();
           expect(request.url).to.equal('/newUrl');
           expect(window.location.pathname).to.equal('/newUrl');
-
           done();
         }, 50);
       });
     });
+
+    describe('Scroll When navigation occurs', function() {
+      let currLoc, currScrollY;
+      before(function() {
+        currLoc = window.location.href;
+        currScrollY = document.documentElement.scrollTop;
+      });
+      after(function() {
+        history.pushState(null, null, currLoc);
+        window.scrollTo(0, currScrollY);
+      });
+
+      beforeEach(function() {
+        moxios.install();
+        moxios.stubRequest('http://localhost/testURL', {
+          status: 200,
+          headers: { location: 'http://localhost/testURL' },
+          responseText: '{"hello": "world"}'
+        });
+
+        palindrom = new PalindromDOM({ remoteUrl: 'http://localhost/testURL' });
+      });
+      afterEach(function() {
+        palindrom.unobserve();
+        moxios.uninstall();
+      });
+      it('should scroll to top', function(done) {
+        window.scrollTo(0, document.body.scrollHeight); // scroll to bottom
+        const currScrollY = document.body.scrollTop;
+
+        moxios.stubRequest(/.+/, {
+          status: 200,
+          headers: { location: 'http://localhost/testURL' },
+          responseText: '[]'
+        });
+
+        palindrom.morphUrl('/newUrl-palindrom-scroll');
+
+        setTimeout(function() {
+          const request = moxios.requests.mostRecent();
+          expect(request.url).to.equal('/newUrl-palindrom-scroll');
+          expect(window.location.pathname + location.hash).to.equal(
+            '/newUrl-palindrom-scroll'
+          );
+          const newCurrScrollY = document.body.scrollTop;
+          expect(newCurrScrollY).to.not.equal(currScrollY);
+          expect(currScrollY).to.not.equal(0);
+
+          done();
+        }, 20);
+      });
+    });
+
     describe('should send JSON Patch HTTP request once history state get changed', function() {
       beforeEach(function() {
         moxios.install();
