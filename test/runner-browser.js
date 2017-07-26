@@ -12340,7 +12340,7 @@ if (typeof window !== 'undefined') {
     const a = document.createElement('A');
     a.innerHTML = 'Link';
     a.href = href;
-    target && (a.target = target);
+    (target || target === '') && (a.target = target);
     parent.appendChild(a);
     clickElement(a);
     parent.removeChild(a);
@@ -12498,8 +12498,20 @@ if (typeof window !== 'undefined') {
             expect(historySpy.callCount).to.equal(0);
           });
           it('should intercept links with target self', function() {
-            const href = '/test';
+            const href = '/test2';
             createAndClickOnLinkWithoutPrevention(href, null, 'self');
+
+            expect(historySpy.callCount).to.equal(1);
+          });
+          it('should intercept links with an empty target', function() {
+            const href = '/test3';
+            createAndClickOnLinkWithoutPrevention(href, null, '');
+
+            expect(historySpy.callCount).to.equal(1);
+          });
+          it('should intercept links without a target', function() {
+            const href = '/test3';
+            createAndClickOnLinkWithoutPrevention(href, null);
 
             expect(historySpy.callCount).to.equal(1);
           });
