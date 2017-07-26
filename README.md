@@ -26,6 +26,10 @@ palindrom.obj.someProperty = "new value";
 // Your change gets propagated automatically to the remote, no glue code needed.
 ```
 
+### [Documentation](https://palindrom.github.io/#/docs)
+
+---
+
 ### Installation
 
 #### You can install using [bower](http://bower.io/) and [NPM](http://npmjs.com/):
@@ -86,10 +90,6 @@ palindrom.obj.someProperty = "new value";
 - [Example with Vue](http://Palindrom.github.io/lab/vue/index.html)
 - [Example with React](http://Palindrom.github.io/lab/react/index.html)
 
-
-### Docs
-
-You can find them [here](https://palindrom.github.io/#/docs).
 
 ### Changelog
 
