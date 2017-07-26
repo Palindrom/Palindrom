@@ -14,7 +14,6 @@ if (!username) {
     {
       browserName: "chrome",
       platform: "Windows 10",
-      version: "59.0",
       username: username,
       accessKey: accessKey,
       name: "Chrome: Running tests",
@@ -23,7 +22,6 @@ if (!username) {
     {
       browserName: "firefox",
       platform: "Windows 10",
-      version: "54.0",
       username: username,
       accessKey: accessKey,
       name: "Firefox: Running tests",
@@ -32,7 +30,6 @@ if (!username) {
     {
       browserName: "MicrosoftEdge",
       platform: "Windows 10",
-      version: "15.15063",
       username: username,
       accessKey: accessKey,
       name: "MicrosoftEdge: Running tests",
