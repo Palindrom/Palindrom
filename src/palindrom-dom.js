@@ -98,7 +98,7 @@ var PalindromDOM = (function() {
    * ====
    * we need to scroll asynchronously, because we need the document rendered to search for the anchored element
    * and even though onReceive + applyPatch are sync, Polymer is not, it renders async-ly
-  PalindromNetworkChannel.prototype.scrollToAnchorOrTopAsync = function(link) {
+  PalindromDOM.prototype.scrollToAnchorOrTopAsync = function(link) {
     this.scrollAsyncTimeout && clearTimeout(this.scrollAsyncTimeout);
     if (window && window.document) {
       var anchorIndex;
@@ -108,7 +108,7 @@ var PalindromDOM = (function() {
         anchor = link.substr(anchorIndex);
       }
       if (!anchor) {
-        window && window.scrollTo(0, 0);
+        window.scrollTo(0, 0);
       } else {
         // if somehow someone manages to navigate twice in a 100ms,
         // we don't scroll for their first navigation, i.e de-bouncing 
@@ -133,7 +133,7 @@ var PalindromDOM = (function() {
    */
   PalindromDOM.prototype.morphUrl = function(url) {
     history.pushState(null, null, url);
-    this.network.changeCurrentUrl(url);
+    this.network.getPatchUsingHTTP(url);
     window && window.scrollTo(0, 0);
   };
   PalindromDOM.prototype.clickHandler = function(event) {
@@ -173,7 +173,7 @@ var PalindromDOM = (function() {
   };
 
   PalindromDOM.prototype.historyHandler = function(/*event*/) {
-    this.network.changeCurrentUrl(location.href);
+    this.network.getPatchUsingHTTP(location.href);
   };
 
   /**

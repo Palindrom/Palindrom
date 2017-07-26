@@ -369,7 +369,7 @@ var Palindrom = (function() {
       }
     };
   };
-  PalindromNetworkChannel.prototype.changeCurrentUrl = function(href) {
+  PalindromNetworkChannel.prototype.getPatchUsingHTTP = function(href) {
     var that = this;
     return this.xhr(
       href,
@@ -383,9 +383,9 @@ var Palindrom = (function() {
   };
   PalindromNetworkChannel.prototype.changeState = function(href) {
     console.warn(
-      "Palindrom: changeState is deprecated in favour of changeCurrentUrl, and they're both not recommended to use, please use `PalindromDOM.morphUrl` instead"
+      "Palindrom: changeState was renamed to `getPatchUsingHTTP`, and they're both not recommended to use, please use `PalindromDOM.morphUrl` instead"
     );
-    return this.changeCurrentUrl(href);
+    return this.getPatchUsingHTTP(href);
   };
   // TODO:(tomalec)[cleanup] hide from public API.
   PalindromNetworkChannel.prototype.setRemoteUrl = function(remoteUrl) {
