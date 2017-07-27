@@ -6,14 +6,14 @@ const sinon = require('sinon');
 const assert = require('assert');
 
 describe('Palindrom', () => {
-  describe('#filter', () => {
+  describe('#filterLocalChange', () => {
     beforeEach(() => {
       moxios.install();
     });
     afterEach(() => {
       moxios.uninstall();
     });
-    it('Should use options.filter function when local changes occur', function(
+    it('Should use options.filterLocalChange function when local changes occur', function(
       done
     ) {
       const spy = sinon.spy();
@@ -25,7 +25,7 @@ describe('Palindrom', () => {
       });
       const palindrom = new Palindrom({
         remoteUrl: 'http://localhost/testURL',
-        filter: op => {
+        filterLocalChange: op => {
           spy();
           return op;
         },
@@ -51,7 +51,7 @@ describe('Palindrom', () => {
       });
       const palindrom = new Palindrom({
         remoteUrl: 'http://localhost/testURL',
-        filter: operation => !operation.path.startsWith('/$$') && operation,
+        filterLocalChange: operation => !operation.path.startsWith('/$$') && operation,
         onStateReset: function(obj) {
           assert(moxios.requests.count() === 1);
           // a change that passes the filter

@@ -4102,7 +4102,7 @@ var Palindrom = (function() {
     this.onLocalChange = options.onLocalChange || noop;
     this.onRemoteChange = options.onRemoteChange || noop;
     this.onStateReset = options.onStateReset || options.callback || noop;
-    this.filter = options.filter || (operation => operation);
+    this.filterLocalChange = options.filterLocalChange || (operation => operation);
     if (options.callback) {
       console.warn(
         'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
@@ -4204,9 +4204,9 @@ var Palindrom = (function() {
 
     const proxifiedObj = this.jsonPatcherProxy.observe(
       true,
-      // JSONPatcherProxy passes a single operation, and handleLocalChange expect a patch (array)
       operation => {
-        const filtered = this.filter(operation);
+        const filtered = this.filterLocalChange(operation);
+        // totally ignore falsy (didn't pass the filter) JSON Patch operations
         filtered && this.handleLocalChange(filtered)
       }
     );

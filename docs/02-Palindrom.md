@@ -39,7 +39,7 @@ Attribute              | Type          | Default                | Description
 `onStateReset`         | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established), **it can be called again if the state was reset by a root-replacing patch**.
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
 `debug`                | *Boolean*     | `true`                 | Toggle debugging mode
-`filter`            | *Function*      |       | A function that is called with every local change and allows you to filter (ignore) some changes. See [Filtering Patches](https://palindrom.github.io/#/docs/master/04-Filtering Patches) section.
+`filterLocalChange`            | *Function*      |       | A function that is called with every local change and allows you to filter (ignore) some changes. See [Filtering Patches](https://palindrom.github.io/#/docs/master/04-Filtering Patches) section.
 `onLocalChange`        | *Function*    |                        | Helper callback triggered each time a change is observed locally
 `onRemoteChange`       | *Function*    |                        | Helper callback triggered each time a change is received from the server and applied.
 `onPatchReceived`      | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts three parameters: (*String* `data`, *String* `url`, *String*, `method`)

@@ -4496,7 +4496,7 @@ var Palindrom = (function() {
     this.onLocalChange = options.onLocalChange || noop;
     this.onRemoteChange = options.onRemoteChange || noop;
     this.onStateReset = options.onStateReset || options.callback || noop;
-    this.filter = options.filter || (operation => operation);
+    this.filterLocalChange = options.filterLocalChange || (operation => operation);
     if (options.callback) {
       console.warn(
         'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
@@ -4598,9 +4598,9 @@ var Palindrom = (function() {
 
     const proxifiedObj = this.jsonPatcherProxy.observe(
       true,
-      // JSONPatcherProxy passes a single operation, and handleLocalChange expect a patch (array)
       operation => {
-        const filtered = this.filter(operation);
+        const filtered = this.filterLocalChange(operation);
+        // totally ignore falsy (didn't pass the filter) JSON Patch operations
         filtered && this.handleLocalChange(filtered)
       }
     );
@@ -13252,14 +13252,14 @@ const sinon = __webpack_require__(5);
 const assert = __webpack_require__(3);
 
 describe('Palindrom', () => {
-  describe('#filter', () => {
+  describe('#filterLocalChange', () => {
     beforeEach(() => {
       moxios.install();
     });
     afterEach(() => {
       moxios.uninstall();
     });
-    it('Should use options.filter function when local changes occur', function(
+    it('Should use options.filterLocalChange function when local changes occur', function(
       done
     ) {
       const spy = sinon.spy();
@@ -13271,7 +13271,7 @@ describe('Palindrom', () => {
       });
       const palindrom = new Palindrom({
         remoteUrl: 'http://localhost/testURL',
-        filter: op => {
+        filterLocalChange: op => {
           spy();
           return op;
         },
@@ -13297,7 +13297,7 @@ describe('Palindrom', () => {
       });
       const palindrom = new Palindrom({
         remoteUrl: 'http://localhost/testURL',
-        filter: operation => !operation.path.startsWith('/$$') && operation,
+        filterLocalChange: operation => !operation.path.startsWith('/$$') && operation,
         onStateReset: function(obj) {
           assert(moxios.requests.count() === 1);
           // a change that passes the filter
