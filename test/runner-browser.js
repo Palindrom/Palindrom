@@ -12327,11 +12327,23 @@ if (typeof window !== 'undefined') {
   const sinon = __webpack_require__(5);
   const expect = __webpack_require__(25).expect;
 
-  function createAndClickOnLink(href, parent) {
+  function createAndClickOnLinkWithoutPrevention(href, parent, target) {
     parent = parent || document.body;
     const a = document.createElement('A');
     a.innerHTML = 'Link';
     a.href = href;
+    (target || target === '') && (a.target = target);
+    parent.appendChild(a);
+    clickElement(a);
+    parent.removeChild(a);
+  }
+
+  function createAndClickOnLink(href, parent, target) {
+    parent = parent || document.body;
+    const a = document.createElement('A');
+    a.innerHTML = 'Link';
+    a.href = href;
+    target && (a.target = target);
     parent.appendChild(a);
     parent.addEventListener('click', clickHandler);
     clickElement(a);
@@ -12472,7 +12484,32 @@ if (typeof window !== 'undefined') {
             expect(historySpy.callCount).to.equal(1);
           });
         });
+        describe('Links with targets', function() {
+          it('should not intercept links with a set target', function() {
+            const href = '/test';
+            createAndClickOnLinkWithoutPrevention(href, null, '_anything');
 
+            expect(historySpy.callCount).to.equal(0);
+          });
+          it('should intercept links with target self', function() {
+            const href = '/test2';
+            createAndClickOnLinkWithoutPrevention(href, null, 'self');
+
+            expect(historySpy.callCount).to.equal(1);
+          });
+          it('should intercept links with an empty target', function() {
+            const href = '/test3';
+            createAndClickOnLinkWithoutPrevention(href, null, '');
+
+            expect(historySpy.callCount).to.equal(1);
+          });
+          it('should intercept links without a target', function() {
+            const href = '/test3';
+            createAndClickOnLinkWithoutPrevention(href, null);
+
+            expect(historySpy.callCount).to.equal(1);
+          });
+        });
         describe('should not intercept external links', function() {
           it('full URL in the same host, different port', function() {
             const port =
@@ -31022,7 +31059,7 @@ function hasOwnProperty(obj, prop) {
 /* 170 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/*! Palindrom 
+/*! Palindrom
  * https://github.com/Palindrom/Palindrom
  * (c) 2017 Joachim Wester
  * MIT license
@@ -31181,18 +31218,20 @@ var PalindromDOM = (function() {
         }
       }
     }
+    var anchorTarget = target.target || target.getAttribute('target');
 
-    //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
-    //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
-    //while target.getAttribute("href") returns desired href (as string)
-    var href = target.href || target.getAttribute('href');
-
-    if (href && PalindromDOM.isApplicationLink(href)) {
-      event.preventDefault();
-      event.stopPropagation();
-      this.morphUrl(href);
-    } else if (target.type === 'submit') {
-      event.preventDefault();
+    if (!anchorTarget || anchorTarget === 'self') {
+      //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
+      //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
+      //while target.getAttribute("href") returns desired href (as string)
+      var href = target.href || target.getAttribute('href');
+      if (href && PalindromDOM.isApplicationLink(href)) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.morphUrl(href);
+      } else if (target.type === 'submit') {
+        event.preventDefault();
+      }
     }
   };
 
