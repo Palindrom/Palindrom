@@ -39,6 +39,7 @@ Attribute              | Type          | Default                | Description
 `onStateReset`         | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established), **it can be called again if the state was reset by a root-replacing patch**.
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
 `debug`                | *Boolean*     | `true`                 | Toggle debugging mode
+`filterLocalChange`            | *Function*      |       | A function that is called with every local change and allows you to filter (ignore) some changes. See [Filtering Patches](https://palindrom.github.io/#/docs/master/04-Filtering Patches) section.
 `onLocalChange`        | *Function*    |                        | Helper callback triggered each time a change is observed locally
 `onRemoteChange`       | *Function*    |                        | Helper callback triggered each time a change is received from the server and applied.
 `onPatchReceived`      | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts three parameters: (*String* `data`, *String* `url`, *String*, `method`)
@@ -56,6 +57,8 @@ Attribute              | Type          | Default                | Description
 `onReconnectionCountdown`| *Function*  |                        | Triggered when palindrom detected connection problem and reconnection is scheduled. Accepts number of milliseconds to scheduled reconnection. Called every second until countdown reaches 0 (inclusive)
 `onReconnectionEnd`    | *Function*    |                        | Triggered when palindrom successfully reconnected
 `jsonpatch`            | *Object*      | `window.jsonpatch`       | The provider object for jsonpatch `apply` and  `validate`. By default it uses Starcounter-Jack/JSON-Patch library.
+
+
 
 most of the properties are accessible also in runtime:
 

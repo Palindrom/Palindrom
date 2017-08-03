@@ -1,4 +1,4 @@
-/*! Palindrom, version: 3.0.0 */
+/*! Palindrom, version: 3.0.1 */
 var Tests =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -65,7 +65,7 @@ var Tests =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 170);
+/******/ 	return __webpack_require__(__webpack_require__.s = 171);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -2417,7 +2417,7 @@ function isBuffer(b) {
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var util = __webpack_require__(168);
+var util = __webpack_require__(169);
 var hasOwn = Object.prototype.hasOwnProperty;
 var pSlice = Array.prototype.slice;
 var functionsHaveNames = (function () {
@@ -2844,243 +2844,6 @@ var objectKeys = Object.keys || function (obj) {
 
 /***/ }),
 /* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/*istanbul ignore start*/
-
-exports.__esModule = true;
-exports['default'] = /*istanbul ignore end*/Diff;
-function Diff() {}
-
-Diff.prototype = { /*istanbul ignore start*/
-  /*istanbul ignore end*/diff: function diff(oldString, newString) {
-    /*istanbul ignore start*/var /*istanbul ignore end*/options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-
-    var callback = options.callback;
-    if (typeof options === 'function') {
-      callback = options;
-      options = {};
-    }
-    this.options = options;
-
-    var self = this;
-
-    function done(value) {
-      if (callback) {
-        setTimeout(function () {
-          callback(undefined, value);
-        }, 0);
-        return true;
-      } else {
-        return value;
-      }
-    }
-
-    // Allow subclasses to massage the input prior to running
-    oldString = this.castInput(oldString);
-    newString = this.castInput(newString);
-
-    oldString = this.removeEmpty(this.tokenize(oldString));
-    newString = this.removeEmpty(this.tokenize(newString));
-
-    var newLen = newString.length,
-        oldLen = oldString.length;
-    var editLength = 1;
-    var maxEditLength = newLen + oldLen;
-    var bestPath = [{ newPos: -1, components: [] }];
-
-    // Seed editLength = 0, i.e. the content starts with the same values
-    var oldPos = this.extractCommon(bestPath[0], newString, oldString, 0);
-    if (bestPath[0].newPos + 1 >= newLen && oldPos + 1 >= oldLen) {
-      // Identity per the equality and tokenizer
-      return done([{ value: this.join(newString), count: newString.length }]);
-    }
-
-    // Main worker method. checks all permutations of a given edit length for acceptance.
-    function execEditLength() {
-      for (var diagonalPath = -1 * editLength; diagonalPath <= editLength; diagonalPath += 2) {
-        var basePath = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
-        var addPath = bestPath[diagonalPath - 1],
-            removePath = bestPath[diagonalPath + 1],
-            _oldPos = (removePath ? removePath.newPos : 0) - diagonalPath;
-        if (addPath) {
-          // No one else is going to attempt to use this value, clear it
-          bestPath[diagonalPath - 1] = undefined;
-        }
-
-        var canAdd = addPath && addPath.newPos + 1 < newLen,
-            canRemove = removePath && 0 <= _oldPos && _oldPos < oldLen;
-        if (!canAdd && !canRemove) {
-          // If this path is a terminal then prune
-          bestPath[diagonalPath] = undefined;
-          continue;
-        }
-
-        // Select the diagonal that we want to branch from. We select the prior
-        // path whose position in the new string is the farthest from the origin
-        // and does not pass the bounds of the diff graph
-        if (!canAdd || canRemove && addPath.newPos < removePath.newPos) {
-          basePath = clonePath(removePath);
-          self.pushComponent(basePath.components, undefined, true);
-        } else {
-          basePath = addPath; // No need to clone, we've pulled it from the list
-          basePath.newPos++;
-          self.pushComponent(basePath.components, true, undefined);
-        }
-
-        _oldPos = self.extractCommon(basePath, newString, oldString, diagonalPath);
-
-        // If we have hit the end of both strings, then we are done
-        if (basePath.newPos + 1 >= newLen && _oldPos + 1 >= oldLen) {
-          return done(buildValues(self, basePath.components, newString, oldString, self.useLongestToken));
-        } else {
-          // Otherwise track this path as a potential candidate and continue.
-          bestPath[diagonalPath] = basePath;
-        }
-      }
-
-      editLength++;
-    }
-
-    // Performs the length of edit iteration. Is a bit fugly as this has to support the
-    // sync and async mode which is never fun. Loops over execEditLength until a value
-    // is produced.
-    if (callback) {
-      (function exec() {
-        setTimeout(function () {
-          // This should not happen, but we want to be safe.
-          /* istanbul ignore next */
-          if (editLength > maxEditLength) {
-            return callback();
-          }
-
-          if (!execEditLength()) {
-            exec();
-          }
-        }, 0);
-      })();
-    } else {
-      while (editLength <= maxEditLength) {
-        var ret = execEditLength();
-        if (ret) {
-          return ret;
-        }
-      }
-    }
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/pushComponent: function pushComponent(components, added, removed) {
-    var last = components[components.length - 1];
-    if (last && last.added === added && last.removed === removed) {
-      // We need to clone here as the component clone operation is just
-      // as shallow array clone
-      components[components.length - 1] = { count: last.count + 1, added: added, removed: removed };
-    } else {
-      components.push({ count: 1, added: added, removed: removed });
-    }
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/extractCommon: function extractCommon(basePath, newString, oldString, diagonalPath) {
-    var newLen = newString.length,
-        oldLen = oldString.length,
-        newPos = basePath.newPos,
-        oldPos = newPos - diagonalPath,
-        commonCount = 0;
-    while (newPos + 1 < newLen && oldPos + 1 < oldLen && this.equals(newString[newPos + 1], oldString[oldPos + 1])) {
-      newPos++;
-      oldPos++;
-      commonCount++;
-    }
-
-    if (commonCount) {
-      basePath.components.push({ count: commonCount });
-    }
-
-    basePath.newPos = newPos;
-    return oldPos;
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/equals: function equals(left, right) {
-    return left === right;
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/removeEmpty: function removeEmpty(array) {
-    var ret = [];
-    for (var i = 0; i < array.length; i++) {
-      if (array[i]) {
-        ret.push(array[i]);
-      }
-    }
-    return ret;
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/castInput: function castInput(value) {
-    return value;
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/tokenize: function tokenize(value) {
-    return value.split('');
-  },
-  /*istanbul ignore start*/ /*istanbul ignore end*/join: function join(chars) {
-    return chars.join('');
-  }
-};
-
-function buildValues(diff, components, newString, oldString, useLongestToken) {
-  var componentPos = 0,
-      componentLen = components.length,
-      newPos = 0,
-      oldPos = 0;
-
-  for (; componentPos < componentLen; componentPos++) {
-    var component = components[componentPos];
-    if (!component.removed) {
-      if (!component.added && useLongestToken) {
-        var value = newString.slice(newPos, newPos + component.count);
-        value = value.map(function (value, i) {
-          var oldValue = oldString[oldPos + i];
-          return oldValue.length > value.length ? oldValue : value;
-        });
-
-        component.value = diff.join(value);
-      } else {
-        component.value = diff.join(newString.slice(newPos, newPos + component.count));
-      }
-      newPos += component.count;
-
-      // Common case
-      if (!component.added) {
-        oldPos += component.count;
-      }
-    } else {
-      component.value = diff.join(oldString.slice(oldPos, oldPos + component.count));
-      oldPos += component.count;
-
-      // Reverse add and remove so removes are output first to match common convention
-      // The diffing algorithm is tied to add then remove output and this is the simplest
-      // route to get the desired output with minimal overhead.
-      if (componentPos && components[componentPos - 1].added) {
-        var tmp = components[componentPos - 1];
-        components[componentPos - 1] = components[componentPos];
-        components[componentPos] = tmp;
-      }
-    }
-  }
-
-  // Special case handle for when one terminal is ignored. For this case we merge the
-  // terminal into the prior string and drop the change.
-  var lastComponent = components[componentLen - 1];
-  if (componentLen > 1 && (lastComponent.added || lastComponent.removed) && diff.equals('', lastComponent.value)) {
-    components[componentLen - 2].value += lastComponent.value;
-    components.pop();
-  }
-
-  return components;
-}
-
-function clonePath(path) {
-  return { newPos: path.newPos, components: path.components.slice(0) };
-}
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uL3NyYy9kaWZmL2Jhc2UuanMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7OzRDQUF3QixJO0FBQVQsU0FBUyxJQUFULEdBQWdCLENBQUU7O0FBRWpDLEtBQUssU0FBTCxHQUFpQixFO3lCQUNmLElBRGUsZ0JBQ1YsU0FEVSxFQUNDLFNBREQsRUFDMEI7NkJBQUEsSSx1QkFBZCxPQUFjLHlEQUFKLEVBQUk7O0FBQ3ZDLFFBQUksV0FBVyxRQUFRLFFBQXZCO0FBQ0EsUUFBSSxPQUFPLE9BQVAsS0FBbUIsVUFBdkIsRUFBbUM7QUFDakMsaUJBQVcsT0FBWDtBQUNBLGdCQUFVLEVBQVY7QUFDRDtBQUNELFNBQUssT0FBTCxHQUFlLE9BQWY7O0FBRUEsUUFBSSxPQUFPLElBQVg7O0FBRUEsYUFBUyxJQUFULENBQWMsS0FBZCxFQUFxQjtBQUNuQixVQUFJLFFBQUosRUFBYztBQUNaLG1CQUFXLFlBQVc7QUFBRSxtQkFBUyxTQUFULEVBQW9CLEtBQXBCO0FBQTZCLFNBQXJELEVBQXVELENBQXZEO0FBQ0EsZUFBTyxJQUFQO0FBQ0QsT0FIRCxNQUdPO0FBQ0wsZUFBTyxLQUFQO0FBQ0Q7QUFDRjs7O0FBR0QsZ0JBQVksS0FBSyxTQUFMLENBQWUsU0FBZixDQUFaO0FBQ0EsZ0JBQVksS0FBSyxTQUFMLENBQWUsU0FBZixDQUFaOztBQUVBLGdCQUFZLEtBQUssV0FBTCxDQUFpQixLQUFLLFFBQUwsQ0FBYyxTQUFkLENBQWpCLENBQVo7QUFDQSxnQkFBWSxLQUFLLFdBQUwsQ0FBaUIsS0FBSyxRQUFMLENBQWMsU0FBZCxDQUFqQixDQUFaOztBQUVBLFFBQUksU0FBUyxVQUFVLE1BQXZCO0FBQUEsUUFBK0IsU0FBUyxVQUFVLE1BQWxEO0FBQ0EsUUFBSSxhQUFhLENBQWpCO0FBQ0EsUUFBSSxnQkFBZ0IsU0FBUyxNQUE3QjtBQUNBLFFBQUksV0FBVyxDQUFDLEVBQUUsUUFBUSxDQUFDLENBQVgsRUFBYyxZQUFZLEVBQTFCLEVBQUQsQ0FBZjs7O0FBR0EsUUFB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LFVBQUwsQ0FBZ0IsS0FBaEIsQ0FBc0IsQ0FBdEIsQ0FBbkMsRUFBUDtBQUNEIiwiZmlsZSI6ImJhc2UuanMiLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBEaWZmKCkge31cblxuRGlmZi5wcm90b3R5cGUgPSB7XG4gIGRpZmYob2xkU3RyaW5nLCBuZXdTdHJpbmcsIG9wdGlvbnMgPSB7fSkge1xuICAgIGxldCBjYWxsYmFjayA9IG9wdGlvbnMuY2FsbGJhY2s7XG4gICAgaWYgKHR5cGVvZiBvcHRpb25zID09PSAnZnVuY3Rpb24nKSB7XG4gICAgICBjYWxsYmFjayA9IG9wdGlvbnM7XG4gICAgICBvcHRpb25zID0ge307XG4gICAgfVxuICAgIHRoaXMub3B0aW9ucyA9IG9wdGlvbnM7XG5cbiAgICBsZXQgc2VsZiA9IHRoaXM7XG5cbiAgICBmdW5jdGlvbiBkb25lKHZhbHVlKSB7XG4gICAgICBpZiAoY2FsbGJhY2spIHtcbiAgICAgICAgc2V0VGltZW91dChmdW5jdGlvbigpIHsgY2FsbGJhY2sodW5kZWZpbmVkLCB2YWx1ZSk7IH0sIDApO1xuICAgICAgICByZXR1cm4gdHJ1ZTtcbiAgICAgIH0gZWxzZSB7XG4gICAgICAgIHJldHVybiB2YWx1ZTtcbiAgICAgIH1cbiAgICB9XG5cbiAgICAvLyBBbGxvdyBzdWJjbGFzc2VzIHRvIG1hc3NhZ2UgdGhlIGlucHV0IHByaW9yIHRvIHJ1bm5pbmdcbiAgICBvbGRTdHJpbmcgPSB0aGlzLmNhc3RJbnB1dChvbGRTdHJpbmcpO1xuICAgIG5ld1N0cmluZyA9IHRoaXMuY2FzdElucHV0KG5ld1N0cmluZyk7XG5cbiAgICBvbGRTdHJpbmcgPSB0aGlzLnJlbW92ZUVtcHR5KHRoaXMudG9rZW5pemUob2xkU3RyaW5nKSk7XG4gICAgbmV3U3RyaW5nID0gdGhpcy5yZW1vdmVFbXB0eSh0aGlzLnRva2VuaXplKG5ld1N0cmluZykpO1xuXG4gICAgbGV0IG5ld0xlbiA9IG5ld1N0cmluZy5sZW5ndGgsIG9sZExlbiA9IG9sZFN0cmluZy5sZW5ndGg7XG4gICAgbGV0IGVkaXRMZW5ndGggPSAxO1xuICAgIGxldCBtYXhFZGl0TGVuZ3RoID0gbmV3TGVuICsgb2xkTGVuO1xuICAgIGxldCBiZXN0UGF0aCA9IFt7IG5ld1BvczogLTEsIGNvbXBvbmVudHM6IFtdIH1dO1xuXG4gICAgLy8gU2VlZCBlZGl0TGVuZ3RoID0gMCwgaS5lLiB0aGUgY29udGVudCBzdGFydHMgd2l0aCB0aGUgc2FtZSB2YWx1ZXNcbiAgICBsZXQgb2xkUG9zID0gdGhpcy5leHRyYWN0Q29tbW9uKGJlc3RQYXRoWzBdLCBuZXdTdHJpbmcsIG9sZFN0cmluZywgMCk7XG4gICAgaWYgKGJlc3RQYXRoWzBdLm5ld1BvcyArIDEgPj0gbmV3TGVuICYmIG9sZFBvcyArIDEgPj0gb2xkTGVuKSB7XG4gICAgICAvLyBJZGVudGl0eSBwZXIgdGhlIGVxdWFsaXR5IGFuZCB0b2tlbml6ZXJcbiAgICAgIHJldHVybiBkb25lKFt7dmFsdWU6IHRoaXMuam9pbihuZXdTdHJpbmcpLCBjb3VudDogbmV3U3RyaW5nLmxlbmd0aH1dKTtcbiAgICB9XG5cbiAgICAvLyBNYWluIHdvcmtlciBtZXRob2QuIGNoZWNrcyBhbGwgcGVybXV0YXRpb25zIG9mIGEgZ2l2ZW4gZWRpdCBsZW5ndGggZm9yIGFjY2VwdGFuY2UuXG4gICAgZnVuY3Rpb24gZXhlY0VkaXRMZW5ndGgoKSB7XG4gICAgICBmb3IgKGxldCBkaWFnb25hbFBhdGggPSAtMSAqIGVkaXRMZW5ndGg7IGRpYWdvbmFsUGF0aCA8PSBlZGl0TGVuZ3RoOyBkaWFnb25hbFBhdGggKz0gMikge1xuICAgICAgICBsZXQgYmFzZVBhdGg7XG4gICAgICAgIGxldCBhZGRQYXRoID0gYmVzdFBhdGhbZGlhZ29uYWxQYXRoIC0gMV0sXG4gICAgICAgICAgICByZW1vdmVQYXRoID0gYmVzdFBhdGhbZGlhZ29uYWxQYXRoICsgMV0sXG4gICAgICAgICAgICBvbGRQb3MgPSAocmVtb3ZlUGF0aCA/IHJlbW92ZVBhdGgubmV3UG9zIDogMCkgLSBkaWFnb25hbFBhdGg7XG4gICAgICAgIGlmIChhZGRQYXRoKSB7XG4gICAgICAgICAgLy8gTm8gb25lIGVsc2UgaXMgZ29pbmcgdG8gYXR0ZW1wdCB0byB1c2UgdGhpcyB2YWx1ZSwgY2xlYXIgaXRcbiAgICAgICAgICBiZXN0UGF0aFtkaWFnb25hbFBhdGggLSAxXSA9IHVuZGVmaW5lZDtcbiAgICAgICAgfVxuXG4gICAgICAgIGxldCBjYW5BZGQgPSBhZGRQYXRoICYmIGFkZFBhdGgubmV3UG9zICsgMSA8IG5ld0xlbixcbiAgICAgICAgICAgIGNhblJlbW92ZSA9IHJlbW92ZVBhdGggJiYgMCA8PSBvbGRQb3MgJiYgb2xkUG9zIDwgb2xkTGVuO1xuICAgICAgICBpZiAoIWNhbkFkZCAmJiAhY2FuUmVtb3ZlKSB7XG4gICAgICAgICAgLy8gSWYgdGhpcyBwYXRoIGlzIGEgdGVybWluYWwgdGhlbiBwcnVuZVxuICAgICAgICAgIGJlc3RQYXRoW2RpYWdvbmFsUGF0aF0gPSB1bmRlZmluZWQ7XG4gICAgICAgICAgY29udGludWU7XG4gICAgICAgIH1cblxuICAgICAgICAvLyBTZWxlY3QgdGhlIGRpYWdvbmFsIHRoYXQgd2Ugd2FudCB0byBicmFuY2ggZnJvbS4gV2Ugc2VsZWN0IHRoZSBwcmlvclxuICAgICAgICAvLyBwYXRoIHdob3NlIHBvc2l0aW9uIGluIHRoZSBuZXcgc3RyaW5nIGlzIHRoZSBmYXJ0aGVzdCBmcm9tIHRoZSBvcmlnaW5cbiAgICAgICAgLy8gYW5kIGRvZXMgbm90IHBhc3MgdGhlIGJvdW5kcyBvZiB0aGUgZGlmZiBncmFwaFxuICAgICAgICBpZiAoIWNhbkFkZCB8fCAoY2FuUmVtb3ZlICYmIGFkZFBhdGgubmV3UG9zIDwgcmVtb3ZlUGF0aC5uZXdQb3MpKSB7XG4gICAgICAgICAgYmFzZVBhdGggPSBjbG9uZVBhdGgocmVtb3ZlUGF0aCk7XG4gICAgICAgICAgc2VsZi5wdXNoQ29tcG9uZW50KGJhc2VQYXRoLmNvbXBvbmVudHMsIHVuZGVmaW5lZCwgdHJ1ZSk7XG4gICAgICAgIH0gZWxzZSB7XG4gICAgICAgICAgYmFzZVBhdGggPSBhZGRQYXRoOyAgIC8vIE5vIG5lZWQgdG8gY2xvbmUsIHdlJ3ZlIHB1bGxlZCBpdCBmcm9tIHRoZSBsaXN0XG4gICAgICAgICAgYmFzZVBhdGgubmV3UG9zKys7XG4gICAgICAgICAgc2VsZi5wdXNoQ29tcG9uZW50KGJhc2VQYXRoLmNvbXBvbmVudHMsIHRydWUsIHVuZGVmaW5lZCk7XG4gICAgICAgIH1cblxuICAgICAgICBvbGRQb3MgPSBzZWxmLmV4dHJhY3RDb21tb24oYmFzZVBhdGgsIG5ld1N0cmluZywgb2xkU3RyaW5nLCBkaWFnb25hbFBhdGgpO1xuXG4gICAgICAgIC8vIElmIHdlIGhhdmUgaGl0IHRoZSBlbmQgb2YgYm90aCBzdHJpbmdzLCB0aGVuIHdlIGFyZSBkb25lXG4gICAgICAgIGlmIChiYXNlUGF0aC5uZXdQb3MgKyAxID49IG5ld0xlbiAmJiBvbGRQb3MgKyAxID49IG9sZExlbikge1xuICAgICAgICAgIHJldHVybiBkb25lKGJ1aWxkVmFsdWVzKHNlbGYsIGJhc2VQYXRoLmNvbXBvbmVudHMsIG5ld1N0cmluZywgb2xkU3RyaW5nLCBzZWxmLnVzZUxvbmdlc3RUb2tlbikpO1xuICAgICAgICB9IGVsc2Uge1xuICAgICAgICAgIC8vIE90aGVyd2lzZSB0cmFjayB0aGlzIHBhdGggYXMgYSBwb3RlbnRpYWwgY2FuZGlkYXRlIGFuZCBjb250aW51ZS5cbiAgICAgICAgICBiZXN0UGF0aFtkaWFnb25hbFBhdGhdID0gYmFzZVBhdGg7XG4gICAgICAgIH1cbiAgICAgIH1cblxuICAgICAgZWRpdExlbmd0aCsrO1xuICAgIH1cblxuICAgIC8vIFBlcmZvcm1zIHRoZSBsZW5ndGggb2YgZWRpdCBpdGVyYXRpb24uIElzIGEgYml0IGZ1Z2x5IGFzIHRoaXMgaGFzIHRvIHN1cHBvcnQgdGhlXG4gICAgLy8gc3luYyBhbmQgYXN5bmMgbW9kZSB3aGljaCBpcyBuZXZlciBmdW4uIExvb3BzIG92ZXIgZXhlY0VkaXRMZW5ndGggdW50aWwgYSB2YWx1ZVxuICAgIC8vIGlzIHByb2R1Y2VkLlxuICAgIGlmIChjYWxsYmFjaykge1xuICAgICAgKGZ1bmN0aW9uIGV4ZWMoKSB7XG4gICAgICAgIHNldFRpbWVvdXQoZnVuY3Rpb24oKSB7XG4gICAgICAgICAgLy8gVGhpcyBzaG91bGQgbm90IGhhcHBlbiwgYnV0IHdlIHdhbnQgdG8gYmUgc2FmZS5cbiAgICAgICAgICAvKiBpc3RhbmJ1bCBpZ25vcmUgbmV4dCAqL1xuICAgICAgICAgIGlmIChlZGl0TGVuZ3RoID4gbWF4RWRpdExlbmd0aCkge1xuICAgICAgICAgICAgcmV0dXJuIGNhbGxiYWNrKCk7XG4gICAgICAgICAgfVxuXG4gICAgICAgICAgaWYgKCFleGVjRWRpdExlbmd0aCgpKSB7XG4gICAgICAgICAgICBleGVjKCk7XG4gICAgICAgICAgfVxuICAgICAgICB9LCAwKTtcbiAgICAgIH0oKSk7XG4gICAgfSBlbHNlIHtcbiAgICAgIHdoaWxlIChlZGl0TGVuZ3RoIDw9IG1heEVkaXRMZW5ndGgpIHtcbiAgICAgICAgbGV0IHJldCA9IGV4ZWNFZGl0TGVuZ3RoKCk7XG4gICAgICAgIGlmIChyZXQpIHtcbiAgICAgICAgICByZXR1cm4gcmV0O1xuICAgICAgICB9XG4gICAgICB9XG4gICAgfVxuICB9LFxuXG4gIHB1c2hDb21wb25lbnQoY29tcG9uZW50cywgYWRkZWQsIHJlbW92ZWQpIHtcbiAgICBsZXQgbGFzdCA9IGNvbXBvbmVudHNbY29tcG9uZW50cy5sZW5ndGggLSAxXTtcbiAgICBpZiAobGFzdCAmJiBsYXN0LmFkZGVkID09PSBhZGRlZCAmJiBsYXN0LnJlbW92ZWQgPT09IHJlbW92ZWQpIHtcbiAgICAgIC8vIFdlIG5lZWQgdG8gY2xvbmUgaGVyZSBhcyB0aGUgY29tcG9uZW50IGNsb25lIG9wZXJhdGlvbiBpcyBqdXN0XG4gICAgICAvLyBhcyBzaGFsbG93IGFycmF5IGNsb25lXG4gICAgICBjb21wb25lbnRzW2NvbXBvbmVudHMubGVuZ3RoIC0gMV0gPSB7Y291bnQ6IGxhc3QuY291bnQgKyAxLCBhZGRlZDogYWRkZWQsIHJlbW92ZWQ6IHJlbW92ZWQgfTtcbiAgICB9IGVsc2Uge1xuICAgICAgY29tcG9uZW50cy5wdXNoKHtjb3VudDogMSwgYWRkZWQ6IGFkZGVkLCByZW1vdmVkOiByZW1vdmVkIH0pO1xuICAgIH1cbiAgfSxcbiAgZXh0cmFjdENvbW1vbihiYXNlUGF0aCwgbmV3U3RyaW5nLCBvbGRTdHJpbmcsIGRpYWdvbmFsUGF0aCkge1xuICAgIGxldCBuZXdMZW4gPSBuZXdTdHJpbmcubGVuZ3RoLFxuICAgICAgICBvbGRMZW4gPSBvbGRTdHJpbmcubGVuZ3RoLFxuICAgICAgICBuZXdQb3MgPSBiYXNlUGF0aC5uZXdQb3MsXG4gICAgICAgIG9sZFBvcyA9IG5ld1BvcyAtIGRpYWdvbmFsUGF0aCxcblxuICAgICAgICBjb21tb25Db3VudCA9IDA7XG4gICAgd2hpbGUgKG5ld1BvcyArIDEgPCBuZXdMZW4gJiYgb2xkUG9zICsgMSA8IG9sZExlbiAmJiB0aGlzLmVxdWFscyhuZXdTdHJpbmdbbmV3UG9zICsgMV0sIG9sZFN0cmluZ1tvbGRQb3MgKyAxXSkpIHtcbiAgICAgIG5ld1BvcysrO1xuICAgICAgb2xkUG9zKys7XG4gICAgICBjb21tb25Db3VudCsrO1xuICAgIH1cblxuICAgIGlmIChjb21tb25Db3VudCkge1xuICAgICAgYmFzZVBhdGguY29tcG9uZW50cy5wdXNoKHtjb3VudDogY29tbW9uQ291bnR9KTtcbiAgICB9XG5cbiAgICBiYXNlUGF0aC5uZXdQb3MgPSBuZXdQb3M7XG4gICAgcmV0dXJuIG9sZFBvcztcbiAgfSxcblxuICBlcXVhbHMobGVmdCwgcmlnaHQpIHtcbiAgICByZXR1cm4gbGVmdCA9PT0gcmlnaHQ7XG4gIH0sXG4gIHJlbW92ZUVtcHR5KGFycmF5KSB7XG4gICAgbGV0IHJldCA9IFtdO1xuICAgIGZvciAobGV0IGkgPSAwOyBpIDwgYXJyYXkubGVuZ3RoOyBpKyspIHtcbiAgICAgIGlmIChhcnJheVtpXSkge1xuICAgICAgICByZXQucHVzaChhcnJheVtpXSk7XG4gICAgICB9XG4gICAgfVxuICAgIHJldHVybiByZXQ7XG4gIH0sXG4gIGNhc3RJbnB1dCh2YWx1ZSkge1xuICAgIHJldHVybiB2YWx1ZTtcbiAgfSxcbiAgdG9rZW5pemUodmFsdWUpIHtcbiAgICByZXR1cm4gdmFsdWUuc3BsaXQoJycpO1xuICB9LFxuICBqb2luKGNoYXJzKSB7XG4gICAgcmV0dXJuIGNoYXJzLmpvaW4oJycpO1xuICB9XG59O1xuXG5mdW5jdGlvbiBidWlsZFZhbHVlcyhkaWZmLCBjb21wb25lbnRzLCBuZXdTdHJpbmcsIG9sZFN0cmluZywgdXNlTG9uZ2VzdFRva2VuKSB7XG4gIGxldCBjb21wb25lbnRQb3MgPSAwLFxuICAgICAgY29tcG9uZW50TGVuID0gY29tcG9uZW50cy5sZW5ndGgsXG4gICAgICBuZXdQb3MgPSAwLFxuICAgICAgb2xkUG9zID0gMDtcblxuICBmb3IgKDsgY29tcG9uZW50UG9zIDwgY29tcG9uZW50TGVuOyBjb21wb25lbnRQb3MrKykge1xuICAgIGxldCBjb21wb25lbnQgPSBjb21wb25lbnRzW2NvbXBvbmVudFBvc107XG4gICAgaWYgKCFjb21wb25lbnQucmVtb3ZlZCkge1xuICAgICAgaWYgKCFjb21wb25lbnQuYWRkZWQgJiYgdXNlTG9uZ2VzdFRva2VuKSB7XG4gICAgICAgIGxldCB2YWx1ZSA9IG5ld1N0cmluZy5zbGljZShuZXdQb3MsIG5ld1BvcyArIGNvbXBvbmVudC5jb3VudCk7XG4gICAgICAgIHZhbHVlID0gdmFsdWUubWFwKGZ1bmN0aW9uKHZhbHVlLCBpKSB7XG4gICAgICAgICAgbGV0IG9sZFZhbHVlID0gb2xkU3RyaW5nW29sZFBvcyArIGldO1xuICAgICAgICAgIHJldHVybiBvbGRWYWx1ZS5sZW5ndGggPiB2YWx1ZS5sZW5ndGggPyBvbGRWYWx1ZSA6IHZhbHVlO1xuICAgICAgICB9KTtcblxuICAgICAgICBjb21wb25lbnQudmFsdWUgPSBkaWZmLmpvaW4odmFsdWUpO1xuICAgICAgfSBlbHNlIHtcbiAgICAgICAgY29tcG9uZW50LnZhbHVlID0gZGlmZi5qb2luKG5ld1N0cmluZy5zbGljZShuZXdQb3MsIG5ld1BvcyArIGNvbXBvbmVudC5jb3VudCkpO1xuICAgICAgfVxuICAgICAgbmV3UG9zICs9IGNvbXBvbmVudC5jb3VudDtcblxuICAgICAgLy8gQ29tbW9uIGNhc2VcbiAgICAgIGlmICghY29tcG9uZW50LmFkZGVkKSB7XG4gICAgICAgIG9sZFBvcyArPSBjb21wb25lbnQuY291bnQ7XG4gICAgICB9XG4gICAgfSBlbHNlIHtcbiAgICAgIGNvbXBvbmVudC52YWx1ZSA9IGRpZmYuam9pbihvbGRTdHJpbmcuc2xpY2Uob2xkUG9zLCBvbGRQb3MgKyBjb21wb25lbnQuY291bnQpKTtcbiAgICAgIG9sZFBvcyArPSBjb21wb25lbnQuY291bnQ7XG5cbiAgICAgIC8vIFJldmVyc2UgYWRkIGFuZCByZW1vdmUgc28gcmVtb3ZlcyBhcmUgb3V0cHV0IGZpcnN0IHRvIG1hdGNoIGNvbW1vbiBjb252ZW50aW9uXG4gICAgICAvLyBUaGUgZGlmZmluZyBhbGdvcml0aG0gaXMgdGllZCB0byBhZGQgdGhlbiByZW1vdmUgb3V0cHV0IGFuZCB0aGlzIGlzIHRoZSBzaW1wbGVzdFxuICAgICAgLy8gcm91dGUgdG8gZ2V0IHRoZSBkZXNpcmVkIG91dHB1dCB3aXRoIG1pbmltYWwgb3ZlcmhlYWQuXG4gICAgICBpZiAoY29tcG9uZW50UG9zICYmIGNvbXBvbmVudHNbY29tcG9uZW50UG9zIC0gMV0uYWRkZWQpIHtcbiAgICAgICAgbGV0IHRtcCA9IGNvbXBvbmVudHNbY29tcG9uZW50UG9zIC0gMV07XG4gICAgICAgIGNvbXBvbmVudHNbY29tcG9uZW50UG9zIC0gMV0gPSBjb21wb25lbnRzW2NvbXBvbmVudFBvc107XG4gICAgICAgIGNvbXBvbmVudHNbY29tcG9uZW50UG9zXSA9IHRtcDtcbiAgICAgIH1cbiAgICB9XG4gIH1cblxuICAvLyBTcGVjaWFsIGNhc2UgaGFuZGxlIGZvciB3aGVuIG9uZSB0ZXJtaW5hbCBpcyBpZ25vcmVkLiBGb3IgdGhpcyBjYXNlIHdlIG1lcmdlIHRoZVxuICAvLyB0ZXJtaW5hbCBpbnRvIHRoZSBwcmlvciBzdHJpbmcgYW5kIGRyb3AgdGhlIGNoYW5nZS5cbiAgbGV0IGxhc3RDb21wb25lbnQgPSBjb21wb25lbnRzW2NvbXBvbmVudExlbiAtIDFdO1xuICBpZiAoY29tcG9uZW50TGVuID4gMVxuICAgICAgJiYgKGxhc3RDb21wb25lbnQuYWRkZWQgfHwgbGFzdENvbXBvbmVudC5yZW1vdmVkKVxuICAgICAgJiYgZGlmZi5lcXVhbHMoJycsIGxhc3RDb21wb25lbnQudmFsdWUpKSB7XG4gICAgY29tcG9uZW50c1tjb21wb25lbnRMZW4gLSAyXS52YWx1ZSArPSBsYXN0Q29tcG9uZW50LnZhbHVlO1xuICAgIGNvbXBvbmVudHMucG9wKCk7XG4gIH1cblxuICByZXR1cm4gY29tcG9uZW50cztcbn1cblxuZnVuY3Rpb24gY2xvbmVQYXRoKHBhdGgpIHtcbiAgcmV0dXJuIHsgbmV3UG9zOiBwYXRoLm5ld1BvcywgY29tcG9uZW50czogcGF0aC5jb21wb25lbnRzLnNsaWNlKDApIH07XG59XG4iXX0=
-
-
-/***/ }),
-/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -4100,13 +3863,13 @@ return /******/ (function(modules) { // webpackBootstrap
 //# sourceMappingURL=moxios.js.map
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var match = __webpack_require__(7);
+var match = __webpack_require__(8);
 var deepEqual = __webpack_require__(13);
 var deprecated = __webpack_require__(31);
 
@@ -4137,7 +3900,7 @@ function exposeEventTarget(target, eventTarget) {
 }
 
 // Expose internal utilities on `sinon` global for backwards compatibility.
-exposeCoreUtils(exports, __webpack_require__(157));
+exposeCoreUtils(exports, __webpack_require__(158));
 
 exports.assert = __webpack_require__(30);
 exports.collection = __webpack_require__(61);
@@ -4146,7 +3909,7 @@ exports.spy = __webpack_require__(17);
 exports.spyCall = __webpack_require__(21);
 exports.stub = __webpack_require__(18);
 exports.mock = __webpack_require__(63);
-exports.sandbox = __webpack_require__(151);
+exports.sandbox = __webpack_require__(152);
 exports.expectation = __webpack_require__(62);
 exports.createStubInstance = __webpack_require__(18).createStubInstance;
 
@@ -4178,436 +3941,7 @@ exports.addBehavior = function (name, fn) {
 
 
 /***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var deepEqual = __webpack_require__(13).use(match); // eslint-disable-line no-use-before-define
-var every = __webpack_require__(67);
-var functionName = __webpack_require__(19);
-var iterableToString = __webpack_require__(68);
-var typeOf = __webpack_require__(34);
-var valueToString = __webpack_require__(10);
-
-var indexOf = Array.prototype.indexOf;
-
-function assertType(value, type, name) {
-    var actual = typeOf(value);
-    if (actual !== type) {
-        throw new TypeError("Expected type of " + name + " to be " +
-            type + ", but was " + actual);
-    }
-}
-
-var matcher = {
-    toString: function () {
-        return this.message;
-    }
-};
-
-function isMatcher(object) {
-    return matcher.isPrototypeOf(object);
-}
-
-function matchObject(expectation, actual) {
-    if (actual === null || actual === undefined) {
-        return false;
-    }
-
-    return Object.keys(expectation).every(function (key) {
-        var exp = expectation[key];
-        var act = actual[key];
-
-        if (isMatcher(exp)) {
-            if (!exp.test(act)) {
-                return false;
-            }
-        } else if (typeOf(exp) === "object") {
-            if (!matchObject(exp, act)) {
-                return false;
-            }
-        } else if (!deepEqual(exp, act)) {
-            return false;
-        }
-
-        return true;
-    });
-}
-
-var TYPE_MAP = {
-    "function": function (m, expectation, message) {
-        m.test = expectation;
-        m.message = message || "match(" + functionName(expectation) + ")";
-    },
-    number: function (m, expectation) {
-        m.test = function (actual) {
-            // we need type coercion here
-            return expectation == actual; // eslint-disable-line eqeqeq
-        };
-    },
-    object: function (m, expectation) {
-        var array = [];
-
-        if (typeof expectation.test === "function") {
-            m.test = function (actual) {
-                return expectation.test(actual) === true;
-            };
-            m.message = "match(" + functionName(expectation.test) + ")";
-            return m;
-        }
-
-        array = Object.keys(expectation).map(function (key) {
-            return key + ": " + valueToString(expectation[key]);
-        });
-
-        m.test = function (actual) {
-            return matchObject(expectation, actual);
-        };
-        m.message = "match(" + array.join(", ") + ")";
-
-        return m;
-    },
-    regexp: function (m, expectation) {
-        m.test = function (actual) {
-            return typeof actual === "string" && expectation.test(actual);
-        };
-    },
-    string: function (m, expectation) {
-        m.test = function (actual) {
-            return typeof actual === "string" && actual.indexOf(expectation) !== -1;
-        };
-        m.message = "match(\"" + expectation + "\")";
-    }
-};
-
-function match(expectation, message) {
-    var m = Object.create(matcher);
-    var type = typeOf(expectation);
-
-    if (type in TYPE_MAP) {
-        TYPE_MAP[type](m, expectation, message);
-    } else {
-        m.test = function (actual) {
-            return deepEqual(expectation, actual);
-        };
-    }
-
-    if (!m.message) {
-        m.message = "match(" + valueToString(expectation) + ")";
-    }
-
-    return m;
-}
-
-matcher.or = function (m2) {
-    if (!arguments.length) {
-        throw new TypeError("Matcher expected");
-    } else if (!isMatcher(m2)) {
-        m2 = match(m2);
-    }
-    var m1 = this;
-    var or = Object.create(matcher);
-    or.test = function (actual) {
-        return m1.test(actual) || m2.test(actual);
-    };
-    or.message = m1.message + ".or(" + m2.message + ")";
-    return or;
-};
-
-matcher.and = function (m2) {
-    if (!arguments.length) {
-        throw new TypeError("Matcher expected");
-    } else if (!isMatcher(m2)) {
-        m2 = match(m2);
-    }
-    var m1 = this;
-    var and = Object.create(matcher);
-    and.test = function (actual) {
-        return m1.test(actual) && m2.test(actual);
-    };
-    and.message = m1.message + ".and(" + m2.message + ")";
-    return and;
-};
-
-match.isMatcher = isMatcher;
-
-match.any = match(function () {
-    return true;
-}, "any");
-
-match.defined = match(function (actual) {
-    return actual !== null && actual !== undefined;
-}, "defined");
-
-match.truthy = match(function (actual) {
-    return !!actual;
-}, "truthy");
-
-match.falsy = match(function (actual) {
-    return !actual;
-}, "falsy");
-
-match.same = function (expectation) {
-    return match(function (actual) {
-        return expectation === actual;
-    }, "same(" + valueToString(expectation) + ")");
-};
-
-match.typeOf = function (type) {
-    assertType(type, "string", "type");
-    return match(function (actual) {
-        return typeOf(actual) === type;
-    }, "typeOf(\"" + type + "\")");
-};
-
-match.instanceOf = function (type) {
-    assertType(type, "function", "type");
-    return match(function (actual) {
-        return actual instanceof type;
-    }, "instanceOf(" + functionName(type) + ")");
-};
-
-function createPropertyMatcher(propertyTest, messagePrefix) {
-    return function (property, value) {
-        assertType(property, "string", "property");
-        var onlyProperty = arguments.length === 1;
-        var message = messagePrefix + "(\"" + property + "\"";
-        if (!onlyProperty) {
-            message += ", " + valueToString(value);
-        }
-        message += ")";
-        return match(function (actual) {
-            if (actual === undefined || actual === null ||
-                    !propertyTest(actual, property)) {
-                return false;
-            }
-            return onlyProperty || deepEqual(value, actual[property]);
-        }, message);
-    };
-}
-
-match.has = createPropertyMatcher(function (actual, property) {
-    if (typeof actual === "object") {
-        return property in actual;
-    }
-    return actual[property] !== undefined;
-}, "has");
-
-match.hasOwn = createPropertyMatcher(function (actual, property) {
-    return actual.hasOwnProperty(property);
-}, "hasOwn");
-
-match.array = match.typeOf("array");
-
-match.array.deepEquals = function (expectation) {
-    return match(function (actual) {
-        // Comparing lengths is the fastest way to spot a difference before iterating through every item
-        var sameLength = actual.length === expectation.length;
-        return typeOf(actual) === "array" && sameLength && every(actual, function (element, index) {
-            return expectation[index] === element;
-        });
-    }, "deepEquals([" + iterableToString(expectation) + "])");
-};
-
-match.array.startsWith = function (expectation) {
-    return match(function (actual) {
-        return typeOf(actual) === "array" && every(expectation, function (expectedElement, index) {
-            return actual[index] === expectedElement;
-        });
-    }, "startsWith([" + iterableToString(expectation) + "])");
-};
-
-match.array.endsWith = function (expectation) {
-    return match(function (actual) {
-        // This indicates the index in which we should start matching
-        var offset = actual.length - expectation.length;
-
-        return typeOf(actual) === "array" && every(expectation, function (expectedElement, index) {
-            return actual[offset + index] === expectedElement;
-        });
-    }, "endsWith([" + iterableToString(expectation) + "])");
-};
-
-match.array.contains = function (expectation) {
-    return match(function (actual) {
-        return typeOf(actual) === "array" && every(expectation, function (expectedElement) {
-            return indexOf.call(actual, expectedElement) !== -1;
-        });
-    }, "contains([" + iterableToString(expectation) + "])");
-};
-
-match.map = match.typeOf("map");
-
-match.map.deepEquals = function mapDeepEquals(expectation) {
-    return match(function (actual) {
-        // Comparing lengths is the fastest way to spot a difference before iterating through every item
-        var sameLength = actual.size === expectation.size;
-        return typeOf(actual) === "map" && sameLength && every(actual, function (element, key) {
-            return expectation.has(key) && expectation.get(key) === element;
-        });
-    }, "deepEquals(Map[" + iterableToString(expectation) + "])");
-};
-
-match.map.contains = function mapContains(expectation) {
-    return match(function (actual) {
-        return typeOf(actual) === "map" && every(expectation, function (element, key) {
-            return actual.has(key) && actual.get(key) === element;
-        });
-    }, "contains(Map[" + iterableToString(expectation) + "])");
-};
-
-match.set = match.typeOf("set");
-
-match.set.deepEquals = function setDeepEquals(expectation) {
-    return match(function (actual) {
-        // Comparing lengths is the fastest way to spot a difference before iterating through every item
-        var sameLength = actual.size === expectation.size;
-        return typeOf(actual) === "set" && sameLength && every(actual, function (element) {
-            return expectation.has(element);
-        });
-    }, "deepEquals(Set[" + iterableToString(expectation) + "])");
-};
-
-match.set.contains = function setContains(expectation) {
-    return match(function (actual) {
-        return typeOf(actual) === "set" && every(expectation, function (element) {
-            return actual.has(element);
-        });
-    }, "contains(Set[" + iterableToString(expectation) + "])");
-};
-
-match.bool = match.typeOf("boolean");
-match.number = match.typeOf("number");
-match.string = match.typeOf("string");
-match.object = match.typeOf("object");
-match.func = match.typeOf("function");
-match.regexp = match.typeOf("regexp");
-match.date = match.typeOf("date");
-match.symbol = match.typeOf("symbol");
-
-module.exports = match;
-
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-// Adapted from https://developer.mozilla.org/en/docs/ECMAScript_DontEnum_attribute#JScript_DontEnum_Bug
-var hasDontEnumBug = (function () {
-    var obj = {
-        constructor: function () {
-            return "0";
-        },
-        toString: function () {
-            return "1";
-        },
-        valueOf: function () {
-            return "2";
-        },
-        toLocaleString: function () {
-            return "3";
-        },
-        prototype: function () {
-            return "4";
-        },
-        isPrototypeOf: function () {
-            return "5";
-        },
-        propertyIsEnumerable: function () {
-            return "6";
-        },
-        hasOwnProperty: function () {
-            return "7";
-        },
-        length: function () {
-            return "8";
-        },
-        unique: function () {
-            return "9";
-        }
-    };
-
-    var result = [];
-    for (var prop in obj) {
-        if (obj.hasOwnProperty(prop)) {
-            result.push(obj[prop]());
-        }
-    }
-    return result.join("") !== "0123456789";
-})();
-
-/* Public: Extend target in place with all (own) properties from sources in-order. Thus, last source will
- *         override properties in previous sources.
- *
- * target - The Object to extend
- * sources - Objects to copy properties from.
- *
- * Returns the extended target
- */
-module.exports = function extend(target /*, sources */) {
-    var sources = Array.prototype.slice.call(arguments, 1);
-    var source, i, prop;
-
-    for (i = 0; i < sources.length; i++) {
-        source = sources[i];
-
-        for (prop in source) {
-            if (source.hasOwnProperty(prop)) {
-                target[prop] = source[prop];
-            }
-        }
-
-        // Make sure we copy (own) toString method even when in JScript with DontEnum bug
-        // See https://developer.mozilla.org/en/docs/ECMAScript_DontEnum_attribute#JScript_DontEnum_Bug
-        if (hasDontEnumBug && source.hasOwnProperty("toString") && source.toString !== target.toString) {
-            target.toString = source.toString;
-        }
-    }
-
-    return target;
-};
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function getPropertyDescriptor(object, property) {
-    var proto = object;
-    var descriptor;
-
-    while (proto && !(descriptor = Object.getOwnPropertyDescriptor(proto, property))) {
-        proto = Object.getPrototypeOf(proto);
-    }
-    return descriptor;
-};
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function (value) {
-    if (value && value.toString) {
-        return value.toString();
-    }
-    return String(value);
-};
-
-
-/***/ }),
-/* 11 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/*! Palindrom 
@@ -4618,13 +3952,13 @@ module.exports = function (value) {
 if (true) {
   /* include only applyPatch and validate */
   var { applyPatch, validate } = __webpack_require__(57);
-  var JSONPatcherProxy = __webpack_require__(144);
+  var JSONPatcherProxy = __webpack_require__(145);
   var JSONPatchQueueSynchronous = __webpack_require__(29)
     .JSONPatchQueueSynchronous;
   var JSONPatchQueue = __webpack_require__(29).JSONPatchQueue;
-  var JSONPatchOT = __webpack_require__(141);
-  var JSONPatchOTAgent = __webpack_require__(140);
-  var URL = __webpack_require__(171);
+  var JSONPatchOT = __webpack_require__(142);
+  var JSONPatchOTAgent = __webpack_require__(141);
+  var URL = __webpack_require__(172);
   var axios = __webpack_require__(41);
 
   /* We are going to hand `websocket` lib as an external to webpack
@@ -4632,7 +3966,7 @@ if (true) {
   this will make `w3cwebsocket` property `undefined`, 
   and this will lead Palindrom to use Browser's WebSocket when it is used 
   from the bundle. And use `websocket` lib in Node environment */
-  var NodeWebSocket = __webpack_require__(172).w3cwebsocket;
+  var NodeWebSocket = __webpack_require__(173).w3cwebsocket;
 
   /* this allows us to stub WebSockets */
   if (!global.WebSocket && NodeWebSocket) {
@@ -5162,7 +4496,7 @@ var Palindrom = (function() {
     this.onLocalChange = options.onLocalChange || noop;
     this.onRemoteChange = options.onRemoteChange || noop;
     this.onStateReset = options.onStateReset || options.callback || noop;
-
+    this.filterLocalChange = options.filterLocalChange || (operation => operation);
     if (options.callback) {
       console.warn(
         'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
@@ -5255,7 +4589,6 @@ var Palindrom = (function() {
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
   };
-
   Palindrom.prototype.prepareProxifiedObject = function(obj) {
     if (!obj) {
       obj = {};
@@ -5265,7 +4598,11 @@ var Palindrom = (function() {
 
     const proxifiedObj = this.jsonPatcherProxy.observe(
       true,
-      this.filterChangedCallback.bind(this)
+      operation => {
+        const filtered = this.filterLocalChange(operation);
+        // totally ignore falsy (didn't pass the filter) JSON Patch operations
+        filtered && this.handleLocalChange(filtered)
+      }
     );
 
     /* make it read-only and expose it as `obj` */
@@ -5292,22 +4629,6 @@ var Palindrom = (function() {
     this.isObserving = false;
   };
 
-  Palindrom.prototype.filterChangedCallback = function(patch) {
-    /*
-    because JSONPatcherProxy is synchronous,
-    it passes a single patch to the callback instantly after the change,
-    to make this review process easier, I'll convert this single patch
-    to an array to keep the logic change minimal,
-    once approved, I can enhance this.
-    Or we can also keep it, in case we decided to introduce batching/delaying 
-    at one point.
-    */
-    var patches = [patch];
-    if (patches.length) {
-      this.handleLocalChange(patches);
-    }
-  };
-
   function sendPatches(palindrom, patches) {
     var txt = JSON.stringify(patches);
     palindrom.unobserve();
@@ -5316,11 +4637,11 @@ var Palindrom = (function() {
     palindrom.observe();
   }
 
-  Palindrom.prototype.handleLocalChange = function(patches) {
+  Palindrom.prototype.handleLocalChange = function(operation) {
+    const patches = [operation];
     if (this.debug) {
       this.validateSequence(this.remoteObj, patches);
     }
-
     sendPatches(this, this.queue.send(patches));
     this.onLocalChange(patches);
   };
@@ -5437,6 +4758,672 @@ if (true) {
 }
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/*istanbul ignore start*/
+
+exports.__esModule = true;
+exports['default'] = /*istanbul ignore end*/Diff;
+function Diff() {}
+
+Diff.prototype = { /*istanbul ignore start*/
+  /*istanbul ignore end*/diff: function diff(oldString, newString) {
+    /*istanbul ignore start*/var /*istanbul ignore end*/options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+    var callback = options.callback;
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    }
+    this.options = options;
+
+    var self = this;
+
+    function done(value) {
+      if (callback) {
+        setTimeout(function () {
+          callback(undefined, value);
+        }, 0);
+        return true;
+      } else {
+        return value;
+      }
+    }
+
+    // Allow subclasses to massage the input prior to running
+    oldString = this.castInput(oldString);
+    newString = this.castInput(newString);
+
+    oldString = this.removeEmpty(this.tokenize(oldString));
+    newString = this.removeEmpty(this.tokenize(newString));
+
+    var newLen = newString.length,
+        oldLen = oldString.length;
+    var editLength = 1;
+    var maxEditLength = newLen + oldLen;
+    var bestPath = [{ newPos: -1, components: [] }];
+
+    // Seed editLength = 0, i.e. the content starts with the same values
+    var oldPos = this.extractCommon(bestPath[0], newString, oldString, 0);
+    if (bestPath[0].newPos + 1 >= newLen && oldPos + 1 >= oldLen) {
+      // Identity per the equality and tokenizer
+      return done([{ value: this.join(newString), count: newString.length }]);
+    }
+
+    // Main worker method. checks all permutations of a given edit length for acceptance.
+    function execEditLength() {
+      for (var diagonalPath = -1 * editLength; diagonalPath <= editLength; diagonalPath += 2) {
+        var basePath = /*istanbul ignore start*/void 0 /*istanbul ignore end*/;
+        var addPath = bestPath[diagonalPath - 1],
+            removePath = bestPath[diagonalPath + 1],
+            _oldPos = (removePath ? removePath.newPos : 0) - diagonalPath;
+        if (addPath) {
+          // No one else is going to attempt to use this value, clear it
+          bestPath[diagonalPath - 1] = undefined;
+        }
+
+        var canAdd = addPath && addPath.newPos + 1 < newLen,
+            canRemove = removePath && 0 <= _oldPos && _oldPos < oldLen;
+        if (!canAdd && !canRemove) {
+          // If this path is a terminal then prune
+          bestPath[diagonalPath] = undefined;
+          continue;
+        }
+
+        // Select the diagonal that we want to branch from. We select the prior
+        // path whose position in the new string is the farthest from the origin
+        // and does not pass the bounds of the diff graph
+        if (!canAdd || canRemove && addPath.newPos < removePath.newPos) {
+          basePath = clonePath(removePath);
+          self.pushComponent(basePath.components, undefined, true);
+        } else {
+          basePath = addPath; // No need to clone, we've pulled it from the list
+          basePath.newPos++;
+          self.pushComponent(basePath.components, true, undefined);
+        }
+
+        _oldPos = self.extractCommon(basePath, newString, oldString, diagonalPath);
+
+        // If we have hit the end of both strings, then we are done
+        if (basePath.newPos + 1 >= newLen && _oldPos + 1 >= oldLen) {
+          return done(buildValues(self, basePath.components, newString, oldString, self.useLongestToken));
+        } else {
+          // Otherwise track this path as a potential candidate and continue.
+          bestPath[diagonalPath] = basePath;
+        }
+      }
+
+      editLength++;
+    }
+
+    // Performs the length of edit iteration. Is a bit fugly as this has to support the
+    // sync and async mode which is never fun. Loops over execEditLength until a value
+    // is produced.
+    if (callback) {
+      (function exec() {
+        setTimeout(function () {
+          // This should not happen, but we want to be safe.
+          /* istanbul ignore next */
+          if (editLength > maxEditLength) {
+            return callback();
+          }
+
+          if (!execEditLength()) {
+            exec();
+          }
+        }, 0);
+      })();
+    } else {
+      while (editLength <= maxEditLength) {
+        var ret = execEditLength();
+        if (ret) {
+          return ret;
+        }
+      }
+    }
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/pushComponent: function pushComponent(components, added, removed) {
+    var last = components[components.length - 1];
+    if (last && last.added === added && last.removed === removed) {
+      // We need to clone here as the component clone operation is just
+      // as shallow array clone
+      components[components.length - 1] = { count: last.count + 1, added: added, removed: removed };
+    } else {
+      components.push({ count: 1, added: added, removed: removed });
+    }
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/extractCommon: function extractCommon(basePath, newString, oldString, diagonalPath) {
+    var newLen = newString.length,
+        oldLen = oldString.length,
+        newPos = basePath.newPos,
+        oldPos = newPos - diagonalPath,
+        commonCount = 0;
+    while (newPos + 1 < newLen && oldPos + 1 < oldLen && this.equals(newString[newPos + 1], oldString[oldPos + 1])) {
+      newPos++;
+      oldPos++;
+      commonCount++;
+    }
+
+    if (commonCount) {
+      basePath.components.push({ count: commonCount });
+    }
+
+    basePath.newPos = newPos;
+    return oldPos;
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/equals: function equals(left, right) {
+    return left === right;
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/removeEmpty: function removeEmpty(array) {
+    var ret = [];
+    for (var i = 0; i < array.length; i++) {
+      if (array[i]) {
+        ret.push(array[i]);
+      }
+    }
+    return ret;
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/castInput: function castInput(value) {
+    return value;
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/tokenize: function tokenize(value) {
+    return value.split('');
+  },
+  /*istanbul ignore start*/ /*istanbul ignore end*/join: function join(chars) {
+    return chars.join('');
+  }
+};
+
+function buildValues(diff, components, newString, oldString, useLongestToken) {
+  var componentPos = 0,
+      componentLen = components.length,
+      newPos = 0,
+      oldPos = 0;
+
+  for (; componentPos < componentLen; componentPos++) {
+    var component = components[componentPos];
+    if (!component.removed) {
+      if (!component.added && useLongestToken) {
+        var value = newString.slice(newPos, newPos + component.count);
+        value = value.map(function (value, i) {
+          var oldValue = oldString[oldPos + i];
+          return oldValue.length > value.length ? oldValue : value;
+        });
+
+        component.value = diff.join(value);
+      } else {
+        component.value = diff.join(newString.slice(newPos, newPos + component.count));
+      }
+      newPos += component.count;
+
+      // Common case
+      if (!component.added) {
+        oldPos += component.count;
+      }
+    } else {
+      component.value = diff.join(oldString.slice(oldPos, oldPos + component.count));
+      oldPos += component.count;
+
+      // Reverse add and remove so removes are output first to match common convention
+      // The diffing algorithm is tied to add then remove output and this is the simplest
+      // route to get the desired output with minimal overhead.
+      if (componentPos && components[componentPos - 1].added) {
+        var tmp = components[componentPos - 1];
+        components[componentPos - 1] = components[componentPos];
+        components[componentPos] = tmp;
+      }
+    }
+  }
+
+  // Special case handle for when one terminal is ignored. For this case we merge the
+  // terminal into the prior string and drop the change.
+  var lastComponent = components[componentLen - 1];
+  if (componentLen > 1 && (lastComponent.added || lastComponent.removed) && diff.equals('', lastComponent.value)) {
+    components[componentLen - 2].value += lastComponent.value;
+    components.pop();
+  }
+
+  return components;
+}
+
+function clonePath(path) {
+  return { newPos: path.newPos, components: path.components.slice(0) };
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uLy4uL3NyYy9kaWZmL2Jhc2UuanMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7OzRDQUF3QixJO0FBQVQsU0FBUyxJQUFULEdBQWdCLENBQUU7O0FBRWpDLEtBQUssU0FBTCxHQUFpQixFO3lCQUNmLElBRGUsZ0JBQ1YsU0FEVSxFQUNDLFNBREQsRUFDMEI7NkJBQUEsSSx1QkFBZCxPQUFjLHlEQUFKLEVBQUk7O0FBQ3ZDLFFBQUksV0FBVyxRQUFRLFFBQXZCO0FBQ0EsUUFBSSxPQUFPLE9BQVAsS0FBbUIsVUFBdkIsRUFBbUM7QUFDakMsaUJBQVcsT0FBWDtBQUNBLGdCQUFVLEVBQVY7QUFDRDtBQUNELFNBQUssT0FBTCxHQUFlLE9BQWY7O0FBRUEsUUFBSSxPQUFPLElBQVg7O0FBRUEsYUFBUyxJQUFULENBQWMsS0FBZCxFQUFxQjtBQUNuQixVQUFJLFFBQUosRUFBYztBQUNaLG1CQUFXLFlBQVc7QUFBRSxtQkFBUyxTQUFULEVBQW9CLEtBQXBCO0FBQTZCLFNBQXJELEVBQXVELENBQXZEO0FBQ0EsZUFBTyxJQUFQO0FBQ0QsT0FIRCxNQUdPO0FBQ0wsZUFBTyxLQUFQO0FBQ0Q7QUFDRjs7O0FBR0QsZ0JBQVksS0FBSyxTQUFMLENBQWUsU0FBZixDQUFaO0FBQ0EsZ0JBQVksS0FBSyxTQUFMLENBQWUsU0FBZixDQUFaOztBQUVBLGdCQUFZLEtBQUssV0FBTCxDQUFpQixLQUFLLFFBQUwsQ0FBYyxTQUFkLENBQWpCLENBQVo7QUFDQSxnQkFBWSxLQUFLLFdBQUwsQ0FBaUIsS0FBSyxRQUFMLENBQWMsU0FBZCxDQUFqQixDQUFaOztBQUVBLFFBQUksU0FBUyxVQUFVLE1BQXZCO0FBQUEsUUFBK0IsU0FBUyxVQUFVLE1BQWxEO0FBQ0EsUUFBSSxhQUFhLENBQWpCO0FBQ0EsUUFBSSxnQkFBZ0IsU0FBUyxNQUE3QjtBQUNBLFFBQUksV0FBVyxDQUFDLEVBQUUsUUFBUSxDQUFDLENBQVgsRUFBYyxZQUFZLEVBQTFCLEVBQUQsQ0FBZjs7O0FBR0EsUUFB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LFVBQUwsQ0FBZ0IsS0FBaEIsQ0FBc0IsQ0FBdEIsQ0FBbkMsRUFBUDtBQUNEIiwiZmlsZSI6ImJhc2UuanMiLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBEaWZmKCkge31cblxuRGlmZi5wcm90b3R5cGUgPSB7XG4gIGRpZmYob2xkU3RyaW5nLCBuZXdTdHJpbmcsIG9wdGlvbnMgPSB7fSkge1xuICAgIGxldCBjYWxsYmFjayA9IG9wdGlvbnMuY2FsbGJhY2s7XG4gICAgaWYgKHR5cGVvZiBvcHRpb25zID09PSAnZnVuY3Rpb24nKSB7XG4gICAgICBjYWxsYmFjayA9IG9wdGlvbnM7XG4gICAgICBvcHRpb25zID0ge307XG4gICAgfVxuICAgIHRoaXMub3B0aW9ucyA9IG9wdGlvbnM7XG5cbiAgICBsZXQgc2VsZiA9IHRoaXM7XG5cbiAgICBmdW5jdGlvbiBkb25lKHZhbHVlKSB7XG4gICAgICBpZiAoY2FsbGJhY2spIHtcbiAgICAgICAgc2V0VGltZW91dChmdW5jdGlvbigpIHsgY2FsbGJhY2sodW5kZWZpbmVkLCB2YWx1ZSk7IH0sIDApO1xuICAgICAgICByZXR1cm4gdHJ1ZTtcbiAgICAgIH0gZWxzZSB7XG4gICAgICAgIHJldHVybiB2YWx1ZTtcbiAgICAgIH1cbiAgICB9XG5cbiAgICAvLyBBbGxvdyBzdWJjbGFzc2VzIHRvIG1hc3NhZ2UgdGhlIGlucHV0IHByaW9yIHRvIHJ1bm5pbmdcbiAgICBvbGRTdHJpbmcgPSB0aGlzLmNhc3RJbnB1dChvbGRTdHJpbmcpO1xuICAgIG5ld1N0cmluZyA9IHRoaXMuY2FzdElucHV0KG5ld1N0cmluZyk7XG5cbiAgICBvbGRTdHJpbmcgPSB0aGlzLnJlbW92ZUVtcHR5KHRoaXMudG9rZW5pemUob2xkU3RyaW5nKSk7XG4gICAgbmV3U3RyaW5nID0gdGhpcy5yZW1vdmVFbXB0eSh0aGlzLnRva2VuaXplKG5ld1N0cmluZykpO1xuXG4gICAgbGV0IG5ld0xlbiA9IG5ld1N0cmluZy5sZW5ndGgsIG9sZExlbiA9IG9sZFN0cmluZy5sZW5ndGg7XG4gICAgbGV0IGVkaXRMZW5ndGggPSAxO1xuICAgIGxldCBtYXhFZGl0TGVuZ3RoID0gbmV3TGVuICsgb2xkTGVuO1xuICAgIGxldCBiZXN0UGF0aCA9IFt7IG5ld1BvczogLTEsIGNvbXBvbmVudHM6IFtdIH1dO1xuXG4gICAgLy8gU2VlZCBlZGl0TGVuZ3RoID0gMCwgaS5lLiB0aGUgY29udGVudCBzdGFydHMgd2l0aCB0aGUgc2FtZSB2YWx1ZXNcbiAgICBsZXQgb2xkUG9zID0gdGhpcy5leHRyYWN0Q29tbW9uKGJlc3RQYXRoWzBdLCBuZXdTdHJpbmcsIG9sZFN0cmluZywgMCk7XG4gICAgaWYgKGJlc3RQYXRoWzBdLm5ld1BvcyArIDEgPj0gbmV3TGVuICYmIG9sZFBvcyArIDEgPj0gb2xkTGVuKSB7XG4gICAgICAvLyBJZGVudGl0eSBwZXIgdGhlIGVxdWFsaXR5IGFuZCB0b2tlbml6ZXJcbiAgICAgIHJldHVybiBkb25lKFt7dmFsdWU6IHRoaXMuam9pbihuZXdTdHJpbmcpLCBjb3VudDogbmV3U3RyaW5nLmxlbmd0aH1dKTtcbiAgICB9XG5cbiAgICAvLyBNYWluIHdvcmtlciBtZXRob2QuIGNoZWNrcyBhbGwgcGVybXV0YXRpb25zIG9mIGEgZ2l2ZW4gZWRpdCBsZW5ndGggZm9yIGFjY2VwdGFuY2UuXG4gICAgZnVuY3Rpb24gZXhlY0VkaXRMZW5ndGgoKSB7XG4gICAgICBmb3IgKGxldCBkaWFnb25hbFBhdGggPSAtMSAqIGVkaXRMZW5ndGg7IGRpYWdvbmFsUGF0aCA8PSBlZGl0TGVuZ3RoOyBkaWFnb25hbFBhdGggKz0gMikge1xuICAgICAgICBsZXQgYmFzZVBhdGg7XG4gICAgICAgIGxldCBhZGRQYXRoID0gYmVzdFBhdGhbZGlhZ29uYWxQYXRoIC0gMV0sXG4gICAgICAgICAgICByZW1vdmVQYXRoID0gYmVzdFBhdGhbZGlhZ29uYWxQYXRoICsgMV0sXG4gICAgICAgICAgICBvbGRQb3MgPSAocmVtb3ZlUGF0aCA/IHJlbW92ZVBhdGgubmV3UG9zIDogMCkgLSBkaWFnb25hbFBhdGg7XG4gICAgICAgIGlmIChhZGRQYXRoKSB7XG4gICAgICAgICAgLy8gTm8gb25lIGVsc2UgaXMgZ29pbmcgdG8gYXR0ZW1wdCB0byB1c2UgdGhpcyB2YWx1ZSwgY2xlYXIgaXRcbiAgICAgICAgICBiZXN0UGF0aFtkaWFnb25hbFBhdGggLSAxXSA9IHVuZGVmaW5lZDtcbiAgICAgICAgfVxuXG4gICAgICAgIGxldCBjYW5BZGQgPSBhZGRQYXRoICYmIGFkZFBhdGgubmV3UG9zICsgMSA8IG5ld0xlbixcbiAgICAgICAgICAgIGNhblJlbW92ZSA9IHJlbW92ZVBhdGggJiYgMCA8PSBvbGRQb3MgJiYgb2xkUG9zIDwgb2xkTGVuO1xuICAgICAgICBpZiAoIWNhbkFkZCAmJiAhY2FuUmVtb3ZlKSB7XG4gICAgICAgICAgLy8gSWYgdGhpcyBwYXRoIGlzIGEgdGVybWluYWwgdGhlbiBwcnVuZVxuICAgICAgICAgIGJlc3RQYXRoW2RpYWdvbmFsUGF0aF0gPSB1bmRlZmluZWQ7XG4gICAgICAgICAgY29udGludWU7XG4gICAgICAgIH1cblxuICAgICAgICAvLyBTZWxlY3QgdGhlIGRpYWdvbmFsIHRoYXQgd2Ugd2FudCB0byBicmFuY2ggZnJvbS4gV2Ugc2VsZWN0IHRoZSBwcmlvclxuICAgICAgICAvLyBwYXRoIHdob3NlIHBvc2l0aW9uIGluIHRoZSBuZXcgc3RyaW5nIGlzIHRoZSBmYXJ0aGVzdCBmcm9tIHRoZSBvcmlnaW5cbiAgICAgICAgLy8gYW5kIGRvZXMgbm90IHBhc3MgdGhlIGJvdW5kcyBvZiB0aGUgZGlmZiBncmFwaFxuICAgICAgICBpZiAoIWNhbkFkZCB8fCAoY2FuUmVtb3ZlICYmIGFkZFBhdGgubmV3UG9zIDwgcmVtb3ZlUGF0aC5uZXdQb3MpKSB7XG4gICAgICAgICAgYmFzZVBhdGggPSBjbG9uZVBhdGgocmVtb3ZlUGF0aCk7XG4gICAgICAgICAgc2VsZi5wdXNoQ29tcG9uZW50KGJhc2VQYXRoLmNvbXBvbmVudHMsIHVuZGVmaW5lZCwgdHJ1ZSk7XG4gICAgICAgIH0gZWxzZSB7XG4gICAgICAgICAgYmFzZVBhdGggPSBhZGRQYXRoOyAgIC8vIE5vIG5lZWQgdG8gY2xvbmUsIHdlJ3ZlIHB1bGxlZCBpdCBmcm9tIHRoZSBsaXN0XG4gICAgICAgICAgYmFzZVBhdGgubmV3UG9zKys7XG4gICAgICAgICAgc2VsZi5wdXNoQ29tcG9uZW50KGJhc2VQYXRoLmNvbXBvbmVudHMsIHRydWUsIHVuZGVmaW5lZCk7XG4gICAgICAgIH1cblxuICAgICAgICBvbGRQb3MgPSBzZWxmLmV4dHJhY3RDb21tb24oYmFzZVBhdGgsIG5ld1N0cmluZywgb2xkU3RyaW5nLCBkaWFnb25hbFBhdGgpO1xuXG4gICAgICAgIC8vIElmIHdlIGhhdmUgaGl0IHRoZSBlbmQgb2YgYm90aCBzdHJpbmdzLCB0aGVuIHdlIGFyZSBkb25lXG4gICAgICAgIGlmIChiYXNlUGF0aC5uZXdQb3MgKyAxID49IG5ld0xlbiAmJiBvbGRQb3MgKyAxID49IG9sZExlbikge1xuICAgICAgICAgIHJldHVybiBkb25lKGJ1aWxkVmFsdWVzKHNlbGYsIGJhc2VQYXRoLmNvbXBvbmVudHMsIG5ld1N0cmluZywgb2xkU3RyaW5nLCBzZWxmLnVzZUxvbmdlc3RUb2tlbikpO1xuICAgICAgICB9IGVsc2Uge1xuICAgICAgICAgIC8vIE90aGVyd2lzZSB0cmFjayB0aGlzIHBhdGggYXMgYSBwb3RlbnRpYWwgY2FuZGlkYXRlIGFuZCBjb250aW51ZS5cbiAgICAgICAgICBiZXN0UGF0aFtkaWFnb25hbFBhdGhdID0gYmFzZVBhdGg7XG4gICAgICAgIH1cbiAgICAgIH1cblxuICAgICAgZWRpdExlbmd0aCsrO1xuICAgIH1cblxuICAgIC8vIFBlcmZvcm1zIHRoZSBsZW5ndGggb2YgZWRpdCBpdGVyYXRpb24uIElzIGEgYml0IGZ1Z2x5IGFzIHRoaXMgaGFzIHRvIHN1cHBvcnQgdGhlXG4gICAgLy8gc3luYyBhbmQgYXN5bmMgbW9kZSB3aGljaCBpcyBuZXZlciBmdW4uIExvb3BzIG92ZXIgZXhlY0VkaXRMZW5ndGggdW50aWwgYSB2YWx1ZVxuICAgIC8vIGlzIHByb2R1Y2VkLlxuICAgIGlmIChjYWxsYmFjaykge1xuICAgICAgKGZ1bmN0aW9uIGV4ZWMoKSB7XG4gICAgICAgIHNldFRpbWVvdXQoZnVuY3Rpb24oKSB7XG4gICAgICAgICAgLy8gVGhpcyBzaG91bGQgbm90IGhhcHBlbiwgYnV0IHdlIHdhbnQgdG8gYmUgc2FmZS5cbiAgICAgICAgICAvKiBpc3RhbmJ1bCBpZ25vcmUgbmV4dCAqL1xuICAgICAgICAgIGlmIChlZGl0TGVuZ3RoID4gbWF4RWRpdExlbmd0aCkge1xuICAgICAgICAgICAgcmV0dXJuIGNhbGxiYWNrKCk7XG4gICAgICAgICAgfVxuXG4gICAgICAgICAgaWYgKCFleGVjRWRpdExlbmd0aCgpKSB7XG4gICAgICAgICAgICBleGVjKCk7XG4gICAgICAgICAgfVxuICAgICAgICB9LCAwKTtcbiAgICAgIH0oKSk7XG4gICAgfSBlbHNlIHtcbiAgICAgIHdoaWxlIChlZGl0TGVuZ3RoIDw9IG1heEVkaXRMZW5ndGgpIHtcbiAgICAgICAgbGV0IHJldCA9IGV4ZWNFZGl0TGVuZ3RoKCk7XG4gICAgICAgIGlmIChyZXQpIHtcbiAgICAgICAgICByZXR1cm4gcmV0O1xuICAgICAgICB9XG4gICAgICB9XG4gICAgfVxuICB9LFxuXG4gIHB1c2hDb21wb25lbnQoY29tcG9uZW50cywgYWRkZWQsIHJlbW92ZWQpIHtcbiAgICBsZXQgbGFzdCA9IGNvbXBvbmVudHNbY29tcG9uZW50cy5sZW5ndGggLSAxXTtcbiAgICBpZiAobGFzdCAmJiBsYXN0LmFkZGVkID09PSBhZGRlZCAmJiBsYXN0LnJlbW92ZWQgPT09IHJlbW92ZWQpIHtcbiAgICAgIC8vIFdlIG5lZWQgdG8gY2xvbmUgaGVyZSBhcyB0aGUgY29tcG9uZW50IGNsb25lIG9wZXJhdGlvbiBpcyBqdXN0XG4gICAgICAvLyBhcyBzaGFsbG93IGFycmF5IGNsb25lXG4gICAgICBjb21wb25lbnRzW2NvbXBvbmVudHMubGVuZ3RoIC0gMV0gPSB7Y291bnQ6IGxhc3QuY291bnQgKyAxLCBhZGRlZDogYWRkZWQsIHJlbW92ZWQ6IHJlbW92ZWQgfTtcbiAgICB9IGVsc2Uge1xuICAgICAgY29tcG9uZW50cy5wdXNoKHtjb3VudDogMSwgYWRkZWQ6IGFkZGVkLCByZW1vdmVkOiByZW1vdmVkIH0pO1xuICAgIH1cbiAgfSxcbiAgZXh0cmFjdENvbW1vbihiYXNlUGF0aCwgbmV3U3RyaW5nLCBvbGRTdHJpbmcsIGRpYWdvbmFsUGF0aCkge1xuICAgIGxldCBuZXdMZW4gPSBuZXdTdHJpbmcubGVuZ3RoLFxuICAgICAgICBvbGRMZW4gPSBvbGRTdHJpbmcubGVuZ3RoLFxuICAgICAgICBuZXdQb3MgPSBiYXNlUGF0aC5uZXdQb3MsXG4gICAgICAgIG9sZFBvcyA9IG5ld1BvcyAtIGRpYWdvbmFsUGF0aCxcblxuICAgICAgICBjb21tb25Db3VudCA9IDA7XG4gICAgd2hpbGUgKG5ld1BvcyArIDEgPCBuZXdMZW4gJiYgb2xkUG9zICsgMSA8IG9sZExlbiAmJiB0aGlzLmVxdWFscyhuZXdTdHJpbmdbbmV3UG9zICsgMV0sIG9sZFN0cmluZ1tvbGRQb3MgKyAxXSkpIHtcbiAgICAgIG5ld1BvcysrO1xuICAgICAgb2xkUG9zKys7XG4gICAgICBjb21tb25Db3VudCsrO1xuICAgIH1cblxuICAgIGlmIChjb21tb25Db3VudCkge1xuICAgICAgYmFzZVBhdGguY29tcG9uZW50cy5wdXNoKHtjb3VudDogY29tbW9uQ291bnR9KTtcbiAgICB9XG5cbiAgICBiYXNlUGF0aC5uZXdQb3MgPSBuZXdQb3M7XG4gICAgcmV0dXJuIG9sZFBvcztcbiAgfSxcblxuICBlcXVhbHMobGVmdCwgcmlnaHQpIHtcbiAgICByZXR1cm4gbGVmdCA9PT0gcmlnaHQ7XG4gIH0sXG4gIHJlbW92ZUVtcHR5KGFycmF5KSB7XG4gICAgbGV0IHJldCA9IFtdO1xuICAgIGZvciAobGV0IGkgPSAwOyBpIDwgYXJyYXkubGVuZ3RoOyBpKyspIHtcbiAgICAgIGlmIChhcnJheVtpXSkge1xuICAgICAgICByZXQucHVzaChhcnJheVtpXSk7XG4gICAgICB9XG4gICAgfVxuICAgIHJldHVybiByZXQ7XG4gIH0sXG4gIGNhc3RJbnB1dCh2YWx1ZSkge1xuICAgIHJldHVybiB2YWx1ZTtcbiAgfSxcbiAgdG9rZW5pemUodmFsdWUpIHtcbiAgICByZXR1cm4gdmFsdWUuc3BsaXQoJycpO1xuICB9LFxuICBqb2luKGNoYXJzKSB7XG4gICAgcmV0dXJuIGNoYXJzLmpvaW4oJycpO1xuICB9XG59O1xuXG5mdW5jdGlvbiBidWlsZFZhbHVlcyhkaWZmLCBjb21wb25lbnRzLCBuZXdTdHJpbmcsIG9sZFN0cmluZywgdXNlTG9uZ2VzdFRva2VuKSB7XG4gIGxldCBjb21wb25lbnRQb3MgPSAwLFxuICAgICAgY29tcG9uZW50TGVuID0gY29tcG9uZW50cy5sZW5ndGgsXG4gICAgICBuZXdQb3MgPSAwLFxuICAgICAgb2xkUG9zID0gMDtcblxuICBmb3IgKDsgY29tcG9uZW50UG9zIDwgY29tcG9uZW50TGVuOyBjb21wb25lbnRQb3MrKykge1xuICAgIGxldCBjb21wb25lbnQgPSBjb21wb25lbnRzW2NvbXBvbmVudFBvc107XG4gICAgaWYgKCFjb21wb25lbnQucmVtb3ZlZCkge1xuICAgICAgaWYgKCFjb21wb25lbnQuYWRkZWQgJiYgdXNlTG9uZ2VzdFRva2VuKSB7XG4gICAgICAgIGxldCB2YWx1ZSA9IG5ld1N0cmluZy5zbGljZShuZXdQb3MsIG5ld1BvcyArIGNvbXBvbmVudC5jb3VudCk7XG4gICAgICAgIHZhbHVlID0gdmFsdWUubWFwKGZ1bmN0aW9uKHZhbHVlLCBpKSB7XG4gICAgICAgICAgbGV0IG9sZFZhbHVlID0gb2xkU3RyaW5nW29sZFBvcyArIGldO1xuICAgICAgICAgIHJldHVybiBvbGRWYWx1ZS5sZW5ndGggPiB2YWx1ZS5sZW5ndGggPyBvbGRWYWx1ZSA6IHZhbHVlO1xuICAgICAgICB9KTtcblxuICAgICAgICBjb21wb25lbnQudmFsdWUgPSBkaWZmLmpvaW4odmFsdWUpO1xuICAgICAgfSBlbHNlIHtcbiAgICAgICAgY29tcG9uZW50LnZhbHVlID0gZGlmZi5qb2luKG5ld1N0cmluZy5zbGljZShuZXdQb3MsIG5ld1BvcyArIGNvbXBvbmVudC5jb3VudCkpO1xuICAgICAgfVxuICAgICAgbmV3UG9zICs9IGNvbXBvbmVudC5jb3VudDtcblxuICAgICAgLy8gQ29tbW9uIGNhc2VcbiAgICAgIGlmICghY29tcG9uZW50LmFkZGVkKSB7XG4gICAgICAgIG9sZFBvcyArPSBjb21wb25lbnQuY291bnQ7XG4gICAgICB9XG4gICAgfSBlbHNlIHtcbiAgICAgIGNvbXBvbmVudC52YWx1ZSA9IGRpZmYuam9pbihvbGRTdHJpbmcuc2xpY2Uob2xkUG9zLCBvbGRQb3MgKyBjb21wb25lbnQuY291bnQpKTtcbiAgICAgIG9sZFBvcyArPSBjb21wb25lbnQuY291bnQ7XG5cbiAgICAgIC8vIFJldmVyc2UgYWRkIGFuZCByZW1vdmUgc28gcmVtb3ZlcyBhcmUgb3V0cHV0IGZpcnN0IHRvIG1hdGNoIGNvbW1vbiBjb252ZW50aW9uXG4gICAgICAvLyBUaGUgZGlmZmluZyBhbGdvcml0aG0gaXMgdGllZCB0byBhZGQgdGhlbiByZW1vdmUgb3V0cHV0IGFuZCB0aGlzIGlzIHRoZSBzaW1wbGVzdFxuICAgICAgLy8gcm91dGUgdG8gZ2V0IHRoZSBkZXNpcmVkIG91dHB1dCB3aXRoIG1pbmltYWwgb3ZlcmhlYWQuXG4gICAgICBpZiAoY29tcG9uZW50UG9zICYmIGNvbXBvbmVudHNbY29tcG9uZW50UG9zIC0gMV0uYWRkZWQpIHtcbiAgICAgICAgbGV0IHRtcCA9IGNvbXBvbmVudHNbY29tcG9uZW50UG9zIC0gMV07XG4gICAgICAgIGNvbXBvbmVudHNbY29tcG9uZW50UG9zIC0gMV0gPSBjb21wb25lbnRzW2NvbXBvbmVudFBvc107XG4gICAgICAgIGNvbXBvbmVudHNbY29tcG9uZW50UG9zXSA9IHRtcDtcbiAgICAgIH1cbiAgICB9XG4gIH1cblxuICAvLyBTcGVjaWFsIGNhc2UgaGFuZGxlIGZvciB3aGVuIG9uZSB0ZXJtaW5hbCBpcyBpZ25vcmVkLiBGb3IgdGhpcyBjYXNlIHdlIG1lcmdlIHRoZVxuICAvLyB0ZXJtaW5hbCBpbnRvIHRoZSBwcmlvciBzdHJpbmcgYW5kIGRyb3AgdGhlIGNoYW5nZS5cbiAgbGV0IGxhc3RDb21wb25lbnQgPSBjb21wb25lbnRzW2NvbXBvbmVudExlbiAtIDFdO1xuICBpZiAoY29tcG9uZW50TGVuID4gMVxuICAgICAgJiYgKGxhc3RDb21wb25lbnQuYWRkZWQgfHwgbGFzdENvbXBvbmVudC5yZW1vdmVkKVxuICAgICAgJiYgZGlmZi5lcXVhbHMoJycsIGxhc3RDb21wb25lbnQudmFsdWUpKSB7XG4gICAgY29tcG9uZW50c1tjb21wb25lbnRMZW4gLSAyXS52YWx1ZSArPSBsYXN0Q29tcG9uZW50LnZhbHVlO1xuICAgIGNvbXBvbmVudHMucG9wKCk7XG4gIH1cblxuICByZXR1cm4gY29tcG9uZW50cztcbn1cblxuZnVuY3Rpb24gY2xvbmVQYXRoKHBhdGgpIHtcbiAgcmV0dXJuIHsgbmV3UG9zOiBwYXRoLm5ld1BvcywgY29tcG9uZW50czogcGF0aC5jb21wb25lbnRzLnNsaWNlKDApIH07XG59XG4iXX0=
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var deepEqual = __webpack_require__(13).use(match); // eslint-disable-line no-use-before-define
+var every = __webpack_require__(67);
+var functionName = __webpack_require__(19);
+var iterableToString = __webpack_require__(68);
+var typeOf = __webpack_require__(34);
+var valueToString = __webpack_require__(11);
+
+var indexOf = Array.prototype.indexOf;
+
+function assertType(value, type, name) {
+    var actual = typeOf(value);
+    if (actual !== type) {
+        throw new TypeError("Expected type of " + name + " to be " +
+            type + ", but was " + actual);
+    }
+}
+
+var matcher = {
+    toString: function () {
+        return this.message;
+    }
+};
+
+function isMatcher(object) {
+    return matcher.isPrototypeOf(object);
+}
+
+function matchObject(expectation, actual) {
+    if (actual === null || actual === undefined) {
+        return false;
+    }
+
+    return Object.keys(expectation).every(function (key) {
+        var exp = expectation[key];
+        var act = actual[key];
+
+        if (isMatcher(exp)) {
+            if (!exp.test(act)) {
+                return false;
+            }
+        } else if (typeOf(exp) === "object") {
+            if (!matchObject(exp, act)) {
+                return false;
+            }
+        } else if (!deepEqual(exp, act)) {
+            return false;
+        }
+
+        return true;
+    });
+}
+
+var TYPE_MAP = {
+    "function": function (m, expectation, message) {
+        m.test = expectation;
+        m.message = message || "match(" + functionName(expectation) + ")";
+    },
+    number: function (m, expectation) {
+        m.test = function (actual) {
+            // we need type coercion here
+            return expectation == actual; // eslint-disable-line eqeqeq
+        };
+    },
+    object: function (m, expectation) {
+        var array = [];
+
+        if (typeof expectation.test === "function") {
+            m.test = function (actual) {
+                return expectation.test(actual) === true;
+            };
+            m.message = "match(" + functionName(expectation.test) + ")";
+            return m;
+        }
+
+        array = Object.keys(expectation).map(function (key) {
+            return key + ": " + valueToString(expectation[key]);
+        });
+
+        m.test = function (actual) {
+            return matchObject(expectation, actual);
+        };
+        m.message = "match(" + array.join(", ") + ")";
+
+        return m;
+    },
+    regexp: function (m, expectation) {
+        m.test = function (actual) {
+            return typeof actual === "string" && expectation.test(actual);
+        };
+    },
+    string: function (m, expectation) {
+        m.test = function (actual) {
+            return typeof actual === "string" && actual.indexOf(expectation) !== -1;
+        };
+        m.message = "match(\"" + expectation + "\")";
+    }
+};
+
+function match(expectation, message) {
+    var m = Object.create(matcher);
+    var type = typeOf(expectation);
+
+    if (type in TYPE_MAP) {
+        TYPE_MAP[type](m, expectation, message);
+    } else {
+        m.test = function (actual) {
+            return deepEqual(expectation, actual);
+        };
+    }
+
+    if (!m.message) {
+        m.message = "match(" + valueToString(expectation) + ")";
+    }
+
+    return m;
+}
+
+matcher.or = function (m2) {
+    if (!arguments.length) {
+        throw new TypeError("Matcher expected");
+    } else if (!isMatcher(m2)) {
+        m2 = match(m2);
+    }
+    var m1 = this;
+    var or = Object.create(matcher);
+    or.test = function (actual) {
+        return m1.test(actual) || m2.test(actual);
+    };
+    or.message = m1.message + ".or(" + m2.message + ")";
+    return or;
+};
+
+matcher.and = function (m2) {
+    if (!arguments.length) {
+        throw new TypeError("Matcher expected");
+    } else if (!isMatcher(m2)) {
+        m2 = match(m2);
+    }
+    var m1 = this;
+    var and = Object.create(matcher);
+    and.test = function (actual) {
+        return m1.test(actual) && m2.test(actual);
+    };
+    and.message = m1.message + ".and(" + m2.message + ")";
+    return and;
+};
+
+match.isMatcher = isMatcher;
+
+match.any = match(function () {
+    return true;
+}, "any");
+
+match.defined = match(function (actual) {
+    return actual !== null && actual !== undefined;
+}, "defined");
+
+match.truthy = match(function (actual) {
+    return !!actual;
+}, "truthy");
+
+match.falsy = match(function (actual) {
+    return !actual;
+}, "falsy");
+
+match.same = function (expectation) {
+    return match(function (actual) {
+        return expectation === actual;
+    }, "same(" + valueToString(expectation) + ")");
+};
+
+match.typeOf = function (type) {
+    assertType(type, "string", "type");
+    return match(function (actual) {
+        return typeOf(actual) === type;
+    }, "typeOf(\"" + type + "\")");
+};
+
+match.instanceOf = function (type) {
+    assertType(type, "function", "type");
+    return match(function (actual) {
+        return actual instanceof type;
+    }, "instanceOf(" + functionName(type) + ")");
+};
+
+function createPropertyMatcher(propertyTest, messagePrefix) {
+    return function (property, value) {
+        assertType(property, "string", "property");
+        var onlyProperty = arguments.length === 1;
+        var message = messagePrefix + "(\"" + property + "\"";
+        if (!onlyProperty) {
+            message += ", " + valueToString(value);
+        }
+        message += ")";
+        return match(function (actual) {
+            if (actual === undefined || actual === null ||
+                    !propertyTest(actual, property)) {
+                return false;
+            }
+            return onlyProperty || deepEqual(value, actual[property]);
+        }, message);
+    };
+}
+
+match.has = createPropertyMatcher(function (actual, property) {
+    if (typeof actual === "object") {
+        return property in actual;
+    }
+    return actual[property] !== undefined;
+}, "has");
+
+match.hasOwn = createPropertyMatcher(function (actual, property) {
+    return actual.hasOwnProperty(property);
+}, "hasOwn");
+
+match.array = match.typeOf("array");
+
+match.array.deepEquals = function (expectation) {
+    return match(function (actual) {
+        // Comparing lengths is the fastest way to spot a difference before iterating through every item
+        var sameLength = actual.length === expectation.length;
+        return typeOf(actual) === "array" && sameLength && every(actual, function (element, index) {
+            return expectation[index] === element;
+        });
+    }, "deepEquals([" + iterableToString(expectation) + "])");
+};
+
+match.array.startsWith = function (expectation) {
+    return match(function (actual) {
+        return typeOf(actual) === "array" && every(expectation, function (expectedElement, index) {
+            return actual[index] === expectedElement;
+        });
+    }, "startsWith([" + iterableToString(expectation) + "])");
+};
+
+match.array.endsWith = function (expectation) {
+    return match(function (actual) {
+        // This indicates the index in which we should start matching
+        var offset = actual.length - expectation.length;
+
+        return typeOf(actual) === "array" && every(expectation, function (expectedElement, index) {
+            return actual[offset + index] === expectedElement;
+        });
+    }, "endsWith([" + iterableToString(expectation) + "])");
+};
+
+match.array.contains = function (expectation) {
+    return match(function (actual) {
+        return typeOf(actual) === "array" && every(expectation, function (expectedElement) {
+            return indexOf.call(actual, expectedElement) !== -1;
+        });
+    }, "contains([" + iterableToString(expectation) + "])");
+};
+
+match.map = match.typeOf("map");
+
+match.map.deepEquals = function mapDeepEquals(expectation) {
+    return match(function (actual) {
+        // Comparing lengths is the fastest way to spot a difference before iterating through every item
+        var sameLength = actual.size === expectation.size;
+        return typeOf(actual) === "map" && sameLength && every(actual, function (element, key) {
+            return expectation.has(key) && expectation.get(key) === element;
+        });
+    }, "deepEquals(Map[" + iterableToString(expectation) + "])");
+};
+
+match.map.contains = function mapContains(expectation) {
+    return match(function (actual) {
+        return typeOf(actual) === "map" && every(expectation, function (element, key) {
+            return actual.has(key) && actual.get(key) === element;
+        });
+    }, "contains(Map[" + iterableToString(expectation) + "])");
+};
+
+match.set = match.typeOf("set");
+
+match.set.deepEquals = function setDeepEquals(expectation) {
+    return match(function (actual) {
+        // Comparing lengths is the fastest way to spot a difference before iterating through every item
+        var sameLength = actual.size === expectation.size;
+        return typeOf(actual) === "set" && sameLength && every(actual, function (element) {
+            return expectation.has(element);
+        });
+    }, "deepEquals(Set[" + iterableToString(expectation) + "])");
+};
+
+match.set.contains = function setContains(expectation) {
+    return match(function (actual) {
+        return typeOf(actual) === "set" && every(expectation, function (element) {
+            return actual.has(element);
+        });
+    }, "contains(Set[" + iterableToString(expectation) + "])");
+};
+
+match.bool = match.typeOf("boolean");
+match.number = match.typeOf("number");
+match.string = match.typeOf("string");
+match.object = match.typeOf("object");
+match.func = match.typeOf("function");
+match.regexp = match.typeOf("regexp");
+match.date = match.typeOf("date");
+match.symbol = match.typeOf("symbol");
+
+module.exports = match;
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+// Adapted from https://developer.mozilla.org/en/docs/ECMAScript_DontEnum_attribute#JScript_DontEnum_Bug
+var hasDontEnumBug = (function () {
+    var obj = {
+        constructor: function () {
+            return "0";
+        },
+        toString: function () {
+            return "1";
+        },
+        valueOf: function () {
+            return "2";
+        },
+        toLocaleString: function () {
+            return "3";
+        },
+        prototype: function () {
+            return "4";
+        },
+        isPrototypeOf: function () {
+            return "5";
+        },
+        propertyIsEnumerable: function () {
+            return "6";
+        },
+        hasOwnProperty: function () {
+            return "7";
+        },
+        length: function () {
+            return "8";
+        },
+        unique: function () {
+            return "9";
+        }
+    };
+
+    var result = [];
+    for (var prop in obj) {
+        if (obj.hasOwnProperty(prop)) {
+            result.push(obj[prop]());
+        }
+    }
+    return result.join("") !== "0123456789";
+})();
+
+/* Public: Extend target in place with all (own) properties from sources in-order. Thus, last source will
+ *         override properties in previous sources.
+ *
+ * target - The Object to extend
+ * sources - Objects to copy properties from.
+ *
+ * Returns the extended target
+ */
+module.exports = function extend(target /*, sources */) {
+    var sources = Array.prototype.slice.call(arguments, 1);
+    var source, i, prop;
+
+    for (i = 0; i < sources.length; i++) {
+        source = sources[i];
+
+        for (prop in source) {
+            if (source.hasOwnProperty(prop)) {
+                target[prop] = source[prop];
+            }
+        }
+
+        // Make sure we copy (own) toString method even when in JScript with DontEnum bug
+        // See https://developer.mozilla.org/en/docs/ECMAScript_DontEnum_attribute#JScript_DontEnum_Bug
+        if (hasDontEnumBug && source.hasOwnProperty("toString") && source.toString !== target.toString) {
+            target.toString = source.toString;
+        }
+    }
+
+    return target;
+};
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function getPropertyDescriptor(object, property) {
+    var proto = object;
+    var descriptor;
+
+    while (proto && !(descriptor = Object.getOwnPropertyDescriptor(proto, property))) {
+        proto = Object.getPrototypeOf(proto);
+    }
+    return descriptor;
+};
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function (value) {
+    if (value && value.toString) {
+        return value.toString();
+    }
+    return String(value);
+};
+
 
 /***/ }),
 /* 12 */
@@ -5604,7 +5591,7 @@ deepEqual.use = function (match) {
 "use strict";
 
 
-var formatio = __webpack_require__(137);
+var formatio = __webpack_require__(138);
 
 var formatter = formatio.configure({
     quoteStrings: false,
@@ -5874,16 +5861,16 @@ process.umask = function() { return 0; };
 "use strict";
 
 
-var extend = __webpack_require__(8);
+var extend = __webpack_require__(9);
 var functionName = __webpack_require__(19);
 var functionToString = __webpack_require__(32);
-var getPropertyDescriptor = __webpack_require__(9);
-var sinonMatch = __webpack_require__(7);
+var getPropertyDescriptor = __webpack_require__(10);
+var sinonMatch = __webpack_require__(8);
 var deepEqual = __webpack_require__(13).use(sinonMatch);
 var spyCall = __webpack_require__(21);
 var wrapMethod = __webpack_require__(20);
 var sinonFormat = __webpack_require__(14);
-var valueToString = __webpack_require__(10);
+var valueToString = __webpack_require__(11);
 
 var push = Array.prototype.push;
 var slice = Array.prototype.slice;
@@ -5967,7 +5954,7 @@ var uuid = 0;
 
 // Public API
 var spyApi = {
-    formatters: __webpack_require__(152),
+    formatters: __webpack_require__(153),
 
     reset: function () {
         if (this.invoking) {
@@ -6329,14 +6316,14 @@ module.exports = spy;
 
 
 var behavior = __webpack_require__(59);
-var behaviors = __webpack_require__(149);
+var behaviors = __webpack_require__(150);
 var spy = __webpack_require__(17);
-var extend = __webpack_require__(8);
+var extend = __webpack_require__(9);
 var functionToString = __webpack_require__(32);
-var getPropertyDescriptor = __webpack_require__(9);
+var getPropertyDescriptor = __webpack_require__(10);
 var wrapMethod = __webpack_require__(20);
-var stubEntireObject = __webpack_require__(154);
-var stubDescriptor = __webpack_require__(153);
+var stubEntireObject = __webpack_require__(155);
+var stubDescriptor = __webpack_require__(154);
 var throwOnFalsyObject = __webpack_require__(64);
 
 var slice = Array.prototype.slice;
@@ -6536,8 +6523,8 @@ module.exports = function functionName(func) {
 "use strict";
 
 
-var getPropertyDescriptor = __webpack_require__(9);
-var valueToString = __webpack_require__(10);
+var getPropertyDescriptor = __webpack_require__(10);
+var valueToString = __webpack_require__(11);
 
 var hasOwn = Object.prototype.hasOwnProperty;
 
@@ -6694,11 +6681,11 @@ module.exports = function wrapMethod(object, property, method) {
 "use strict";
 
 
-var sinonMatch = __webpack_require__(7);
+var sinonMatch = __webpack_require__(8);
 var deepEqual = __webpack_require__(13).use(sinonMatch);
 var functionName = __webpack_require__(19);
 var sinonFormat = __webpack_require__(14);
-var valueToString = __webpack_require__(10);
+var valueToString = __webpack_require__(11);
 var slice = Array.prototype.slice;
 
 function throwYieldError(proxy, text, args) {
@@ -6992,7 +6979,7 @@ module.exports = function walk(obj, iterator, context) {
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(1);
-var normalizeHeaderName = __webpack_require__(95);
+var normalizeHeaderName = __webpack_require__(96);
 
 var PROTECTION_PREFIX = /^\)\]\}',?\n/;
 var DEFAULT_CONTENT_TYPE = {
@@ -7089,7 +7076,7 @@ module.exports = defaults;
 /* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(100);
+module.exports = __webpack_require__(101);
 
 
 /***/ }),
@@ -7100,8 +7087,8 @@ module.exports = __webpack_require__(100);
 // https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/util.js
 
 var getName = __webpack_require__(48);
-var getProperties = __webpack_require__(113);
-var getEnumerableProperties = __webpack_require__(110);
+var getProperties = __webpack_require__(114);
+var getEnumerableProperties = __webpack_require__(111);
 
 module.exports = inspect;
 
@@ -7445,7 +7432,7 @@ exports.lineDiff = undefined;
 exports. /*istanbul ignore end*/diffLines = diffLines;
 /*istanbul ignore start*/exports. /*istanbul ignore end*/diffTrimmedLines = diffTrimmedLines;
 
-var /*istanbul ignore start*/_base = __webpack_require__(4) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(7) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
@@ -7665,8 +7652,8 @@ exports.PatchError = PatchError;
 /**
  * version: 2.0.1
  */
-var queue = __webpack_require__(143);
-var sync = __webpack_require__(142);
+var queue = __webpack_require__(144);
+var sync = __webpack_require__(143);
 
 module.exports = { JSONPatchQueue: queue, JSONPatchQueueSynchronous: sync, /* Babel demands this */__esModule:  true };
 
@@ -7682,7 +7669,7 @@ var calledInOrder = __webpack_require__(65);
 var orderByFirstCall = __webpack_require__(69);
 var timesInWords = __webpack_require__(22);
 var format = __webpack_require__(14);
-var sinonMatch = __webpack_require__(7);
+var sinonMatch = __webpack_require__(8);
 
 var slice = Array.prototype.slice;
 
@@ -8009,7 +7996,7 @@ module.exports = configure;
 "use strict";
 
 
-var type = __webpack_require__(161);
+var type = __webpack_require__(162);
 
 module.exports = function typeOf(value) {
     return type(value).toLowerCase();
@@ -8027,7 +8014,7 @@ var fakeXhr = __webpack_require__(37);
 var push = [].push;
 var format = __webpack_require__(14);
 var configureLogError = __webpack_require__(33);
-var pathToRegexp = __webpack_require__(160);
+var pathToRegexp = __webpack_require__(161);
 
 function responseArray(handler) {
     var response = handler;
@@ -8316,7 +8303,7 @@ module.exports = fakeServer;
 "use strict";
 /* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {
 
-var llx = __webpack_require__(145);
+var llx = __webpack_require__(146);
 
 exports.useFakeTimers = function () {
     var now;
@@ -8358,11 +8345,11 @@ exports.timers = {
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {
 
-var TextEncoder = __webpack_require__(162).TextEncoder;
+var TextEncoder = __webpack_require__(163).TextEncoder;
 
 var configureLogError = __webpack_require__(33);
 var sinonEvent = __webpack_require__(70);
-var extend = __webpack_require__(8);
+var extend = __webpack_require__(9);
 
 function getWorkingXHR(globalScope) {
     var supportsXHR = typeof globalScope.XMLHttpRequest !== "undefined";
@@ -8384,7 +8371,7 @@ var supportsProgress = typeof ProgressEvent !== "undefined";
 var supportsCustomEvent = typeof CustomEvent !== "undefined";
 var supportsFormData = typeof FormData !== "undefined";
 var supportsArrayBuffer = typeof ArrayBuffer !== "undefined";
-var supportsBlob = __webpack_require__(147).isSupported;
+var supportsBlob = __webpack_require__(148).isSupported;
 var isReactNative = global.navigator && global.navigator.product === "ReactNative";
 var sinonXhr = { XMLHttpRequest: global.XMLHttpRequest };
 sinonXhr.GlobalXMLHttpRequest = global.XMLHttpRequest;
@@ -9058,7 +9045,7 @@ exports._unrefActive = exports.active = function(item) {
 };
 
 // setimmediate attaches itself to the global object
-__webpack_require__(146);
+__webpack_require__(147);
 exports.setImmediate = setImmediate;
 exports.clearImmediate = clearImmediate;
 
@@ -9067,7 +9054,7 @@ exports.clearImmediate = clearImmediate;
 /* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(165);
+module.exports = __webpack_require__(166);
 
 
 /***/ }),
@@ -9196,7 +9183,7 @@ AssertionError.prototype.toJSON = function (stack) {
 /* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(81);
+module.exports = __webpack_require__(82);
 
 /***/ }),
 /* 42 */
@@ -9206,12 +9193,12 @@ module.exports = __webpack_require__(81);
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(1);
-var settle = __webpack_require__(87);
-var buildURL = __webpack_require__(90);
-var parseHeaders = __webpack_require__(96);
-var isURLSameOrigin = __webpack_require__(94);
+var settle = __webpack_require__(88);
+var buildURL = __webpack_require__(91);
+var parseHeaders = __webpack_require__(97);
+var isURLSameOrigin = __webpack_require__(95);
 var createError = __webpack_require__(45);
-var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(89);
+var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(90);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -9307,7 +9294,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(92);
+      var cookies = __webpack_require__(93);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -9428,7 +9415,7 @@ module.exports = function isCancel(value) {
 "use strict";
 
 
-var enhanceError = __webpack_require__(86);
+var enhanceError = __webpack_require__(87);
 
 /**
  * Create an Error with the specified message, config, error code, and response.
@@ -9816,8 +9803,8 @@ module.exports = function (assertion, object, includeAll) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var pSlice = Array.prototype.slice;
-var objectKeys = __webpack_require__(124);
-var isArguments = __webpack_require__(123);
+var objectKeys = __webpack_require__(125);
+var isArguments = __webpack_require__(124);
 
 var deepEqual = module.exports = function (actual, expected, opts) {
   if (!opts) opts = {};
@@ -11126,9 +11113,9 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(("function" =
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process, setImmediate) {
 
-var extend = __webpack_require__(8);
+var extend = __webpack_require__(9);
 var functionName = __webpack_require__(19);
-var valueToString = __webpack_require__(10);
+var valueToString = __webpack_require__(11);
 
 var slice = Array.prototype.slice;
 var join = Array.prototype.join;
@@ -11350,7 +11337,7 @@ module.exports = proto;
 
 
 var walk = __webpack_require__(23);
-var getPropertyDescriptor = __webpack_require__(9);
+var getPropertyDescriptor = __webpack_require__(10);
 
 function collectMethod(methods, object, prop, propOwner) {
     if (
@@ -11383,7 +11370,7 @@ module.exports = collectOwnMethods;
 var sinonSpy = __webpack_require__(17);
 var sinonStub = __webpack_require__(18);
 var sinonMock = __webpack_require__(63);
-var sandboxStub = __webpack_require__(150);
+var sandboxStub = __webpack_require__(151);
 var collectOwnMethods = __webpack_require__(60);
 
 var push = [].push;
@@ -11525,13 +11512,13 @@ module.exports = collection;
 var spyInvoke = __webpack_require__(17).invoke;
 var spyCallToString = __webpack_require__(21).toString;
 var timesInWords = __webpack_require__(22);
-var extend = __webpack_require__(8);
-var match = __webpack_require__(7);
+var extend = __webpack_require__(9);
+var match = __webpack_require__(8);
 var stub = __webpack_require__(18);
 var assert = __webpack_require__(30);
 var deepEqual = __webpack_require__(13).use(match);
 var format = __webpack_require__(14);
-var valueToString = __webpack_require__(10);
+var valueToString = __webpack_require__(11);
 
 var slice = Array.prototype.slice;
 var push = Array.prototype.push;
@@ -11819,8 +11806,8 @@ module.exports = mockExpectation;
 
 var mockExpectation = __webpack_require__(62);
 var spyCallToString = __webpack_require__(21).toString;
-var extend = __webpack_require__(8);
-var match = __webpack_require__(7);
+var extend = __webpack_require__(9);
+var match = __webpack_require__(8);
 var deepEqual = __webpack_require__(13).use(match);
 var wrapMethod = __webpack_require__(20);
 
@@ -11999,7 +11986,7 @@ module.exports = mock;
 
 "use strict";
 
-var valueToString = __webpack_require__(10);
+var valueToString = __webpack_require__(11);
 
 function throwOnFalsyObject(object, property) {
     if (property && !object) {
@@ -12334,10 +12321,10 @@ module.exports = __webpack_amd_options__;
 
 /** only run DOM tests in browsers */
 if (typeof window !== 'undefined') {
-  const PalindromDOM = __webpack_require__(169);
+  const PalindromDOM = __webpack_require__(170);
   const assert = __webpack_require__(3);
-  const moxios = __webpack_require__(5);
-  const sinon = __webpack_require__(6);
+  const moxios = __webpack_require__(4);
+  const sinon = __webpack_require__(5);
   const expect = __webpack_require__(25).expect;
 
   function createAndClickOnLinkWithoutPrevention(href, parent, target) {
@@ -12909,10 +12896,10 @@ if (typeof window !== 'undefined') {
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
 
 const MockSocketServer = __webpack_require__(2).Server;
-const Palindrom = __webpack_require__(11);
+const Palindrom = __webpack_require__(6);
 const assert = __webpack_require__(3);
-const moxios = __webpack_require__(5);
-const sinon = __webpack_require__(6);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
 
 describe("Callbacks, onPatchSent and onPatchReceived", () => {
   beforeEach(() => {
@@ -13064,10 +13051,10 @@ describe("Callbacks, onPatchSent and onPatchReceived", () => {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
 
-const Palindrom = __webpack_require__(11);
+const Palindrom = __webpack_require__(6);
 const assert = __webpack_require__(3);
-const moxios = __webpack_require__(5);
-const sinon = __webpack_require__(6);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
 
 describe("Callbacks", () => {
   beforeEach(() => {
@@ -13149,10 +13136,10 @@ describe("Callbacks", () => {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
 
-const Palindrom = __webpack_require__(11);
+const Palindrom = __webpack_require__(6);
 const assert = __webpack_require__(3);
-const moxios = __webpack_require__(5);
-const sinon = __webpack_require__(6);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
 const expect = __webpack_require__(25).expect;
 
 describe('Palindrom', () => {
@@ -13296,9 +13283,93 @@ describe('Palindrom', () => {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
 
-const Palindrom = __webpack_require__(11);
-const moxios = __webpack_require__(5);
-const sinon = __webpack_require__(6);
+const Palindrom = __webpack_require__(6);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
+const assert = __webpack_require__(3);
+
+describe('Palindrom', () => {
+  describe('#filterLocalChange', () => {
+    beforeEach(() => {
+      moxios.install();
+    });
+    afterEach(() => {
+      moxios.uninstall();
+    });
+    it('Should use options.filterLocalChange function when local changes occur', function(
+      done
+    ) {
+      const spy = sinon.spy();
+
+      moxios.stubRequest('http://localhost/testURL', {
+        status: 200,
+        headers: { contentType: 'application/json' },
+        responseText: '{"hello": "world"}'
+      });
+      const palindrom = new Palindrom({
+        remoteUrl: 'http://localhost/testURL',
+        filterLocalChange: op => {
+          spy();
+          return op;
+        },
+        onStateReset: function(obj) {
+          obj.newProp = 'name';
+
+          // wait for ajax
+          setTimeout(() => {
+            assert(spy.calledOnce);
+            done();
+          }, 20);
+        }
+      });
+    });
+    it('Should use options.filter function when local changes occur', function(
+      done
+    ) {
+      moxios.stubRequest('http://localhost/testURL', {
+        status: 200,
+        location: 'http://localhost/testURL/patch-server',
+        headers: { contentType: 'application/json' },
+        responseText: '{"hello": "world"}'
+      });
+      const palindrom = new Palindrom({
+        remoteUrl: 'http://localhost/testURL',
+        filterLocalChange: operation => !operation.path.startsWith('/$$') && operation,
+        onStateReset: function(obj) {
+          assert(moxios.requests.count() === 1);
+          // a change that passes the filter
+          obj.newProp = 'name';
+
+          // wait for ajax
+          setTimeout(() => {
+            assert(moxios.requests.count() === 2);
+
+            // a change that does not pass the filter
+            obj.$$ignored = 'name';
+
+            // wait for ajax
+            setTimeout(() => {
+              assert(moxios.requests.count() === 2);
+              done();
+            }, 20);
+          }, 20);
+        }
+      });
+    });
+  });
+});
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 78 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
+
+const Palindrom = __webpack_require__(6);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
 const assert = __webpack_require__(3);
 
 describe('Palindrom', () => {
@@ -13348,15 +13419,15 @@ describe('Palindrom', () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 78 */
+/* 79 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
 
-const Palindrom = __webpack_require__(11);
+const Palindrom = __webpack_require__(6);
 const assert = __webpack_require__(3);
-const moxios = __webpack_require__(5);
-const sinon = __webpack_require__(6);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
 const expect = __webpack_require__(25).expect;
 
 describe("Palindrom", () => {
@@ -13594,15 +13665,15 @@ describe("Palindrom", () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 79 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
 
-const Palindrom = __webpack_require__(11);
+const Palindrom = __webpack_require__(6);
 const assert = __webpack_require__(3);
-const moxios = __webpack_require__(5);
-const sinon = __webpack_require__(6);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
 const {
   validate,
   JsonPatchError
@@ -13826,16 +13897,16 @@ describe('Palindrom', () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 80 */
+/* 81 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
 
 const MockSocketServer = __webpack_require__(2).Server;
-const Palindrom = __webpack_require__(11);
+const Palindrom = __webpack_require__(6);
 const assert = __webpack_require__(3);
-const moxios = __webpack_require__(5);
-const sinon = __webpack_require__(6);
+const moxios = __webpack_require__(4);
+const sinon = __webpack_require__(5);
 
 describe('Sockets', () => {
   beforeEach(() => {
@@ -14305,7 +14376,7 @@ describe('Sockets', () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 81 */
+/* 82 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14313,7 +14384,7 @@ describe('Sockets', () => {
 
 var utils = __webpack_require__(1);
 var bind = __webpack_require__(46);
-var Axios = __webpack_require__(83);
+var Axios = __webpack_require__(84);
 var defaults = __webpack_require__(24);
 
 /**
@@ -14348,14 +14419,14 @@ axios.create = function create(instanceConfig) {
 
 // Expose Cancel & CancelToken
 axios.Cancel = __webpack_require__(43);
-axios.CancelToken = __webpack_require__(82);
+axios.CancelToken = __webpack_require__(83);
 axios.isCancel = __webpack_require__(44);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(97);
+axios.spread = __webpack_require__(98);
 
 module.exports = axios;
 
@@ -14364,7 +14435,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 82 */
+/* 83 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14428,7 +14499,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 83 */
+/* 84 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14436,10 +14507,10 @@ module.exports = CancelToken;
 
 var defaults = __webpack_require__(24);
 var utils = __webpack_require__(1);
-var InterceptorManager = __webpack_require__(84);
-var dispatchRequest = __webpack_require__(85);
-var isAbsoluteURL = __webpack_require__(93);
-var combineURLs = __webpack_require__(91);
+var InterceptorManager = __webpack_require__(85);
+var dispatchRequest = __webpack_require__(86);
+var isAbsoluteURL = __webpack_require__(94);
+var combineURLs = __webpack_require__(92);
 
 /**
  * Create a new instance of Axios
@@ -14520,7 +14591,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 84 */
+/* 85 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14579,14 +14650,14 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 85 */
+/* 86 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(1);
-var transformData = __webpack_require__(88);
+var transformData = __webpack_require__(89);
 var isCancel = __webpack_require__(44);
 var defaults = __webpack_require__(24);
 
@@ -14665,7 +14736,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 86 */
+/* 87 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14691,7 +14762,7 @@ module.exports = function enhanceError(error, config, code, response) {
 
 
 /***/ }),
-/* 87 */
+/* 88 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14723,7 +14794,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 88 */
+/* 89 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14750,7 +14821,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 89 */
+/* 90 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14793,7 +14864,7 @@ module.exports = btoa;
 
 
 /***/ }),
-/* 90 */
+/* 91 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14868,7 +14939,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 91 */
+/* 92 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14887,7 +14958,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 92 */
+/* 93 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14947,7 +15018,7 @@ module.exports = (
 
 
 /***/ }),
-/* 93 */
+/* 94 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14968,7 +15039,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 94 */
+/* 95 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15043,7 +15114,7 @@ module.exports = (
 
 
 /***/ }),
-/* 95 */
+/* 96 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15062,7 +15133,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 96 */
+/* 97 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15106,7 +15177,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 97 */
+/* 98 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15140,7 +15211,7 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 98 */
+/* 99 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15261,7 +15332,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 99 */
+/* 100 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15275,9 +15346,9 @@ function fromByteArray (uint8) {
 
 
 
-var base64 = __webpack_require__(98)
-var ieee754 = __webpack_require__(138)
-var isArray = __webpack_require__(139)
+var base64 = __webpack_require__(99)
+var ieee754 = __webpack_require__(139)
+var isArray = __webpack_require__(140)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -17058,7 +17129,7 @@ function isnan (val) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 100 */
+/* 101 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -17086,7 +17157,7 @@ exports.AssertionError = __webpack_require__(40);
  * Utils for plugins (not exported)
  */
 
-var util = __webpack_require__(114);
+var util = __webpack_require__(115);
 
 /**
  * # .use(function)
@@ -17124,40 +17195,40 @@ exports.config = config;
  * Primary `Assertion` prototype
  */
 
-var assertion = __webpack_require__(101);
+var assertion = __webpack_require__(102);
 exports.use(assertion);
 
 /*!
  * Core Assertions
  */
 
-var core = __webpack_require__(102);
+var core = __webpack_require__(103);
 exports.use(core);
 
 /*!
  * Expect interface
  */
 
-var expect = __webpack_require__(104);
+var expect = __webpack_require__(105);
 exports.use(expect);
 
 /*!
  * Should interface
  */
 
-var should = __webpack_require__(105);
+var should = __webpack_require__(106);
 exports.use(should);
 
 /*!
  * Assert interface
  */
 
-var assert = __webpack_require__(103);
+var assert = __webpack_require__(104);
 exports.use(assert);
 
 
 /***/ }),
-/* 101 */
+/* 102 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -17294,7 +17365,7 @@ module.exports = function (_chai, util) {
 
 
 /***/ }),
-/* 102 */
+/* 103 */
 /***/ (function(module, exports) {
 
 /*!
@@ -19160,7 +19231,7 @@ module.exports = function (chai, _) {
 
 
 /***/ }),
-/* 103 */
+/* 104 */
 /***/ (function(module, exports) {
 
 /*!
@@ -20811,7 +20882,7 @@ module.exports = function (chai, util) {
 
 
 /***/ }),
-/* 104 */
+/* 105 */
 /***/ (function(module, exports) {
 
 /*!
@@ -20851,7 +20922,7 @@ module.exports = function (chai, util) {
 
 
 /***/ }),
-/* 105 */
+/* 106 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21058,7 +21129,7 @@ module.exports = function (chai, util) {
 
 
 /***/ }),
-/* 106 */
+/* 107 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21176,7 +21247,7 @@ module.exports = function (ctx, name, method, chainingBehavior) {
 
 
 /***/ }),
-/* 107 */
+/* 108 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21226,7 +21297,7 @@ module.exports = function (ctx, name, method) {
 
 
 /***/ }),
-/* 108 */
+/* 109 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21280,7 +21351,7 @@ module.exports = function (ctx, name, getter) {
 
 
 /***/ }),
-/* 109 */
+/* 110 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21328,7 +21399,7 @@ module.exports = function (obj, types) {
 
 
 /***/ }),
-/* 110 */
+/* 111 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21360,7 +21431,7 @@ module.exports = function getEnumerableProperties(object) {
 
 
 /***/ }),
-/* 111 */
+/* 112 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21417,7 +21488,7 @@ module.exports = function (obj, args) {
 
 
 /***/ }),
-/* 112 */
+/* 113 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21466,7 +21537,7 @@ module.exports = function(path, obj) {
 
 
 /***/ }),
-/* 113 */
+/* 114 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21508,7 +21579,7 @@ module.exports = function getProperties(object) {
 
 
 /***/ }),
-/* 114 */
+/* 115 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21527,7 +21598,7 @@ var exports = module.exports = {};
  * test utility
  */
 
-exports.test = __webpack_require__(118);
+exports.test = __webpack_require__(119);
 
 /*!
  * type utility
@@ -21538,13 +21609,13 @@ exports.type = __webpack_require__(39);
 /*!
  * expectTypes utility
  */
-exports.expectTypes = __webpack_require__(109);
+exports.expectTypes = __webpack_require__(110);
 
 /*!
  * message utility
  */
 
-exports.getMessage = __webpack_require__(111);
+exports.getMessage = __webpack_require__(112);
 
 /*!
  * actual utility
@@ -21580,13 +21651,13 @@ exports.transferFlags = __webpack_require__(52);
  * Deep equal utility
  */
 
-exports.eql = __webpack_require__(119);
+exports.eql = __webpack_require__(120);
 
 /*!
  * Deep path value
  */
 
-exports.getPathValue = __webpack_require__(112);
+exports.getPathValue = __webpack_require__(113);
 
 /*!
  * Deep path info
@@ -21610,41 +21681,41 @@ exports.getName = __webpack_require__(48);
  * add Property
  */
 
-exports.addProperty = __webpack_require__(108);
+exports.addProperty = __webpack_require__(109);
 
 /*!
  * add Method
  */
 
-exports.addMethod = __webpack_require__(107);
+exports.addMethod = __webpack_require__(108);
 
 /*!
  * overwrite Property
  */
 
-exports.overwriteProperty = __webpack_require__(117);
+exports.overwriteProperty = __webpack_require__(118);
 
 /*!
  * overwrite Method
  */
 
-exports.overwriteMethod = __webpack_require__(116);
+exports.overwriteMethod = __webpack_require__(117);
 
 /*!
  * Add a chainable method
  */
 
-exports.addChainableMethod = __webpack_require__(106);
+exports.addChainableMethod = __webpack_require__(107);
 
 /*!
  * Overwrite chainable method
  */
 
-exports.overwriteChainableMethod = __webpack_require__(115);
+exports.overwriteChainableMethod = __webpack_require__(116);
 
 
 /***/ }),
-/* 115 */
+/* 116 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21704,7 +21775,7 @@ module.exports = function (ctx, name, method, chainingBehavior) {
 
 
 /***/ }),
-/* 116 */
+/* 117 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21762,7 +21833,7 @@ module.exports = function (ctx, name, method) {
 
 
 /***/ }),
-/* 117 */
+/* 118 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21823,7 +21894,7 @@ module.exports = function (ctx, name, getter) {
 
 
 /***/ }),
-/* 118 */
+/* 119 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21857,14 +21928,14 @@ module.exports = function (obj, args) {
 
 
 /***/ }),
-/* 119 */
+/* 120 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(120);
+module.exports = __webpack_require__(121);
 
 
 /***/ }),
-/* 120 */
+/* 121 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21877,14 +21948,14 @@ module.exports = __webpack_require__(120);
  * Module dependencies
  */
 
-var type = __webpack_require__(121);
+var type = __webpack_require__(122);
 
 /*!
  * Buffer.isBuffer browser shim
  */
 
 var Buffer;
-try { Buffer = __webpack_require__(99).Buffer; }
+try { Buffer = __webpack_require__(100).Buffer; }
 catch(ex) {
   Buffer = {};
   Buffer.isBuffer = function() { return false; }
@@ -22127,14 +22198,14 @@ function objectEqual(a, b, m) {
 
 
 /***/ }),
-/* 121 */
+/* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(122);
+module.exports = __webpack_require__(123);
 
 
 /***/ }),
-/* 122 */
+/* 123 */
 /***/ (function(module, exports) {
 
 /*!
@@ -22282,7 +22353,7 @@ Library.prototype.test = function (obj, type) {
 
 
 /***/ }),
-/* 123 */
+/* 124 */
 /***/ (function(module, exports) {
 
 var supportsArgumentsClass = (function(){
@@ -22308,7 +22379,7 @@ function unsupported(object){
 
 
 /***/ }),
-/* 124 */
+/* 125 */
 /***/ (function(module, exports) {
 
 exports = module.exports = typeof Object.keys === 'function'
@@ -22323,7 +22394,7 @@ function shim (obj) {
 
 
 /***/ }),
-/* 125 */
+/* 126 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22354,7 +22425,7 @@ function convertChangesToDMP(changes) {
 
 
 /***/ }),
-/* 126 */
+/* 127 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22396,7 +22467,7 @@ function escapeHTML(s) {
 
 
 /***/ }),
-/* 127 */
+/* 128 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22406,7 +22477,7 @@ exports.__esModule = true;
 exports.arrayDiff = undefined;
 exports. /*istanbul ignore end*/diffArrays = diffArrays;
 
-var /*istanbul ignore start*/_base = __webpack_require__(4) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(7) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
@@ -22425,7 +22496,7 @@ function diffArrays(oldArr, newArr, callback) {
 
 
 /***/ }),
-/* 128 */
+/* 129 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22435,7 +22506,7 @@ exports.__esModule = true;
 exports.characterDiff = undefined;
 exports. /*istanbul ignore end*/diffChars = diffChars;
 
-var /*istanbul ignore start*/_base = __webpack_require__(4) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(7) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
@@ -22450,7 +22521,7 @@ function diffChars(oldStr, newStr, callback) {
 
 
 /***/ }),
-/* 129 */
+/* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22460,7 +22531,7 @@ exports.__esModule = true;
 exports.cssDiff = undefined;
 exports. /*istanbul ignore end*/diffCss = diffCss;
 
-var /*istanbul ignore start*/_base = __webpack_require__(4) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(7) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
@@ -22479,7 +22550,7 @@ function diffCss(oldStr, newStr, callback) {
 
 
 /***/ }),
-/* 130 */
+/* 131 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22493,7 +22564,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 exports. /*istanbul ignore end*/diffJson = diffJson;
 /*istanbul ignore start*/exports. /*istanbul ignore end*/canonicalize = canonicalize;
 
-var /*istanbul ignore start*/_base = __webpack_require__(4) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(7) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
@@ -22595,7 +22666,7 @@ function canonicalize(obj, stack, replacementStack) {
 
 
 /***/ }),
-/* 131 */
+/* 132 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22605,7 +22676,7 @@ exports.__esModule = true;
 exports.sentenceDiff = undefined;
 exports. /*istanbul ignore end*/diffSentences = diffSentences;
 
-var /*istanbul ignore start*/_base = __webpack_require__(4) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(7) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
@@ -22624,7 +22695,7 @@ function diffSentences(oldStr, newStr, callback) {
 
 
 /***/ }),
-/* 132 */
+/* 133 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22635,7 +22706,7 @@ exports.wordDiff = undefined;
 exports. /*istanbul ignore end*/diffWords = diffWords;
 /*istanbul ignore start*/exports. /*istanbul ignore end*/diffWordsWithSpace = diffWordsWithSpace;
 
-var /*istanbul ignore start*/_base = __webpack_require__(4) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(7) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
@@ -22701,7 +22772,7 @@ function diffWordsWithSpace(oldStr, newStr, callback) {
 
 
 /***/ }),
-/* 133 */
+/* 134 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22710,35 +22781,35 @@ function diffWordsWithSpace(oldStr, newStr, callback) {
 exports.__esModule = true;
 exports.canonicalize = exports.convertChangesToXML = exports.convertChangesToDMP = exports.parsePatch = exports.applyPatches = exports.applyPatch = exports.createPatch = exports.createTwoFilesPatch = exports.structuredPatch = exports.diffArrays = exports.diffJson = exports.diffCss = exports.diffSentences = exports.diffTrimmedLines = exports.diffLines = exports.diffWordsWithSpace = exports.diffWords = exports.diffChars = exports.Diff = undefined;
 /*istanbul ignore end*/
-var /*istanbul ignore start*/_base = __webpack_require__(4) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_base = __webpack_require__(7) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _base2 = _interopRequireDefault(_base);
 
 /*istanbul ignore end*/
-var /*istanbul ignore start*/_character = __webpack_require__(128) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_character = __webpack_require__(129) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_word = __webpack_require__(132) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_word = __webpack_require__(133) /*istanbul ignore end*/;
 
 var /*istanbul ignore start*/_line = __webpack_require__(27) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_sentence = __webpack_require__(131) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_sentence = __webpack_require__(132) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_css = __webpack_require__(129) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_css = __webpack_require__(130) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_json = __webpack_require__(130) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_json = __webpack_require__(131) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_array = __webpack_require__(127) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_array = __webpack_require__(128) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_apply = __webpack_require__(134) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_apply = __webpack_require__(135) /*istanbul ignore end*/;
 
 var /*istanbul ignore start*/_parse = __webpack_require__(54) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_create = __webpack_require__(135) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_create = __webpack_require__(136) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_dmp = __webpack_require__(125) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_dmp = __webpack_require__(126) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_xml = __webpack_require__(126) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_xml = __webpack_require__(127) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -22781,7 +22852,7 @@ exports. /*istanbul ignore end*/Diff = _base2['default'];
 
 
 /***/ }),
-/* 134 */
+/* 135 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22793,7 +22864,7 @@ exports. /*istanbul ignore end*/applyPatch = applyPatch;
 
 var /*istanbul ignore start*/_parse = __webpack_require__(54) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_distanceIterator = __webpack_require__(136) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_distanceIterator = __webpack_require__(137) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _distanceIterator2 = _interopRequireDefault(_distanceIterator);
@@ -22965,7 +23036,7 @@ function applyPatches(uniDiff, options) {
 
 
 /***/ }),
-/* 135 */
+/* 136 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23128,7 +23199,7 @@ function createPatch(fileName, oldStr, newStr, oldHeader, newHeader, options) {
 
 
 /***/ }),
-/* 136 */
+/* 137 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23182,7 +23253,7 @@ exports["default"] = /*istanbul ignore end*/function (start, minLine, maxLine) {
 
 
 /***/ }),
-/* 137 */
+/* 138 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(("function" === "function" && __webpack_require__(72) && function (m) {
@@ -23421,7 +23492,7 @@ exports["default"] = /*istanbul ignore end*/function (start, minLine, maxLine) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 138 */
+/* 139 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -23511,7 +23582,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 139 */
+/* 140 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -23522,7 +23593,7 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 140 */
+/* 141 */
 /***/ (function(module, exports, __webpack_require__) {
 
 if(typeof JSONPatchQueue === 'undefined') {
@@ -23634,7 +23705,7 @@ if(true) {
 }
 
 /***/ }),
-/* 141 */
+/* 142 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -23795,7 +23866,7 @@ if(true) {
 }
 
 /***/ }),
-/* 142 */
+/* 143 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -23926,7 +23997,7 @@ if(true) {
 
 
 /***/ }),
-/* 143 */
+/* 144 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -24074,7 +24145,7 @@ if(true) {
 
 
 /***/ }),
-/* 144 */
+/* 145 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -24353,7 +24424,7 @@ if (true) {
 
 
 /***/ }),
-/* 145 */
+/* 146 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25017,7 +25088,7 @@ exports.install = function install(target, now, toFake, loopLimit) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 146 */
+/* 147 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -25210,7 +25281,7 @@ exports.install = function install(target, now, toFake, loopLimit) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(16)))
 
 /***/ }),
-/* 147 */
+/* 148 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25227,7 +25298,7 @@ exports.isSupported = (function () {
 
 
 /***/ }),
-/* 148 */
+/* 149 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25254,13 +25325,13 @@ exports.green = function (str) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16)))
 
 /***/ }),
-/* 149 */
+/* 150 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var getPropertyDescriptor = __webpack_require__(9);
+var getPropertyDescriptor = __webpack_require__(10);
 
 var slice = [].slice;
 var useLeftMostCallback = -1;
@@ -25498,7 +25569,7 @@ Object.keys(module.exports).forEach(function (method) {
 
 
 /***/ }),
-/* 150 */
+/* 151 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25506,8 +25577,8 @@ Object.keys(module.exports).forEach(function (method) {
 
 var collectOwnMethods = __webpack_require__(60);
 var deprecated = __webpack_require__(31);
-var getPropertyDescriptor = __webpack_require__(9);
-var stubNonFunctionProperty = __webpack_require__(155);
+var getPropertyDescriptor = __webpack_require__(10);
+var stubNonFunctionProperty = __webpack_require__(156);
 var sinonStub = __webpack_require__(18);
 var throwOnFalsyObject = __webpack_require__(64);
 
@@ -25556,15 +25627,15 @@ module.exports = sandboxStub;
 
 
 /***/ }),
-/* 151 */
+/* 152 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var extend = __webpack_require__(8);
+var extend = __webpack_require__(9);
 var sinonCollection = __webpack_require__(61);
-var sinonMatch = __webpack_require__(7);
+var sinonMatch = __webpack_require__(8);
 var sinonAssert = __webpack_require__(30);
 var sinonClock = __webpack_require__(36);
 var fakeServer = __webpack_require__(35);
@@ -25715,17 +25786,17 @@ module.exports = sinonSandbox;
 
 
 /***/ }),
-/* 152 */
+/* 153 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var color = __webpack_require__(148);
+var color = __webpack_require__(149);
 var timesInWords = __webpack_require__(22);
 var sinonFormat = __webpack_require__(14);
-var sinonMatch = __webpack_require__(7);
-var jsDiff = __webpack_require__(133);
+var sinonMatch = __webpack_require__(8);
+var jsDiff = __webpack_require__(134);
 var push = Array.prototype.push;
 
 function colorSinonMatchText(matcher, calledArg, calledArgMessage) {
@@ -25822,7 +25893,7 @@ module.exports = {
 
 
 /***/ }),
-/* 153 */
+/* 154 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25870,13 +25941,13 @@ module.exports = stubDescriptor;
 
 
 /***/ }),
-/* 154 */
+/* 155 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var getPropertyDescriptor = __webpack_require__(9);
+var getPropertyDescriptor = __webpack_require__(10);
 var walk = __webpack_require__(23);
 
 function stubEntireObject(stub, object) {
@@ -25899,13 +25970,13 @@ module.exports = stubEntireObject;
 
 
 /***/ }),
-/* 155 */
+/* 156 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var valueToString = __webpack_require__(10);
+var valueToString = __webpack_require__(11);
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function stubNonFunctionProperty(object, property, value) {
@@ -25928,7 +25999,7 @@ module.exports = stubNonFunctionProperty;
 
 
 /***/ }),
-/* 156 */
+/* 157 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25953,7 +26024,7 @@ module.exports = function getConfig(custom) {
 
 
 /***/ }),
-/* 157 */
+/* 158 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25965,15 +26036,15 @@ module.exports = {
     defaultConfig: __webpack_require__(66),
     deepEqual: __webpack_require__(13),
     every: __webpack_require__(67),
-    extend: __webpack_require__(8),
+    extend: __webpack_require__(9),
     format: __webpack_require__(14),
     functionName: __webpack_require__(19),
     functionToString: __webpack_require__(32),
-    getConfig: __webpack_require__(156),
-    getPropertyDescriptor: __webpack_require__(9),
+    getConfig: __webpack_require__(157),
+    getPropertyDescriptor: __webpack_require__(10),
     iterableToString: __webpack_require__(68),
     orderByFirstCall: __webpack_require__(69),
-    restore: __webpack_require__(158),
+    restore: __webpack_require__(159),
     timesInWords: __webpack_require__(22),
     typeOf: __webpack_require__(34),
     walk: __webpack_require__(23),
@@ -25982,7 +26053,7 @@ module.exports = {
 
 
 /***/ }),
-/* 158 */
+/* 159 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26008,7 +26079,7 @@ module.exports = function restore(object) {
 
 
 /***/ }),
-/* 159 */
+/* 160 */
 /***/ (function(module, exports) {
 
 module.exports = Array.isArray || function (arr) {
@@ -26017,10 +26088,10 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 160 */
+/* 161 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isarray = __webpack_require__(159)
+var isarray = __webpack_require__(160)
 
 /**
  * Expose `pathToRegexp`.
@@ -26449,7 +26520,7 @@ function pathToRegexp (path, keys, options) {
 
 
 /***/ }),
-/* 161 */
+/* 162 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26827,13 +26898,13 @@ module.exports.typeDetect = module.exports;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 162 */
+/* 163 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // This is free and unencumbered software released into the public domain.
 // See LICENSE.md for more information.
 
-var encoding = __webpack_require__(164);
+var encoding = __webpack_require__(165);
 
 module.exports = {
   TextEncoder: encoding.TextEncoder,
@@ -26842,7 +26913,7 @@ module.exports = {
 
 
 /***/ }),
-/* 163 */
+/* 164 */
 /***/ (function(module, exports) {
 
 (function(global) {
@@ -26894,7 +26965,7 @@ module.exports = {
 }(this || {}));
 
 /***/ }),
-/* 164 */
+/* 165 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // This is free and unencumbered software released into the public domain.
@@ -26911,7 +26982,7 @@ module.exports = {
   if (typeof module !== "undefined" && module.exports &&
     !global["encoding-indexes"]) {
     global["encoding-indexes"] =
-      __webpack_require__(163)["encoding-indexes"];
+      __webpack_require__(164)["encoding-indexes"];
   }
 
   //
@@ -30212,7 +30283,7 @@ module.exports = {
 }(this || {}));
 
 /***/ }),
-/* 165 */
+/* 166 */
 /***/ (function(module, exports) {
 
 /*!
@@ -30352,7 +30423,7 @@ Library.prototype.test = function(obj, type) {
 
 
 /***/ }),
-/* 166 */
+/* 167 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -30381,7 +30452,7 @@ if (typeof Object.create === 'function') {
 
 
 /***/ }),
-/* 167 */
+/* 168 */
 /***/ (function(module, exports) {
 
 module.exports = function isBuffer(arg) {
@@ -30392,7 +30463,7 @@ module.exports = function isBuffer(arg) {
 }
 
 /***/ }),
-/* 168 */
+/* 169 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -30920,7 +30991,7 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-exports.isBuffer = __webpack_require__(167);
+exports.isBuffer = __webpack_require__(168);
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
@@ -30964,7 +31035,7 @@ exports.log = function() {
  *     prototype.
  * @param {function} superCtor Constructor function to inherit prototype from.
  */
-exports.inherits = __webpack_require__(166);
+exports.inherits = __webpack_require__(167);
 
 exports._extend = function(origin, add) {
   // Don't do anything if add isn't an object
@@ -30985,7 +31056,7 @@ function hasOwnProperty(obj, prop) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(16)))
 
 /***/ }),
-/* 169 */
+/* 170 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*! Palindrom
@@ -30994,7 +31065,7 @@ function hasOwnProperty(obj, prop) {
  * MIT license
  */
 if (true) {
-  var Palindrom = __webpack_require__(11);
+  var Palindrom = __webpack_require__(6);
 }
 
 var PalindromDOM = (function() {
@@ -31222,28 +31293,29 @@ if (true) {
 
 
 /***/ }),
-/* 170 */
+/* 171 */
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(75);
-__webpack_require__(78);
 __webpack_require__(79);
 __webpack_require__(80);
+__webpack_require__(81);
 __webpack_require__(74);
 __webpack_require__(76);
+__webpack_require__(78);
 __webpack_require__(77);
 
 __webpack_require__(73);
 
 
 /***/ }),
-/* 171 */
+/* 172 */
 /***/ (function(module, exports) {
 
 module.exports = URL;
 
 /***/ }),
-/* 172 */
+/* 173 */
 /***/ (function(module, exports) {
 
 module.exports = WebSocket;
