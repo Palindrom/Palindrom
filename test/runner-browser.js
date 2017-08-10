@@ -102,7 +102,7 @@ module.exports = g;
 "use strict";
 
 
-var bind = __webpack_require__(46);
+var bind = __webpack_require__(47);
 
 /*global toString:true*/
 
@@ -2848,7 +2848,7 @@ var objectKeys = Object.keys || function (obj) {
 
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(true)
-		module.exports = factory(__webpack_require__(41));
+		module.exports = factory(__webpack_require__(42));
 	else if(typeof define === 'function' && define.amd)
 		define(["axios"], factory);
 	else if(typeof exports === 'object')
@@ -3871,7 +3871,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 var match = __webpack_require__(8);
 var deepEqual = __webpack_require__(13);
-var deprecated = __webpack_require__(31);
+var deprecated = __webpack_require__(32);
 
 function exposeCoreUtils(target, utils) {
     var keys = Object.keys(utils);
@@ -3913,7 +3913,7 @@ exports.sandbox = __webpack_require__(152);
 exports.expectation = __webpack_require__(62);
 exports.createStubInstance = __webpack_require__(18).createStubInstance;
 
-var fakeTimers = __webpack_require__(36);
+var fakeTimers = __webpack_require__(37);
 exports.useFakeTimers = fakeTimers.useFakeTimers;
 exports.clock = fakeTimers.clock;
 exports.timers = fakeTimers.timers;
@@ -3925,15 +3925,15 @@ exports.ProgressEvent = deprecated.wrap(event.ProgressEvent, deprecated.defaultM
 exports.EventTarget = {};
 exposeEventTarget(exports.EventTarget, event.EventTarget);
 
-var fakeXhr = __webpack_require__(37);
+var fakeXhr = __webpack_require__(38);
 exports.xhr = fakeXhr.xhr;
 exports.FakeXMLHttpRequest = fakeXhr.FakeXMLHttpRequest;
 exports.useFakeXMLHttpRequest = fakeXhr.useFakeXMLHttpRequest;
 
-exports.fakeServer = __webpack_require__(35);
+exports.fakeServer = __webpack_require__(36);
 exports.fakeServerWithClock = __webpack_require__(71);
 
-var behavior = __webpack_require__(59);
+var behavior = __webpack_require__(31);
 
 exports.addBehavior = function (name, fn) {
     behavior.addBehavior(exports.stub, name, fn);
@@ -3951,7 +3951,7 @@ exports.addBehavior = function (name, fn) {
  */
 if (true) {
   /* include only applyPatch and validate */
-  var { applyPatch, validate } = __webpack_require__(57);
+  var { applyPatch, validate } = __webpack_require__(58);
   var JSONPatcherProxy = __webpack_require__(145);
   var JSONPatchQueueSynchronous = __webpack_require__(29)
     .JSONPatchQueueSynchronous;
@@ -3959,7 +3959,7 @@ if (true) {
   var JSONPatchOT = __webpack_require__(142);
   var JSONPatchOTAgent = __webpack_require__(141);
   var URL = __webpack_require__(172);
-  var axios = __webpack_require__(41);
+  var axios = __webpack_require__(42);
 
   /* We are going to hand `websocket` lib as an external to webpack
   (see: https://webpack.js.org/configuration/externals/), 
@@ -5007,7 +5007,7 @@ var deepEqual = __webpack_require__(13).use(match); // eslint-disable-line no-us
 var every = __webpack_require__(67);
 var functionName = __webpack_require__(19);
 var iterableToString = __webpack_require__(68);
-var typeOf = __webpack_require__(34);
+var typeOf = __webpack_require__(35);
 var valueToString = __webpack_require__(11);
 
 var indexOf = Array.prototype.indexOf;
@@ -5861,9 +5861,10 @@ process.umask = function() { return 0; };
 "use strict";
 
 
+var createBehavior = __webpack_require__(31).create;
 var extend = __webpack_require__(9);
 var functionName = __webpack_require__(19);
-var functionToString = __webpack_require__(32);
+var functionToString = __webpack_require__(33);
 var getPropertyDescriptor = __webpack_require__(10);
 var sinonMatch = __webpack_require__(8);
 var deepEqual = __webpack_require__(13).use(sinonMatch);
@@ -6169,6 +6170,11 @@ var spyApi = {
         fake.parent = this;
         push.call(this.fakes, fake);
 
+        if (original.defaultBehavior && original.defaultBehavior.promiseLibrary) {
+            fake.defaultBehavior = fake.defaultBehavior || createBehavior(fake);
+            fake.defaultBehavior.promiseLibrary = original.defaultBehavior.promiseLibrary;
+        }
+
         fake.withArgs = function () {
             return original.withArgs.apply(original, arguments);
         };
@@ -6315,11 +6321,11 @@ module.exports = spy;
 "use strict";
 
 
-var behavior = __webpack_require__(59);
+var behavior = __webpack_require__(31);
 var behaviors = __webpack_require__(150);
 var spy = __webpack_require__(17);
 var extend = __webpack_require__(9);
-var functionToString = __webpack_require__(32);
+var functionToString = __webpack_require__(33);
 var getPropertyDescriptor = __webpack_require__(10);
 var wrapMethod = __webpack_require__(20);
 var stubEntireObject = __webpack_require__(155);
@@ -6996,10 +7002,10 @@ function getDefaultAdapter() {
   var adapter;
   if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(42);
+    adapter = __webpack_require__(43);
   } else if (typeof process !== 'undefined') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(42);
+    adapter = __webpack_require__(43);
   }
   return adapter;
 }
@@ -7086,7 +7092,7 @@ module.exports = __webpack_require__(101);
 // This is (almost) directly from Node.js utils
 // https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/util.js
 
-var getName = __webpack_require__(48);
+var getName = __webpack_require__(49);
 var getProperties = __webpack_require__(114);
 var getEnumerableProperties = __webpack_require__(111);
 
@@ -7438,7 +7444,7 @@ var /*istanbul ignore start*/_base = __webpack_require__(7) /*istanbul ignore en
 var _base2 = _interopRequireDefault(_base);
 
 /*istanbul ignore end*/
-var /*istanbul ignore start*/_params = __webpack_require__(55) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_params = __webpack_require__(56) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -7874,6 +7880,229 @@ module.exports = assert;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+/* WEBPACK VAR INJECTION */(function(process, setImmediate) {
+
+var extend = __webpack_require__(9);
+var functionName = __webpack_require__(19);
+var valueToString = __webpack_require__(11);
+
+var slice = Array.prototype.slice;
+var join = Array.prototype.join;
+var useLeftMostCallback = -1;
+var useRightMostCallback = -2;
+
+var nextTick = (function () {
+    if (typeof process === "object" && typeof process.nextTick === "function") {
+        return process.nextTick;
+    }
+
+    if (typeof setImmediate === "function") {
+        return setImmediate;
+    }
+
+    return function (callback) {
+        setTimeout(callback, 0);
+    };
+})();
+
+function getCallback(behavior, args) {
+    var callArgAt = behavior.callArgAt;
+
+    if (callArgAt >= 0) {
+        return args[callArgAt];
+    }
+
+    var argumentList;
+
+    if (callArgAt === useLeftMostCallback) {
+        argumentList = args;
+    }
+
+    if (callArgAt === useRightMostCallback) {
+        argumentList = slice.call(args).reverse();
+    }
+
+    var callArgProp = behavior.callArgProp;
+
+    for (var i = 0, l = argumentList.length; i < l; ++i) {
+        if (!callArgProp && typeof argumentList[i] === "function") {
+            return argumentList[i];
+        }
+
+        if (callArgProp && argumentList[i] &&
+            typeof argumentList[i][callArgProp] === "function") {
+            return argumentList[i][callArgProp];
+        }
+    }
+
+    return null;
+}
+
+function getCallbackError(behavior, func, args) {
+    if (behavior.callArgAt < 0) {
+        var msg;
+
+        if (behavior.callArgProp) {
+            msg = functionName(behavior.stub) +
+                " expected to yield to '" + valueToString(behavior.callArgProp) +
+                "', but no object with such a property was passed.";
+        } else {
+            msg = functionName(behavior.stub) +
+                " expected to yield, but no callback was passed.";
+        }
+
+        if (args.length > 0) {
+            msg += " Received [" + join.call(args, ", ") + "]";
+        }
+
+        return msg;
+    }
+
+    return "argument at index " + behavior.callArgAt + " is not a function: " + func;
+}
+
+function callCallback(behavior, args) {
+    if (typeof behavior.callArgAt === "number") {
+        var func = getCallback(behavior, args);
+
+        if (typeof func !== "function") {
+            throw new TypeError(getCallbackError(behavior, func, args));
+        }
+
+        if (behavior.callbackAsync) {
+            nextTick(function () {
+                func.apply(behavior.callbackContext, behavior.callbackArguments);
+            });
+        } else {
+            func.apply(behavior.callbackContext, behavior.callbackArguments);
+        }
+    }
+}
+
+var proto = {
+    create: function create(stub) {
+        var behavior = extend({}, proto);
+        delete behavior.create;
+        delete behavior.addBehavior;
+        delete behavior.createBehavior;
+        behavior.stub = stub;
+
+        if (stub.defaultBehavior && stub.defaultBehavior.promiseLibrary) {
+            behavior.promiseLibrary = stub.defaultBehavior.promiseLibrary;
+        }
+
+        return behavior;
+    },
+
+    isPresent: function isPresent() {
+        return (typeof this.callArgAt === "number" ||
+                this.exception ||
+                typeof this.returnArgAt === "number" ||
+                this.returnThis ||
+                typeof this.throwArgAt === "number" ||
+                this.fakeFn ||
+                this.returnValueDefined);
+    },
+
+    invoke: function invoke(context, args) {
+        callCallback(this, args);
+
+        if (this.exception) {
+            throw this.exception;
+        } else if (typeof this.returnArgAt === "number") {
+            return args[this.returnArgAt];
+        } else if (this.returnThis) {
+            return context;
+        } else if (typeof this.throwArgAt === "number") {
+            if (args.length < this.throwArgAt) {
+                throw new TypeError(
+                    "throwArgs failed: " + this.throwArgAt
+                    + " arguments required but only " + args.length
+                    + " present"
+                );
+            }
+            throw args[this.throwArgAt];
+        } else if (this.fakeFn) {
+            return this.fakeFn.apply(context, args);
+        } else if (this.resolve) {
+            return (this.promiseLibrary || Promise).resolve(this.returnValue);
+        } else if (this.reject) {
+            return (this.promiseLibrary || Promise).reject(this.returnValue);
+        } else if (this.callsThrough) {
+            return this.stub.wrappedMethod.apply(context, args);
+        }
+        return this.returnValue;
+    },
+
+    onCall: function onCall(index) {
+        return this.stub.onCall(index);
+    },
+
+    onFirstCall: function onFirstCall() {
+        return this.stub.onFirstCall();
+    },
+
+    onSecondCall: function onSecondCall() {
+        return this.stub.onSecondCall();
+    },
+
+    onThirdCall: function onThirdCall() {
+        return this.stub.onThirdCall();
+    },
+
+    withArgs: function withArgs(/* arguments */) {
+        throw new Error(
+            "Defining a stub by invoking \"stub.onCall(...).withArgs(...)\" " +
+            "is not supported. Use \"stub.withArgs(...).onCall(...)\" " +
+            "to define sequential behavior for calls with certain arguments."
+        );
+    }
+};
+
+function createAsyncVersion(syncFnName) {
+    return function () {
+        var result = this[syncFnName].apply(this, arguments);
+        this.callbackAsync = true;
+        return result;
+    };
+}
+
+// create asynchronous versions of callsArg* and yields* methods
+Object.keys(proto).forEach(function (method) {
+    // need to avoid creating anotherasync versions of the newly added async methods
+    if (method.match(/^(callsArg|yields)/) && !method.match(/Async/)) {
+        proto[method + "Async"] = createAsyncVersion(method);
+    }
+});
+
+function createBehavior(behaviorMethod) {
+    return function () {
+        this.defaultBehavior = this.defaultBehavior || proto.create(this);
+        this.defaultBehavior[behaviorMethod].apply(this.defaultBehavior, arguments);
+        return this;
+    };
+}
+
+function addBehavior(stub, name, fn) {
+    proto[name] = function () {
+        fn.apply(this, [this].concat([].slice.call(arguments)));
+        return this.stub || this;
+    };
+
+    stub[name] = createBehavior(name);
+}
+
+proto.addBehavior = addBehavior;
+proto.createBehavior = createBehavior;
+module.exports = proto;
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16), __webpack_require__(39).setImmediate))
+
+/***/ }),
+/* 32 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
 /*eslint no-console: 0 */
 
 
@@ -7909,7 +8138,7 @@ exports.printWarning = function (msg) {
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7936,7 +8165,7 @@ module.exports = function toString() {
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7990,7 +8219,7 @@ module.exports = configure;
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8004,16 +8233,16 @@ module.exports = function typeOf(value) {
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var fakeXhr = __webpack_require__(37);
+var fakeXhr = __webpack_require__(38);
 var push = [].push;
 var format = __webpack_require__(14);
-var configureLogError = __webpack_require__(33);
+var configureLogError = __webpack_require__(34);
 var pathToRegexp = __webpack_require__(161);
 
 function responseArray(handler) {
@@ -8297,7 +8526,7 @@ module.exports = fakeServer;
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8336,10 +8565,10 @@ exports.timers = {
     Date: Date
 };
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(38).setImmediate, __webpack_require__(38).clearImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(39).setImmediate, __webpack_require__(39).clearImmediate))
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8347,7 +8576,7 @@ exports.timers = {
 
 var TextEncoder = __webpack_require__(163).TextEncoder;
 
-var configureLogError = __webpack_require__(33);
+var configureLogError = __webpack_require__(34);
 var sinonEvent = __webpack_require__(70);
 var extend = __webpack_require__(9);
 
@@ -8992,7 +9221,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var apply = Function.prototype.apply;
@@ -9051,14 +9280,14 @@ exports.clearImmediate = clearImmediate;
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(166);
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports) {
 
 /*!
@@ -9180,13 +9409,13 @@ AssertionError.prototype.toJSON = function (stack) {
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(82);
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9197,7 +9426,7 @@ var settle = __webpack_require__(88);
 var buildURL = __webpack_require__(91);
 var parseHeaders = __webpack_require__(97);
 var isURLSameOrigin = __webpack_require__(95);
-var createError = __webpack_require__(45);
+var createError = __webpack_require__(46);
 var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(90);
 
 module.exports = function xhrAdapter(config) {
@@ -9371,7 +9600,7 @@ module.exports = function xhrAdapter(config) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16)))
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9397,7 +9626,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9409,7 +9638,7 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9433,7 +9662,7 @@ module.exports = function createError(message, config, code, response) {
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9451,7 +9680,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports) {
 
 /*!
@@ -9477,7 +9706,7 @@ module.exports = function (obj, args) {
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports) {
 
 /*!
@@ -9505,7 +9734,7 @@ module.exports = function (func) {
 
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -9514,7 +9743,7 @@ module.exports = function (func) {
  * MIT Licensed
  */
 
-var hasProperty = __webpack_require__(50);
+var hasProperty = __webpack_require__(51);
 
 /**
  * ### .getPathInfo(path, object)
@@ -9622,7 +9851,7 @@ function _getPathValue (parsed, obj, index) {
 
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -9631,7 +9860,7 @@ function _getPathValue (parsed, obj, index) {
  * MIT Licensed
  */
 
-var type = __webpack_require__(39);
+var type = __webpack_require__(40);
 
 /**
  * ### .hasProperty(object, name)
@@ -9692,7 +9921,7 @@ module.exports = function hasProperty(name, obj) {
 
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -9748,7 +9977,7 @@ module.exports = function (obj) {
 
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports) {
 
 /*!
@@ -9799,7 +10028,7 @@ module.exports = function (assertion, object, includeAll) {
 
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var pSlice = Array.prototype.slice;
@@ -9899,7 +10128,7 @@ function objEquiv(a, b, opts) {
 
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10049,7 +10278,7 @@ function parsePatch(uniDiff) {
 
 
 /***/ }),
-/* 55 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10074,11 +10303,11 @@ function generateOptions(options, defaults) {
 
 
 /***/ }),
-/* 56 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var equalsOptions = { strict: true };
-var _equals = __webpack_require__(53);
+var _equals = __webpack_require__(54);
 var areEquals = function (a, b) {
     return _equals(a, b, equalsOptions);
 };
@@ -10325,6 +10554,11 @@ exports.applyOperation = applyOperation;
  * @return An array of `{newDocument, result}` after the patch
  */
 function applyPatch(document, patch, validateOperation) {
+    if (validateOperation) {
+        if (!Array.isArray(patch)) {
+            throw new exports.JsonPatchError('Patch sequence must be an array', 'SEQUENCE_NOT_AN_ARRAY');
+        }
+    }
     var results = new Array(patch.length);
     for (var i = 0, length_1 = patch.length; i < length_1; i++) {
         results[i] = applyOperation(document, patch[i], validateOperation);
@@ -10440,18 +10674,18 @@ exports.validate = validate;
 
 
 /***/ }),
-/* 57 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var equalsOptions = { strict: true };
-var _equals = __webpack_require__(53);
+var _equals = __webpack_require__(54);
 var areEquals = function (a, b) {
     return _equals(a, b, equalsOptions);
 };
 var helpers_1 = __webpack_require__(28);
-var core_1 = __webpack_require__(56);
+var core_1 = __webpack_require__(57);
 /* export all core functions */
-var core_2 = __webpack_require__(56);
+var core_2 = __webpack_require__(57);
 exports.applyOperation = core_2.applyOperation;
 exports.applyPatch = core_2.applyPatch;
 exports.applyReducer = core_2.applyReducer;
@@ -10660,7 +10894,7 @@ exports.compare = compare;
 
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(("function" === "function" && __webpack_require__(72) && function (m) { !(__WEBPACK_AMD_DEFINE_FACTORY__ = (m),
@@ -11105,229 +11339,6 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;(("function" =
     };
 });
 
-
-/***/ }),
-/* 59 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process, setImmediate) {
-
-var extend = __webpack_require__(9);
-var functionName = __webpack_require__(19);
-var valueToString = __webpack_require__(11);
-
-var slice = Array.prototype.slice;
-var join = Array.prototype.join;
-var useLeftMostCallback = -1;
-var useRightMostCallback = -2;
-
-var nextTick = (function () {
-    if (typeof process === "object" && typeof process.nextTick === "function") {
-        return process.nextTick;
-    }
-
-    if (typeof setImmediate === "function") {
-        return setImmediate;
-    }
-
-    return function (callback) {
-        setTimeout(callback, 0);
-    };
-})();
-
-function getCallback(behavior, args) {
-    var callArgAt = behavior.callArgAt;
-
-    if (callArgAt >= 0) {
-        return args[callArgAt];
-    }
-
-    var argumentList;
-
-    if (callArgAt === useLeftMostCallback) {
-        argumentList = args;
-    }
-
-    if (callArgAt === useRightMostCallback) {
-        argumentList = slice.call(args).reverse();
-    }
-
-    var callArgProp = behavior.callArgProp;
-
-    for (var i = 0, l = argumentList.length; i < l; ++i) {
-        if (!callArgProp && typeof argumentList[i] === "function") {
-            return argumentList[i];
-        }
-
-        if (callArgProp && argumentList[i] &&
-            typeof argumentList[i][callArgProp] === "function") {
-            return argumentList[i][callArgProp];
-        }
-    }
-
-    return null;
-}
-
-function getCallbackError(behavior, func, args) {
-    if (behavior.callArgAt < 0) {
-        var msg;
-
-        if (behavior.callArgProp) {
-            msg = functionName(behavior.stub) +
-                " expected to yield to '" + valueToString(behavior.callArgProp) +
-                "', but no object with such a property was passed.";
-        } else {
-            msg = functionName(behavior.stub) +
-                " expected to yield, but no callback was passed.";
-        }
-
-        if (args.length > 0) {
-            msg += " Received [" + join.call(args, ", ") + "]";
-        }
-
-        return msg;
-    }
-
-    return "argument at index " + behavior.callArgAt + " is not a function: " + func;
-}
-
-function callCallback(behavior, args) {
-    if (typeof behavior.callArgAt === "number") {
-        var func = getCallback(behavior, args);
-
-        if (typeof func !== "function") {
-            throw new TypeError(getCallbackError(behavior, func, args));
-        }
-
-        if (behavior.callbackAsync) {
-            nextTick(function () {
-                func.apply(behavior.callbackContext, behavior.callbackArguments);
-            });
-        } else {
-            func.apply(behavior.callbackContext, behavior.callbackArguments);
-        }
-    }
-}
-
-var proto = {
-    create: function create(stub) {
-        var behavior = extend({}, proto);
-        delete behavior.create;
-        delete behavior.addBehavior;
-        delete behavior.createBehavior;
-        behavior.stub = stub;
-
-        if (stub.defaultBehavior && stub.defaultBehavior.promiseLibrary) {
-            behavior.promiseLibrary = stub.defaultBehavior.promiseLibrary;
-        }
-
-        return behavior;
-    },
-
-    isPresent: function isPresent() {
-        return (typeof this.callArgAt === "number" ||
-                this.exception ||
-                typeof this.returnArgAt === "number" ||
-                this.returnThis ||
-                typeof this.throwArgAt === "number" ||
-                this.fakeFn ||
-                this.returnValueDefined);
-    },
-
-    invoke: function invoke(context, args) {
-        callCallback(this, args);
-
-        if (this.exception) {
-            throw this.exception;
-        } else if (typeof this.returnArgAt === "number") {
-            return args[this.returnArgAt];
-        } else if (this.returnThis) {
-            return context;
-        } else if (typeof this.throwArgAt === "number") {
-            if (args.length < this.throwArgAt) {
-                throw new TypeError(
-                    "throwArgs failed: " + this.throwArgAt
-                    + " arguments required but only " + args.length
-                    + " present"
-                );
-            }
-            throw args[this.throwArgAt];
-        } else if (this.fakeFn) {
-            return this.fakeFn.apply(context, args);
-        } else if (this.resolve) {
-            return (this.promiseLibrary || Promise).resolve(this.returnValue);
-        } else if (this.reject) {
-            return (this.promiseLibrary || Promise).reject(this.returnValue);
-        } else if (this.callsThrough) {
-            return this.stub.wrappedMethod.apply(context, args);
-        }
-        return this.returnValue;
-    },
-
-    onCall: function onCall(index) {
-        return this.stub.onCall(index);
-    },
-
-    onFirstCall: function onFirstCall() {
-        return this.stub.onFirstCall();
-    },
-
-    onSecondCall: function onSecondCall() {
-        return this.stub.onSecondCall();
-    },
-
-    onThirdCall: function onThirdCall() {
-        return this.stub.onThirdCall();
-    },
-
-    withArgs: function withArgs(/* arguments */) {
-        throw new Error(
-            "Defining a stub by invoking \"stub.onCall(...).withArgs(...)\" " +
-            "is not supported. Use \"stub.withArgs(...).onCall(...)\" " +
-            "to define sequential behavior for calls with certain arguments."
-        );
-    }
-};
-
-function createAsyncVersion(syncFnName) {
-    return function () {
-        var result = this[syncFnName].apply(this, arguments);
-        this.callbackAsync = true;
-        return result;
-    };
-}
-
-// create asynchronous versions of callsArg* and yields* methods
-Object.keys(proto).forEach(function (method) {
-    // need to avoid creating anotherasync versions of the newly added async methods
-    if (method.match(/^(callsArg|yields)/) && !method.match(/Async/)) {
-        proto[method + "Async"] = createAsyncVersion(method);
-    }
-});
-
-function createBehavior(behaviorMethod) {
-    return function () {
-        this.defaultBehavior = this.defaultBehavior || proto.create(this);
-        this.defaultBehavior[behaviorMethod].apply(this.defaultBehavior, arguments);
-        return this;
-    };
-}
-
-function addBehavior(stub, name, fn) {
-    proto[name] = function () {
-        fn.apply(this, [this].concat([].slice.call(arguments)));
-        return this.stub || this;
-    };
-
-    stub[name] = createBehavior(name);
-}
-
-proto.addBehavior = addBehavior;
-proto.createBehavior = createBehavior;
-module.exports = proto;
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16), __webpack_require__(38).setImmediate))
 
 /***/ }),
 /* 60 */
@@ -11814,8 +11825,8 @@ var wrapMethod = __webpack_require__(20);
 var push = Array.prototype.push;
 
 function mock(object) {
-    if (!object) {
-        return mockExpectation.create("Anonymous mock");
+    if (!object || typeof object === "string") {
+        return mockExpectation.create(object ? object : "Anonymous mock");
     }
 
     return mock.create(object);
@@ -12087,7 +12098,7 @@ module.exports = function every(obj, fn) {
 
 "use strict";
 
-var typeOf = __webpack_require__(34);
+var typeOf = __webpack_require__(35);
 
 module.exports = function iterableToString(obj) {
     var representation = "";
@@ -12240,8 +12251,8 @@ module.exports = {
 "use strict";
 
 
-var fakeServer = __webpack_require__(35);
-var fakeTimers = __webpack_require__(36);
+var fakeServer = __webpack_require__(36);
+var fakeTimers = __webpack_require__(37);
 
 function Server() {}
 Server.prototype = fakeServer;
@@ -13677,7 +13688,7 @@ const sinon = __webpack_require__(5);
 const {
   validate,
   JsonPatchError
-} = __webpack_require__(57); /* include only apply and validate */
+} = __webpack_require__(58); /* include only apply and validate */
 
 describe('Palindrom', () => {
   describe('#ValidatePatches', () => {
@@ -14383,7 +14394,7 @@ describe('Sockets', () => {
 
 
 var utils = __webpack_require__(1);
-var bind = __webpack_require__(46);
+var bind = __webpack_require__(47);
 var Axios = __webpack_require__(84);
 var defaults = __webpack_require__(24);
 
@@ -14418,9 +14429,9 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(43);
+axios.Cancel = __webpack_require__(44);
 axios.CancelToken = __webpack_require__(83);
-axios.isCancel = __webpack_require__(44);
+axios.isCancel = __webpack_require__(45);
 
 // Expose all/spread
 axios.all = function all(promises) {
@@ -14441,7 +14452,7 @@ module.exports.default = axios;
 "use strict";
 
 
-var Cancel = __webpack_require__(43);
+var Cancel = __webpack_require__(44);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -14658,7 +14669,7 @@ module.exports = InterceptorManager;
 
 var utils = __webpack_require__(1);
 var transformData = __webpack_require__(89);
-var isCancel = __webpack_require__(44);
+var isCancel = __webpack_require__(45);
 var defaults = __webpack_require__(24);
 
 /**
@@ -14768,7 +14779,7 @@ module.exports = function enhanceError(error, config, code, response) {
 "use strict";
 
 
-var createError = __webpack_require__(45);
+var createError = __webpack_require__(46);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -17151,7 +17162,7 @@ exports.version = '3.5.0';
  * Assertion Error
  */
 
-exports.AssertionError = __webpack_require__(40);
+exports.AssertionError = __webpack_require__(41);
 
 /*!
  * Utils for plugins (not exported)
@@ -21142,7 +21153,7 @@ module.exports = function (chai, util) {
  * Module dependencies
  */
 
-var transferFlags = __webpack_require__(52);
+var transferFlags = __webpack_require__(53);
 var flag = __webpack_require__(12);
 var config = __webpack_require__(15);
 
@@ -21374,9 +21385,9 @@ module.exports = function (ctx, name, getter) {
  * @api public
  */
 
-var AssertionError = __webpack_require__(40);
+var AssertionError = __webpack_require__(41);
 var flag = __webpack_require__(12);
-var type = __webpack_require__(39);
+var type = __webpack_require__(40);
 
 module.exports = function (obj, types) {
   var obj = flag(obj, 'object');
@@ -21445,9 +21456,9 @@ module.exports = function getEnumerableProperties(object) {
  */
 
 var flag = __webpack_require__(12)
-  , getActual = __webpack_require__(47)
+  , getActual = __webpack_require__(48)
   , inspect = __webpack_require__(26)
-  , objDisplay = __webpack_require__(51);
+  , objDisplay = __webpack_require__(52);
 
 /**
  * ### .getMessage(object, message, negateMessage)
@@ -21498,7 +21509,7 @@ module.exports = function (obj, args) {
  * MIT Licensed
  */
 
-var getPathInfo = __webpack_require__(49);
+var getPathInfo = __webpack_require__(50);
 
 /**
  * ### .getPathValue(path, object)
@@ -21604,7 +21615,7 @@ exports.test = __webpack_require__(119);
  * type utility
  */
 
-exports.type = __webpack_require__(39);
+exports.type = __webpack_require__(40);
 
 /*!
  * expectTypes utility
@@ -21621,7 +21632,7 @@ exports.getMessage = __webpack_require__(112);
  * actual utility
  */
 
-exports.getActual = __webpack_require__(47);
+exports.getActual = __webpack_require__(48);
 
 /*!
  * Inspect util
@@ -21633,7 +21644,7 @@ exports.inspect = __webpack_require__(26);
  * Object Display util
  */
 
-exports.objDisplay = __webpack_require__(51);
+exports.objDisplay = __webpack_require__(52);
 
 /*!
  * Flag utility
@@ -21645,7 +21656,7 @@ exports.flag = __webpack_require__(12);
  * Flag transferring utility
  */
 
-exports.transferFlags = __webpack_require__(52);
+exports.transferFlags = __webpack_require__(53);
 
 /*!
  * Deep equal utility
@@ -21663,19 +21674,19 @@ exports.getPathValue = __webpack_require__(113);
  * Deep path info
  */
 
-exports.getPathInfo = __webpack_require__(49);
+exports.getPathInfo = __webpack_require__(50);
 
 /*!
  * Check if a property exists
  */
 
-exports.hasProperty = __webpack_require__(50);
+exports.hasProperty = __webpack_require__(51);
 
 /*!
  * Function name
  */
 
-exports.getName = __webpack_require__(48);
+exports.getName = __webpack_require__(49);
 
 /*!
  * add Property
@@ -22712,7 +22723,7 @@ var /*istanbul ignore start*/_base = __webpack_require__(7) /*istanbul ignore en
 var _base2 = _interopRequireDefault(_base);
 
 /*istanbul ignore end*/
-var /*istanbul ignore start*/_params = __webpack_require__(55) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_params = __webpack_require__(56) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -22803,7 +22814,7 @@ var /*istanbul ignore start*/_array = __webpack_require__(128) /*istanbul ignore
 
 var /*istanbul ignore start*/_apply = __webpack_require__(135) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_parse = __webpack_require__(54) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_parse = __webpack_require__(55) /*istanbul ignore end*/;
 
 var /*istanbul ignore start*/_create = __webpack_require__(136) /*istanbul ignore end*/;
 
@@ -22862,7 +22873,7 @@ exports.__esModule = true;
 exports. /*istanbul ignore end*/applyPatch = applyPatch;
 /*istanbul ignore start*/exports. /*istanbul ignore end*/applyPatches = applyPatches;
 
-var /*istanbul ignore start*/_parse = __webpack_require__(54) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_parse = __webpack_require__(55) /*istanbul ignore end*/;
 
 var /*istanbul ignore start*/_distanceIterator = __webpack_require__(137) /*istanbul ignore end*/;
 
@@ -23257,12 +23268,12 @@ exports["default"] = /*istanbul ignore end*/function (start, minLine, maxLine) {
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(("function" === "function" && __webpack_require__(72) && function (m) {
-    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(58)], __WEBPACK_AMD_DEFINE_FACTORY__ = (m),
+    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(59)], __WEBPACK_AMD_DEFINE_FACTORY__ = (m),
 				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
 				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 }) || (typeof module === "object" && function (m) {
-    module.exports = m(__webpack_require__(58));
+    module.exports = m(__webpack_require__(59));
 }) || function (m) { this.formatio = m(this.samsam); }
 )(function (samsam) {
     "use strict";
@@ -24148,17 +24159,31 @@ if(true) {
 /* 145 */
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+
 /*!
- * https://github.com/PuppetJS/JSONPatcherProxy
- * JSONPatcherProxy version: 0.0.5
+ * https://github.com/Palindrom/JSONPatcherProxy
+ * JSONPatcherProxy version: 0.0.6
  * (c) 2017 Starcounter 
  * MIT license
  */
 
 /** Class representing a JS Object observer  */
 const JSONPatcherProxy = (function() {
-  const proxifiedObjectsMap = new Map();
-
+  /**
+   * A helper function that calls Reflect.set.
+   * It is utilized to re-populate path history map after every `Reflect.set` call.
+   * @param {JSONPatcherProxy} instance JSONPatcherProxy instance
+   * @param {Object} target target object
+   * @param {string} key affected property name 
+   * @param {any} newValue the new set value
+   */
+  function ownReflectSet(instance, target, key, newValue) {
+    const result = Reflect.set(target, key, newValue);
+    /* we traverse the new (post-apply) object and update proxies paths accordingly */
+    instance._resetCachedProxiesPaths(instance.cachedProxy, '');
+    return result;
+  }
   /**
     * Creates an instance of JSONPatcherProxy around your object of interest `root`. 
     * @param {Object|Array} root - the object you want to wrap
@@ -24167,6 +24192,8 @@ const JSONPatcherProxy = (function() {
     * @constructor
     */
   function JSONPatcherProxy(root, showDetachedWarning) {
+    this.proxifiedObjectsMap = new Map();
+    this.objectsPathsMap = new Map();
     // default to true
     if (typeof showDetachedWarning !== 'boolean') {
       showDetachedWarning = true;
@@ -24192,7 +24219,7 @@ const JSONPatcherProxy = (function() {
      * Replaces your callback with a noop function.
      */
     this.pause = () => {
-      this.defaultCallback = function() {};
+      this.defaultCallback = () => {};
     };
   }
   /**
@@ -24212,106 +24239,153 @@ const JSONPatcherProxy = (function() {
     if (str.indexOf('/') === -1 && str.indexOf('~') === -1) return str;
     return str.replace(/~/g, '~0').replace(/\//g, '~1');
   };
+  /**
+    * A helper function that retrieves the object path from object paths map. 
+    * And if it failed to find it, it sets it for future retrieval.
+    * @param {Object} target the object that you need its path
+    * @param {String} string the path used when object is not found in object-path cache
+  */
+  JSONPatcherProxy.prototype.getOrSetObjectPath = function(target, path) {
+    const cachedPath = this.objectsPathsMap.get(target);
+    if (cachedPath) {
+      return cachedPath;
+    } else {
+      this.objectsPathsMap.set(target, path);
+      return path;
+    }
+  };
+
   JSONPatcherProxy.prototype.generateProxyAtPath = function(obj, path) {
     if (!obj) {
       return obj;
     }
     const instance = this;
     const traps = {
-      get: function(target, propKey, receiver) {
+      get: function(target, propKey, newValue) {
         if (propKey.toString() === '_isProxified') {
           return true; //to distinguish proxies
         }
-        return Reflect.get(target, propKey, receiver);
+        return Reflect.get(target, propKey, newValue);
       },
-      set: function(target, key, receiver) {
-        const distPath =
-          path + '/' + JSONPatcherProxy.escapePathComponent(key.toString());
+      set: function(target, key, newValue) {
+        /* each proxified object has its path cached, we need to use that instead of `path` variable
+        because at one point in the future, paths might change and we will simply update our cache instead of 
+        proxifying again.  */
+
+        var destinationPropKey =
+          instance.getOrSetObjectPath(target, path) +
+          '/' +
+          JSONPatcherProxy.escapePathComponent(key);
+
+        /* in case the set value is already proxified by a different instance of JSONPatcherProxy */
+        if (
+          newValue &&
+          newValue._isProxified &&
+          !instance.proxifiedObjectsMap.has(newValue)
+        ) {
+          newValue = JSONPatcherProxy.deepClone(newValue);
+        }
+
         // if the new value is an object, make sure to watch it
         if (
-          receiver /* because `null` is in object */ &&
-          typeof receiver === 'object' &&
-          receiver._isProxified !== true
+          newValue &&
+          typeof newValue === 'object' &&
+          newValue._isProxified !== true
         ) {
-          receiver = instance._proxifyObjectTreeRecursively(receiver, distPath);
+          newValue = instance._proxifyObjectTreeRecursively(
+            newValue,
+            destinationPropKey
+          );
         }
-        if (typeof receiver === 'undefined') {
+        if (typeof newValue === 'undefined') {
           if (target.hasOwnProperty(key)) {
             // when array element is set to `undefined`, should generate replace to `null`
             if (Array.isArray(target)) {
               //undefined array elements are JSON.stringified to `null`
               instance.defaultCallback({
                 op: 'replace',
-                path: distPath,
+                path: destinationPropKey,
                 value: null
               });
             } else {
-              instance.defaultCallback({ op: 'remove', path: distPath });
+              instance.defaultCallback({
+                op: 'remove',
+                path: destinationPropKey
+              });
             }
-            return Reflect.set(target, key, receiver);
+            return ownReflectSet(instance, target, key, newValue);
           } else if (!Array.isArray(target)) {
-            return Reflect.set(target, key, receiver);
+            return ownReflectSet(instance, target, key, newValue);
           }
         }
         if (Array.isArray(target) && !Number.isInteger(+key.toString())) {
-          return Reflect.set(target, key, receiver);
+          return ownReflectSet(instance, target, key, newValue);
         }
         if (target.hasOwnProperty(key)) {
           if (typeof target[key] === 'undefined') {
             if (Array.isArray(target)) {
               instance.defaultCallback({
                 op: 'replace',
-                path: distPath,
-                value: receiver
+                path: destinationPropKey,
+                value: newValue
               });
             } else {
               instance.defaultCallback({
                 op: 'add',
-                path: distPath,
-                value: receiver
+                path: destinationPropKey,
+                value: newValue
               });
             }
-            return Reflect.set(target, key, receiver);
+            return ownReflectSet(instance, target, key, newValue);
           } else {
             instance.defaultCallback({
               op: 'replace',
-              path: distPath,
-              value: receiver
+              path: destinationPropKey,
+              value: newValue
             });
-            return Reflect.set(target, key, receiver);
+            return ownReflectSet(instance, target, key, newValue);
           }
         } else {
           instance.defaultCallback({
             op: 'add',
-            path: distPath,
-            value: receiver
+            path: destinationPropKey,
+            value: newValue
           });
-          return Reflect.set(target, key, receiver);
+          return ownReflectSet(instance, target, key, newValue);
         }
       },
       deleteProperty: function(target, key) {
         if (typeof target[key] !== 'undefined') {
           instance.defaultCallback({
             op: 'remove',
-            path: path +
-              '/' +
-              JSONPatcherProxy.escapePathComponent(key.toString())
+            path:
+              path + '/' + JSONPatcherProxy.escapePathComponent(key.toString())
           });
-          const proxyInstance = proxifiedObjectsMap.get(target[key]);
-          if (proxyInstance) {
-            instance.disableTrapsForProxy(proxyInstance);
+          const revokableProxyInstance = instance.proxifiedObjectsMap.get(
+            target[key]
+          );
+
+          if (revokableProxyInstance) {
+            instance.objectsPathsMap.delete(
+              revokableProxyInstance.originalObject
+            );
+            instance.disableTrapsForProxy(revokableProxyInstance);
+            instance.proxifiedObjectsMap.delete(target[key]);
           }
         }
-        // else {
-        return Reflect.deleteProperty(target, key);
+        const result = Reflect.deleteProperty(target, key);
+        /* we need the Reflection to occur before we map paths to their object */
+        instance._resetCachedProxiesPaths(instance.cachedProxy, '');
+        return result;
       }
     };
-    const proxy = Proxy.revocable(obj, traps);
+    const revocableInstance = Proxy.revocable(obj, traps);
     // cache traps object to disable them later.
-    proxy.trapsInstance = traps;
+    revocableInstance.trapsInstance = traps;
+    revocableInstance.originalObject = obj;
     /* keeping track of all the proxies to be able to revoke them later */
-    proxifiedObjectsMap.set(proxy.proxy, proxy);
-    return proxy.proxy;
+    this.proxifiedObjectsMap.set(revocableInstance.proxy, revocableInstance);
+    return revocableInstance.proxy;
   };
   //grab tree's leaves one by one, encapsulate them into a proxy and return
   JSONPatcherProxy.prototype._proxifyObjectTreeRecursively = function(
@@ -24321,24 +24395,58 @@ const JSONPatcherProxy = (function() {
     for (let key in root) {
       if (root.hasOwnProperty(key)) {
         if (typeof root[key] === 'object') {
-          const distPath =
+          const destinationPropKey =
             path + '/' + JSONPatcherProxy.escapePathComponent(key);
-          root[key] = this.generateProxyAtPath(root[key], distPath);
-          this._proxifyObjectTreeRecursively(root[key], distPath);
+          root[key] = this.generateProxyAtPath(root[key], destinationPropKey);
+          this._proxifyObjectTreeRecursively(root[key], destinationPropKey);
         }
       }
     }
     return this.generateProxyAtPath(root, path);
   };
+  /** 
+    A function that recursively traverses the proxy tree and caches all its proxy-object-children in a map
+    @param {Proxy} root the proxy object
+  */
+  JSONPatcherProxy.prototype._resetCachedProxiesPaths = function(root, path) {
+    /* deleting array elements could render other array elements paths incorrect, 
+    this function fixes all incorrect paths efficiently */
+    for (let key in root) {
+      if (!root.hasOwnProperty(key)) continue;
+      const subObject = root[key];
+      if (subObject && subObject._isProxified) {
+        const destinationPropKey =
+          path + '/' + JSONPatcherProxy.escapePathComponent(key);
+
+        // get the proxy instance (an instance is {proxy, originalObject})
+        var revokableProxyInstance = this.proxifiedObjectsMap.get(subObject);
+        if (revokableProxyInstance) {
+          // get the un-proxified originalObject, we need because `set` trap passes the original object as target
+          const originalObject = revokableProxyInstance.originalObject;
+          // update its path
+          this.objectsPathsMap.set(originalObject, destinationPropKey);
+        }
+        /* Even though we didn't find the proxy in the proxies-cache,
+         We need to continue updating its descendants' paths,
+         because we might come at this point in recursive calls inside `set` trap.
+         Because we cache the proxy (revokableInstance) to proxies map only **after** the revokableInstance is created.
+         And `set` trap can call this function before revokableInstance is created.
+         This means we can come across totally valid proxies that are not cached in the our cache.
+         We continue traversing them because we know 100% they're proxies (they have _isProxified = true).
+         */
+        this._resetCachedProxiesPaths(subObject, destinationPropKey);
+      }
+    }
+  };
   //this function is for aesthetic purposes
   JSONPatcherProxy.prototype.proxifyObjectTree = function(root) {
     /*
-        while proxyifying object tree,
-        the proxyifying operation itself is being
-        recorded, which in an unwanted behavior,
-        that's why we disable recording through this
-        initial process;
-        */
+    while proxyifying object tree,
+    the proxyifying operation itself is being
+    recorded, which in an unwanted behavior,
+    that's why we disable recording through this
+    initial process;
+    */
     this.pause();
     const proxifiedObject = this._proxifyObjectTreeRecursively(root, '');
     /* OK you can record now */
@@ -24349,26 +24457,39 @@ const JSONPatcherProxy = (function() {
    * Turns a proxified object into a forward-proxy object; doesn't emit any patches anymore, like a normal object
    * @param {Proxy} proxy - The target proxy object
    */
-  JSONPatcherProxy.prototype.disableTrapsForProxy = function(proxyInstance) {
+  JSONPatcherProxy.prototype.disableTrapsForProxy = function(
+    revokableProxyInstance
+  ) {
     if (this.showDetachedWarning) {
       const message =
         "You're accessing an object that is detached from the observedObject tree, see https://github.com/Palindrom/JSONPatcherProxy#detached-objects";
-      proxyInstance.trapsInstance.get = (a, b, c) => {
+
+      revokableProxyInstance.trapsInstance.set = (
+        targetObject,
+        propKey,
+        newValue
+      ) => {
         console.warn(message);
-        return Reflect.get(a, b, c);
+        return Reflect.set(targetObject, propKey, newValue);
       };
-      proxyInstance.trapsInstance.set = (a, b, c) => {
+      revokableProxyInstance.trapsInstance.set = (
+        targetObject,
+        propKey,
+        newValue
+      ) => {
         console.warn(message);
-        return Reflect.set(a, b, c);
+        return Reflect.set(targetObject, propKey, newValue);
       };
-      proxyInstance.trapsInstance.deleteProperty = (a, b, c) => {
-        console.warn(message);
-        return Reflect.deleteProperty(a, b, c);
+      revokableProxyInstance.trapsInstance.deleteProperty = (
+        targetObject,
+        propKey
+      ) => {
+        return Reflect.deleteProperty(targetObject, propKey);
       };
     } else {
-      delete proxyInstance.trapsInstance.set;
-      delete proxyInstance.trapsInstance.get;
-      delete proxyInstance.trapsInstance.deleteProperty;
+      delete revokableProxyInstance.trapsInstance.set;
+      delete revokableProxyInstance.trapsInstance.get;
+      delete revokableProxyInstance.trapsInstance.deleteProperty;
     }
   };
   /**
@@ -24389,9 +24510,9 @@ const JSONPatcherProxy = (function() {
     They might need to use only a callback.
     */
     if (record) this.patches = [];
-    return (this.cachedProxy = this.proxifyObjectTree(
-      JSONPatcherProxy.deepClone(this.originalObject)
-    ));
+    this.originalObject = JSONPatcherProxy.deepClone(this.originalObject);
+    this.cachedProxy = this.proxifyObjectTree(this.originalObject);
+    return this.cachedProxy;
   };
   /**
    * If the observed is set to record, it will synchronously return all the patches and empties patches array.
@@ -24406,13 +24527,15 @@ const JSONPatcherProxy = (function() {
    * Revokes all proxies rendering the observed object useless and good for garbage collection @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/revocable}
    */
   JSONPatcherProxy.prototype.revoke = function() {
-    proxifiedObjectsMap.forEach(el => el.revoke());
+    this.proxifiedObjectsMap.forEach(el => {
+      el.revoke();
+    });
   };
   /**
    * Disables all proxies' traps, turning the observed object into a forward-proxy object, like a normal object that you can modify silently.
    */
   JSONPatcherProxy.prototype.disableTraps = function() {
-    proxifiedObjectsMap.forEach(this.disableTrapsForProxy, this);
+    this.proxifiedObjectsMap.forEach(this.disableTrapsForProxy, this);
   };
   return JSONPatcherProxy;
 })();
@@ -25576,7 +25699,7 @@ Object.keys(module.exports).forEach(function (method) {
 
 
 var collectOwnMethods = __webpack_require__(60);
-var deprecated = __webpack_require__(31);
+var deprecated = __webpack_require__(32);
 var getPropertyDescriptor = __webpack_require__(10);
 var stubNonFunctionProperty = __webpack_require__(156);
 var sinonStub = __webpack_require__(18);
@@ -25637,9 +25760,9 @@ var extend = __webpack_require__(9);
 var sinonCollection = __webpack_require__(61);
 var sinonMatch = __webpack_require__(8);
 var sinonAssert = __webpack_require__(30);
-var sinonClock = __webpack_require__(36);
-var fakeServer = __webpack_require__(35);
-var fakeXhr = __webpack_require__(37);
+var sinonClock = __webpack_require__(37);
+var fakeServer = __webpack_require__(36);
+var fakeXhr = __webpack_require__(38);
 var fakeServerWithClock = __webpack_require__(71);
 
 var push = [].push;
@@ -25899,7 +26022,7 @@ module.exports = {
 "use strict";
 
 
-var deprecated = __webpack_require__(31);
+var deprecated = __webpack_require__(32);
 var spy = __webpack_require__(17);
 var wrapMethod = __webpack_require__(20);
 
@@ -26032,21 +26155,21 @@ module.exports = function getConfig(custom) {
 
 module.exports = {
     calledInOrder: __webpack_require__(65),
-    configureLogError: __webpack_require__(33),
+    configureLogError: __webpack_require__(34),
     defaultConfig: __webpack_require__(66),
     deepEqual: __webpack_require__(13),
     every: __webpack_require__(67),
     extend: __webpack_require__(9),
     format: __webpack_require__(14),
     functionName: __webpack_require__(19),
-    functionToString: __webpack_require__(32),
+    functionToString: __webpack_require__(33),
     getConfig: __webpack_require__(157),
     getPropertyDescriptor: __webpack_require__(10),
     iterableToString: __webpack_require__(68),
     orderByFirstCall: __webpack_require__(69),
     restore: __webpack_require__(159),
     timesInWords: __webpack_require__(22),
-    typeOf: __webpack_require__(34),
+    typeOf: __webpack_require__(35),
     walk: __webpack_require__(23),
     wrapMethod: __webpack_require__(20)
 };
