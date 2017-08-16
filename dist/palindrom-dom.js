@@ -1,4 +1,4 @@
-/*! Palindrom, version: 3.0.2 */
+/*! Palindrom, version: 3.0.3 */
 var PalindromDOM =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -4060,7 +4060,7 @@ if(true) {
 
 /*!
  * https://github.com/Palindrom/JSONPatcherProxy
- * JSONPatcherProxy version: 0.0.6
+ * JSONPatcherProxy version: 0.0.7
  * (c) 2017 Starcounter 
  * MIT license
  */
@@ -4089,6 +4089,8 @@ const JSONPatcherProxy = (function() {
     * @constructor
     */
   function JSONPatcherProxy(root, showDetachedWarning) {
+    this.isProxifyingTreeNow = false;
+    this.isObserving = false;
     this.proxifiedObjectsMap = new Map();
     this.objectsPathsMap = new Map();
     // default to true
@@ -4110,6 +4112,7 @@ const JSONPatcherProxy = (function() {
         this.isRecording && this.patches.push(operation);
         this.userCallback && this.userCallback(operation);
       };
+      this.isObserving = true;
     };
     /**
      * @memberof JSONPatcherProxy
@@ -4117,6 +4120,7 @@ const JSONPatcherProxy = (function() {
      */
     this.pause = () => {
       this.defaultCallback = () => {};
+      this.isObserving = false;
     };
   }
   /**
@@ -4181,6 +4185,33 @@ const JSONPatcherProxy = (function() {
           !instance.proxifiedObjectsMap.has(newValue)
         ) {
           newValue = JSONPatcherProxy.deepClone(newValue);
+        } else {
+          /* mark already proxified values as inherited.
+          rationale: proxy.obj1 = proxy.obj2
+          will emit
+          {op: replace, path: '/obj1', value: obj2}
+          {op: remove, path: '/obj2'}
+          
+          by default, the second operation would revoke the proxy, an this renders obj1 revoked.
+          That's why we need to remember the proxies that are inherited.
+          */
+
+          const revokableInstance = instance.proxifiedObjectsMap.get(newValue);
+
+          /*
+          Why do we need to check instance.isProxifyingTreeNow?
+
+          We need to make sure we mark revokables as inherited ONLY when we're observing,
+          because throughout the first proxification, a sub-object is proxified and then assigned to 
+          its parent object. This assignment of a pre-proxified object can fool us into thinking
+          that it's a proxified object moved around, while in fact it's the first assignment ever. 
+
+          Checking isProxifyingTreeNow ensures this is not happening in the first proxification, 
+          but in fact is is a proxified object moved around the tree
+          */
+          if (revokableInstance && !instance.isProxifyingTreeNow) {
+            revokableInstance.inherited = true;
+          }
         }
 
         // if the new value is an object, make sure to watch it
@@ -4250,7 +4281,7 @@ const JSONPatcherProxy = (function() {
           });
           return ownReflectSet(instance, target, key, newValue);
         }
-      },
+      }, 
       deleteProperty: function(target, key) {
         if (typeof target[key] !== 'undefined') {
           instance.defaultCallback({
@@ -4263,11 +4294,23 @@ const JSONPatcherProxy = (function() {
           );
 
           if (revokableProxyInstance) {
-            instance.objectsPathsMap.delete(
-              revokableProxyInstance.originalObject
-            );
-            instance.disableTrapsForProxy(revokableProxyInstance);
-            instance.proxifiedObjectsMap.delete(target[key]);
+            if (revokableProxyInstance.inherited) {
+              /* this is an inherited proxy (an already proxified object that was moved around), 
+              we shouldn't revoke it, because even though it was removed from path1, it is indeed used in path2.
+              And we know that because we mark moved proxies with `inherited` flag when we move them
+              
+              it is a good idea to remove this flag if we come across it here, in deleteProperty trap.
+              We DO want to revoke the proxy if it was removed again.
+              */
+
+              revokableProxyInstance.inherited = false;
+            } else {
+              instance.objectsPathsMap.delete(
+                revokableProxyInstance.originalObject
+              );
+              instance.disableTrapsForProxy(revokableProxyInstance);
+              instance.proxifiedObjectsMap.delete(target[key]);
+            }
           }
         }
         const result = Reflect.deleteProperty(target, key);
@@ -4345,8 +4388,10 @@ const JSONPatcherProxy = (function() {
     initial process;
     */
     this.pause();
+    this.isProxifyingTreeNow = true;
     const proxifiedObject = this._proxifyObjectTreeRecursively(root, '');
     /* OK you can record now */
+    this.isProxifyingTreeNow = false;
     this.resume();
     return proxifiedObject;
   };
