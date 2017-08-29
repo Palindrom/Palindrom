@@ -1,4 +1,4 @@
-/*! Palindrom, version: 3.0.3 */
+/*! Palindrom, version: 3.0.4 */
 var PalindromDOM =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
