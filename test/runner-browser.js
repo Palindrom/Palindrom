@@ -1,4 +1,4 @@
-/*! Palindrom, version: 3.0.4 */
+/*! Palindrom, version: 3.0.5 */
 var Tests =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
