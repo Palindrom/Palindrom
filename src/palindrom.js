@@ -462,6 +462,7 @@ var Palindrom = (function() {
           url,
           method
         );
+        console.log(res);
       });
 
     this.onSend(data, url, method);
