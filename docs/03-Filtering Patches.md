@@ -5,15 +5,14 @@ You can ignore local changes by setting `Palindrom.filterLocalChange` function. 
 ### Example
 
 ```js
-const palindrom = new Palindrom({remoteUrl: window.location.href});
+const palindrom = new Palindrom({ remoteUrl: window.location.href });
 
 palindrom.filterLocalChange = function(operation) {
-  if(!operation.path.startsWith('$')) {
+  if (!operation.path.startsWith('$')) {
     return operation;
   }
-}
+};
 // use palindrom.obj
-palindrom.obj.$someProperty = "new value"; // this change will be ignored and will not reach the server 
-
+palindrom.obj.$someProperty = 'new value'; // this change will be ignored and will not reach the server
 ```
 

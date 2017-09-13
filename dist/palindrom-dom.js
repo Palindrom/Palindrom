@@ -1795,6 +1795,7 @@ var Palindrom = (function() {
     onReceive,
     onSend,
     onConnectionError,
+    onSocketOpened,
     onFatalError,
     onStateChange
   ) {
@@ -1813,7 +1814,7 @@ var Palindrom = (function() {
     onConnectionError && (this.onConnectionError = onConnectionError);
     onFatalError && (this.onFatalError = onFatalError);
     onStateChange && (this.onStateChange = onStateChange);
-
+    onSocketOpened && (this.onSocketOpened = onSocketOpened);
     //useWebSocket = useWebSocket || false;
     var that = this;
     Object.defineProperty(this, 'useWebSocket', {
@@ -1856,7 +1857,7 @@ var Palindrom = (function() {
     return network.xhr(url, 'application/json', body, function(res) {
       bootstrap(res.data);
       if (network.useWebSocket) {
-        network.webSocketUpgrade();
+        network.webSocketUpgrade(network.onSocketOpened);
       }
     });
   }
@@ -1906,7 +1907,7 @@ var Palindrom = (function() {
    * @param {Function} [callback] Function to be called once connection gets opened.
    * @returns {WebSocket} created WebSocket
    */
-  PalindromNetworkChannel.prototype.webSocketUpgrade = function(callback) {
+  PalindromNetworkChannel.prototype.webSocketUpgrade = function(onSocketOpenCallback) {
     var that = this;
 
     this.wsUrl = toWebSocketURL(this.remoteUrl.href);
@@ -1916,8 +1917,7 @@ var Palindrom = (function() {
     that._ws = new WebSocket(upgradeURL);
     that._ws.onopen = function(event) {
       that.onStateChange(that._ws.readyState, upgradeURL);
-      callback && callback(event);
-      //TODO: trigger on-ready event (tomalec)
+      onSocketOpenCallback && onSocketOpenCallback(event);
     };
     that._ws.onmessage = function(event) {
       that.onReceive(JSON.parse(event.data), that._ws.url, 'WS');
@@ -2157,6 +2157,7 @@ var Palindrom = (function() {
     this.retransmissionThreshold = options.retransmissionThreshold || 3;
     this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
     this.onReconnectionEnd = options.onReconnectionEnd || noop;
+    this.onSocketOpened = options.onSocketOpened || noop;
     this.onIncomingPatchValidationError =
       options.onIncomingPatchValidationError || noop;
     this.onOutgoingPatchValidationError =
@@ -2189,6 +2190,7 @@ var Palindrom = (function() {
       this.handleRemoteChange.bind(this), //onReceive
       this.onPatchSent.bind(this), //onSend,
       this.handleConnectionError.bind(this), //onConnectionError,
+      this.onSocketOpened.bind(this),
       this.handleFatalError.bind(this), //onFatalError,
       this.onSocketStateChanged.bind(this) //onStateChange
     );
@@ -2244,7 +2246,7 @@ var Palindrom = (function() {
     this.jsonPatcherProxy = new JSONPatcherProxy(obj);
 
     const proxifiedObj = this.jsonPatcherProxy.observe(
-      true,
+      false,
       operation => {
         const filtered = this.filterLocalChange(operation);
         // totally ignore falsy (didn't pass the filter) JSON Patch operations
