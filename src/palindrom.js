@@ -652,7 +652,7 @@ var Palindrom = (function() {
     this.jsonPatcherProxy = new JSONPatcherProxy(obj);
 
     const proxifiedObj = this.jsonPatcherProxy.observe(
-      true,
+      false,
       operation => {
         const filtered = this.filterLocalChange(operation);
         // totally ignore falsy (didn't pass the filter) JSON Patch operations
