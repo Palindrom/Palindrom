@@ -625,12 +625,14 @@ var Palindrom = (function() {
         // double versioning or OT
         this.queue = options.ot
           ? new JSONPatchOTAgent(
+              this.obj, 
               JSONPatchOT.transform,
               [options.localVersionPath, options.remoteVersionPath],
               this.validateAndApplySequence.bind(this),
               options.purity
             )
           : new JSONPatchQueue(
+              this.obj, 
               [options.localVersionPath, options.remoteVersionPath],
               this.validateAndApplySequence.bind(this),
               options.purity
@@ -715,6 +717,8 @@ var Palindrom = (function() {
       if (results.newDocument !== tree) {
         // object was reset, proxify it again
         this.prepareProxifiedObject(results.newDocument);
+        
+        this.queue.obj = this.obj;
 
         //notify people about it
         this.onStateReset(this.obj);
@@ -728,6 +732,7 @@ var Palindrom = (function() {
         throw error;
       }
     }
+    return this.obj;
   };
 
   Palindrom.prototype.validateSequence = function(tree, sequence) {
@@ -786,7 +791,7 @@ var Palindrom = (function() {
     if (!this.isObserving) {
       return;
     }
-    this.queue.receive(this.obj, patches);
+    this.queue.receive(patches);
     if (
       this.queue.pending &&
       this.queue.pending.length &&
@@ -800,6 +805,7 @@ var Palindrom = (function() {
     if (this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
     }
+    
   };
 
   /* backward compatibility */

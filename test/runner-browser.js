@@ -65,7 +65,7 @@ var Tests =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 171);
+/******/ 	return __webpack_require__(__webpack_require__.s = 172);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -2417,7 +2417,7 @@ function isBuffer(b) {
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var util = __webpack_require__(169);
+var util = __webpack_require__(171);
 var hasOwn = Object.prototype.hasOwnProperty;
 var pSlice = Array.prototype.slice;
 var functionsHaveNames = (function () {
@@ -3900,7 +3900,7 @@ function exposeEventTarget(target, eventTarget) {
 }
 
 // Expose internal utilities on `sinon` global for backwards compatibility.
-exposeCoreUtils(exports, __webpack_require__(158));
+exposeCoreUtils(exports, __webpack_require__(160));
 
 exports.assert = __webpack_require__(30);
 exports.collection = __webpack_require__(61);
@@ -3909,7 +3909,7 @@ exports.spy = __webpack_require__(17);
 exports.spyCall = __webpack_require__(21);
 exports.stub = __webpack_require__(18);
 exports.mock = __webpack_require__(63);
-exports.sandbox = __webpack_require__(152);
+exports.sandbox = __webpack_require__(154);
 exports.expectation = __webpack_require__(62);
 exports.createStubInstance = __webpack_require__(18).createStubInstance;
 
@@ -3952,13 +3952,13 @@ exports.addBehavior = function (name, fn) {
 if (true) {
   /* include only applyPatch and validate */
   var { applyPatch, validate } = __webpack_require__(58);
-  var JSONPatcherProxy = __webpack_require__(145);
+  var JSONPatcherProxy = __webpack_require__(147);
   var JSONPatchQueueSynchronous = __webpack_require__(29)
     .JSONPatchQueueSynchronous;
   var JSONPatchQueue = __webpack_require__(29).JSONPatchQueue;
-  var JSONPatchOT = __webpack_require__(142);
-  var JSONPatchOTAgent = __webpack_require__(141);
-  var URL = __webpack_require__(172);
+  var JSONPatchOT = __webpack_require__(144);
+  var JSONPatchOTAgent = __webpack_require__(143);
+  var URL = __webpack_require__(173);
   var axios = __webpack_require__(42);
 
   /* We are going to hand `websocket` lib as an external to webpack
@@ -3966,7 +3966,7 @@ if (true) {
   this will make `w3cwebsocket` property `undefined`, 
   and this will lead Palindrom to use Browser's WebSocket when it is used 
   from the bundle. And use `websocket` lib in Node environment */
-  var NodeWebSocket = __webpack_require__(173).w3cwebsocket;
+  var NodeWebSocket = __webpack_require__(174).w3cwebsocket;
 
   /* this allows us to stub WebSockets */
   if (!global.WebSocket && NodeWebSocket) {
@@ -4571,12 +4571,14 @@ var Palindrom = (function() {
         // double versioning or OT
         this.queue = options.ot
           ? new JSONPatchOTAgent(
+              this.obj, 
               JSONPatchOT.transform,
               [options.localVersionPath, options.remoteVersionPath],
               this.validateAndApplySequence.bind(this),
               options.purity
             )
           : new JSONPatchQueue(
+              this.obj, 
               [options.localVersionPath, options.remoteVersionPath],
               this.validateAndApplySequence.bind(this),
               options.purity
@@ -4661,6 +4663,8 @@ var Palindrom = (function() {
       if (results.newDocument !== tree) {
         // object was reset, proxify it again
         this.prepareProxifiedObject(results.newDocument);
+        
+        this.queue.obj = this.obj;
 
         //notify people about it
         this.onStateReset(this.obj);
@@ -4674,6 +4678,7 @@ var Palindrom = (function() {
         throw error;
       }
     }
+    return this.obj;
   };
 
   Palindrom.prototype.validateSequence = function(tree, sequence) {
@@ -4732,7 +4737,7 @@ var Palindrom = (function() {
     if (!this.isObserving) {
       return;
     }
-    this.queue.receive(this.obj, patches);
+    this.queue.receive(patches);
     if (
       this.queue.pending &&
       this.queue.pending.length &&
@@ -4746,6 +4751,7 @@ var Palindrom = (function() {
     if (this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
     }
+    
   };
 
   /* backward compatibility */
@@ -5594,7 +5600,7 @@ deepEqual.use = function (match) {
 "use strict";
 
 
-var formatio = __webpack_require__(138);
+var formatio = __webpack_require__(140);
 
 var formatter = formatio.configure({
     quoteStrings: false,
@@ -5958,7 +5964,7 @@ var uuid = 0;
 
 // Public API
 var spyApi = {
-    formatters: __webpack_require__(153),
+    formatters: __webpack_require__(155),
 
     reset: function () {
         if (this.invoking) {
@@ -6325,14 +6331,14 @@ module.exports = spy;
 
 
 var behavior = __webpack_require__(31);
-var behaviors = __webpack_require__(150);
+var behaviors = __webpack_require__(152);
 var spy = __webpack_require__(17);
 var extend = __webpack_require__(9);
 var functionToString = __webpack_require__(33);
 var getPropertyDescriptor = __webpack_require__(10);
 var wrapMethod = __webpack_require__(20);
-var stubEntireObject = __webpack_require__(155);
-var stubDescriptor = __webpack_require__(154);
+var stubEntireObject = __webpack_require__(157);
+var stubDescriptor = __webpack_require__(156);
 var throwOnFalsyObject = __webpack_require__(64);
 
 var slice = Array.prototype.slice;
@@ -6988,7 +6994,7 @@ module.exports = function walk(obj, iterator, context) {
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(1);
-var normalizeHeaderName = __webpack_require__(96);
+var normalizeHeaderName = __webpack_require__(98);
 
 var PROTECTION_PREFIX = /^\)\]\}',?\n/;
 var DEFAULT_CONTENT_TYPE = {
@@ -7085,7 +7091,7 @@ module.exports = defaults;
 /* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(101);
+module.exports = __webpack_require__(103);
 
 
 /***/ }),
@@ -7096,8 +7102,8 @@ module.exports = __webpack_require__(101);
 // https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/util.js
 
 var getName = __webpack_require__(49);
-var getProperties = __webpack_require__(114);
-var getEnumerableProperties = __webpack_require__(111);
+var getProperties = __webpack_require__(116);
+var getEnumerableProperties = __webpack_require__(113);
 
 module.exports = inspect;
 
@@ -7661,8 +7667,8 @@ exports.PatchError = PatchError;
 /**
  * version: 2.0.1
  */
-var queue = __webpack_require__(144);
-var sync = __webpack_require__(143);
+var queue = __webpack_require__(146);
+var sync = __webpack_require__(145);
 
 module.exports = { JSONPatchQueue: queue, JSONPatchQueueSynchronous: sync, /* Babel demands this */__esModule:  true };
 
@@ -8228,7 +8234,7 @@ module.exports = configure;
 "use strict";
 
 
-var type = __webpack_require__(162);
+var type = __webpack_require__(164);
 
 module.exports = function typeOf(value) {
     return type(value).toLowerCase();
@@ -8246,7 +8252,7 @@ var fakeXhr = __webpack_require__(38);
 var push = [].push;
 var format = __webpack_require__(14);
 var configureLogError = __webpack_require__(34);
-var pathToRegexp = __webpack_require__(161);
+var pathToRegexp = __webpack_require__(163);
 
 function responseArray(handler) {
     var response = handler;
@@ -8535,7 +8541,7 @@ module.exports = fakeServer;
 "use strict";
 /* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {
 
-var llx = __webpack_require__(146);
+var llx = __webpack_require__(148);
 
 exports.useFakeTimers = function () {
     var now;
@@ -8577,7 +8583,7 @@ exports.timers = {
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {
 
-var TextEncoder = __webpack_require__(163).TextEncoder;
+var TextEncoder = __webpack_require__(165).TextEncoder;
 
 var configureLogError = __webpack_require__(34);
 var sinonEvent = __webpack_require__(70);
@@ -8603,7 +8609,7 @@ var supportsProgress = typeof ProgressEvent !== "undefined";
 var supportsCustomEvent = typeof CustomEvent !== "undefined";
 var supportsFormData = typeof FormData !== "undefined";
 var supportsArrayBuffer = typeof ArrayBuffer !== "undefined";
-var supportsBlob = __webpack_require__(148).isSupported;
+var supportsBlob = __webpack_require__(150).isSupported;
 var isReactNative = global.navigator && global.navigator.product === "ReactNative";
 var sinonXhr = { XMLHttpRequest: global.XMLHttpRequest };
 sinonXhr.GlobalXMLHttpRequest = global.XMLHttpRequest;
@@ -9277,7 +9283,7 @@ exports._unrefActive = exports.active = function(item) {
 };
 
 // setimmediate attaches itself to the global object
-__webpack_require__(147);
+__webpack_require__(149);
 exports.setImmediate = setImmediate;
 exports.clearImmediate = clearImmediate;
 
@@ -9286,7 +9292,7 @@ exports.clearImmediate = clearImmediate;
 /* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(166);
+module.exports = __webpack_require__(168);
 
 
 /***/ }),
@@ -9415,7 +9421,7 @@ AssertionError.prototype.toJSON = function (stack) {
 /* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(82);
+module.exports = __webpack_require__(84);
 
 /***/ }),
 /* 43 */
@@ -9425,12 +9431,12 @@ module.exports = __webpack_require__(82);
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(1);
-var settle = __webpack_require__(88);
-var buildURL = __webpack_require__(91);
-var parseHeaders = __webpack_require__(97);
-var isURLSameOrigin = __webpack_require__(95);
+var settle = __webpack_require__(90);
+var buildURL = __webpack_require__(93);
+var parseHeaders = __webpack_require__(99);
+var isURLSameOrigin = __webpack_require__(97);
 var createError = __webpack_require__(46);
-var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(90);
+var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(92);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -9526,7 +9532,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(93);
+      var cookies = __webpack_require__(95);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -9647,7 +9653,7 @@ module.exports = function isCancel(value) {
 "use strict";
 
 
-var enhanceError = __webpack_require__(87);
+var enhanceError = __webpack_require__(89);
 
 /**
  * Create an Error with the specified message, config, error code, and response.
@@ -10035,8 +10041,8 @@ module.exports = function (assertion, object, includeAll) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var pSlice = Array.prototype.slice;
-var objectKeys = __webpack_require__(125);
-var isArguments = __webpack_require__(124);
+var objectKeys = __webpack_require__(127);
+var isArguments = __webpack_require__(126);
 
 var deepEqual = module.exports = function (actual, expected, opts) {
   if (!opts) opts = {};
@@ -11391,7 +11397,7 @@ module.exports = collectOwnMethods;
 var sinonSpy = __webpack_require__(17);
 var sinonStub = __webpack_require__(18);
 var sinonMock = __webpack_require__(63);
-var sandboxStub = __webpack_require__(151);
+var sandboxStub = __webpack_require__(153);
 var collectOwnMethods = __webpack_require__(60);
 
 var push = [].push;
@@ -12340,9 +12346,246 @@ module.exports = __webpack_amd_options__;
 /* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
+/*! Palindrom
+ * https://github.com/Palindrom/Palindrom
+ * (c) 2017 Joachim Wester
+ * MIT license
+ */
+if (true) {
+  var Palindrom = __webpack_require__(6);
+}
+
+var PalindromDOM = (function() {
+  /**
+   * PalindromDOM
+   * @extends {Palindrom}
+   * @param {Object} [options] map of arguments. See README.md for description
+   */
+  var PalindromDOM = function(options) {
+    if (typeof options !== 'object') {
+      throw new Error('PalindromDOM constructor requires an object argument.');
+    }
+    if (!options.remoteUrl) {
+      throw new Error('remoteUrl is required');
+    }
+    var onStateReset = options.onStateReset || options.callback;
+    if (options.callback) {
+      console.warn(
+        'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
+      );
+    }
+    this.element = options.listenTo || document.body;
+    var clickHandler = this.clickHandler.bind(this);
+    this.historyHandler = this.historyHandler.bind(this);
+
+    this.historyHandlerDeprecated = function() {
+      console.warn(
+        "`puppet-redirect-pushstate` event is deprecated, please use `palindrom-redirect-pushstate`, if you're using `puppet-redirect`, please upgrade to `palindrom-redirect`"
+      );
+      this.historyHandler();
+    }.bind(this);
+
+    /* in some cases, people emit redirect requests before `listen` is called */
+    this.element.addEventListener(
+      'palindrom-redirect-pushstate',
+      this.historyHandler
+    );
+    /* backward compatibility: for people using old puppet-redirect */
+    this.element.addEventListener(
+      'puppet-redirect-pushstate',
+      this.historyHandlerDeprecated
+    );
+
+    options.onStateReset = function addDOMListeners(obj) {
+      this.listen();
+      onStateReset && onStateReset.call(this, obj);
+    };
+
+    this.listen = function() {
+      this.listening = true;
+      this.element.addEventListener('click', clickHandler);
+      window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
+
+      this.element.addEventListener(
+        'palindrom-redirect-pushstate',
+        this.historyHandler
+      );
+
+      /* backward compatibility: for people using old puppet-redirect */
+      this.element.addEventListener(
+        'puppet-redirect-pushstate',
+        this.historyHandlerDeprecated
+      );
+    };
+    this.unlisten = function() {
+      this.listening = false;
+
+      this.element.removeEventListener('click', clickHandler);
+      window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
+      this.element.removeEventListener(
+        'palindrom-redirect-pushstate',
+        this.historyHandler
+      );
+
+      /* backward compatibility: for people using old puppet-redirect */
+      this.element.removeEventListener(
+        'puppet-redirect-pushstate',
+        this.historyHandlerDeprecated
+      );
+    };
+
+    //TODO move fallback to window.location.href from PalindromNetworkChannel to here (PalindromDOM)
+
+    Palindrom.call(this, options);
+  };
+  PalindromDOM.prototype = Object.create(Palindrom.prototype);
+
+  /**
+   * DISABLED FOR NOW: we don't know when rendering actually finishes.
+   * It's left here for the hope of having synchronous rendering at some point in the future.
+   * ====
+   * we need to scroll asynchronously, because we need the document rendered to search for the anchored element
+   * and even though onReceive + applyPatch are sync, Polymer is not, it renders async-ly
+  PalindromDOM.prototype.scrollToAnchorOrTopAsync = function(link) {
+    this.scrollAsyncTimeout && clearTimeout(this.scrollAsyncTimeout);
+    if (window && window.document) {
+      var anchorIndex;
+      var anchor;
+      // does the URL have an anchor
+      if (link && (anchorIndex = link.indexOf('#')) > -1) {
+        anchor = link.substr(anchorIndex);
+      }
+      if (!anchor) {
+        window.scrollTo(0, 0);
+      } else {
+        // if somehow someone manages to navigate twice in a 100ms,
+        // we don't scroll for their first navigation, i.e de-bouncing 
+        
+        this.scrollAsyncTimeout = setTimeout(() => {
+          // does that anchor exist in the page?
+          const anchorTarget = document.querySelector(anchor); // look for #element-id
+          if (anchorTarget) {
+            anchorTarget.scrollIntoView();
+          } else {
+            window.scrollTo(0, 0);
+          }
+        }, 100);
+      }
+    }
+  };
+  */
+  /**
+   * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
+   * so that the URL handlers can be executed on the remote
+   * @param url
+   */
+  PalindromDOM.prototype.morphUrl = function(url) {
+    history.pushState(null, null, url);
+    this.network.getPatchUsingHTTP(url);
+    window && window.scrollTo(0, 0);
+  };
+  PalindromDOM.prototype.clickHandler = function(event) {
+    //Don't morph ctrl/cmd + click & middle mouse button
+    if (event.ctrlKey || event.metaKey || event.which == 2) {
+      return;
+    }
+
+    if (event.detail && event.detail.target) {
+      //detail is Polymer
+      event = event.detail;
+    }
+
+    var target = event.target;
+
+    if (target.nodeName !== 'A') {
+      for (var i = 0; i < event.path.length; i++) {
+        if (event.path[i].nodeName == 'A') {
+          target = event.path[i];
+          break;
+        }
+      }
+    }
+    var anchorTarget = target.target || target.getAttribute('target');
+
+    if (!anchorTarget || anchorTarget === 'self') {
+      //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
+      //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
+      //while target.getAttribute("href") returns desired href (as string)
+      var href = target.href || target.getAttribute('href');
+      if (href && PalindromDOM.isApplicationLink(href)) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.morphUrl(href);
+      } else if (target.type === 'submit') {
+        event.preventDefault();
+      }
+    }
+  };
+
+  PalindromDOM.prototype.historyHandler = function(/*event*/) {
+    this.network.getPatchUsingHTTP(location.href);
+  };
+
+  /**
+   * Returns information if a given element is an internal application link that Palindrom should intercept into a history push
+   * @param elem HTMLElement or String
+   * @returns {boolean}
+   */
+  PalindromDOM.isApplicationLink = function(elem) {
+    if (typeof elem === 'string') {
+      //type string is reported in Polymer / Canary (Web Platform features disabled)
+      var parser = document.createElement('A');
+      parser.href = elem;
+
+      // @see http://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
+      // IE doesn't populate all link properties when setting .href with a relative URL,
+      // however .href will return an absolute URL which then can be used on itself
+      // to populate these additional fields.
+      if (parser.host == '') {
+        parser.href = parser.href;
+      }
+
+      elem = parser;
+    }
+    return (
+      elem.protocol == window.location.protocol &&
+      elem.host == window.location.host
+    );
+  };
+
+  /* backward compatibility, not sure if this is good practice */
+  if (typeof global === 'undefined') {
+    if (typeof window !== 'undefined') {
+      /* incase neither window nor global existed, e.g React Native */
+      var global = window;
+    } else {
+      var global = {};
+    }
+  }
+  global.PuppetDOM = PalindromDOM;
+
+  /* Since we have Palindrom bundled,
+  let's expose it in case anyone needs it */
+  global.Puppet = Palindrom;
+  global.Palindrom = Palindrom;
+
+  return PalindromDOM;
+})();
+
+if (true) {
+  module.exports = PalindromDOM;
+  module.exports.default = PalindromDOM;
+  module.exports.__esModule = true;
+}
+
+
+/***/ }),
+/* 74 */
+/***/ (function(module, exports, __webpack_require__) {
+
 /** only run DOM tests in browsers */
 if (typeof window !== 'undefined') {
-  const PalindromDOM = __webpack_require__(170);
+  const PalindromDOM = __webpack_require__(73);
   const assert = __webpack_require__(3);
   const moxios = __webpack_require__(4);
   const sinon = __webpack_require__(5);
@@ -12911,7 +13154,102 @@ if (typeof window !== 'undefined') {
 
 
 /***/ }),
-/* 74 */
+/* 75 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {/** only run DOM tests in browsers */
+if (typeof window !== 'undefined') {
+  if (!global.WebSocket) {
+    global.WebSocket = __webpack_require__(2).WebSocket;
+  }
+  const MockSocketServer = __webpack_require__(2).Server;
+
+  const PalindromDOM = __webpack_require__(73);
+  const assert = __webpack_require__(3);
+  const moxios = __webpack_require__(4);
+
+  describe('PalindromDOM OT', function() {
+    let currLoc;
+
+    beforeEach(function() {
+      currLoc = window.location.href;
+      moxios.install();
+    });
+
+    afterEach(function() {
+      history.pushState(null, null, currLoc);
+      moxios.uninstall();
+    });
+
+  it("should patch a mix of XHR and WS incoming patches in the correct order", function(done) {
+    const baseUrl = window.location;
+    const url = new URL("/testURL", baseUrl).toString();
+    const server = new MockSocketServer(
+      url.replace("http", "ws")
+    );
+    moxios.stubRequest(url, {
+      status: 200,
+      headers: {
+        contentType: "application/json"
+      },
+      responseText: `{"_ver#c$":0,"_ver#s":0,"WebsiteProvider_0":{"Html":"/websiteprovider/surfaces/DefaultSurface.html","Sections":{"Main":{"WebsiteProvider_1":{},"WebsiteProvider_0":{"Html":"/WebsiteProvider/views/ContentWrapperPage.html","Content":{"People_0":{"Html":"/People/viewmodels/MasterPage.html","ShowMenu":true,"CurrentPage":{"People_0":{"Html":"/People/viewmodels/OrganizationsPage.html","Organizations":[],"AddUrl":"/people/organizations/add","RedirectUrl$":"","Confirm":{"Html":"/People/viewmodels/ConfirmDialogPage.html","Message":"","Ok$":"","Reject$":""},"EntriesPerPage$":0,"Pagination":{"Html":"/People/viewmodels/PaginationPage.html","ChangePage$":0,"NextPage$":0,"PreviousPage$":0,"LastPage$":0,"FirstPage$":0,"EntriesPerPage":5,"PageEntries":[{"Amount":5,"Text":"Show 5 items per page"},{"Amount":15,"Text":"Show 15 items per page"},{"Amount":30,"Text":"Show 30 items per page"}],"Pages":[],"TotalEntries":0,"TotalPages":0,"CurrentPage":1,"CurrentOffset":0,"DisableFirst":true,"DisableLast":false}}}}}}},"TopBar":{"WebsiteProvider_1":{},"WebsiteProvider_0":{},"SignIn_0":{"Uri":"","Html":"/SignIn/viewmodels/SignInPage.html","IsSignedIn":true,"Message":"","FullName":"admin admin","SignInClick$":0,"Submit":0,"SessionUri":"/__default/7F3049B0CEE1FA3530000000","UserImage":{"SignIn_0":{"Html":"/SignIn/viewmodels/UserImagePage.html"}}}}}}}`
+    });
+    let tempObject;
+    const palindrom = new PalindromDOM({
+      remoteUrl: url,
+      onStateReset: function(obj) {
+        tempObject = obj;
+      },
+      localVersionPath: '/_ver#c$',
+      remoteVersionPath: '/_ver#s',
+      ot: true,
+      useWebSocket: true
+    });
+    setTimeout(
+      () => {
+        setTimeout(() => {
+          server.send(
+            `[{"op":"replace","path":"/_ver#s","value":2},{"op":"test","path":"/_ver#c$","value":0},{"op":"remove","path":"/WebsiteProvider_0/Sections/Main/WebsiteProvider_0/Content/People_0/CurrentPage/People_0/CustomContactTypes/0"},{"op":"add","path":"/WebsiteProvider_0/Sections/Main/WebsiteProvider_0/Content/People_0/CurrentPage/People_0/CustomContactTypes/0","value":{"Name$":"XXX"}},{"op":"remove","path":"/WebsiteProvider_0/Sections/Main/WebsiteProvider_0/Content/People_0/CurrentPage/People_0/Persons/0/CustomContactRelations/0"},{"op":"add","path":"/WebsiteProvider_0/Sections/Main/WebsiteProvider_0/Content/People_0/CurrentPage/People_0/Persons/0/CustomContactRelations/0","value":{"Name":null,"ThisUrl":"/people/persons/R"}},{"op":"remove","path":"/WebsiteProvider_0/Sections/Main/WebsiteProvider_0/Content/People_0/CurrentPage/People_0/Persons/1/CustomContactRelations/0"},{"op":"add","path":"/WebsiteProvider_0/Sections/Main/WebsiteProvider_0/Content/People_0/CurrentPage/People_0/Persons/1/CustomContactRelations/0","value":{"Name":null,"ThisUrl":"/people/persons/Q2"}}]`
+          );
+        }, 100);
+
+        setTimeout(() => {
+          const url2 = new URL("/testURL2", baseUrl).toString();
+          moxios.stubRequest(url2, {
+            status: 200,
+            headers: {
+              contentType: "application/json-patch+json"
+            },
+            responseText: `[{"op":"replace","path":"/_ver#s","value":1},{"op":"test","path":"/_ver#c$","value":0},{"op":"replace","path":"","value":{"_ver#c$":0,"_ver#s":1,"WebsiteProvider_0":{"Html":"/websiteprovider/surfaces/DefaultSurface.html","Sections":{"Main":{"WebsiteProvider_1":{},"WebsiteProvider_0":{"Html":"/WebsiteProvider/views/ContentWrapperPage.html","Content":{"People_0":{"Html":"/People/viewmodels/MasterPage.html","ShowMenu":true,"CurrentPage":{"People_0":{"Html":"/People/viewmodels/PersonsPage.html","NonSelectedFields":[],"SelectedFields":[{"Name$":"XXX","IsClicked$":0}],"CustomContactTypes":[{"Name$":"XXX"}],"Persons":[{"Key":"R","Name":null,"Extra":{"People_0":{}},"ParentNameList":[],"EmailAddressName":"admin@starcounter.com","PhoneNumberName":"","AddressName":"","Delete$":0,"Edit$":0,"CustomContactRelations":[{"Name":null,"ThisUrl":"/people/persons/R"}],"ViewUrl":"/people/persons/R"},{"Key":"Q","Name":"admin admin","Extra":{"People_0":{}},"ParentNameList":[],"EmailAddressName":"","PhoneNumberName":"","AddressName":"","Delete$":0,"Edit$":0,"CustomContactRelations":[{"Name":null,"ThisUrl":"/people/persons/Q0"}],"ViewUrl":"/people/persons/Q1"}],"InputAdd$":"","AddUrl":"/people/persons/add","RedirectUrl$":"","Confirm":{"Html":"/People/viewmodels/ConfirmDialogPage.html","Message":"","Ok$":"","Reject$":""},"EntriesPerPage$":0,"Pagination":{"Html":"/People/viewmodels/PaginationPage.html","ChangePage$":0,"NextPage$":0,"PreviousPage$":0,"LastPage$":0,"FirstPage$":0,"EntriesPerPage":5,"PageEntries":[{"Amount":5,"Text":"Show 5 items per page"},{"Amount":15,"Text":"Show 15 items per page"},{"Amount":30,"Text":"Show 30 items per page"}],"Pages":[{"PageNumber":1,"Active":true}],"TotalEntries":2,"TotalPages":1,"CurrentPage":1,"CurrentOffset":0,"DisableFirst":true,"DisableLast":true}}}}}}},"TopBar":{"WebsiteProvider_1":{},"WebsiteProvider_0":{},"SignIn_0":{"Uri":"","Html":"/SignIn/viewmodels/SignInPage.html","IsSignedIn":true,"Message":"","FullName":"admin admin","SignInClick$":0,"Submit":0,"SessionUri":"/__default/7F3049B0CEE1FA3530000000","UserImage":{"SignIn_0":{"Html":"/SignIn/viewmodels/UserImagePage.html"}}}}}}}}]`,
+          });
+          palindrom.morphUrl(url2);
+        }, 300);
+
+        setTimeout(() => {
+          server.send(
+            `[{"op":"replace","path":"/_ver#s","value":3},{"op":"test","path":"/_ver#c$","value":0},{"op":"remove","path":"/WebsiteProvider_0/Sections/Main/WebsiteProvider_0/Content/People_0/CurrentPage/People_0/CustomContactTypes/0"},{"op":"add","path":"/WebsiteProvider_0/Sections/Main/WebsiteProvider_0/Content/People_0/CurrentPage/People_0/CustomContactTypes/0","value":{"Name$":"XXX"}},{"op":"remove","path":"/WebsiteProvider_0/Sections/Main/WebsiteProvider_0/Content/People_0/CurrentPage/People_0/Persons/0/CustomContactRelations/0"},{"op":"add","path":"/WebsiteProvider_0/Sections/Main/WebsiteProvider_0/Content/People_0/CurrentPage/People_0/Persons/0/CustomContactRelations/0","value":{"Name":null,"ThisUrl":"/people/persons/R"}},{"op":"remove","path":"/WebsiteProvider_0/Sections/Main/WebsiteProvider_0/Content/People_0/CurrentPage/People_0/Persons/1/CustomContactRelations/0"},{"op":"add","path":"/WebsiteProvider_0/Sections/Main/WebsiteProvider_0/Content/People_0/CurrentPage/People_0/Persons/1/CustomContactRelations/0","value":{"Name":null,"ThisUrl":"/people/persons/Q3"}}]`
+          );
+        }, 500);
+
+        setTimeout(
+          () => {
+            assert.equal(tempObject.WebsiteProvider_0.Sections.Main.WebsiteProvider_0.Content.People_0.CurrentPage.People_0.Persons[1].CustomContactRelations[0].ThisUrl, "/people/persons/Q3");
+            palindrom.unobserve();
+            palindrom.unlisten();
+            server.stop(done);
+          },
+          700
+        );
+      }, 50);
+  });
+});
+
+}
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
@@ -13067,7 +13405,7 @@ describe("Callbacks, onPatchSent and onPatchReceived", () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 75 */
+/* 77 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
@@ -13152,7 +13490,7 @@ describe("Callbacks", () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 76 */
+/* 78 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
@@ -13299,7 +13637,7 @@ describe('Palindrom', () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 77 */
+/* 79 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
@@ -13383,7 +13721,7 @@ describe('Palindrom', () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 78 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
@@ -13440,7 +13778,7 @@ describe('Palindrom', () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 79 */
+/* 81 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
@@ -13686,7 +14024,7 @@ describe("Palindrom", () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 80 */
+/* 82 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
@@ -13918,7 +14256,7 @@ describe('Palindrom', () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 81 */
+/* 83 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {global.WebSocket = __webpack_require__(2).WebSocket;
@@ -14388,7 +14726,7 @@ describe('Sockets', () => {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 82 */
+/* 84 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14396,7 +14734,7 @@ describe('Sockets', () => {
 
 var utils = __webpack_require__(1);
 var bind = __webpack_require__(47);
-var Axios = __webpack_require__(84);
+var Axios = __webpack_require__(86);
 var defaults = __webpack_require__(24);
 
 /**
@@ -14431,14 +14769,14 @@ axios.create = function create(instanceConfig) {
 
 // Expose Cancel & CancelToken
 axios.Cancel = __webpack_require__(44);
-axios.CancelToken = __webpack_require__(83);
+axios.CancelToken = __webpack_require__(85);
 axios.isCancel = __webpack_require__(45);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(98);
+axios.spread = __webpack_require__(100);
 
 module.exports = axios;
 
@@ -14447,7 +14785,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 83 */
+/* 85 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14511,7 +14849,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 84 */
+/* 86 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14519,10 +14857,10 @@ module.exports = CancelToken;
 
 var defaults = __webpack_require__(24);
 var utils = __webpack_require__(1);
-var InterceptorManager = __webpack_require__(85);
-var dispatchRequest = __webpack_require__(86);
-var isAbsoluteURL = __webpack_require__(94);
-var combineURLs = __webpack_require__(92);
+var InterceptorManager = __webpack_require__(87);
+var dispatchRequest = __webpack_require__(88);
+var isAbsoluteURL = __webpack_require__(96);
+var combineURLs = __webpack_require__(94);
 
 /**
  * Create a new instance of Axios
@@ -14603,7 +14941,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 85 */
+/* 87 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14662,14 +15000,14 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 86 */
+/* 88 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(1);
-var transformData = __webpack_require__(89);
+var transformData = __webpack_require__(91);
 var isCancel = __webpack_require__(45);
 var defaults = __webpack_require__(24);
 
@@ -14748,7 +15086,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 87 */
+/* 89 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14774,7 +15112,7 @@ module.exports = function enhanceError(error, config, code, response) {
 
 
 /***/ }),
-/* 88 */
+/* 90 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14806,7 +15144,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 89 */
+/* 91 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14833,7 +15171,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 90 */
+/* 92 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14876,7 +15214,7 @@ module.exports = btoa;
 
 
 /***/ }),
-/* 91 */
+/* 93 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14951,7 +15289,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 92 */
+/* 94 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14970,7 +15308,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 93 */
+/* 95 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15030,7 +15368,7 @@ module.exports = (
 
 
 /***/ }),
-/* 94 */
+/* 96 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15051,7 +15389,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 95 */
+/* 97 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15126,7 +15464,7 @@ module.exports = (
 
 
 /***/ }),
-/* 96 */
+/* 98 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15145,7 +15483,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 97 */
+/* 99 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15189,7 +15527,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 98 */
+/* 100 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15223,7 +15561,7 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 99 */
+/* 101 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15344,7 +15682,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 100 */
+/* 102 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15358,9 +15696,9 @@ function fromByteArray (uint8) {
 
 
 
-var base64 = __webpack_require__(99)
-var ieee754 = __webpack_require__(139)
-var isArray = __webpack_require__(140)
+var base64 = __webpack_require__(101)
+var ieee754 = __webpack_require__(141)
+var isArray = __webpack_require__(142)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -17141,7 +17479,7 @@ function isnan (val) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 101 */
+/* 103 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -17169,7 +17507,7 @@ exports.AssertionError = __webpack_require__(41);
  * Utils for plugins (not exported)
  */
 
-var util = __webpack_require__(115);
+var util = __webpack_require__(117);
 
 /**
  * # .use(function)
@@ -17207,40 +17545,40 @@ exports.config = config;
  * Primary `Assertion` prototype
  */
 
-var assertion = __webpack_require__(102);
+var assertion = __webpack_require__(104);
 exports.use(assertion);
 
 /*!
  * Core Assertions
  */
 
-var core = __webpack_require__(103);
+var core = __webpack_require__(105);
 exports.use(core);
 
 /*!
  * Expect interface
  */
 
-var expect = __webpack_require__(105);
+var expect = __webpack_require__(107);
 exports.use(expect);
 
 /*!
  * Should interface
  */
 
-var should = __webpack_require__(106);
+var should = __webpack_require__(108);
 exports.use(should);
 
 /*!
  * Assert interface
  */
 
-var assert = __webpack_require__(104);
+var assert = __webpack_require__(106);
 exports.use(assert);
 
 
 /***/ }),
-/* 102 */
+/* 104 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -17377,7 +17715,7 @@ module.exports = function (_chai, util) {
 
 
 /***/ }),
-/* 103 */
+/* 105 */
 /***/ (function(module, exports) {
 
 /*!
@@ -19243,7 +19581,7 @@ module.exports = function (chai, _) {
 
 
 /***/ }),
-/* 104 */
+/* 106 */
 /***/ (function(module, exports) {
 
 /*!
@@ -20894,7 +21232,7 @@ module.exports = function (chai, util) {
 
 
 /***/ }),
-/* 105 */
+/* 107 */
 /***/ (function(module, exports) {
 
 /*!
@@ -20934,7 +21272,7 @@ module.exports = function (chai, util) {
 
 
 /***/ }),
-/* 106 */
+/* 108 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21141,7 +21479,7 @@ module.exports = function (chai, util) {
 
 
 /***/ }),
-/* 107 */
+/* 109 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21259,7 +21597,7 @@ module.exports = function (ctx, name, method, chainingBehavior) {
 
 
 /***/ }),
-/* 108 */
+/* 110 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21309,7 +21647,7 @@ module.exports = function (ctx, name, method) {
 
 
 /***/ }),
-/* 109 */
+/* 111 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21363,7 +21701,7 @@ module.exports = function (ctx, name, getter) {
 
 
 /***/ }),
-/* 110 */
+/* 112 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21411,7 +21749,7 @@ module.exports = function (obj, types) {
 
 
 /***/ }),
-/* 111 */
+/* 113 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21443,7 +21781,7 @@ module.exports = function getEnumerableProperties(object) {
 
 
 /***/ }),
-/* 112 */
+/* 114 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21500,7 +21838,7 @@ module.exports = function (obj, args) {
 
 
 /***/ }),
-/* 113 */
+/* 115 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21549,7 +21887,7 @@ module.exports = function(path, obj) {
 
 
 /***/ }),
-/* 114 */
+/* 116 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21591,7 +21929,7 @@ module.exports = function getProperties(object) {
 
 
 /***/ }),
-/* 115 */
+/* 117 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21610,7 +21948,7 @@ var exports = module.exports = {};
  * test utility
  */
 
-exports.test = __webpack_require__(119);
+exports.test = __webpack_require__(121);
 
 /*!
  * type utility
@@ -21621,13 +21959,13 @@ exports.type = __webpack_require__(40);
 /*!
  * expectTypes utility
  */
-exports.expectTypes = __webpack_require__(110);
+exports.expectTypes = __webpack_require__(112);
 
 /*!
  * message utility
  */
 
-exports.getMessage = __webpack_require__(112);
+exports.getMessage = __webpack_require__(114);
 
 /*!
  * actual utility
@@ -21663,13 +22001,13 @@ exports.transferFlags = __webpack_require__(53);
  * Deep equal utility
  */
 
-exports.eql = __webpack_require__(120);
+exports.eql = __webpack_require__(122);
 
 /*!
  * Deep path value
  */
 
-exports.getPathValue = __webpack_require__(113);
+exports.getPathValue = __webpack_require__(115);
 
 /*!
  * Deep path info
@@ -21693,41 +22031,41 @@ exports.getName = __webpack_require__(49);
  * add Property
  */
 
-exports.addProperty = __webpack_require__(109);
+exports.addProperty = __webpack_require__(111);
 
 /*!
  * add Method
  */
 
-exports.addMethod = __webpack_require__(108);
+exports.addMethod = __webpack_require__(110);
 
 /*!
  * overwrite Property
  */
 
-exports.overwriteProperty = __webpack_require__(118);
+exports.overwriteProperty = __webpack_require__(120);
 
 /*!
  * overwrite Method
  */
 
-exports.overwriteMethod = __webpack_require__(117);
+exports.overwriteMethod = __webpack_require__(119);
 
 /*!
  * Add a chainable method
  */
 
-exports.addChainableMethod = __webpack_require__(107);
+exports.addChainableMethod = __webpack_require__(109);
 
 /*!
  * Overwrite chainable method
  */
 
-exports.overwriteChainableMethod = __webpack_require__(116);
+exports.overwriteChainableMethod = __webpack_require__(118);
 
 
 /***/ }),
-/* 116 */
+/* 118 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21787,7 +22125,7 @@ module.exports = function (ctx, name, method, chainingBehavior) {
 
 
 /***/ }),
-/* 117 */
+/* 119 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21845,7 +22183,7 @@ module.exports = function (ctx, name, method) {
 
 
 /***/ }),
-/* 118 */
+/* 120 */
 /***/ (function(module, exports) {
 
 /*!
@@ -21906,7 +22244,7 @@ module.exports = function (ctx, name, getter) {
 
 
 /***/ }),
-/* 119 */
+/* 121 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21940,14 +22278,14 @@ module.exports = function (obj, args) {
 
 
 /***/ }),
-/* 120 */
+/* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(121);
+module.exports = __webpack_require__(123);
 
 
 /***/ }),
-/* 121 */
+/* 123 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -21960,14 +22298,14 @@ module.exports = __webpack_require__(121);
  * Module dependencies
  */
 
-var type = __webpack_require__(122);
+var type = __webpack_require__(124);
 
 /*!
  * Buffer.isBuffer browser shim
  */
 
 var Buffer;
-try { Buffer = __webpack_require__(100).Buffer; }
+try { Buffer = __webpack_require__(102).Buffer; }
 catch(ex) {
   Buffer = {};
   Buffer.isBuffer = function() { return false; }
@@ -22210,14 +22548,14 @@ function objectEqual(a, b, m) {
 
 
 /***/ }),
-/* 122 */
+/* 124 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(123);
+module.exports = __webpack_require__(125);
 
 
 /***/ }),
-/* 123 */
+/* 125 */
 /***/ (function(module, exports) {
 
 /*!
@@ -22365,7 +22703,7 @@ Library.prototype.test = function (obj, type) {
 
 
 /***/ }),
-/* 124 */
+/* 126 */
 /***/ (function(module, exports) {
 
 var supportsArgumentsClass = (function(){
@@ -22391,7 +22729,7 @@ function unsupported(object){
 
 
 /***/ }),
-/* 125 */
+/* 127 */
 /***/ (function(module, exports) {
 
 exports = module.exports = typeof Object.keys === 'function'
@@ -22406,7 +22744,7 @@ function shim (obj) {
 
 
 /***/ }),
-/* 126 */
+/* 128 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22437,7 +22775,7 @@ function convertChangesToDMP(changes) {
 
 
 /***/ }),
-/* 127 */
+/* 129 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22479,7 +22817,7 @@ function escapeHTML(s) {
 
 
 /***/ }),
-/* 128 */
+/* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22508,7 +22846,7 @@ function diffArrays(oldArr, newArr, callback) {
 
 
 /***/ }),
-/* 129 */
+/* 131 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22533,7 +22871,7 @@ function diffChars(oldStr, newStr, callback) {
 
 
 /***/ }),
-/* 130 */
+/* 132 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22562,7 +22900,7 @@ function diffCss(oldStr, newStr, callback) {
 
 
 /***/ }),
-/* 131 */
+/* 133 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22678,7 +23016,7 @@ function canonicalize(obj, stack, replacementStack) {
 
 
 /***/ }),
-/* 132 */
+/* 134 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22707,7 +23045,7 @@ function diffSentences(oldStr, newStr, callback) {
 
 
 /***/ }),
-/* 133 */
+/* 135 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22784,7 +23122,7 @@ function diffWordsWithSpace(oldStr, newStr, callback) {
 
 
 /***/ }),
-/* 134 */
+/* 136 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22799,29 +23137,29 @@ var /*istanbul ignore start*/_base = __webpack_require__(7) /*istanbul ignore en
 var _base2 = _interopRequireDefault(_base);
 
 /*istanbul ignore end*/
-var /*istanbul ignore start*/_character = __webpack_require__(129) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_character = __webpack_require__(131) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_word = __webpack_require__(133) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_word = __webpack_require__(135) /*istanbul ignore end*/;
 
 var /*istanbul ignore start*/_line = __webpack_require__(27) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_sentence = __webpack_require__(132) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_sentence = __webpack_require__(134) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_css = __webpack_require__(130) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_css = __webpack_require__(132) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_json = __webpack_require__(131) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_json = __webpack_require__(133) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_array = __webpack_require__(128) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_array = __webpack_require__(130) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_apply = __webpack_require__(135) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_apply = __webpack_require__(137) /*istanbul ignore end*/;
 
 var /*istanbul ignore start*/_parse = __webpack_require__(55) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_create = __webpack_require__(136) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_create = __webpack_require__(138) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_dmp = __webpack_require__(126) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_dmp = __webpack_require__(128) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_xml = __webpack_require__(127) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_xml = __webpack_require__(129) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -22864,7 +23202,7 @@ exports. /*istanbul ignore end*/Diff = _base2['default'];
 
 
 /***/ }),
-/* 135 */
+/* 137 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22876,7 +23214,7 @@ exports. /*istanbul ignore end*/applyPatch = applyPatch;
 
 var /*istanbul ignore start*/_parse = __webpack_require__(55) /*istanbul ignore end*/;
 
-var /*istanbul ignore start*/_distanceIterator = __webpack_require__(137) /*istanbul ignore end*/;
+var /*istanbul ignore start*/_distanceIterator = __webpack_require__(139) /*istanbul ignore end*/;
 
 /*istanbul ignore start*/
 var _distanceIterator2 = _interopRequireDefault(_distanceIterator);
@@ -23048,7 +23386,7 @@ function applyPatches(uniDiff, options) {
 
 
 /***/ }),
-/* 136 */
+/* 138 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23211,7 +23549,7 @@ function createPatch(fileName, oldStr, newStr, oldHeader, newHeader, options) {
 
 
 /***/ }),
-/* 137 */
+/* 139 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -23265,7 +23603,7 @@ exports["default"] = /*istanbul ignore end*/function (start, minLine, maxLine) {
 
 
 /***/ }),
-/* 138 */
+/* 140 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(("function" === "function" && __webpack_require__(72) && function (m) {
@@ -23504,7 +23842,7 @@ exports["default"] = /*istanbul ignore end*/function (start, minLine, maxLine) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 139 */
+/* 141 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -23594,7 +23932,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 140 */
+/* 142 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -23605,7 +23943,7 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 141 */
+/* 143 */
 /***/ (function(module, exports, __webpack_require__) {
 
 if(typeof JSONPatchQueue === 'undefined') {
@@ -23627,8 +23965,8 @@ if(typeof JSONPatchQueue === 'undefined') {
  * @extends {JSONPatchQueue}
  * @version: 1.1.2
  */
-var JSONPatchOTAgent = function(transform, versionPaths, apply, purity){
-	JSONPatchQueue.call(this, versionPaths, apply, purity);
+var JSONPatchOTAgent = function(obj, transform, versionPaths, apply, purity){
+	JSONPatchQueue.call(this, obj, versionPaths, apply, purity);
 	this.transform = transform;
 	/**
 	 * History of performed JSON Patch sequences that might not yet be acknowledged by Peer
@@ -23666,12 +24004,12 @@ JSONPatchOTAgent.prototype.send = function(sequence){
  * @param  {JSONPatch} versionedJsonPatch patch to be applied
  * @param  {Function} [applyCallback]     optional `function(object, consecutiveTransformedPatch)` to be called when applied, if not given #apply will be called
  */
-JSONPatchOTAgent.prototype.receive = function(obj, versionedJsonPatch, applyCallback){
+JSONPatchOTAgent.prototype.receive = function(versionedJsonPatch, applyCallback){
 	var apply = applyCallback || this.apply,
 		queue = this;
 
-	return JSONPatchQueue.prototype.receive.call(this, obj, versionedJsonPatch,
-		function applyOT(obj, remoteVersionedJsonPatch){
+	return JSONPatchQueue.prototype.receive.call(this, versionedJsonPatch,
+		function applyOT(remoteVersionedJsonPatch){
 			// console.log("applyPatch", queue, arguments);
 	        // transforming / applying
 	        var consecutivePatch = remoteVersionedJsonPatch.slice(0);
@@ -23694,10 +24032,9 @@ JSONPatchOTAgent.prototype.receive = function(obj, versionedJsonPatch, applyCall
 	                    consecutivePatch,
 	                    queue.pending
 	                );
-
-	        }
-	    	apply(obj, consecutivePatch);
-		});
+			}
+			apply(this.obj, consecutivePatch);
+		}.bind(this));
 };
 
 /**
@@ -23708,7 +24045,7 @@ JSONPatchOTAgent.prototype.receive = function(obj, versionedJsonPatch, applyCall
 JSONPatchOTAgent.prototype.reset = function(obj, newState){
 	this.ackLocalVersion = JSONPatchQueue.getPropertyByJsonPointer(newState, this.localPath);
 	this.pending = [];
-	JSONPatchQueue.prototype.reset.call(this, obj, newState);
+	return this.obj = JSONPatchQueue.prototype.reset.call(this, obj, newState);
 };
 if(true) {
 	module.exports = JSONPatchOTAgent;
@@ -23717,7 +24054,7 @@ if(true) {
 }
 
 /***/ }),
-/* 142 */
+/* 144 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -23878,7 +24215,7 @@ if(true) {
 }
 
 /***/ }),
-/* 143 */
+/* 145 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -23888,7 +24225,14 @@ if(true) {
  * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
  * @param {Boolean} [purist]       If set to true adds test operation before replace.
  */
-var JSONPatchQueueSynchronous = function(versionPath, apply, purist){
+var JSONPatchQueueSynchronous = function(obj, versionPath, apply, purist){
+
+	/**
+	 * The target object where patches are applied
+	 * @type {Object}
+	 */
+	this.obj = obj;
+
 	/**
 	 * Queue of consecutive JSON Patch sequences. May contain gaps.
 	 * Item with index 0 has 1 sequence version gap to `this.version`.
@@ -23919,11 +24263,10 @@ JSONPatchQueueSynchronous.prototype.version = 0;
 /**
  * Process received versioned JSON Patch.
  * Applies or adds to queue.
- * @param  {Object} obj                   object to apply patches to
  * @param  {JSONPatch} versionedJsonPatch patch to be applied
  * @param  {Function} [applyCallback]     optional `function(object, consecutivePatch)` to be called when applied, if not given #apply will be called
  */
-JSONPatchQueueSynchronous.prototype.receive = function(obj, versionedJsonPatch, applyCallback){
+JSONPatchQueueSynchronous.prototype.receive = function(versionedJsonPatch, applyCallback){
 	var apply = applyCallback || this.apply,
 		consecutivePatch = versionedJsonPatch.slice(0);
 	// strip Versioned JSON Patch specyfiv operation objects from given sequence
@@ -23942,7 +24285,7 @@ JSONPatchQueueSynchronous.prototype.receive = function(obj, versionedJsonPatch, 
 	// consecutive new version
 		while( consecutivePatch ){// process consecutive patch(-es)
 			this.version++;
-			apply(obj, consecutivePatch);
+			apply(this.obj, consecutivePatch);
 			consecutivePatch = this.waiting.shift();
 		}
 	} else {
@@ -23997,7 +24340,7 @@ JSONPatchQueueSynchronous.prototype.reset = function(obj, newState){
 	this.version = JSONPatchQueueSynchronous.getPropertyByJsonPointer(newState, this.versionPath);
 	this.waiting = [];
 	var patch = [{ op: "replace", path: "", value: newState }];
-	this.apply(obj, patch);
+	return this.obj = this.apply(obj, patch);
 };
 
 if(true) {
@@ -24009,7 +24352,7 @@ if(true) {
 
 
 /***/ }),
-/* 144 */
+/* 146 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -24019,7 +24362,13 @@ if(true) {
  * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
  * @param {Boolean} [purist]       If set to true adds test operation before replace.
  */
-var JSONPatchQueue = function(versionPaths, apply, purist){
+var JSONPatchQueue = function(obj, versionPaths, apply, purist){
+
+	/**
+	 * The target object where patches are applied
+	 * @type {Object}
+	 */
+	this.obj = obj;
 	/**
 	 * Queue of consecutive JSON Patch sequences. May contain gaps.
 	 * Item with index 0 has 1 version gap to this.remoteVersion.
@@ -24066,7 +24415,7 @@ JSONPatchQueue.prototype.remoteVersion = 0;
  * @param  {JSONPatch} versionedJsonPatch patch to be applied
  * @param  {Function} [applyCallback]     optional `function(object, consecutivePatch)` to be called when applied, if not given #apply will be called
  */
-JSONPatchQueue.prototype.receive = function(obj, versionedJsonPatch, applyCallback){
+JSONPatchQueue.prototype.receive = function(versionedJsonPatch, applyCallback){
 	var apply = applyCallback || this.apply,
 		consecutivePatch = versionedJsonPatch.slice(0);
 	// strip Versioned JSON Patch specyfiv operation objects from given sequence
@@ -24085,7 +24434,7 @@ JSONPatchQueue.prototype.receive = function(obj, versionedJsonPatch, applyCallba
 	// consecutive new version
 		while( consecutivePatch ){// process consecutive patch(-es)
 			this.remoteVersion++;
-			apply(obj, consecutivePatch);
+			apply(consecutivePatch);
 			consecutivePatch = this.waiting.shift();
 		}
 	} else {
@@ -24144,8 +24493,8 @@ JSONPatchQueue.getPropertyByJsonPointer = function(obj, pointer) {
 JSONPatchQueue.prototype.reset = function(obj, newState){
 	this.remoteVersion = JSONPatchQueue.getPropertyByJsonPointer(newState, this.remotePath);
 	this.waiting = [];
-	var patch = [{ op: "replace", path: "", value: newState }];
-	this.apply(obj, patch);
+	var patch = [{ op: "replace", path: "", value: newState }];	
+	return this.obj = this.apply(obj, patch);
 };
 
 if(true) {
@@ -24157,7 +24506,7 @@ if(true) {
 
 
 /***/ }),
-/* 145 */
+/* 147 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -24578,7 +24927,7 @@ if (true) {
 
 
 /***/ }),
-/* 146 */
+/* 148 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25242,7 +25591,7 @@ exports.install = function install(target, now, toFake, loopLimit) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 147 */
+/* 149 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -25435,7 +25784,7 @@ exports.install = function install(target, now, toFake, loopLimit) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(16)))
 
 /***/ }),
-/* 148 */
+/* 150 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25452,7 +25801,7 @@ exports.isSupported = (function () {
 
 
 /***/ }),
-/* 149 */
+/* 151 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25479,7 +25828,7 @@ exports.green = function (str) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16)))
 
 /***/ }),
-/* 150 */
+/* 152 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25723,7 +26072,7 @@ Object.keys(module.exports).forEach(function (method) {
 
 
 /***/ }),
-/* 151 */
+/* 153 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25732,7 +26081,7 @@ Object.keys(module.exports).forEach(function (method) {
 var collectOwnMethods = __webpack_require__(60);
 var deprecated = __webpack_require__(32);
 var getPropertyDescriptor = __webpack_require__(10);
-var stubNonFunctionProperty = __webpack_require__(156);
+var stubNonFunctionProperty = __webpack_require__(158);
 var sinonStub = __webpack_require__(18);
 var throwOnFalsyObject = __webpack_require__(64);
 
@@ -25781,7 +26130,7 @@ module.exports = sandboxStub;
 
 
 /***/ }),
-/* 152 */
+/* 154 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -25940,17 +26289,17 @@ module.exports = sinonSandbox;
 
 
 /***/ }),
-/* 153 */
+/* 155 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var color = __webpack_require__(149);
+var color = __webpack_require__(151);
 var timesInWords = __webpack_require__(22);
 var sinonFormat = __webpack_require__(14);
 var sinonMatch = __webpack_require__(8);
-var jsDiff = __webpack_require__(134);
+var jsDiff = __webpack_require__(136);
 var push = Array.prototype.push;
 
 function colorSinonMatchText(matcher, calledArg, calledArgMessage) {
@@ -26047,7 +26396,7 @@ module.exports = {
 
 
 /***/ }),
-/* 154 */
+/* 156 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26095,7 +26444,7 @@ module.exports = stubDescriptor;
 
 
 /***/ }),
-/* 155 */
+/* 157 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26124,7 +26473,7 @@ module.exports = stubEntireObject;
 
 
 /***/ }),
-/* 156 */
+/* 158 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26153,7 +26502,7 @@ module.exports = stubNonFunctionProperty;
 
 
 /***/ }),
-/* 157 */
+/* 159 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26178,7 +26527,7 @@ module.exports = function getConfig(custom) {
 
 
 /***/ }),
-/* 158 */
+/* 160 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26194,11 +26543,11 @@ module.exports = {
     format: __webpack_require__(14),
     functionName: __webpack_require__(19),
     functionToString: __webpack_require__(33),
-    getConfig: __webpack_require__(157),
+    getConfig: __webpack_require__(159),
     getPropertyDescriptor: __webpack_require__(10),
     iterableToString: __webpack_require__(68),
     orderByFirstCall: __webpack_require__(69),
-    restore: __webpack_require__(159),
+    restore: __webpack_require__(161),
     timesInWords: __webpack_require__(22),
     typeOf: __webpack_require__(35),
     walk: __webpack_require__(23),
@@ -26207,7 +26556,7 @@ module.exports = {
 
 
 /***/ }),
-/* 159 */
+/* 161 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26233,7 +26582,7 @@ module.exports = function restore(object) {
 
 
 /***/ }),
-/* 160 */
+/* 162 */
 /***/ (function(module, exports) {
 
 module.exports = Array.isArray || function (arr) {
@@ -26242,10 +26591,10 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 161 */
+/* 163 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isarray = __webpack_require__(160)
+var isarray = __webpack_require__(162)
 
 /**
  * Expose `pathToRegexp`.
@@ -26674,7 +27023,7 @@ function pathToRegexp (path, keys, options) {
 
 
 /***/ }),
-/* 162 */
+/* 164 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -27052,13 +27401,13 @@ module.exports.typeDetect = module.exports;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 163 */
+/* 165 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // This is free and unencumbered software released into the public domain.
 // See LICENSE.md for more information.
 
-var encoding = __webpack_require__(165);
+var encoding = __webpack_require__(167);
 
 module.exports = {
   TextEncoder: encoding.TextEncoder,
@@ -27067,7 +27416,7 @@ module.exports = {
 
 
 /***/ }),
-/* 164 */
+/* 166 */
 /***/ (function(module, exports) {
 
 (function(global) {
@@ -27119,7 +27468,7 @@ module.exports = {
 }(this || {}));
 
 /***/ }),
-/* 165 */
+/* 167 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // This is free and unencumbered software released into the public domain.
@@ -27136,7 +27485,7 @@ module.exports = {
   if (typeof module !== "undefined" && module.exports &&
     !global["encoding-indexes"]) {
     global["encoding-indexes"] =
-      __webpack_require__(164)["encoding-indexes"];
+      __webpack_require__(166)["encoding-indexes"];
   }
 
   //
@@ -30437,7 +30786,7 @@ module.exports = {
 }(this || {}));
 
 /***/ }),
-/* 166 */
+/* 168 */
 /***/ (function(module, exports) {
 
 /*!
@@ -30577,7 +30926,7 @@ Library.prototype.test = function(obj, type) {
 
 
 /***/ }),
-/* 167 */
+/* 169 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -30606,7 +30955,7 @@ if (typeof Object.create === 'function') {
 
 
 /***/ }),
-/* 168 */
+/* 170 */
 /***/ (function(module, exports) {
 
 module.exports = function isBuffer(arg) {
@@ -30617,7 +30966,7 @@ module.exports = function isBuffer(arg) {
 }
 
 /***/ }),
-/* 169 */
+/* 171 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -31145,7 +31494,7 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-exports.isBuffer = __webpack_require__(168);
+exports.isBuffer = __webpack_require__(170);
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
@@ -31189,7 +31538,7 @@ exports.log = function() {
  *     prototype.
  * @param {function} superCtor Constructor function to inherit prototype from.
  */
-exports.inherits = __webpack_require__(167);
+exports.inherits = __webpack_require__(169);
 
 exports._extend = function(origin, add) {
   // Don't do anything if add isn't an object
@@ -31210,266 +31559,29 @@ function hasOwnProperty(obj, prop) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0), __webpack_require__(16)))
 
 /***/ }),
-/* 170 */
+/* 172 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/*! Palindrom
- * https://github.com/Palindrom/Palindrom
- * (c) 2017 Joachim Wester
- * MIT license
- */
-if (true) {
-  var Palindrom = __webpack_require__(6);
-}
-
-var PalindromDOM = (function() {
-  /**
-   * PalindromDOM
-   * @extends {Palindrom}
-   * @param {Object} [options] map of arguments. See README.md for description
-   */
-  var PalindromDOM = function(options) {
-    if (typeof options !== 'object') {
-      throw new Error('PalindromDOM constructor requires an object argument.');
-    }
-    if (!options.remoteUrl) {
-      throw new Error('remoteUrl is required');
-    }
-    var onStateReset = options.onStateReset || options.callback;
-    if (options.callback) {
-      console.warn(
-        'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
-      );
-    }
-    this.element = options.listenTo || document.body;
-    var clickHandler = this.clickHandler.bind(this);
-    this.historyHandler = this.historyHandler.bind(this);
-
-    this.historyHandlerDeprecated = function() {
-      console.warn(
-        "`puppet-redirect-pushstate` event is deprecated, please use `palindrom-redirect-pushstate`, if you're using `puppet-redirect`, please upgrade to `palindrom-redirect`"
-      );
-      this.historyHandler();
-    }.bind(this);
-
-    /* in some cases, people emit redirect requests before `listen` is called */
-    this.element.addEventListener(
-      'palindrom-redirect-pushstate',
-      this.historyHandler
-    );
-    /* backward compatibility: for people using old puppet-redirect */
-    this.element.addEventListener(
-      'puppet-redirect-pushstate',
-      this.historyHandlerDeprecated
-    );
-
-    options.onStateReset = function addDOMListeners(obj) {
-      this.listen();
-      onStateReset && onStateReset.call(this, obj);
-    };
-
-    this.listen = function() {
-      this.listening = true;
-      this.element.addEventListener('click', clickHandler);
-      window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
-
-      this.element.addEventListener(
-        'palindrom-redirect-pushstate',
-        this.historyHandler
-      );
-
-      /* backward compatibility: for people using old puppet-redirect */
-      this.element.addEventListener(
-        'puppet-redirect-pushstate',
-        this.historyHandlerDeprecated
-      );
-    };
-    this.unlisten = function() {
-      this.listening = false;
-
-      this.element.removeEventListener('click', clickHandler);
-      window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
-      this.element.removeEventListener(
-        'palindrom-redirect-pushstate',
-        this.historyHandler
-      );
-
-      /* backward compatibility: for people using old puppet-redirect */
-      this.element.removeEventListener(
-        'puppet-redirect-pushstate',
-        this.historyHandlerDeprecated
-      );
-    };
-
-    //TODO move fallback to window.location.href from PalindromNetworkChannel to here (PalindromDOM)
-
-    Palindrom.call(this, options);
-  };
-  PalindromDOM.prototype = Object.create(Palindrom.prototype);
-
-  /**
-   * DISABLED FOR NOW: we don't know when rendering actually finishes.
-   * It's left here for the hope of having synchronous rendering at some point in the future.
-   * ====
-   * we need to scroll asynchronously, because we need the document rendered to search for the anchored element
-   * and even though onReceive + applyPatch are sync, Polymer is not, it renders async-ly
-  PalindromDOM.prototype.scrollToAnchorOrTopAsync = function(link) {
-    this.scrollAsyncTimeout && clearTimeout(this.scrollAsyncTimeout);
-    if (window && window.document) {
-      var anchorIndex;
-      var anchor;
-      // does the URL have an anchor
-      if (link && (anchorIndex = link.indexOf('#')) > -1) {
-        anchor = link.substr(anchorIndex);
-      }
-      if (!anchor) {
-        window.scrollTo(0, 0);
-      } else {
-        // if somehow someone manages to navigate twice in a 100ms,
-        // we don't scroll for their first navigation, i.e de-bouncing 
-        
-        this.scrollAsyncTimeout = setTimeout(() => {
-          // does that anchor exist in the page?
-          const anchorTarget = document.querySelector(anchor); // look for #element-id
-          if (anchorTarget) {
-            anchorTarget.scrollIntoView();
-          } else {
-            window.scrollTo(0, 0);
-          }
-        }, 100);
-      }
-    }
-  };
-  */
-  /**
-   * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
-   * so that the URL handlers can be executed on the remote
-   * @param url
-   */
-  PalindromDOM.prototype.morphUrl = function(url) {
-    history.pushState(null, null, url);
-    this.network.getPatchUsingHTTP(url);
-    window && window.scrollTo(0, 0);
-  };
-  PalindromDOM.prototype.clickHandler = function(event) {
-    //Don't morph ctrl/cmd + click & middle mouse button
-    if (event.ctrlKey || event.metaKey || event.which == 2) {
-      return;
-    }
-
-    if (event.detail && event.detail.target) {
-      //detail is Polymer
-      event = event.detail;
-    }
-
-    var target = event.target;
-
-    if (target.nodeName !== 'A') {
-      for (var i = 0; i < event.path.length; i++) {
-        if (event.path[i].nodeName == 'A') {
-          target = event.path[i];
-          break;
-        }
-      }
-    }
-    var anchorTarget = target.target || target.getAttribute('target');
-
-    if (!anchorTarget || anchorTarget === 'self') {
-      //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
-      //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
-      //while target.getAttribute("href") returns desired href (as string)
-      var href = target.href || target.getAttribute('href');
-      if (href && PalindromDOM.isApplicationLink(href)) {
-        event.preventDefault();
-        event.stopPropagation();
-        this.morphUrl(href);
-      } else if (target.type === 'submit') {
-        event.preventDefault();
-      }
-    }
-  };
-
-  PalindromDOM.prototype.historyHandler = function(/*event*/) {
-    this.network.getPatchUsingHTTP(location.href);
-  };
-
-  /**
-   * Returns information if a given element is an internal application link that Palindrom should intercept into a history push
-   * @param elem HTMLElement or String
-   * @returns {boolean}
-   */
-  PalindromDOM.isApplicationLink = function(elem) {
-    if (typeof elem === 'string') {
-      //type string is reported in Polymer / Canary (Web Platform features disabled)
-      var parser = document.createElement('A');
-      parser.href = elem;
-
-      // @see http://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
-      // IE doesn't populate all link properties when setting .href with a relative URL,
-      // however .href will return an absolute URL which then can be used on itself
-      // to populate these additional fields.
-      if (parser.host == '') {
-        parser.href = parser.href;
-      }
-
-      elem = parser;
-    }
-    return (
-      elem.protocol == window.location.protocol &&
-      elem.host == window.location.host
-    );
-  };
-
-  /* backward compatibility, not sure if this is good practice */
-  if (typeof global === 'undefined') {
-    if (typeof window !== 'undefined') {
-      /* incase neither window nor global existed, e.g React Native */
-      var global = window;
-    } else {
-      var global = {};
-    }
-  }
-  global.PuppetDOM = PalindromDOM;
-
-  /* Since we have Palindrom bundled,
-  let's expose it in case anyone needs it */
-  global.Puppet = Palindrom;
-  global.Palindrom = Palindrom;
-
-  return PalindromDOM;
-})();
-
-if (true) {
-  module.exports = PalindromDOM;
-  module.exports.default = PalindromDOM;
-  module.exports.__esModule = true;
-}
-
-
-/***/ }),
-/* 171 */
-/***/ (function(module, exports, __webpack_require__) {
-
-__webpack_require__(75);
-__webpack_require__(79);
-__webpack_require__(80);
+__webpack_require__(77);
 __webpack_require__(81);
-__webpack_require__(74);
+__webpack_require__(82);
+__webpack_require__(83);
 __webpack_require__(76);
 __webpack_require__(78);
-__webpack_require__(77);
+__webpack_require__(80);
+__webpack_require__(79);
 
-__webpack_require__(73);
-
+__webpack_require__(74);
+__webpack_require__(75); //fixme: this does not clean up well, must be the last one
 
 /***/ }),
-/* 172 */
+/* 173 */
 /***/ (function(module, exports) {
 
 module.exports = URL;
 
 /***/ }),
-/* 173 */
+/* 174 */
 /***/ (function(module, exports) {
 
 module.exports = WebSocket;
