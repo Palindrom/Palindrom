@@ -1827,6 +1827,7 @@ if(typeof JSONPatchQueue === 'undefined') {
 
 /**
  * [JSONPatchOTAgent description]
+ * @param {Object} Obj The target object where patches are applied
  * @param {Function} transform function(seqenceA, sequences) that transforms `seqenceA` against `sequences`.
  * @param {Array<JSON-Pointer>} versionPaths JSON-Pointers to version numbers [local, remote]
  * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
@@ -1879,7 +1880,7 @@ JSONPatchOTAgent.prototype.receive = function(versionedJsonPatch, applyCallback)
 		queue = this;
 
 	return JSONPatchQueue.prototype.receive.call(this, versionedJsonPatch,
-		function applyOT(remoteVersionedJsonPatch){
+		function applyOT(obj, remoteVersionedJsonPatch){
 			// console.log("applyPatch", queue, arguments);
 	        // transforming / applying
 	        var consecutivePatch = remoteVersionedJsonPatch.slice(0);
@@ -1903,8 +1904,8 @@ JSONPatchOTAgent.prototype.receive = function(versionedJsonPatch, applyCallback)
 	                    queue.pending
 	                );
 			}
-			apply(this.obj, consecutivePatch);
-		}.bind(this));
+			return queue.obj = apply(queue.obj, consecutivePatch);
+		});
 };
 
 /**
@@ -3427,6 +3428,7 @@ function shim (obj) {
 /**
  * JSON Patch Queue for synchronous operations, and asynchronous networking.
  * version: 2.0.1
+ * @param {Object} obj The target object where patches are applied
  * @param {JSON-Pointer} versionPath JSON-Pointers to version numbers
  * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
  * @param {Boolean} [purist]       If set to true adds test operation before replace.
@@ -3491,7 +3493,7 @@ JSONPatchQueueSynchronous.prototype.receive = function(versionedJsonPatch, apply
 	// consecutive new version
 		while( consecutivePatch ){// process consecutive patch(-es)
 			this.version++;
-			apply(this.obj, consecutivePatch);
+			this.obj = apply(this.obj, consecutivePatch);
 			consecutivePatch = this.waiting.shift();
 		}
 	} else {
@@ -3564,6 +3566,7 @@ if(true) {
 /**
  * JSON Patch Queue for asynchronous operations, and asynchronous networking.
  * version: 2.0.1
+ * @param {Object} obj The target object where patches are applied
  * @param {Array<JSON-Pointer>} versionPaths JSON-Pointers to version numbers [local, remote]
  * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
  * @param {Boolean} [purist]       If set to true adds test operation before replace.
@@ -3617,7 +3620,6 @@ JSONPatchQueue.prototype.remoteVersion = 0;
 /**
  * Process received versioned JSON Patch
  * Applies or adds to queue.
- * @param  {Object} obj                   object to apply patches to
  * @param  {JSONPatch} versionedJsonPatch patch to be applied
  * @param  {Function} [applyCallback]     optional `function(object, consecutivePatch)` to be called when applied, if not given #apply will be called
  */
@@ -3640,7 +3642,7 @@ JSONPatchQueue.prototype.receive = function(versionedJsonPatch, applyCallback){
 	// consecutive new version
 		while( consecutivePatch ){// process consecutive patch(-es)
 			this.remoteVersion++;
-			apply(consecutivePatch);
+			this.obj = apply(this.obj, consecutivePatch);
 			consecutivePatch = this.waiting.shift();
 		}
 	} else {
@@ -3699,7 +3701,7 @@ JSONPatchQueue.getPropertyByJsonPointer = function(obj, pointer) {
 JSONPatchQueue.prototype.reset = function(obj, newState){
 	this.remoteVersion = JSONPatchQueue.getPropertyByJsonPointer(newState, this.remotePath);
 	this.waiting = [];
-	var patch = [{ op: "replace", path: "", value: newState }];	
+	var patch = [{ op: "replace", path: "", value: newState }];
 	return this.obj = this.apply(obj, patch);
 };
 
@@ -4334,6 +4336,7 @@ var Palindrom = (function() {
       if (!options.remoteVersionPath) {
         // just versioning
         this.queue = new JSONPatchQueueSynchronous(
+          this.obj, 
           options.localVersionPath,
           this.validateAndApplySequence.bind(this),
           options.purity

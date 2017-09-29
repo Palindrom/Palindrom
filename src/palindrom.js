@@ -617,6 +617,7 @@ var Palindrom = (function() {
       if (!options.remoteVersionPath) {
         // just versioning
         this.queue = new JSONPatchQueueSynchronous(
+          this.obj, 
           options.localVersionPath,
           this.validateAndApplySequence.bind(this),
           options.purity
