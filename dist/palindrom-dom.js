@@ -1901,7 +1901,7 @@ var Palindrom = (function() {
 
   /**
    * Send a WebSocket upgrade request to the server.
-   * For testing purposes WS upgrade url is hardcoded now in Palindrom (replace __default/ID with __default/ID)
+   * For testing purposes WS upgrade url is hard-coded now in Palindrom (replace __default/ID with __default/ID)
    * In future, server should suggest the WebSocket upgrade URL
    * @TODO:(tomalec)[cleanup] hide from public API.
    * @param {Function} [callback] Function to be called once connection gets opened.
@@ -2064,7 +2064,8 @@ var Palindrom = (function() {
    * Non-queuing object that conforms JSON-Patch-Queue API
    * @param {Function} apply function to apply received patch
    */
-  function NoQueue(apply) {
+  function NoQueue(obj, apply) {
+    this.obj = obj;
     this.apply = apply;
   }
   /** just forward message */
@@ -2072,12 +2073,12 @@ var Palindrom = (function() {
     return msg;
   };
   /** Apply given JSON Patch sequence immediately */
-  NoQueue.prototype.receive = function(obj, sequence) {
-    this.apply(obj, sequence);
+  NoQueue.prototype.receive = function(sequence) {
+    return this.obj = this.apply(this.obj, sequence);
   };
-  NoQueue.prototype.reset = function(obj, newState) {
+  NoQueue.prototype.reset = function(newState) {
     var patch = [{ op: 'replace', path: '', value: newState }];
-    this.apply(obj, patch);
+    return this.obj = this.apply(this.obj, patch);
   };
 
   function connectToRemote(palindrom, reconnectionFn) {
@@ -2091,7 +2092,7 @@ var Palindrom = (function() {
         palindrom.remoteObj = JSON.parse(JSON.stringify(json));
       }
 
-      palindrom.queue.reset(palindrom.obj, json);
+      palindrom.queue.reset(json);
 
       palindrom.heartbeat.start();
     });
@@ -2233,7 +2234,7 @@ var Palindrom = (function() {
       }
     } else {
       // no queue - just api
-      this.queue = new NoQueue(this.validateAndApplySequence.bind(this));
+      this.queue = new NoQueue(this.obj, this.validateAndApplySequence.bind(this));
     }
     makeInitialConnection(this);
   }
@@ -3532,11 +3533,11 @@ if(typeof JSONPatchQueue === 'undefined') {
 
 /**
  * [JSONPatchOTAgent description]
- * @param {Object} Obj The target object where patches are applied
+ * @param {Object} obj The target object where patches are applied
  * @param {Function} transform function(seqenceA, sequences) that transforms `seqenceA` against `sequences`.
  * @param {Array<JSON-Pointer>} versionPaths JSON-Pointers to version numbers [local, remote]
- * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
- * @param {Boolean} purity       [description]
+ * @param {function} apply apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object. Must return the final state of the object.
+ * @param {Boolean} purity 
  * @constructor
  * @extends {JSONPatchQueue}
  * @version: 1.1.2
@@ -3576,9 +3577,9 @@ JSONPatchOTAgent.prototype.send = function(sequence){
 /**
  * Process received versioned JSON Patch
  * Adds to queue, transform and apply when applicable.
- * @param  {Object} obj                   object to apply patches to
+ * @param  {Object} obj object to apply patches to
  * @param  {JSONPatch} versionedJsonPatch patch to be applied
- * @param  {Function} [applyCallback]     optional `function(object, consecutiveTransformedPatch)` to be called when applied, if not given #apply will be called
+ * @param  {Function} [applyCallback] optional `function(object, consecutiveTransformedPatch)` to be called when applied, must return the final state of the object, if not given #apply will be called
  */
 JSONPatchOTAgent.prototype.receive = function(versionedJsonPatch, applyCallback){
 	var apply = applyCallback || this.apply,
@@ -3615,13 +3616,12 @@ JSONPatchOTAgent.prototype.receive = function(versionedJsonPatch, applyCallback)
 
 /**
  * Reset queue internals and object to new, given state
- * @param obj object to apply new state to
  * @param newState versioned object representing desired state along with versions
  */
-JSONPatchOTAgent.prototype.reset = function(obj, newState){
+JSONPatchOTAgent.prototype.reset = function(newState){
 	this.ackLocalVersion = JSONPatchQueue.getPropertyByJsonPointer(newState, this.localPath);
 	this.pending = [];
-	return this.obj = JSONPatchQueue.prototype.reset.call(this, obj, newState);
+	return this.obj = JSONPatchQueue.prototype.reset.call(this, newState);
 };
 if(true) {
 	module.exports = JSONPatchOTAgent;
@@ -3797,7 +3797,7 @@ if(true) {
 /**
  * JSON Patch Queue for synchronous operations, and asynchronous networking.
  * version: 2.0.1
- * @param {Object} obj The target object where patches are applied
+ * @param {Object} Obj The target object where patches are applied
  * @param {JSON-Pointer} versionPath JSON-Pointers to version numbers
  * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
  * @param {Boolean} [purist]       If set to true adds test operation before replace.
@@ -3910,14 +3910,13 @@ JSONPatchQueueSynchronous.getPropertyByJsonPointer = function(obj, pointer) {
 
 /**
  * Reset queue internals and object to new, given state
- * @param obj object to apply new state to
  * @param newState versioned object representing desired state along with versions
  */
-JSONPatchQueueSynchronous.prototype.reset = function(obj, newState){
+JSONPatchQueueSynchronous.prototype.reset = function(newState){
 	this.version = JSONPatchQueueSynchronous.getPropertyByJsonPointer(newState, this.versionPath);
 	this.waiting = [];
 	var patch = [{ op: "replace", path: "", value: newState }];
-	return this.obj = this.apply(obj, patch);
+	return this.obj = this.apply(this.obj, patch);
 };
 
 if(true) {
@@ -4064,14 +4063,13 @@ JSONPatchQueue.getPropertyByJsonPointer = function(obj, pointer) {
 
 /**
  * Reset queue internals and object to new, given state
- * @param obj object to apply new state to
  * @param newState versioned object representing desired state along with versions
  */
-JSONPatchQueue.prototype.reset = function(obj, newState){
+JSONPatchQueue.prototype.reset = function(newState){
 	this.remoteVersion = JSONPatchQueue.getPropertyByJsonPointer(newState, this.remotePath);
 	this.waiting = [];
 	var patch = [{ op: "replace", path: "", value: newState }];
-	return this.obj = this.apply(obj, patch);
+	return this.obj = this.apply(this.obj, patch);
 };
 
 if(true) {

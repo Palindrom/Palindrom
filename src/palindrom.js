@@ -309,7 +309,7 @@ var Palindrom = (function() {
 
   /**
    * Send a WebSocket upgrade request to the server.
-   * For testing purposes WS upgrade url is hardcoded now in Palindrom (replace __default/ID with __default/ID)
+   * For testing purposes WS upgrade url is hard-coded now in Palindrom (replace __default/ID with __default/ID)
    * In future, server should suggest the WebSocket upgrade URL
    * @TODO:(tomalec)[cleanup] hide from public API.
    * @param {Function} [callback] Function to be called once connection gets opened.
@@ -472,7 +472,8 @@ var Palindrom = (function() {
    * Non-queuing object that conforms JSON-Patch-Queue API
    * @param {Function} apply function to apply received patch
    */
-  function NoQueue(apply) {
+  function NoQueue(obj, apply) {
+    this.obj = obj;
     this.apply = apply;
   }
   /** just forward message */
@@ -480,12 +481,12 @@ var Palindrom = (function() {
     return msg;
   };
   /** Apply given JSON Patch sequence immediately */
-  NoQueue.prototype.receive = function(obj, sequence) {
-    this.apply(obj, sequence);
+  NoQueue.prototype.receive = function(sequence) {
+    return this.obj = this.apply(this.obj, sequence);
   };
-  NoQueue.prototype.reset = function(obj, newState) {
+  NoQueue.prototype.reset = function(newState) {
     var patch = [{ op: 'replace', path: '', value: newState }];
-    this.apply(obj, patch);
+    return this.obj = this.apply(this.obj, patch);
   };
 
   function connectToRemote(palindrom, reconnectionFn) {
@@ -499,7 +500,7 @@ var Palindrom = (function() {
         palindrom.remoteObj = JSON.parse(JSON.stringify(json));
       }
 
-      palindrom.queue.reset(palindrom.obj, json);
+      palindrom.queue.reset(json);
 
       palindrom.heartbeat.start();
     });
@@ -641,7 +642,7 @@ var Palindrom = (function() {
       }
     } else {
       // no queue - just api
-      this.queue = new NoQueue(this.validateAndApplySequence.bind(this));
+      this.queue = new NoQueue(this.obj, this.validateAndApplySequence.bind(this));
     }
     makeInitialConnection(this);
   }
