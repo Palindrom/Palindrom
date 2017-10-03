@@ -20,6 +20,7 @@
     </script>
     <script src="runner-browser.js"></script>
     <script>
+        window.name = 'Parent';
         /* wait for button component to load */
         setTimeout(() => {
             const runner = mocha.run();

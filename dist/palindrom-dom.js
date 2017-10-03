@@ -3525,6 +3525,7 @@ if(typeof JSONPatchQueue === 'undefined') {
 
 /**
  * [JSONPatchOTAgent description]
+ * @param {Object} Obj The target object where patches are applied
  * @param {Function} transform function(seqenceA, sequences) that transforms `seqenceA` against `sequences`.
  * @param {Array<JSON-Pointer>} versionPaths JSON-Pointers to version numbers [local, remote]
  * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
@@ -3533,8 +3534,8 @@ if(typeof JSONPatchQueue === 'undefined') {
  * @extends {JSONPatchQueue}
  * @version: 1.1.2
  */
-var JSONPatchOTAgent = function(transform, versionPaths, apply, purity){
-	JSONPatchQueue.call(this, versionPaths, apply, purity);
+var JSONPatchOTAgent = function(obj, transform, versionPaths, apply, purity){
+	JSONPatchQueue.call(this, obj, versionPaths, apply, purity);
 	this.transform = transform;
 	/**
 	 * History of performed JSON Patch sequences that might not yet be acknowledged by Peer
@@ -3572,11 +3573,11 @@ JSONPatchOTAgent.prototype.send = function(sequence){
  * @param  {JSONPatch} versionedJsonPatch patch to be applied
  * @param  {Function} [applyCallback]     optional `function(object, consecutiveTransformedPatch)` to be called when applied, if not given #apply will be called
  */
-JSONPatchOTAgent.prototype.receive = function(obj, versionedJsonPatch, applyCallback){
+JSONPatchOTAgent.prototype.receive = function(versionedJsonPatch, applyCallback){
 	var apply = applyCallback || this.apply,
 		queue = this;
 
-	return JSONPatchQueue.prototype.receive.call(this, obj, versionedJsonPatch,
+	return JSONPatchQueue.prototype.receive.call(this, versionedJsonPatch,
 		function applyOT(obj, remoteVersionedJsonPatch){
 			// console.log("applyPatch", queue, arguments);
 	        // transforming / applying
@@ -3600,21 +3601,19 @@ JSONPatchOTAgent.prototype.receive = function(obj, versionedJsonPatch, applyCall
 	                    consecutivePatch,
 	                    queue.pending
 	                );
-
-	        }
-	    	apply(obj, consecutivePatch);
+			}
+			return queue.obj = apply(queue.obj, consecutivePatch);
 		});
 };
 
 /**
  * Reset queue internals and object to new, given state
- * @param obj object to apply new state to
  * @param newState versioned object representing desired state along with versions
  */
-JSONPatchOTAgent.prototype.reset = function(obj, newState){
+JSONPatchOTAgent.prototype.reset = function(newState){
 	this.ackLocalVersion = JSONPatchQueue.getPropertyByJsonPointer(newState, this.localPath);
 	this.pending = [];
-	JSONPatchQueue.prototype.reset.call(this, obj, newState);
+	return this.obj = JSONPatchQueue.prototype.reset.call(this, newState);
 };
 if(true) {
 	module.exports = JSONPatchOTAgent;
@@ -3790,11 +3789,19 @@ if(true) {
 /**
  * JSON Patch Queue for synchronous operations, and asynchronous networking.
  * version: 2.0.1
+ * @param {Object} Obj The target object where patches are applied
  * @param {JSON-Pointer} versionPath JSON-Pointers to version numbers
  * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
  * @param {Boolean} [purist]       If set to true adds test operation before replace.
  */
-var JSONPatchQueueSynchronous = function(versionPath, apply, purist){
+var JSONPatchQueueSynchronous = function(obj, versionPath, apply, purist){
+
+	/**
+	 * The target object where patches are applied
+	 * @type {Object}
+	 */
+	this.obj = obj;
+
 	/**
 	 * Queue of consecutive JSON Patch sequences. May contain gaps.
 	 * Item with index 0 has 1 sequence version gap to `this.version`.
@@ -3825,11 +3832,10 @@ JSONPatchQueueSynchronous.prototype.version = 0;
 /**
  * Process received versioned JSON Patch.
  * Applies or adds to queue.
- * @param  {Object} obj                   object to apply patches to
  * @param  {JSONPatch} versionedJsonPatch patch to be applied
  * @param  {Function} [applyCallback]     optional `function(object, consecutivePatch)` to be called when applied, if not given #apply will be called
  */
-JSONPatchQueueSynchronous.prototype.receive = function(obj, versionedJsonPatch, applyCallback){
+JSONPatchQueueSynchronous.prototype.receive = function(versionedJsonPatch, applyCallback){
 	var apply = applyCallback || this.apply,
 		consecutivePatch = versionedJsonPatch.slice(0);
 	// strip Versioned JSON Patch specyfiv operation objects from given sequence
@@ -3848,7 +3854,7 @@ JSONPatchQueueSynchronous.prototype.receive = function(obj, versionedJsonPatch, 
 	// consecutive new version
 		while( consecutivePatch ){// process consecutive patch(-es)
 			this.version++;
-			apply(obj, consecutivePatch);
+			this.obj = apply(this.obj, consecutivePatch);
 			consecutivePatch = this.waiting.shift();
 		}
 	} else {
@@ -3896,14 +3902,13 @@ JSONPatchQueueSynchronous.getPropertyByJsonPointer = function(obj, pointer) {
 
 /**
  * Reset queue internals and object to new, given state
- * @param obj object to apply new state to
  * @param newState versioned object representing desired state along with versions
  */
-JSONPatchQueueSynchronous.prototype.reset = function(obj, newState){
+JSONPatchQueueSynchronous.prototype.reset = function(newState){
 	this.version = JSONPatchQueueSynchronous.getPropertyByJsonPointer(newState, this.versionPath);
 	this.waiting = [];
 	var patch = [{ op: "replace", path: "", value: newState }];
-	this.apply(obj, patch);
+	return this.obj = this.apply(this.obj, patch);
 };
 
 if(true) {
@@ -3921,11 +3926,18 @@ if(true) {
 /**
  * JSON Patch Queue for asynchronous operations, and asynchronous networking.
  * version: 2.0.1
+ * @param {Object} obj The target object where patches are applied
  * @param {Array<JSON-Pointer>} versionPaths JSON-Pointers to version numbers [local, remote]
  * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
  * @param {Boolean} [purist]       If set to true adds test operation before replace.
  */
-var JSONPatchQueue = function(versionPaths, apply, purist){
+var JSONPatchQueue = function(obj, versionPaths, apply, purist){
+
+	/**
+	 * The target object where patches are applied
+	 * @type {Object}
+	 */
+	this.obj = obj;
 	/**
 	 * Queue of consecutive JSON Patch sequences. May contain gaps.
 	 * Item with index 0 has 1 version gap to this.remoteVersion.
@@ -3968,11 +3980,10 @@ JSONPatchQueue.prototype.remoteVersion = 0;
 /**
  * Process received versioned JSON Patch
  * Applies or adds to queue.
- * @param  {Object} obj                   object to apply patches to
  * @param  {JSONPatch} versionedJsonPatch patch to be applied
  * @param  {Function} [applyCallback]     optional `function(object, consecutivePatch)` to be called when applied, if not given #apply will be called
  */
-JSONPatchQueue.prototype.receive = function(obj, versionedJsonPatch, applyCallback){
+JSONPatchQueue.prototype.receive = function(versionedJsonPatch, applyCallback){
 	var apply = applyCallback || this.apply,
 		consecutivePatch = versionedJsonPatch.slice(0);
 	// strip Versioned JSON Patch specyfiv operation objects from given sequence
@@ -3991,7 +4002,7 @@ JSONPatchQueue.prototype.receive = function(obj, versionedJsonPatch, applyCallba
 	// consecutive new version
 		while( consecutivePatch ){// process consecutive patch(-es)
 			this.remoteVersion++;
-			apply(obj, consecutivePatch);
+			this.obj = apply(this.obj, consecutivePatch);
 			consecutivePatch = this.waiting.shift();
 		}
 	} else {
@@ -4044,14 +4055,13 @@ JSONPatchQueue.getPropertyByJsonPointer = function(obj, pointer) {
 
 /**
  * Reset queue internals and object to new, given state
- * @param obj object to apply new state to
  * @param newState versioned object representing desired state along with versions
  */
-JSONPatchQueue.prototype.reset = function(obj, newState){
+JSONPatchQueue.prototype.reset = function(newState){
 	this.remoteVersion = JSONPatchQueue.getPropertyByJsonPointer(newState, this.remotePath);
 	this.waiting = [];
 	var patch = [{ op: "replace", path: "", value: newState }];
-	this.apply(obj, patch);
+	return this.obj = this.apply(this.obj, patch);
 };
 
 if(true) {
