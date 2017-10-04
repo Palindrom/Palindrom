@@ -1901,7 +1901,7 @@ var Palindrom = (function() {
 
   /**
    * Send a WebSocket upgrade request to the server.
-   * For testing purposes WS upgrade url is hardcoded now in Palindrom (replace __default/ID with __default/ID)
+   * For testing purposes WS upgrade url is hard-coded now in Palindrom (replace __default/ID with __default/ID)
    * In future, server should suggest the WebSocket upgrade URL
    * @TODO:(tomalec)[cleanup] hide from public API.
    * @param {Function} [callback] Function to be called once connection gets opened.
@@ -2064,7 +2064,8 @@ var Palindrom = (function() {
    * Non-queuing object that conforms JSON-Patch-Queue API
    * @param {Function} apply function to apply received patch
    */
-  function NoQueue(apply) {
+  function NoQueue(obj, apply) {
+    this.obj = obj;
     this.apply = apply;
   }
   /** just forward message */
@@ -2072,12 +2073,12 @@ var Palindrom = (function() {
     return msg;
   };
   /** Apply given JSON Patch sequence immediately */
-  NoQueue.prototype.receive = function(obj, sequence) {
-    this.apply(obj, sequence);
+  NoQueue.prototype.receive = function(sequence) {
+    return this.obj = this.apply(this.obj, sequence);
   };
-  NoQueue.prototype.reset = function(obj, newState) {
+  NoQueue.prototype.reset = function(newState) {
     var patch = [{ op: 'replace', path: '', value: newState }];
-    this.apply(obj, patch);
+    return this.obj = this.apply(this.obj, patch);
   };
 
   function connectToRemote(palindrom, reconnectionFn) {
@@ -2091,7 +2092,7 @@ var Palindrom = (function() {
         palindrom.remoteObj = JSON.parse(JSON.stringify(json));
       }
 
-      palindrom.queue.reset(palindrom.obj, json);
+      palindrom.queue.reset(json);
 
       palindrom.heartbeat.start();
     });
@@ -2209,6 +2210,7 @@ var Palindrom = (function() {
       if (!options.remoteVersionPath) {
         // just versioning
         this.queue = new JSONPatchQueueSynchronous(
+          this.obj, 
           options.localVersionPath,
           this.validateAndApplySequence.bind(this),
           options.purity
@@ -2217,12 +2219,14 @@ var Palindrom = (function() {
         // double versioning or OT
         this.queue = options.ot
           ? new JSONPatchOTAgent(
+              this.obj, 
               JSONPatchOT.transform,
               [options.localVersionPath, options.remoteVersionPath],
               this.validateAndApplySequence.bind(this),
               options.purity
             )
           : new JSONPatchQueue(
+              this.obj, 
               [options.localVersionPath, options.remoteVersionPath],
               this.validateAndApplySequence.bind(this),
               options.purity
@@ -2230,7 +2234,7 @@ var Palindrom = (function() {
       }
     } else {
       // no queue - just api
-      this.queue = new NoQueue(this.validateAndApplySequence.bind(this));
+      this.queue = new NoQueue(this.obj, this.validateAndApplySequence.bind(this));
     }
     makeInitialConnection(this);
   }
@@ -2307,6 +2311,8 @@ var Palindrom = (function() {
       if (results.newDocument !== tree) {
         // object was reset, proxify it again
         this.prepareProxifiedObject(results.newDocument);
+        
+        this.queue.obj = this.obj;
 
         //notify people about it
         this.onStateReset(this.obj);
@@ -2320,6 +2326,7 @@ var Palindrom = (function() {
         throw error;
       }
     }
+    return this.obj;
   };
 
   Palindrom.prototype.validateSequence = function(tree, sequence) {
@@ -2378,7 +2385,7 @@ var Palindrom = (function() {
     if (!this.isObserving) {
       return;
     }
-    this.queue.receive(this.obj, patches);
+    this.queue.receive(patches);
     if (
       this.queue.pending &&
       this.queue.pending.length &&
@@ -2392,6 +2399,7 @@ var Palindrom = (function() {
     if (this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
     }
+    
   };
 
   /* backward compatibility */
@@ -3525,11 +3533,11 @@ if(typeof JSONPatchQueue === 'undefined') {
 
 /**
  * [JSONPatchOTAgent description]
- * @param {Object} Obj The target object where patches are applied
+ * @param {Object} obj The target object where patches are applied
  * @param {Function} transform function(seqenceA, sequences) that transforms `seqenceA` against `sequences`.
  * @param {Array<JSON-Pointer>} versionPaths JSON-Pointers to version numbers [local, remote]
- * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
- * @param {Boolean} purity       [description]
+ * @param {function} apply apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object. Must return the final state of the object.
+ * @param {Boolean} purity 
  * @constructor
  * @extends {JSONPatchQueue}
  * @version: 1.1.2
@@ -3569,9 +3577,9 @@ JSONPatchOTAgent.prototype.send = function(sequence){
 /**
  * Process received versioned JSON Patch
  * Adds to queue, transform and apply when applicable.
- * @param  {Object} obj                   object to apply patches to
+ * @param  {Object} obj object to apply patches to
  * @param  {JSONPatch} versionedJsonPatch patch to be applied
- * @param  {Function} [applyCallback]     optional `function(object, consecutiveTransformedPatch)` to be called when applied, if not given #apply will be called
+ * @param  {Function} [applyCallback] optional `function(object, consecutiveTransformedPatch)` to be called when applied, must return the final state of the object, if not given #apply will be called
  */
 JSONPatchOTAgent.prototype.receive = function(versionedJsonPatch, applyCallback){
 	var apply = applyCallback || this.apply,
