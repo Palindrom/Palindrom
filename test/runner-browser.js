@@ -12752,25 +12752,30 @@ if (typeof window !== 'undefined') {
         });
         describe('Links with targets', function() {
           it('should not intercept links with a set target', function() {
-            const href = '/test';
-            createAndClickOnLinkWithoutPrevention(href, null, '_anything');
+            const href = '/components/Palindrom/test/PopupPage.html';
+
+            // needed for Sauce labs, they allow pop ups, and this means we lose focus here
+            const popup = window.open('', '_popup')
+            createAndClickOnLinkWithoutPrevention(href, null, '_popup');
+            // focus again
+            popup && popup.close();
 
             expect(historySpy.callCount).to.equal(0);
           });
           it('should intercept links with target self', function() {
-            const href = '/test2';
+            const href = '/components/Palindrom/test/PopupPage.html';
             createAndClickOnLinkWithoutPrevention(href, null, 'self');
 
             expect(historySpy.callCount).to.equal(1);
           });
           it('should intercept links with an empty target', function() {
-            const href = '/test3';
+            const href = '/components/Palindrom/test/PopupPage.html';
             createAndClickOnLinkWithoutPrevention(href, null, '');
 
             expect(historySpy.callCount).to.equal(1);
           });
           it('should intercept links without a target', function() {
-            const href = '/test3';
+            const href = '/components/Palindrom/test/PopupPage.html';
             createAndClickOnLinkWithoutPrevention(href, null);
 
             expect(historySpy.callCount).to.equal(1);
