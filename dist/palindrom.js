@@ -1,4 +1,4 @@
-/*! Palindrom, version: 3.0.5 */
+/*! Palindrom, version: 3.0.6 */
 var Palindrom =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -379,7 +379,7 @@ module.exports = {
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
- * version: 2.0.1
+ * version: 3.0.0-rc.0
  */
 var queue = __webpack_require__(40);
 var sync = __webpack_require__(39);
@@ -1834,7 +1834,7 @@ if(typeof JSONPatchQueue === 'undefined') {
  * @param {Boolean} purity 
  * @constructor
  * @extends {JSONPatchQueue}
- * @version: 1.1.2
+ * @version: 2.0.0-rc.0
  */
 var JSONPatchOTAgent = function(obj, transform, versionPaths, apply, purity){
 	JSONPatchQueue.call(this, obj, versionPaths, apply, purity);
@@ -3426,7 +3426,7 @@ function shim (obj) {
 
 /**
  * JSON Patch Queue for synchronous operations, and asynchronous networking.
- * version: 2.0.1
+ * version: 3.0.0-rc.0
  * @param {Object} Obj The target object where patches are applied
  * @param {JSON-Pointer} versionPath JSON-Pointers to version numbers
  * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
@@ -3563,7 +3563,7 @@ if(true) {
 
 /**
  * JSON Patch Queue for asynchronous operations, and asynchronous networking.
- * version: 2.0.1
+ * version: 3.0.0-rc.0
  * @param {Object} obj The target object where patches are applied
  * @param {Array<JSON-Pointer>} versionPaths JSON-Pointers to version numbers [local, remote]
  * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
@@ -4186,7 +4186,8 @@ var Palindrom = (function() {
 
   /**
    * Non-queuing object that conforms JSON-Patch-Queue API
-   * @param {Function} apply function to apply received patch
+   * @param {Object} obj target object where patches are applied
+   * @param {Function} apply function to apply received patch, must return the object in its final state
    */
   function NoQueue(obj, apply) {
     this.obj = obj;
