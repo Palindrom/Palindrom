@@ -470,7 +470,8 @@ var Palindrom = (function() {
 
   /**
    * Non-queuing object that conforms JSON-Patch-Queue API
-   * @param {Function} apply function to apply received patch
+   * @param {Object} obj target object where patches are applied
+   * @param {Function} apply function to apply received patch, must return the object in its final state
    */
   function NoQueue(obj, apply) {
     this.obj = obj;
