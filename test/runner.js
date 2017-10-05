@@ -4,6 +4,7 @@ require('./specs/palindrom.validate.test');
 require('./specs/palindrom.websockets.test');
 require('./specs/onPatchSentAndReceived.test');
 require('./specs/palindrom.errors.test');
+require('./specs/palindrom.ignore.defineProperty.test.js');
 require('./specs/palindrom.ignoreAdd.test');
 require('./specs/palindrom.filter.test');
 
