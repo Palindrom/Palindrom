@@ -4031,7 +4031,9 @@ var Palindrom = (function() {
    * @param {Function} [callback] Function to be called once connection gets opened.
    * @returns {WebSocket} created WebSocket
    */
-  PalindromNetworkChannel.prototype.webSocketUpgrade = function(onSocketOpenCallback) {
+  PalindromNetworkChannel.prototype.webSocketUpgrade = function(
+    onSocketOpenCallback
+  ) {
     var that = this;
 
     this.wsUrl = toWebSocketURL(this.remoteUrl.href);
@@ -4119,7 +4121,7 @@ var Palindrom = (function() {
 
   PalindromNetworkChannel.prototype.handleResponseHeader = function(res) {
     /* Axios always returns lowercase headers */
-    var location = res.headers['x-location'] || res.headers['location'];
+    var location = res.headers && (res.headers['x-location'] || res.headers['location']);
     if (location) {
       this.setRemoteUrl(location);
     }
@@ -4168,17 +4170,23 @@ var Palindrom = (function() {
         that.handleResponseHeader(res);
         callback && callback.call(that.palindrom, res, method);
       })
-      .catch(function(res) {
-        that.onFatalError(
-          {
-            statusCode: res.status,
-            statusText: res.statusText,
-            reason: res.data
-          },
-          url,
-          method
-        );
-        console.log(res);
+      .catch(function(error) {
+        const res = error.response;
+        if (res) {
+          that.onFatalError(
+            {
+              statusCode: res.status,
+              statusText: res.statusText,
+              reason: res.data
+            },
+            url,
+            method
+          );
+        }
+        // not a network error; an error that is swallowed by Promise catch
+        if (!res) {
+          throw error;
+        }
       });
 
     this.onSend(data, url, method);
@@ -4199,11 +4207,11 @@ var Palindrom = (function() {
   };
   /** Apply given JSON Patch sequence immediately */
   NoQueue.prototype.receive = function(sequence) {
-    return this.obj = this.apply(this.obj, sequence);
+    return (this.obj = this.apply(this.obj, sequence));
   };
   NoQueue.prototype.reset = function(newState) {
     var patch = [{ op: 'replace', path: '', value: newState }];
-    return this.obj = this.apply(this.obj, patch);
+    return (this.obj = this.apply(this.obj, patch));
   };
 
   function connectToRemote(palindrom, reconnectionFn) {
@@ -4269,7 +4277,8 @@ var Palindrom = (function() {
     this.onLocalChange = options.onLocalChange || noop;
     this.onRemoteChange = options.onRemoteChange || noop;
     this.onStateReset = options.onStateReset || options.callback || noop;
-    this.filterLocalChange = options.filterLocalChange || (operation => operation);
+    this.filterLocalChange =
+      options.filterLocalChange || (operation => operation);
     if (options.callback) {
       console.warn(
         'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
@@ -4335,7 +4344,7 @@ var Palindrom = (function() {
       if (!options.remoteVersionPath) {
         // just versioning
         this.queue = new JSONPatchQueueSynchronous(
-          this.obj, 
+          this.obj,
           options.localVersionPath,
           this.validateAndApplySequence.bind(this),
           options.purity
@@ -4344,14 +4353,14 @@ var Palindrom = (function() {
         // double versioning or OT
         this.queue = options.ot
           ? new JSONPatchOTAgent(
-              this.obj, 
+              this.obj,
               JSONPatchOT.transform,
               [options.localVersionPath, options.remoteVersionPath],
               this.validateAndApplySequence.bind(this),
               options.purity
             )
           : new JSONPatchQueue(
-              this.obj, 
+              this.obj,
               [options.localVersionPath, options.remoteVersionPath],
               this.validateAndApplySequence.bind(this),
               options.purity
@@ -4359,7 +4368,10 @@ var Palindrom = (function() {
       }
     } else {
       // no queue - just api
-      this.queue = new NoQueue(this.obj, this.validateAndApplySequence.bind(this));
+      this.queue = new NoQueue(
+        this.obj,
+        this.validateAndApplySequence.bind(this)
+      );
     }
     makeInitialConnection(this);
   }
@@ -4374,14 +4386,11 @@ var Palindrom = (function() {
     /* wrap a new object with a proxy observer */
     this.jsonPatcherProxy = new JSONPatcherProxy(obj);
 
-    const proxifiedObj = this.jsonPatcherProxy.observe(
-      false,
-      operation => {
-        const filtered = this.filterLocalChange(operation);
-        // totally ignore falsy (didn't pass the filter) JSON Patch operations
-        filtered && this.handleLocalChange(filtered)
-      }
-    );
+    const proxifiedObj = this.jsonPatcherProxy.observe(false, operation => {
+      const filtered = this.filterLocalChange(operation);
+      // totally ignore falsy (didn't pass the filter) JSON Patch operations
+      filtered && this.handleLocalChange(filtered);
+    });
 
     /* make it read-only and expose it as `obj` */
     Object.defineProperty(this, 'obj', {
@@ -4436,7 +4445,7 @@ var Palindrom = (function() {
       if (results.newDocument !== tree) {
         // object was reset, proxify it again
         this.prepareProxifiedObject(results.newDocument);
-        
+
         this.queue.obj = this.obj;
 
         //notify people about it
@@ -4524,7 +4533,6 @@ var Palindrom = (function() {
     if (this.debug) {
       this.remoteObj = JSON.parse(JSON.stringify(this.obj));
     }
-    
   };
 
   /* backward compatibility */

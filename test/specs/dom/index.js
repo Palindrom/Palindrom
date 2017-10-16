@@ -175,9 +175,9 @@ if (typeof window !== 'undefined') {
 
             expect(historySpy.callCount).to.equal(0);
           });
-          it('should intercept links with target self', function() {
+          it('should intercept links with target _self', function() {
             const href = '/components/Palindrom/test/PopupPage.html';
-            createAndClickOnLinkWithoutPrevention(href, null, 'self');
+            createAndClickOnLinkWithoutPrevention(href, null, '_self');
 
             expect(historySpy.callCount).to.equal(1);
           });

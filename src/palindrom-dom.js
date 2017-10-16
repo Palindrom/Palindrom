@@ -159,7 +159,7 @@ var PalindromDOM = (function() {
     }
     var anchorTarget = target.target || target.getAttribute('target');
 
-    if (!anchorTarget || anchorTarget === 'self') {
+    if (!anchorTarget || anchorTarget === '_self') {
       //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
       //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
       //while target.getAttribute("href") returns desired href (as string)
