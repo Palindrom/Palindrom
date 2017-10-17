@@ -19,3 +19,10 @@ Example:
 ```
 
 ... even if `internalLink.html` is part of your application, PalindromDOM will not intercept the navigation and the browser will issue a full HTTP request to `internalLink.html`.
+
+As the value of the `target` attribute, you might consider one of the following keywords that have a special meaning in HTML:
+
+- `_top` - load the URL into the current browser tab or window
+- `_blank` - load the URL into a new browser tab or window
+
+You can find more information on the `target` attribute at [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a).
