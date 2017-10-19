@@ -4082,7 +4082,7 @@ var Palindrom = (function() {
 
       if (event.reason) {
         that.onFatalError(m, upgradeURL, 'WS');
-      } else {
+      } else if(!event.wasClean) {
         that.onConnectionError();
       }
     };
