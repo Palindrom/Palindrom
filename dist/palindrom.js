@@ -3964,6 +3964,52 @@ var Palindrom = (function() {
       }
     });
   }
+  /**
+   * Traverses/checks value looking for out-of-range numbers, throws a RangeError if it finds any
+   * @param {*} val value 
+   * @param {string} direction the inspected patch direction "outgoing"|"incoming"
+   */
+  PalindromNetworkChannel.prototype.findRangeErrors = function(val, direction) {
+    var type = typeof val;
+    if (type == 'object') {
+      for (var prop in val) {
+        if (val.hasOwnProperty(prop)) {
+          this.findRangeErrors(val[prop], direction);
+        }
+      }
+    } else if (
+      type === 'number' &&
+      (val > 9007199254740991 || val < -9007199254740991)
+    ) {
+      if (direction === 'outgoing') {
+        this.palindrom.onOutgoingPatchValidationError(
+          new RangeError(
+            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an ${direction} patch, value is ${val}`)
+        );
+      } else {
+        this.palindrom.onIncomingPatchValidationError(
+          new RangeError(
+            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an ${direction} patch, value is: ${val}`)
+        );
+      }
+    }
+  };
+  /**
+   * Iterates a JSON-Patch, traversing every patch value looking for out-of-range numbers
+   * @param {JSONPatch} patch patch to check
+   * @param {string} direction direction of the patch, "outgoing"|"incoming"
+   * @param {*} startFrom the index where iteration starts
+   */
+  PalindromNetworkChannel.prototype.validateNumericsRangesInPatch = function(
+    patch,
+    direction,
+    startFrom = this.palindrom.OTPatchIndexOffset
+  ) {
+    for (let i = startFrom, len = patch.length; i < len; i++) {
+      this.findRangeErrors(patch[0].value, direction);
+    }
+  };
+
   PalindromNetworkChannel.prototype.establish = function(bootstrap) {
     establish(this, this.remoteUrl.href, null, bootstrap);
   };
@@ -4046,7 +4092,9 @@ var Palindrom = (function() {
       onSocketOpenCallback && onSocketOpenCallback(event);
     };
     that._ws.onmessage = function(event) {
-      that.onReceive(JSON.parse(event.data), that._ws.url, 'WS');
+      const parsedMessage = JSON.parse(event.data);
+      that.validateNumericsRangesInPatch(parsedMessage, 'incoming');
+      that.onReceive(parsedMessage, that._ws.url, 'WS');
     };
     that._ws.onerror = function(event) {
       that.onStateChange(that._ws.readyState, upgradeURL, event.data);
@@ -4088,13 +4136,13 @@ var Palindrom = (function() {
     };
   };
   PalindromNetworkChannel.prototype.getPatchUsingHTTP = function(href) {
-    var that = this;
     return this.xhr(
       href,
       'application/json-patch+json',
       null,
-      function(res, method) {
-        that.onReceive(res.data, href, method);
+      (res, method) => {
+        this.validateNumericsRangesInPatch(res.data, 'incoming');
+        this.onReceive(res.data, href, method);
       },
       true
     );
@@ -4121,7 +4169,8 @@ var Palindrom = (function() {
 
   PalindromNetworkChannel.prototype.handleResponseHeader = function(res) {
     /* Axios always returns lowercase headers */
-    var location = res.headers && (res.headers['x-location'] || res.headers['location']);
+    var location =
+      res.headers && (res.headers['x-location'] || res.headers['location']);
     if (location) {
       this.setRemoteUrl(location);
     }
@@ -4168,6 +4217,7 @@ var Palindrom = (function() {
     requestPromise
       .then(function(res) {
         that.handleResponseHeader(res);
+        that.findRangeErrors(res.data, "incoming");
         callback && callback.call(that.palindrom, res, method);
       })
       .catch(function(error) {
@@ -4338,10 +4388,14 @@ var Palindrom = (function() {
         this.network.useWebSocket = newValue;
       }
     });
-
+    /**
+     * how many OT operations are there in each patch 0, 1 or 2
+     */
+    this.OTPatchIndexOffset = 0;
     // choose queuing engine
     if (options.localVersionPath) {
       if (!options.remoteVersionPath) {
+        this.OTPatchIndexOffset = 1;
         // just versioning
         this.queue = new JSONPatchQueueSynchronous(
           this.obj,
@@ -4350,6 +4404,7 @@ var Palindrom = (function() {
           options.purity
         );
       } else {
+        this.OTPatchIndexOffset = 2;
         // double versioning or OT
         this.queue = options.ot
           ? new JSONPatchOTAgent(
@@ -4415,8 +4470,9 @@ var Palindrom = (function() {
     this.jsonPatcherProxy && this.jsonPatcherProxy.pause();
     this.isObserving = false;
   };
-
+  
   function sendPatches(palindrom, patches) {
+    palindrom.network.validateNumericsRangesInPatch(patches, 'outgoing');
     var txt = JSON.stringify(patches);
     palindrom.unobserve();
     palindrom.heartbeat.notifySend();

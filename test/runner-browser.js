@@ -4194,6 +4194,52 @@ var Palindrom = (function() {
       }
     });
   }
+  /**
+   * Traverses/checks value looking for out-of-range numbers, throws a RangeError if it finds any
+   * @param {*} val value 
+   * @param {string} direction the inspected patch direction "outgoing"|"incoming"
+   */
+  PalindromNetworkChannel.prototype.findRangeErrors = function(val, direction) {
+    var type = typeof val;
+    if (type == 'object') {
+      for (var prop in val) {
+        if (val.hasOwnProperty(prop)) {
+          this.findRangeErrors(val[prop], direction);
+        }
+      }
+    } else if (
+      type === 'number' &&
+      (val > 9007199254740991 || val < -9007199254740991)
+    ) {
+      if (direction === 'outgoing') {
+        this.palindrom.onOutgoingPatchValidationError(
+          new RangeError(
+            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an ${direction} patch, value is ${val}`)
+        );
+      } else {
+        this.palindrom.onIncomingPatchValidationError(
+          new RangeError(
+            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an ${direction} patch, value is: ${val}`)
+        );
+      }
+    }
+  };
+  /**
+   * Iterates a JSON-Patch, traversing every patch value looking for out-of-range numbers
+   * @param {JSONPatch} patch patch to check
+   * @param {string} direction direction of the patch, "outgoing"|"incoming"
+   * @param {*} startFrom the index where iteration starts
+   */
+  PalindromNetworkChannel.prototype.validateNumericsRangesInPatch = function(
+    patch,
+    direction,
+    startFrom = this.palindrom.OTPatchIndexOffset
+  ) {
+    for (let i = startFrom, len = patch.length; i < len; i++) {
+      this.findRangeErrors(patch[0].value, direction);
+    }
+  };
+
   PalindromNetworkChannel.prototype.establish = function(bootstrap) {
     establish(this, this.remoteUrl.href, null, bootstrap);
   };
@@ -4276,7 +4322,9 @@ var Palindrom = (function() {
       onSocketOpenCallback && onSocketOpenCallback(event);
     };
     that._ws.onmessage = function(event) {
-      that.onReceive(JSON.parse(event.data), that._ws.url, 'WS');
+      const parsedMessage = JSON.parse(event.data);
+      that.validateNumericsRangesInPatch(parsedMessage, 'incoming');
+      that.onReceive(parsedMessage, that._ws.url, 'WS');
     };
     that._ws.onerror = function(event) {
       that.onStateChange(that._ws.readyState, upgradeURL, event.data);
@@ -4318,13 +4366,13 @@ var Palindrom = (function() {
     };
   };
   PalindromNetworkChannel.prototype.getPatchUsingHTTP = function(href) {
-    var that = this;
     return this.xhr(
       href,
       'application/json-patch+json',
       null,
-      function(res, method) {
-        that.onReceive(res.data, href, method);
+      (res, method) => {
+        this.validateNumericsRangesInPatch(res.data, 'incoming');
+        this.onReceive(res.data, href, method);
       },
       true
     );
@@ -4351,7 +4399,8 @@ var Palindrom = (function() {
 
   PalindromNetworkChannel.prototype.handleResponseHeader = function(res) {
     /* Axios always returns lowercase headers */
-    var location = res.headers && (res.headers['x-location'] || res.headers['location']);
+    var location =
+      res.headers && (res.headers['x-location'] || res.headers['location']);
     if (location) {
       this.setRemoteUrl(location);
     }
@@ -4398,6 +4447,7 @@ var Palindrom = (function() {
     requestPromise
       .then(function(res) {
         that.handleResponseHeader(res);
+        that.findRangeErrors(res.data, "incoming");
         callback && callback.call(that.palindrom, res, method);
       })
       .catch(function(error) {
@@ -4568,10 +4618,14 @@ var Palindrom = (function() {
         this.network.useWebSocket = newValue;
       }
     });
-
+    /**
+     * how many OT operations are there in each patch 0, 1 or 2
+     */
+    this.OTPatchIndexOffset = 0;
     // choose queuing engine
     if (options.localVersionPath) {
       if (!options.remoteVersionPath) {
+        this.OTPatchIndexOffset = 1;
         // just versioning
         this.queue = new JSONPatchQueueSynchronous(
           this.obj,
@@ -4580,6 +4634,7 @@ var Palindrom = (function() {
           options.purity
         );
       } else {
+        this.OTPatchIndexOffset = 2;
         // double versioning or OT
         this.queue = options.ot
           ? new JSONPatchOTAgent(
@@ -4645,8 +4700,9 @@ var Palindrom = (function() {
     this.jsonPatcherProxy && this.jsonPatcherProxy.pause();
     this.isObserving = false;
   };
-
+  
   function sendPatches(palindrom, patches) {
+    palindrom.network.validateNumericsRangesInPatch(patches, 'outgoing');
     var txt = JSON.stringify(patches);
     palindrom.unobserve();
     palindrom.heartbeat.notifySend();
@@ -13000,8 +13056,8 @@ if (typeof window !== 'undefined') {
               assert(historySpy.callCount === 1);
 
               done();
-            }, 50);
-          }, 50);
+            }, 5);
+          }, 5);
         });
       });
 
@@ -13018,9 +13074,9 @@ if (typeof window !== 'undefined') {
             setTimeout(function() {
               expect(historySpy.callCount).to.equal(0);
               done();
-            }, 50);
-          }, 50);
-        }, 50);
+            }, 5);
+          }, 5);
+        }, 5);
       });
 
       it('should start listening to DOM changes after `.listen()` was called', function() {
@@ -13072,7 +13128,7 @@ if (typeof window !== 'undefined') {
           expect(request.url).to.equal('/newUrl');
           expect(window.location.pathname).to.equal('/newUrl');
           done();
-        }, 50);
+        }, 5);
       });
     });
 
@@ -13124,7 +13180,7 @@ if (typeof window !== 'undefined') {
           expect(currScrollY).to.not.equal(0);
 
           done();
-        }, 20);
+        }, 5);
       });
     });
 
@@ -13166,7 +13222,7 @@ if (typeof window !== 'undefined') {
           expect(new URL(request.url).pathname).to.equal('/newUrl-palindrom');
           expect(window.location.pathname).to.equal('/newUrl-palindrom');
           done();
-        }, 50);
+        }, 5);
       });
     });
   });
@@ -13570,6 +13626,7 @@ const assert = __webpack_require__(3);
 const moxios = __webpack_require__(4);
 const sinon = __webpack_require__(5);
 const expect = __webpack_require__(25).expect;
+const MockSocketServer = __webpack_require__(1).Server;
 
 describe('Palindrom', () => {
   describe('#error responses', () => {
@@ -13579,127 +13636,256 @@ describe('Palindrom', () => {
     afterEach(() => {
       moxios.uninstall();
     });
-    it('should call onConnectionError on HTTP 400 response', function (done) {
-      const spy = sinon.spy();
+    context('Network', function() {
+      it('should call onConnectionError on HTTP 400 response', function(done) {
+        const spy = sinon.spy();
 
-      moxios.stubRequest('http://localhost/testURL', {
-        status: 400,
-        headers: { contentType: 'application/json' },
-        responseText: 'Custom message'
-      });
-
-      let tempObject;
-      const that = this;
-
-      const palindrom = new Palindrom({
-        remoteUrl: 'http://localhost/testURL',
-        onConnectionError: spy
-      });
-
-      /* onConnectionError should be called once now */
-      setTimeout(() => {
-        assert(spy.calledOnce);
-        done();
-      }, 5);
-    });
-
-    it('should call onConnectionError on HTTP 599 response', function (done) {
-      const spy = sinon.spy();
-
-      moxios.stubRequest('http://localhost/testURL', {
-        status: 599,
-        headers: { contentType: 'application/json' },
-        responseText: 'Custom message'
-      });
-
-      let tempObject;
-      const that = this;
-
-      const palindrom = new Palindrom({
-        remoteUrl: 'http://localhost/testURL',
-        onConnectionError: spy
-      });
-
-      /* onConnectionError should be called once now */
-      setTimeout(() => {
-        assert(spy.calledOnce);
-        done();
-      }, 5);
-    });
-
-    it('should call onConnectionError on HTTP 400 response (patch)', function (done) {
-      const spy = sinon.spy();
-
-      const palindrom = new Palindrom({
-        remoteUrl: 'http://localhost/testURL',
-        onConnectionError: spy
-      });
-
-      // let Palindrom issue a request
-      setTimeout(() => {
-        // respond to it
-        let request = moxios.requests.mostRecent();
-        request.respondWith({
-          status: 200,
+        moxios.stubRequest('http://localhost/testURL', {
+          status: 400,
           headers: { contentType: 'application/json' },
-          responseText: '{"hello": "world"}'
+          responseText: 'Custom message'
         });
-        setTimeout(() => {
-          //issue a patch
-          palindrom.obj.hello = 'galaxy';
 
+        let tempObject;
+        const that = this;
+
+        const palindrom = new Palindrom({
+          remoteUrl: 'http://localhost/testURL',
+          onConnectionError: spy
+        });
+
+        /* onConnectionError should be called once now */
+        setTimeout(() => {
+          assert(spy.calledOnce);
+          done();
+        }, 5);
+      });
+
+      it('should call onConnectionError on HTTP 599 response', function(done) {
+        const spy = sinon.spy();
+
+        moxios.stubRequest('http://localhost/testURL', {
+          status: 599,
+          headers: { contentType: 'application/json' },
+          responseText: 'Custom message'
+        });
+
+        let tempObject;
+        const that = this;
+
+        const palindrom = new Palindrom({
+          remoteUrl: 'http://localhost/testURL',
+          onConnectionError: spy
+        });
+
+        /* onConnectionError should be called once now */
+        setTimeout(() => {
+          assert(spy.calledOnce);
+          done();
+        }, 5);
+      });
+
+      it('should call onConnectionError on HTTP 400 response (patch)', function(
+        done
+      ) {
+        const spy = sinon.spy();
+
+        const palindrom = new Palindrom({
+          remoteUrl: 'http://localhost/testURL',
+          onConnectionError: spy
+        });
+
+        // let Palindrom issue a request
+        setTimeout(() => {
+          // respond to it
+          let request = moxios.requests.mostRecent();
+          request.respondWith({
+            status: 200,
+            headers: { contentType: 'application/json' },
+            responseText: '{"hello": "world"}'
+          });
           setTimeout(() => {
-            let request = moxios.requests.mostRecent();
-            //respond with an error
-            request.respondWith({
-              status: 400,
-              responseText: 'error'
-            });
+            //issue a patch
+            palindrom.obj.hello = 'galaxy';
+
             setTimeout(() => {
-              /* onConnectionError should be called once now */
-              assert(spy.calledOnce);
-              done();
+              let request = moxios.requests.mostRecent();
+              //respond with an error
+              request.respondWith({
+                status: 400,
+                responseText: 'error'
+              });
+              setTimeout(() => {
+                /* onConnectionError should be called once now */
+                assert(spy.calledOnce);
+                done();
+              }, 5);
             }, 5);
           }, 5);
-        }, 100);
-      }, 5);
-    });
-    it('should call onConnectionError on HTTP 599 response (patch)', function (done) {
-      const spy = sinon.spy();
-
-      const palindrom = new Palindrom({
-        remoteUrl: 'http://localhost/testURL',
-        onConnectionError: spy
+        }, 5);
       });
+      it('should call onConnectionError on HTTP 599 response (patch)', function(
+        done
+      ) {
+        const spy = sinon.spy();
 
-      // let Palindrom issue a request
-      setTimeout(() => {
-        // respond to it
-        let request = moxios.requests.mostRecent();
-        request.respondWith({
-          status: 200,
-          headers: { contentType: 'application/json' },
-          responseText: '{"hello": "world"}'
+        const palindrom = new Palindrom({
+          remoteUrl: 'http://localhost/testURL',
+          onConnectionError: spy
         });
-        setTimeout(() => {
-          //issue a patch
-          palindrom.obj.hello = 'galaxy';
 
+        // let Palindrom issue a request
+        setTimeout(() => {
+          // respond to it
+          let request = moxios.requests.mostRecent();
+          request.respondWith({
+            status: 200,
+            headers: { contentType: 'application/json' },
+            responseText: '{"hello": "world"}'
+          });
           setTimeout(() => {
-            let request = moxios.requests.mostRecent();
-            //respond with an error
-            request.respondWith({
-              status: 599,
-              responseText: 'error'
-            });
+            //issue a patch
+            palindrom.obj.hello = 'galaxy';
+
             setTimeout(() => {
-              /* onConnectionError should be called once now */
-              assert(spy.calledOnce);
-              done();
+              let request = moxios.requests.mostRecent();
+              //respond with an error
+              request.respondWith({
+                status: 599,
+                responseText: 'error'
+              });
+              setTimeout(() => {
+                /* onConnectionError should be called once now */
+                assert(spy.calledOnce);
+                done();
+              }, 5);
             }, 5);
           }, 5);
+        }, 5);
+      });
+    });
+    context('Numbers Validation', function() {
+      it('Initial HTTP response: out of range numbers should call onIncomingPatchValidationError with a RangeError', done => {
+        moxios.stubRequest('http://localhost/testURL', {
+          status: 200,
+          headers: { Location: 'http://localhost/testURL' },
+          responseText: `{"value": ${Number.MAX_SAFE_INTEGER + 1}}`
+        });
+        const spy = sinon.spy();
+        const palindrom = new Palindrom({
+          remoteUrl: 'http://localhost/testURL',
+          onIncomingPatchValidationError: spy
+        });
+        setTimeout(() => {
+          assert(spy.calledOnce);
+          const errorPassed = spy.getCall(0).args[0];
+          assert(errorPassed instanceof RangeError);
+          assert(
+            errorPassed.message ===
+              `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an incoming patch, value is: ${Number.MAX_SAFE_INTEGER +
+                1}`
+          );
+          done();
+        }, 2);
+      });
+      it('Outgoing HTTP patches: out of range numbers should call onOutgoingPatchValidationError with a RangeError', done => {
+        moxios.stubRequest('http://localhost/testURL', {
+          status: 200,
+          headers: { Location: 'http://localhost/testURL' },
+          responseText: `{"val": 1}`
+        });
+
+        const spy = sinon.spy();
+
+        const palindrom = new Palindrom({
+          remoteUrl: 'http://localhost/testURL',
+          onOutgoingPatchValidationError: spy,
+          onStateReset(obj) {
+            obj.val = Number.MAX_SAFE_INTEGER + 1;
+          }
+        });
+
+        setTimeout(() => {
+          assert(spy.calledOnce);
+          const errorPassed = spy.getCall(0).args[0];
+          assert(errorPassed instanceof RangeError);
+          assert(
+            errorPassed.message ===
+              `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an outgoing patch, value is ${Number.MAX_SAFE_INTEGER +
+                1}`
+          );
+          done();
+        }, 10);
+      });
+      it('Outgoing socket patches: out of range numbers should call onOutgoingPatchValidationError with a RangeError', function(
+        done
+      ) {
+        const server = new MockSocketServer('ws://localhost/testURL');
+
+        moxios.stubRequest('http://localhost/testURL', {
+          status: 200,
+          headers: { location: 'http://localhost/testURL' },
+          responseText: '{"val": 100}'
+        });
+
+        var spy = sinon.spy();
+
+        var palindrom = new Palindrom({
+          remoteUrl: 'http://localhost/testURL',
+          useWebSocket: true,
+          onOutgoingPatchValidationError: spy
+        });
+
+        setTimeout(() => {
+          palindrom.obj.value = Number.MAX_SAFE_INTEGER + 1;
+          // make sure WS is up
+          assert(palindrom.network._ws.readyState === 1);
+          assert(spy.calledOnce);
+          const errorPassed = spy.getCall(0).args[0];
+          assert(errorPassed instanceof RangeError);
+          assert(
+            errorPassed.message ===
+              `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an outgoing patch, value is ${Number.MAX_SAFE_INTEGER +
+                1}`
+          );
+          server.stop(done);
         }, 50);
-      }, 5);
+      });
+      it('Incoming socket patches: out of range numbers should call onIncomingPatchValidationError with a RangeError', function(
+        done
+      ) {
+        const server = new MockSocketServer('ws://localhost/testURL');
+
+        moxios.stubRequest('http://localhost/testURL', {
+          status: 200,
+          headers: { location: 'http://localhost/testURL' },
+          responseText: '{"val": 100}'
+        });
+
+        var spy = sinon.spy();
+
+        var palindrom = new Palindrom({
+          remoteUrl: 'http://localhost/testURL',
+          useWebSocket: true,
+          onIncomingPatchValidationError: spy
+        });
+
+        setTimeout(() => {
+          server.send(
+            `[{"op": "replace", "path": "/val", "value": ${Number.MAX_SAFE_INTEGER +
+              1}}]`
+          );
+          assert(spy.calledOnce);
+          const errorPassed = spy.getCall(0).args[0];
+          assert(errorPassed instanceof RangeError);
+          assert(
+            errorPassed.message ===
+              `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an incoming patch, value is: ${Number.MAX_SAFE_INTEGER +
+                1}`
+          );
+          server.stop(done);
+        }, 5);
+      });
     });
   });
 });
