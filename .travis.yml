@@ -1,6 +1,7 @@
 language: node_js
 dist: trusty
 before_script:
+  - npm install -g npm@5.2.0 # https://github.com/npm/npm/issues/17858
   - npm install
   - polyserve -p 8000 &
   - sleep 5 # give polyserve some time to start
