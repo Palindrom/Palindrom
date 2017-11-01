@@ -1840,51 +1840,6 @@ var Palindrom = (function() {
       }
     });
   }
-  /**
-   * Traverses/checks value looking for out-of-range numbers, throws a RangeError if it finds any
-   * @param {*} val value 
-   * @param {string} direction the inspected patch direction "outgoing"|"incoming"
-   */
-  PalindromNetworkChannel.prototype.findRangeErrors = function(val, direction) {
-    var type = typeof val;
-    if (type == 'object') {
-      for (var prop in val) {
-        if (val.hasOwnProperty(prop)) {
-          this.findRangeErrors(val[prop], direction);
-        }
-      }
-    } else if (
-      type === 'number' &&
-      (val > 9007199254740991 || val < -9007199254740991)
-    ) {
-      if (direction === 'outgoing') {
-        this.palindrom.onOutgoingPatchValidationError(
-          new RangeError(
-            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an ${direction} patch, value is ${val}`)
-        );
-      } else {
-        this.palindrom.onIncomingPatchValidationError(
-          new RangeError(
-            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an ${direction} patch, value is: ${val}`)
-        );
-      }
-    }
-  };
-  /**
-   * Iterates a JSON-Patch, traversing every patch value looking for out-of-range numbers
-   * @param {JSONPatch} patch patch to check
-   * @param {string} direction direction of the patch, "outgoing"|"incoming"
-   * @param {*} startFrom the index where iteration starts
-   */
-  PalindromNetworkChannel.prototype.validateNumericsRangesInPatch = function(
-    patch,
-    direction,
-    startFrom = this.palindrom.OTPatchIndexOffset
-  ) {
-    for (let i = startFrom, len = patch.length; i < len; i++) {
-      this.findRangeErrors(patch[0].value, direction);
-    }
-  };
 
   PalindromNetworkChannel.prototype.establish = function(bootstrap) {
     establish(this, this.remoteUrl.href, null, bootstrap);
@@ -1969,7 +1924,6 @@ var Palindrom = (function() {
     };
     that._ws.onmessage = function(event) {
       const parsedMessage = JSON.parse(event.data);
-      that.validateNumericsRangesInPatch(parsedMessage, 'incoming');
       that.onReceive(parsedMessage, that._ws.url, 'WS');
     };
     that._ws.onerror = function(event) {
@@ -2006,7 +1960,7 @@ var Palindrom = (function() {
 
       if (event.reason) {
         that.onFatalError(m, upgradeURL, 'WS');
-      } else if(!event.wasClean) {
+      } else if (!event.wasClean) {
         that.onConnectionError();
       }
     };
@@ -2017,7 +1971,6 @@ var Palindrom = (function() {
       'application/json-patch+json',
       null,
       (res, method) => {
-        this.validateNumericsRangesInPatch(res.data, 'incoming');
         this.onReceive(res.data, href, method);
       },
       true
@@ -2093,7 +2046,6 @@ var Palindrom = (function() {
     requestPromise
       .then(function(res) {
         that.handleResponseHeader(res);
-        that.findRangeErrors(res.data, "incoming");
         callback && callback.call(that.palindrom, res, method);
       })
       .catch(function(error) {
@@ -2306,6 +2258,44 @@ var Palindrom = (function() {
     }
     makeInitialConnection(this);
   }
+  /**
+   * Iterates a JSON-Patch, traversing every patch value looking for out-of-range numbers
+   * @param {JSONPatch} patch patch to check
+   * @param {Function} errorHandler the error handler callback
+   * @param {*} startFrom the index where iteration starts
+   */
+  Palindrom.prototype.validateNumericsRangesInPatch = function(
+    patch,
+    errorHandler,
+    startFrom = this.palindrom.OTPatchIndexOffset
+  ) {
+    for (let i = startFrom, len = patch.length; i < len; i++) {
+      this.findRangeErrors(patch[i].value, errorHandler);
+    }
+  };
+
+  /**
+   * Traverses/checks value looking for out-of-range numbers, throws a RangeError if it finds any
+   * @param {*} val value 
+   * @param {Function} errorHandler 
+   */
+  Palindrom.prototype.findRangeErrors = (function createValidator(min, max) {
+    // curry validator to cache Number.MIN_SAFE_INTEGER and Number.MAX_SAFE_INTEGER for better performance, this code runs A LOT
+    return function(val, errorHandler) {
+      const type = typeof val;
+      if (type == 'object') {
+        Object.values(val).forEach(value =>
+          this.findRangeErrors(value, errorHandler)
+        );
+      } else if (type === 'number' && (val > max || val < min)) {
+        errorHandler(
+          new RangeError(
+            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}`
+          )
+        );
+      }
+    };
+  })(Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
 
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
@@ -2346,9 +2336,8 @@ var Palindrom = (function() {
     this.jsonPatcherProxy && this.jsonPatcherProxy.pause();
     this.isObserving = false;
   };
-  
+
   function sendPatches(palindrom, patches) {
-    palindrom.network.validateNumericsRangesInPatch(patches, 'outgoing');
     var txt = JSON.stringify(patches);
     palindrom.unobserve();
     palindrom.heartbeat.notifySend();
@@ -2357,6 +2346,13 @@ var Palindrom = (function() {
   }
 
   Palindrom.prototype.handleLocalChange = function(operation) {
+    // it's a single operation, we need to check only it's value
+    operation.value &&
+      this.findRangeErrors(
+        operation.value,
+        this.onOutgoingPatchValidationError
+      );
+
     const patches = [operation];
     if (this.debug) {
       this.validateSequence(this.remoteObj, patches);
@@ -2379,6 +2375,9 @@ var Palindrom = (function() {
         this.prepareProxifiedObject(results.newDocument);
 
         this.queue.obj = this.obj;
+
+        // validate json response
+        this.findRangeErrors(this.obj, this.onIncomingPatchValidationError);
 
         //notify people about it
         this.onStateReset(this.obj);
@@ -2437,6 +2436,12 @@ var Palindrom = (function() {
   Palindrom.prototype.handleRemoteChange = function(data, url, method) {
     this.heartbeat.notifyReceive();
     var patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
+
+    this.validateNumericsRangesInPatch(
+      patches,
+      this.onIncomingPatchValidationError,
+      this.OTPatchIndexOffset
+    );
 
     if (patches.length === 0) {
       // ping message

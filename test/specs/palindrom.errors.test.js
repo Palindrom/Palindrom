@@ -159,10 +159,10 @@ describe('Palindrom', () => {
           assert(spy.calledOnce);
           const errorPassed = spy.getCall(0).args[0];
           assert(errorPassed instanceof RangeError);
-          assert(
-            errorPassed.message ===
-              `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an incoming patch, value is: ${Number.MAX_SAFE_INTEGER +
-                1}`
+          assert.equal(
+            errorPassed.message,
+            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
+              1}`
           );
           done();
         }, 2);
@@ -188,10 +188,10 @@ describe('Palindrom', () => {
           assert(spy.calledOnce);
           const errorPassed = spy.getCall(0).args[0];
           assert(errorPassed instanceof RangeError);
-          assert(
-            errorPassed.message ===
-              `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an outgoing patch, value is ${Number.MAX_SAFE_INTEGER +
-                1}`
+          assert.equal(
+            errorPassed.message,
+            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
+              1}`
           );
           done();
         }, 10);
@@ -218,14 +218,14 @@ describe('Palindrom', () => {
         setTimeout(() => {
           palindrom.obj.value = Number.MAX_SAFE_INTEGER + 1;
           // make sure WS is up
-          assert(palindrom.network._ws.readyState === 1);
+          assert.equal(palindrom.network._ws.readyState, 1);
           assert(spy.calledOnce);
           const errorPassed = spy.getCall(0).args[0];
           assert(errorPassed instanceof RangeError);
-          assert(
-            errorPassed.message ===
-              `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an outgoing patch, value is ${Number.MAX_SAFE_INTEGER +
-                1}`
+          assert.equal(
+            errorPassed.message,
+            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
+              1}`
           );
           server.stop(done);
         }, 50);
@@ -257,10 +257,10 @@ describe('Palindrom', () => {
           assert(spy.calledOnce);
           const errorPassed = spy.getCall(0).args[0];
           assert(errorPassed instanceof RangeError);
-          assert(
-            errorPassed.message ===
-              `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in an incoming patch, value is: ${Number.MAX_SAFE_INTEGER +
-                1}`
+          assert.equal(
+            errorPassed.message,
+            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
+              1}`
           );
           server.stop(done);
         }, 5);
