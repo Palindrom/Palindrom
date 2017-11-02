@@ -1274,13 +1274,18 @@ exports.applyOperation = applyOperation;
  * @param document The document to patch
  * @param patch The patch to apply
  * @param validateOperation `false` is without validation, `true` to use default jsonpatch's validation, or you can pass a `validateOperation` callback to be used for validation.
+ * @param mutateDocument Whether to mutate the original document or clone it before applying
  * @return An array of `{newDocument, result}` after the patch
  */
-function applyPatch(document, patch, validateOperation) {
+function applyPatch(document, patch, validateOperation, mutateDocument) {
+    if (mutateDocument === void 0) { mutateDocument = true; }
     if (validateOperation) {
         if (!Array.isArray(patch)) {
             throw new exports.JsonPatchError('Patch sequence must be an array', 'SEQUENCE_NOT_AN_ARRAY');
         }
+    }
+    if (!mutateDocument) {
+        document = helpers_1._deepClone(document);
     }
     var results = new Array(patch.length);
     for (var i = 0, length_1 = patch.length; i < length_1; i++) {
@@ -1840,6 +1845,7 @@ var Palindrom = (function() {
       }
     });
   }
+
   PalindromNetworkChannel.prototype.establish = function(bootstrap) {
     establish(this, this.remoteUrl.href, null, bootstrap);
   };
@@ -1922,7 +1928,8 @@ var Palindrom = (function() {
       onSocketOpenCallback && onSocketOpenCallback(event);
     };
     that._ws.onmessage = function(event) {
-      that.onReceive(JSON.parse(event.data), that._ws.url, 'WS');
+      const parsedMessage = JSON.parse(event.data);
+      that.onReceive(parsedMessage, that._ws.url, 'WS');
     };
     that._ws.onerror = function(event) {
       that.onStateChange(that._ws.readyState, upgradeURL, event.data);
@@ -1958,19 +1965,18 @@ var Palindrom = (function() {
 
       if (event.reason) {
         that.onFatalError(m, upgradeURL, 'WS');
-      } else if(!event.wasClean) {
+      } else if (!event.wasClean) {
         that.onConnectionError();
       }
     };
   };
   PalindromNetworkChannel.prototype.getPatchUsingHTTP = function(href) {
-    var that = this;
     return this.xhr(
       href,
       'application/json-patch+json',
       null,
-      function(res, method) {
-        that.onReceive(res.data, href, method);
+      (res, method) => {
+        this.onReceive(res.data, href, method);
       },
       true
     );
@@ -1997,7 +2003,8 @@ var Palindrom = (function() {
 
   PalindromNetworkChannel.prototype.handleResponseHeader = function(res) {
     /* Axios always returns lowercase headers */
-    var location = res.headers && (res.headers['x-location'] || res.headers['location']);
+    var location =
+      res.headers && (res.headers['x-location'] || res.headers['location']);
     if (location) {
       this.setRemoteUrl(location);
     }
@@ -2214,10 +2221,14 @@ var Palindrom = (function() {
         this.network.useWebSocket = newValue;
       }
     });
-
+    /**
+     * how many OT operations are there in each patch 0, 1 or 2
+     */
+    this.OTPatchIndexOffset = 0;
     // choose queuing engine
     if (options.localVersionPath) {
       if (!options.remoteVersionPath) {
+        this.OTPatchIndexOffset = 1;
         // just versioning
         this.queue = new JSONPatchQueueSynchronous(
           this.obj,
@@ -2226,6 +2237,7 @@ var Palindrom = (function() {
           options.purity
         );
       } else {
+        this.OTPatchIndexOffset = 2;
         // double versioning or OT
         this.queue = options.ot
           ? new JSONPatchOTAgent(
@@ -2251,6 +2263,41 @@ var Palindrom = (function() {
     }
     makeInitialConnection(this);
   }
+  /**
+   * Iterates a JSON-Patch, traversing every patch value looking for out-of-range numbers
+   * @param {JSONPatch} patch patch to check
+   * @param {Function} errorHandler the error handler callback
+   * @param {*} startFrom the index where iteration starts
+   */
+  Palindrom.prototype.validateNumericsRangesInPatch = function(
+    patch,
+    errorHandler,
+    startFrom = this.palindrom.OTPatchIndexOffset
+  ) {
+    for (let i = startFrom, len = patch.length; i < len; i++) {
+      findRangeErrors(patch[i].value, errorHandler);
+    }
+  };
+
+  /**
+   * Traverses/checks value looking for out-of-range numbers, throws a RangeError if it finds any
+   * @param {*} val value 
+   * @param {Function} errorHandler 
+   */
+  function findRangeErrors(val, errorHandler) {
+      const type = typeof val;
+      if (type == 'object') {
+        for(const item of val) {
+          findRangeErrors(item, errorHandler)
+        }
+      } else if (type === 'number' && (val > Number.MAX_SAFE_INTEGER || val < Number.MIN_SAFE_INTEGER)) {
+        errorHandler(
+          new RangeError(
+            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}`
+          )
+        );
+      }
+    }
 
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
@@ -2301,6 +2348,13 @@ var Palindrom = (function() {
   }
 
   Palindrom.prototype.handleLocalChange = function(operation) {
+    // it's a single operation, we need to check only it's value
+    operation.value &&
+      findRangeErrors(
+        operation.value,
+        this.onOutgoingPatchValidationError
+      );
+
     const patches = [operation];
     if (this.debug) {
       this.validateSequence(this.remoteObj, patches);
@@ -2324,11 +2378,15 @@ var Palindrom = (function() {
 
         this.queue.obj = this.obj;
 
+        // validate json response
+        findRangeErrors(this.obj, this.onIncomingPatchValidationError);
+
         //notify people about it
         this.onStateReset(this.obj);
       }
       this.onRemoteChange(sequence, results);
     } catch (error) {
+      debugger
       if (this.debug) {
         this.onIncomingPatchValidationError(error);
         return;
@@ -2381,6 +2439,12 @@ var Palindrom = (function() {
   Palindrom.prototype.handleRemoteChange = function(data, url, method) {
     this.heartbeat.notifyReceive();
     var patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
+
+    this.validateNumericsRangesInPatch(
+      patches,
+      this.onIncomingPatchValidationError,
+      this.OTPatchIndexOffset
+    );
 
     if (patches.length === 0) {
       // ping message

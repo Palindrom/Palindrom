@@ -400,8 +400,8 @@ if (typeof window !== 'undefined') {
               assert(historySpy.callCount === 1);
 
               done();
-            }, 50);
-          }, 50);
+            }, 5);
+          }, 5);
         });
       });
 
@@ -418,9 +418,9 @@ if (typeof window !== 'undefined') {
             setTimeout(function() {
               expect(historySpy.callCount).to.equal(0);
               done();
-            }, 50);
-          }, 50);
-        }, 50);
+            }, 5);
+          }, 5);
+        }, 5);
       });
 
       it('should start listening to DOM changes after `.listen()` was called', function() {
@@ -472,7 +472,7 @@ if (typeof window !== 'undefined') {
           expect(request.url).to.equal('/newUrl');
           expect(window.location.pathname).to.equal('/newUrl');
           done();
-        }, 50);
+        }, 5);
       });
     });
 
@@ -524,7 +524,7 @@ if (typeof window !== 'undefined') {
           expect(currScrollY).to.not.equal(0);
 
           done();
-        }, 20);
+        }, 5);
       });
     });
 
@@ -566,7 +566,7 @@ if (typeof window !== 'undefined') {
           expect(new URL(request.url).pathname).to.equal('/newUrl-palindrom');
           expect(window.location.pathname).to.equal('/newUrl-palindrom');
           done();
-        }, 50);
+        }, 5);
       });
     });
   });
