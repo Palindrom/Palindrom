@@ -687,23 +687,21 @@ var Palindrom = (function() {
    * @param {*} val value 
    * @param {Function} errorHandler 
    */
-  const findRangeErrors = (function createValidator(min, max) {
-    // curry validator to cache Number.MIN_SAFE_INTEGER and Number.MAX_SAFE_INTEGER for better performance, this code runs A LOT
-    return function(val, errorHandler) {
-      const type = typeof val;
-      if (type == 'object') {
-        Object.values(val).forEach(value =>
-          findRangeErrors(value, errorHandler)
-        );
-      } else if (type === 'number' && (val > max || val < min)) {
-        errorHandler(
-          new RangeError(
-            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}`
-          )
-        );
-      }
-    };
-  })(Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+  function findRangeErrors(val, errorHandler) {
+    const type = typeof val;
+    if (type == 'object') {
+      Object.values(val).forEach(value => findRangeErrors(value, errorHandler));
+    } else if (
+      type === 'number' &&
+      (val > Number.MAX_SAFE_INTEGER || val < Number.MIN_SAFE_INTEGER)
+    ) {
+      errorHandler(
+        new RangeError(
+          `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}`
+        )
+      );
+    }
+  }
 
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
@@ -756,10 +754,7 @@ var Palindrom = (function() {
   Palindrom.prototype.handleLocalChange = function(operation) {
     // it's a single operation, we need to check only it's value
     operation.value &&
-      findRangeErrors(
-        operation.value,
-        this.onOutgoingPatchValidationError
-      );
+      findRangeErrors(operation.value, this.onOutgoingPatchValidationError);
 
     const patches = [operation];
     if (this.debug) {
