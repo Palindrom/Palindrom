@@ -672,10 +672,10 @@ var Palindrom = (function() {
    * @param {Function} errorHandler the error handler callback
    * @param {*} startFrom the index where iteration starts
    */
-  Palindrom.prototype.validateNumericsRangesInPatch = function(
+  function validateNumericsRangesInPatch(
     patch,
     errorHandler,
-    startFrom = this.palindrom.OTPatchIndexOffset
+    startFrom
   ) {
     for (let i = startFrom, len = patch.length; i < len; i++) {
       findRangeErrors(patch[i].value, errorHandler);
@@ -688,20 +688,21 @@ var Palindrom = (function() {
    * @param {Function} errorHandler 
    */
   function findRangeErrors(val, errorHandler) {
-    const type = typeof val;
-    if (type == 'object') {
-      Object.values(val).forEach(value => findRangeErrors(value, errorHandler));
-    } else if (
-      type === 'number' &&
-      (val > Number.MAX_SAFE_INTEGER || val < Number.MIN_SAFE_INTEGER)
-    ) {
-      errorHandler(
-        new RangeError(
-          `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}`
-        )
-      );
+      const type = typeof val;
+      if (type == 'object') {
+        for(const key in val) {
+          if(val.hasOwnProperty(key)) {
+            findRangeErrors(val[key], errorHandler)
+          }
+        }
+      } else if (type === 'number' && (val > Number.MAX_SAFE_INTEGER || val < Number.MIN_SAFE_INTEGER)) {
+        errorHandler(
+          new RangeError(
+            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}`
+          )
+        );
+      }
     }
-  }
 
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
@@ -754,7 +755,10 @@ var Palindrom = (function() {
   Palindrom.prototype.handleLocalChange = function(operation) {
     // it's a single operation, we need to check only it's value
     operation.value &&
-      findRangeErrors(operation.value, this.onOutgoingPatchValidationError);
+      findRangeErrors(
+        operation.value,
+        this.onOutgoingPatchValidationError
+      );
 
     const patches = [operation];
     if (this.debug) {
@@ -787,6 +791,7 @@ var Palindrom = (function() {
       }
       this.onRemoteChange(sequence, results);
     } catch (error) {
+      debugger
       if (this.debug) {
         this.onIncomingPatchValidationError(error);
         return;
@@ -840,7 +845,7 @@ var Palindrom = (function() {
     this.heartbeat.notifyReceive();
     var patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
 
-    this.validateNumericsRangesInPatch(
+    validateNumericsRangesInPatch(
       patches,
       this.onIncomingPatchValidationError,
       this.OTPatchIndexOffset

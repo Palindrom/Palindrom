@@ -1274,13 +1274,18 @@ exports.applyOperation = applyOperation;
  * @param document The document to patch
  * @param patch The patch to apply
  * @param validateOperation `false` is without validation, `true` to use default jsonpatch's validation, or you can pass a `validateOperation` callback to be used for validation.
+ * @param mutateDocument Whether to mutate the original document or clone it before applying
  * @return An array of `{newDocument, result}` after the patch
  */
-function applyPatch(document, patch, validateOperation) {
+function applyPatch(document, patch, validateOperation, mutateDocument) {
+    if (mutateDocument === void 0) { mutateDocument = true; }
     if (validateOperation) {
         if (!Array.isArray(patch)) {
             throw new exports.JsonPatchError('Patch sequence must be an array', 'SEQUENCE_NOT_AN_ARRAY');
         }
+    }
+    if (!mutateDocument) {
+        document = helpers_1._deepClone(document);
     }
     var results = new Array(patch.length);
     for (var i = 0, length_1 = patch.length; i < length_1; i++) {
@@ -2270,7 +2275,7 @@ var Palindrom = (function() {
     startFrom = this.palindrom.OTPatchIndexOffset
   ) {
     for (let i = startFrom, len = patch.length; i < len; i++) {
-      this.findRangeErrors(patch[i].value, errorHandler);
+      findRangeErrors(patch[i].value, errorHandler);
     }
   };
 
@@ -2279,23 +2284,20 @@ var Palindrom = (function() {
    * @param {*} val value 
    * @param {Function} errorHandler 
    */
-  Palindrom.prototype.findRangeErrors = (function createValidator(min, max) {
-    // curry validator to cache Number.MIN_SAFE_INTEGER and Number.MAX_SAFE_INTEGER for better performance, this code runs A LOT
-    return function(val, errorHandler) {
+  function findRangeErrors(val, errorHandler) {
       const type = typeof val;
       if (type == 'object') {
-        Object.values(val).forEach(value =>
-          this.findRangeErrors(value, errorHandler)
-        );
-      } else if (type === 'number' && (val > max || val < min)) {
+        for(const item of val) {
+          findRangeErrors(item, errorHandler)
+        }
+      } else if (type === 'number' && (val > Number.MAX_SAFE_INTEGER || val < Number.MIN_SAFE_INTEGER)) {
         errorHandler(
           new RangeError(
             `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}`
           )
         );
       }
-    };
-  })(Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+    }
 
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
@@ -2348,7 +2350,7 @@ var Palindrom = (function() {
   Palindrom.prototype.handleLocalChange = function(operation) {
     // it's a single operation, we need to check only it's value
     operation.value &&
-      this.findRangeErrors(
+      findRangeErrors(
         operation.value,
         this.onOutgoingPatchValidationError
       );
@@ -2377,13 +2379,14 @@ var Palindrom = (function() {
         this.queue.obj = this.obj;
 
         // validate json response
-        this.findRangeErrors(this.obj, this.onIncomingPatchValidationError);
+        findRangeErrors(this.obj, this.onIncomingPatchValidationError);
 
         //notify people about it
         this.onStateReset(this.obj);
       }
       this.onRemoteChange(sequence, results);
     } catch (error) {
+      debugger
       if (this.debug) {
         this.onIncomingPatchValidationError(error);
         return;
