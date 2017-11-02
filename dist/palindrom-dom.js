@@ -1,4 +1,4 @@
-/*! Palindrom, version: 3.0.6 */
+/*! Palindrom, version: 3.0.7 */
 var PalindromDOM =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -2269,10 +2269,10 @@ var Palindrom = (function() {
    * @param {Function} errorHandler the error handler callback
    * @param {*} startFrom the index where iteration starts
    */
-  Palindrom.prototype.validateNumericsRangesInPatch = function(
+  function validateNumericsRangesInPatch(
     patch,
     errorHandler,
-    startFrom = this.palindrom.OTPatchIndexOffset
+    startFrom
   ) {
     for (let i = startFrom, len = patch.length; i < len; i++) {
       findRangeErrors(patch[i].value, errorHandler);
@@ -2287,8 +2287,10 @@ var Palindrom = (function() {
   function findRangeErrors(val, errorHandler) {
       const type = typeof val;
       if (type == 'object') {
-        for(const item of val) {
-          findRangeErrors(item, errorHandler)
+        for(const key in val) {
+          if(val.hasOwnProperty(key)) {
+            findRangeErrors(val[key], errorHandler)
+          }
         }
       } else if (type === 'number' && (val > Number.MAX_SAFE_INTEGER || val < Number.MIN_SAFE_INTEGER)) {
         errorHandler(
@@ -2386,7 +2388,6 @@ var Palindrom = (function() {
       }
       this.onRemoteChange(sequence, results);
     } catch (error) {
-      debugger
       if (this.debug) {
         this.onIncomingPatchValidationError(error);
         return;
@@ -2440,7 +2441,7 @@ var Palindrom = (function() {
     this.heartbeat.notifyReceive();
     var patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
 
-    this.validateNumericsRangesInPatch(
+    validateNumericsRangesInPatch(
       patches,
       this.onIncomingPatchValidationError,
       this.OTPatchIndexOffset
