@@ -791,7 +791,6 @@ var Palindrom = (function() {
       }
       this.onRemoteChange(sequence, results);
     } catch (error) {
-      debugger
       if (this.debug) {
         this.onIncomingPatchValidationError(error);
         return;
