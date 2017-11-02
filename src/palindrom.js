@@ -678,7 +678,7 @@ var Palindrom = (function() {
     startFrom = this.palindrom.OTPatchIndexOffset
   ) {
     for (let i = startFrom, len = patch.length; i < len; i++) {
-      this.findRangeErrors(patch[i].value, errorHandler);
+      findRangeErrors(patch[i].value, errorHandler);
     }
   };
 
@@ -687,13 +687,13 @@ var Palindrom = (function() {
    * @param {*} val value 
    * @param {Function} errorHandler 
    */
-  Palindrom.prototype.findRangeErrors = (function createValidator(min, max) {
+  const findRangeErrors = (function createValidator(min, max) {
     // curry validator to cache Number.MIN_SAFE_INTEGER and Number.MAX_SAFE_INTEGER for better performance, this code runs A LOT
     return function(val, errorHandler) {
       const type = typeof val;
       if (type == 'object') {
         Object.values(val).forEach(value =>
-          this.findRangeErrors(value, errorHandler)
+          findRangeErrors(value, errorHandler)
         );
       } else if (type === 'number' && (val > max || val < min)) {
         errorHandler(
@@ -756,7 +756,7 @@ var Palindrom = (function() {
   Palindrom.prototype.handleLocalChange = function(operation) {
     // it's a single operation, we need to check only it's value
     operation.value &&
-      this.findRangeErrors(
+      findRangeErrors(
         operation.value,
         this.onOutgoingPatchValidationError
       );
@@ -785,7 +785,7 @@ var Palindrom = (function() {
         this.queue.obj = this.obj;
 
         // validate json response
-        this.findRangeErrors(this.obj, this.onIncomingPatchValidationError);
+        findRangeErrors(this.obj, this.onIncomingPatchValidationError);
 
         //notify people about it
         this.onStateReset(this.obj);
