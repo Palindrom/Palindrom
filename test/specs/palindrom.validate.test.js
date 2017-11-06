@@ -42,7 +42,7 @@ describe('Palindrom', () => {
       setTimeout(() => {
         assert(spy.notCalled);
         done();
-      }, 10);
+      }, 1);
     });
 
     it('replacing a nonexisting property should cause OPERATION_PATH_UNRESOLVABLE (test built into Fast-JSON-Patch)', done => {
@@ -71,7 +71,7 @@ describe('Palindrom', () => {
         assert(spy.calledOnce);
         assert.equal('OPERATION_PATH_UNRESOLVABLE', spy.lastCall.args[0].name);
         done();
-      }, 10);
+      }, 1);
     });
 
     it('undefined value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', done => {

@@ -3949,38 +3949,37 @@ exports.addBehavior = function (name, fn) {
  * (c) 2017 Joachim Wester
  * MIT license
  */
-if (true) {
-  /* include only applyPatch and validate */
-  var { applyPatch, validate } = __webpack_require__(57);
-  var JSONPatcherProxy = __webpack_require__(145);
-  var JSONPatchQueueSynchronous = __webpack_require__(30)
-    .JSONPatchQueueSynchronous;
-  var JSONPatchQueue = __webpack_require__(30).JSONPatchQueue;
-  var JSONPatchOT = __webpack_require__(142);
-  var JSONPatchOTAgent = __webpack_require__(141);
-  var URL = __webpack_require__(174);
-  var axios = __webpack_require__(40);
 
-  /* We are going to hand `websocket` lib as an external to webpack
+const { applyPatch, validate } = __webpack_require__(57);
+const JSONPatcherProxy = __webpack_require__(145);
+const JSONPatchQueueSynchronous = __webpack_require__(30)
+  .JSONPatchQueueSynchronous;
+const JSONPatchQueue = __webpack_require__(30).JSONPatchQueue;
+const JSONPatchOT = __webpack_require__(142);
+const JSONPatchOTAgent = __webpack_require__(141);
+const URL = __webpack_require__(174);
+const axios = __webpack_require__(40);
+
+/* We are going to hand `websocket` lib as an external to webpack
   (see: https://webpack.js.org/configuration/externals/), 
   this will make `w3cwebsocket` property `undefined`, 
   and this will lead Palindrom to use Browser's WebSocket when it is used 
   from the bundle. And use `websocket` lib in Node environment */
-  var NodeWebSocket = __webpack_require__(175).w3cwebsocket;
+const NodeWebSocket = __webpack_require__(175).w3cwebsocket;
 
-  /* this allows us to stub WebSockets */
-  if (!global.WebSocket && NodeWebSocket) {
-    /* we are in production env */
-    var WebSocket = NodeWebSocket;
-  } else if (global.WebSocket) {
-    /* we are in testing env */
-    var WebSocket = global.WebSocket;
-  }
-  /* else {
+/* this allows us to stub WebSockets */
+if (!global.WebSocket && NodeWebSocket) {
+  /* we are in production env */
+  var WebSocket = NodeWebSocket;
+} else if (global.WebSocket) {
+  /* we are in testing env */
+  var WebSocket = global.WebSocket;
+}
+/* else {
     we are using Browser's WebSocket
   } */
-}
-var Palindrom = (function() {
+
+const Palindrom = (() => {
   if (typeof global === 'undefined') {
     if (typeof window !== 'undefined') {
       /* incase neither window nor global existed, e.g React Native */
@@ -4013,11 +4012,11 @@ var Palindrom = (function() {
    * @constructor
    */
   function Reconnector(reconnect, onReconnectionCountdown, onReconnectionEnd) {
-    var intervalMs,
-      timeToCurrentReconnectionMs,
-      reconnectionPending,
-      reconnection,
-      defaultIntervalMs = 1000;
+    let intervalMs;
+    let timeToCurrentReconnectionMs;
+    let reconnectionPending;
+    let reconnection;
+    const defaultIntervalMs = 1000;
 
     function reset() {
       intervalMs = defaultIntervalMs;
@@ -4027,7 +4026,7 @@ var Palindrom = (function() {
       reconnection = null;
     }
 
-    var step = function() {
+    const step = () => {
       if (timeToCurrentReconnectionMs == 0) {
         onReconnectionCountdown(0);
         reconnectionPending = false;
@@ -4043,7 +4042,7 @@ var Palindrom = (function() {
     /**
      * Notify Reconnector that connection error occurred and automatic reconnection should be scheduled.
      */
-    this.triggerReconnection = function() {
+    this.triggerReconnection = () => {
       if (reconnectionPending) {
         return;
       }
@@ -4055,7 +4054,7 @@ var Palindrom = (function() {
     /**
      * Reconnect immediately and reset all reconnection timers.
      */
-    this.reconnectNow = function() {
+    this.reconnectNow = () => {
       timeToCurrentReconnectionMs = 0;
       intervalMs = defaultIntervalMs;
     };
@@ -4064,7 +4063,7 @@ var Palindrom = (function() {
      * Notify Reconnector that there's no need to do further actions (either connection has been established or a fatal error occured).
      * Resets state of Reconnector
      */
-    this.stopReconnecting = function() {
+    this.stopReconnecting = () => {
       reset();
       onReconnectionEnd();
     };
@@ -4082,7 +4081,8 @@ var Palindrom = (function() {
    * @constructor
      */
   function Heartbeat(sendHeartbeatAction, onError, intervalMs, timeoutMs) {
-    var scheduledSend, scheduledError;
+    let scheduledSend;
+    let scheduledError;
 
     /**
      * Call this function at the beginning of operation and after successful reconnection.
@@ -4091,13 +4091,10 @@ var Palindrom = (function() {
       if (scheduledSend) {
         return;
       }
-      scheduledSend = setTimeout(
-        function() {
-          this.notifySend();
-          sendHeartbeatAction();
-        }.bind(this),
-        intervalMs
-      );
+      scheduledSend = setTimeout(() => {
+        this.notifySend();
+        sendHeartbeatAction();
+      }, intervalMs);
     };
 
     /**
@@ -4109,13 +4106,10 @@ var Palindrom = (function() {
       if (scheduledError) {
         return;
       }
-      scheduledError = setTimeout(
-        function() {
-          scheduledError = null;
-          onError(); // timeout has passed and response hasn't arrived
-        }.bind(this),
-        timeoutMs
-      );
+      scheduledError = setTimeout(() => {
+        scheduledError = null;
+        onError(); // timeout has passed and response hasn't arrived
+      }, timeoutMs);
     };
 
     /**
@@ -4130,7 +4124,7 @@ var Palindrom = (function() {
     /**
      * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
      */
-    this.stop = function() {
+    this.stop = () => {
       clearTimeout(scheduledSend);
       scheduledSend = null;
       clearTimeout(scheduledError);
@@ -4139,312 +4133,311 @@ var Palindrom = (function() {
   }
 
   function NoHeartbeat() {
-    this.start = this.stop = this.notifySend = this.notifyReceive = function() {};
+    this.start = this.stop = this.notifySend = this.notifyReceive = () => {};
   }
 
-  function PalindromNetworkChannel(
-    palindrom,
-    remoteUrl,
-    useWebSocket,
-    onReceive,
-    onSend,
-    onConnectionError,
-    onSocketOpened,
-    onFatalError,
-    onStateChange
-  ) {
-    // TODO(tomalec): to be removed once we will achieve better separation of concerns
-    this.palindrom = palindrom;
+  class PalindromNetworkChannel {
+    constructor(
+      palindrom,
+      remoteUrl,
+      useWebSocket,
+      onReceive,
+      onSend,
+      onConnectionError,
+      onSocketOpened,
+      onFatalError,
+      onStateChange
+    ) {
+      // TODO(tomalec): to be removed once we will achieve better separation of concerns
+      this.palindrom = palindrom;
 
-    if (typeof window !== 'undefined' && window.location) {
-      this.remoteUrl = new URL(remoteUrl, window.location.href);
-    } else {
-      // in Node, URL is absolute
-      this.remoteUrl = new URL(remoteUrl);
+      if (typeof window !== 'undefined' && window.location) {
+        this.remoteUrl = new URL(remoteUrl, window.location.href);
+      } else {
+        // in Node, URL is absolute
+        this.remoteUrl = new URL(remoteUrl);
+      }
+
+      onReceive && (this.onReceive = onReceive);
+      onSend && (this.onSend = onSend);
+      onConnectionError && (this.onConnectionError = onConnectionError);
+      onFatalError && (this.onFatalError = onFatalError);
+      onStateChange && (this.onStateChange = onStateChange);
+      onSocketOpened && (this.onSocketOpened = onSocketOpened);
+      this._useWebSocket = useWebSocket || false;
+    }
+    get useWebSocket() {
+      return this._useWebSocket;
+    }
+    set useWebSocket(newValue) {
+      this._useWebSocket = newValue;
+
+      if (newValue == false) {
+        if (this._ws) {
+          this._ws.onclose = () => {
+            //overwrites the previous onclose
+            this._ws = null;
+          };
+          this._ws.close();
+        }
+        // define wsUrl if needed
+      } else if (!this.wsUrl) {
+        this.wsUrl = toWebSocketURL(this.remoteUrl.href);
+      }
+      return this.useWebSocket;
     }
 
-    onReceive && (this.onReceive = onReceive);
-    onSend && (this.onSend = onSend);
-    onConnectionError && (this.onConnectionError = onConnectionError);
-    onFatalError && (this.onFatalError = onFatalError);
-    onStateChange && (this.onStateChange = onStateChange);
-    onSocketOpened && (this.onSocketOpened = onSocketOpened);
-    //useWebSocket = useWebSocket || false;
-    var that = this;
-    Object.defineProperty(this, 'useWebSocket', {
-      get: function() {
-        return useWebSocket;
-      },
-      set: function(newValue) {
-        useWebSocket = newValue;
+    establish(bootstrap) {
+      establish(this, this.remoteUrl.href, null, bootstrap);
+    }
 
-        if (newValue == false) {
-          if (that._ws) {
-            that._ws.onclose = function() {
-              //overwrites the previous onclose
-              that._ws = null;
-            };
-            that._ws.close();
-          }
-          // define wsUrl if needed
-        } else if (!that.wsUrl) {
-          that.wsUrl = toWebSocketURL(that.remoteUrl.href);
-        }
-        return useWebSocket;
+    reestablish(pending, bootstrap) {
+      establish(
+        this,
+        `${this.remoteUrl.href}/reconnect`,
+        JSON.stringify(pending),
+        bootstrap
+      );
+    }
+
+    /**
+     * Send any text message by currently established channel
+     * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
+     * @param  {String} msg message to be sent
+     * @return {PalindromNetworkChannel}     self
+     */
+    send(msg) {
+      // send message only if there is a working ws connection
+      if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
+        this._ws.send(msg);
+        this.onSend(msg, this._ws.url, 'WS');
+      } else {
+        const url = this.remoteUrl.href;
+        this.xhr(url, 'application/json-patch+json', msg, (res, method) => {
+          this.onReceive(res.data, url, method);
+        });
       }
-    });
-  }
+      return this;
+    }
 
-  PalindromNetworkChannel.prototype.establish = function(bootstrap) {
-    establish(this, this.remoteUrl.href, null, bootstrap);
-  };
-  PalindromNetworkChannel.prototype.reestablish = function(pending, bootstrap) {
-    establish(
-      this,
-      this.remoteUrl.href + '/reconnect',
-      JSON.stringify(pending),
-      bootstrap
-    );
-  };
+    /**
+     * Callback function that will be called once message from remote comes.
+     * @param {String} [JSONPatch_sequences] message with Array of JSONPatches that were send by remote.
+     * @return {[type]} [description]
+     */
+    onReceive() /*String_with_JSONPatch_sequences*/ {
+    }
+
+    onSend() {}
+    onStateChange() {}
+    upgrade(msg) {}
+
+    /**
+     * Send a WebSocket upgrade request to the server.
+     * For testing purposes WS upgrade url is hard-coded now in Palindrom (replace __default/ID with __default/ID)
+     * In future, server should suggest the WebSocket upgrade URL
+     * @TODO:(tomalec)[cleanup] hide from public API.
+     * @param {Function} [callback] Function to be called once connection gets opened.
+     * @returns {WebSocket} created WebSocket
+     */
+    webSocketUpgrade(onSocketOpenCallback) {
+      this.wsUrl = toWebSocketURL(this.remoteUrl.href);
+      const upgradeURL = this.wsUrl;
+
+      closeWsIfNeeded(this);
+
+      this._ws = new WebSocket(upgradeURL);
+      this._ws.onopen = event => {
+        this.onStateChange(this._ws.readyState, upgradeURL);
+        onSocketOpenCallback && onSocketOpenCallback(event);
+      };
+      this._ws.onmessage = event => {
+        const parsedMessage = JSON.parse(event.data);
+        this.onReceive(parsedMessage, this._ws.url, 'WS');
+      };
+      this._ws.onerror = event => {
+        this.onStateChange(this._ws.readyState, upgradeURL, event.data);
+
+        if (!this.useWebSocket) {
+          return;
+        }
+
+        const m = {
+          statusText: 'WebSocket connection could not be made.',
+          readyState: this._ws.readyState,
+          url: upgradeURL
+        };
+
+        this.onFatalError(m, upgradeURL, 'WS');
+      };
+      this._ws.onclose = event => {
+        this.onStateChange(
+          this._ws.readyState,
+          upgradeURL,
+          null,
+          event.code,
+          event.reason
+        );
+
+        const m = {
+          statusText: 'WebSocket connection closed.',
+          readyState: this._ws.readyState,
+          url: upgradeURL,
+          statusCode: event.code,
+          reason: event.reason
+        };
+
+        if (event.reason) {
+          this.onFatalError(m, upgradeURL, 'WS');
+        } else if (!event.wasClean) {
+          this.onConnectionError();
+        }
+      };
+    }
+
+    getPatchUsingHTTP(href) {
+      return this.xhr(
+        href,
+        'application/json-patch+json',
+        null,
+        (res, method) => {
+          this.onReceive(res.data, href, method);
+        },
+        true
+      );
+    }
+
+    changeState(href) {
+      console.warn(
+        "Palindrom: changeState was renamed to `getPatchUsingHTTP`, and they're both not recommended to use, please use `PalindromDOM.morphUrl` instead"
+      );
+      return this.getPatchUsingHTTP(href);
+    }
+
+    // TODO:(tomalec)[cleanup] hide from public API.
+    setRemoteUrl(remoteUrl) {
+      if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
+        throw new Error(
+          `Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: ${this
+            .remoteUrl}\nNew session ID: ${remoteUrl}`
+        );
+      }
+      this.remoteUrlSet = true;
+      this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
+    }
+
+    handleResponseHeader(res) {
+      /* Axios always returns lowercase headers */
+      const location =
+        res.headers && (res.headers['x-location'] || res.headers['location']);
+      if (location) {
+        this.setRemoteUrl(location);
+      }
+    }
+
+    /**
+     * Internal method to perform XMLHttpRequest
+     * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
+     * @param accept (Optional) HTTP accept header
+     * @param data (Optional) Data payload
+     * @param [callback(response)] callback to be called in context of palindrom with response as argument
+     * @returns {XMLHttpRequest} performed XHR
+     */
+    xhr(url, accept, data, callback, setReferer) {
+      const method = data ? 'PATCH' : 'GET';
+      const headers = {};
+      let requestPromise;
+
+      if (data) {
+        headers['Content-Type'] = 'application/json-patch+json';
+      }
+      if (accept) {
+        headers['Accept'] = accept;
+      }
+      if (this.remoteUrl && setReferer) {
+        headers['X-Referer'] = this.remoteUrl.pathname;
+      }
+      if (method === 'GET') {
+        requestPromise = axios.get(url, {
+          headers
+        });
+      } else {
+        requestPromise = axios.patch(url, data, {
+          headers
+        });
+      }
+      requestPromise
+        .then(res => {
+          this.handleResponseHeader(res);
+          callback && callback.call(this.palindrom, res, method);
+        })
+        .catch(error => {
+          const res = error.response;
+          if (res) {
+            this.onFatalError(
+              {
+                statusCode: res.status,
+                statusText: res.statusText,
+                reason: res.data
+              },
+              url,
+              method
+            );
+          }
+          // not a network error; an error that is swallowed by Promise catch
+          if (!res) {
+            throw error;
+          }
+        });
+
+      this.onSend(data, url, method);
+    }
+  }
 
   // TODO: auto-configure here #38 (tomalec)
   function establish(network, url, body, bootstrap) {
-    return network.xhr(url, 'application/json', body, function(res) {
+    return network.xhr(url, 'application/json', body, res => {
       bootstrap(res.data);
       if (network.useWebSocket) {
         network.webSocketUpgrade(network.onSocketOpened);
       }
     });
   }
-  /**
-   * Send any text message by currently established channel
-   * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
-   * @param  {String} msg message to be sent
-   * @return {PalindromNetworkChannel}     self
-   */
-  PalindromNetworkChannel.prototype.send = function(msg) {
-    var that = this;
-    // send message only if there is a working ws connection
-    if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
-      this._ws.send(msg);
-      that.onSend(msg, that._ws.url, 'WS');
-    } else {
-      var url = this.remoteUrl.href;
-      this.xhr(url, 'application/json-patch+json', msg, function(res, method) {
-        that.onReceive(res.data, url, method);
-      });
-    }
-    return this;
-  };
-  /**
-   * Callback function that will be called once message from remote comes.
-   * @param {String} [JSONPatch_sequences] message with Array of JSONPatches that were send by remote.
-   * @return {[type]} [description]
-   */
-  PalindromNetworkChannel.prototype.onReceive = function(/*String_with_JSONPatch_sequences*/) {};
-  PalindromNetworkChannel.prototype.onSend = function() {};
-  PalindromNetworkChannel.prototype.onStateChange = function() {};
-  PalindromNetworkChannel.prototype.upgrade = function(msg) {};
 
   function closeWsIfNeeded(network) {
     if (network._ws) {
-      network._ws.onclose = function() {};
+      network._ws.onclose = () => {};
       network._ws.close();
       network._ws = null;
     }
   }
 
   /**
-   * Send a WebSocket upgrade request to the server.
-   * For testing purposes WS upgrade url is hard-coded now in Palindrom (replace __default/ID with __default/ID)
-   * In future, server should suggest the WebSocket upgrade URL
-   * @TODO:(tomalec)[cleanup] hide from public API.
-   * @param {Function} [callback] Function to be called once connection gets opened.
-   * @returns {WebSocket} created WebSocket
-   */
-  PalindromNetworkChannel.prototype.webSocketUpgrade = function(
-    onSocketOpenCallback
-  ) {
-    var that = this;
-
-    this.wsUrl = toWebSocketURL(this.remoteUrl.href);
-    var upgradeURL = this.wsUrl;
-
-    closeWsIfNeeded(that);
-    that._ws = new WebSocket(upgradeURL);
-    that._ws.onopen = function(event) {
-      that.onStateChange(that._ws.readyState, upgradeURL);
-      onSocketOpenCallback && onSocketOpenCallback(event);
-    };
-    that._ws.onmessage = function(event) {
-      const parsedMessage = JSON.parse(event.data);
-      that.onReceive(parsedMessage, that._ws.url, 'WS');
-    };
-    that._ws.onerror = function(event) {
-      that.onStateChange(that._ws.readyState, upgradeURL, event.data);
-
-      if (!that.useWebSocket) {
-        return;
-      }
-
-      var m = {
-        statusText: 'WebSocket connection could not be made.',
-        readyState: that._ws.readyState,
-        url: upgradeURL
-      };
-
-      that.onFatalError(m, upgradeURL, 'WS');
-    };
-    that._ws.onclose = function(event) {
-      that.onStateChange(
-        that._ws.readyState,
-        upgradeURL,
-        null,
-        event.code,
-        event.reason
-      );
-
-      var m = {
-        statusText: 'WebSocket connection closed.',
-        readyState: that._ws.readyState,
-        url: upgradeURL,
-        statusCode: event.code,
-        reason: event.reason
-      };
-
-      if (event.reason) {
-        that.onFatalError(m, upgradeURL, 'WS');
-      } else if (!event.wasClean) {
-        that.onConnectionError();
-      }
-    };
-  };
-  PalindromNetworkChannel.prototype.getPatchUsingHTTP = function(href) {
-    return this.xhr(
-      href,
-      'application/json-patch+json',
-      null,
-      (res, method) => {
-        this.onReceive(res.data, href, method);
-      },
-      true
-    );
-  };
-  PalindromNetworkChannel.prototype.changeState = function(href) {
-    console.warn(
-      "Palindrom: changeState was renamed to `getPatchUsingHTTP`, and they're both not recommended to use, please use `PalindromDOM.morphUrl` instead"
-    );
-    return this.getPatchUsingHTTP(href);
-  };
-  // TODO:(tomalec)[cleanup] hide from public API.
-  PalindromNetworkChannel.prototype.setRemoteUrl = function(remoteUrl) {
-    if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
-      throw new Error(
-        'Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: ' +
-          this.remoteUrl +
-          '\nNew session ID: ' +
-          remoteUrl
-      );
-    }
-    this.remoteUrlSet = true;
-    this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
-  };
-
-  PalindromNetworkChannel.prototype.handleResponseHeader = function(res) {
-    /* Axios always returns lowercase headers */
-    var location =
-      res.headers && (res.headers['x-location'] || res.headers['location']);
-    if (location) {
-      this.setRemoteUrl(location);
-    }
-  };
-
-  /**
-   * Internal method to perform XMLHttpRequest
-   * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
-   * @param accept (Optional) HTTP accept header
-   * @param data (Optional) Data payload
-   * @param [callback(response)] callback to be called in context of palindrom with response as argument
-   * @returns {XMLHttpRequest} performed XHR
-   */
-  PalindromNetworkChannel.prototype.xhr = function(
-    url,
-    accept,
-    data,
-    callback,
-    setReferer
-  ) {
-    const method = data ? 'PATCH' : 'GET';
-    const headers = {};
-    const that = this;
-    var requestPromise;
-
-    if (data) {
-      headers['Content-Type'] = 'application/json-patch+json';
-    }
-    if (accept) {
-      headers['Accept'] = accept;
-    }
-    if (this.remoteUrl && setReferer) {
-      headers['X-Referer'] = this.remoteUrl.pathname;
-    }
-    if (method === 'GET') {
-      requestPromise = axios.get(url, {
-        headers: headers
-      });
-    } else {
-      requestPromise = axios.patch(url, data, {
-        headers: headers
-      });
-    }
-    requestPromise
-      .then(function(res) {
-        that.handleResponseHeader(res);
-        callback && callback.call(that.palindrom, res, method);
-      })
-      .catch(function(error) {
-        const res = error.response;
-        if (res) {
-          that.onFatalError(
-            {
-              statusCode: res.status,
-              statusText: res.statusText,
-              reason: res.data
-            },
-            url,
-            method
-          );
-        }
-        // not a network error; an error that is swallowed by Promise catch
-        if (!res) {
-          throw error;
-        }
-      });
-
-    this.onSend(data, url, method);
-  };
-
-  /**
    * Non-queuing object that conforms JSON-Patch-Queue API
    * @param {Object} obj target object where patches are applied
    * @param {Function} apply function to apply received patch, must return the object in its final state
    */
-  function NoQueue(obj, apply) {
-    this.obj = obj;
-    this.apply = apply;
+  class NoQueue {
+    constructor(obj, apply) {
+      this.obj = obj;
+      this.apply = apply;
+    }
+
+    /** just forward message */
+    send(msg) {
+      return msg;
+    }
+
+    /** Apply given JSON Patch sequence immediately */
+    receive(sequence) {
+      return (this.obj = this.apply(this.obj, sequence));
+    }
+
+    reset(newState) {
+      const patch = [{ op: 'replace', path: '', value: newState }];
+      return (this.obj = this.apply(this.obj, patch));
+    }
   }
-  /** just forward message */
-  NoQueue.prototype.send = function(msg) {
-    return msg;
-  };
-  /** Apply given JSON Patch sequence immediately */
-  NoQueue.prototype.receive = function(sequence) {
-    return (this.obj = this.apply(this.obj, sequence));
-  };
-  NoQueue.prototype.reset = function(newState) {
-    var patch = [{ op: 'replace', path: '', value: newState }];
-    return (this.obj = this.apply(this.obj, patch));
-  };
 
   function connectToRemote(palindrom, reconnectionFn) {
     // if we lose connection at this point, the connection we're trying to establish should trigger onError
@@ -4471,7 +4464,7 @@ var Palindrom = (function() {
   }
 
   function makeReconnection(palindrom) {
-    connectToRemote(palindrom, function(bootstrap) {
+    connectToRemote(palindrom, bootstrap => {
       palindrom.network.reestablish(palindrom.queue.pending, bootstrap);
     });
   }
@@ -4480,153 +4473,311 @@ var Palindrom = (function() {
    * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
    * @param {Object} [options] map of arguments. See README.md for description
    */
-  function Palindrom(options) {
-    if (typeof options !== 'object') {
-      throw new Error('Palindrom constructor requires an object argument.');
-    }
-    if (!options.remoteUrl) {
-      throw new Error('remoteUrl is required');
-    }
+  class Palindrom {
+    constructor(options) {
+      if (typeof options !== 'object') {
+        throw new Error('Palindrom constructor requires an object argument.');
+      }
+      if (!options.remoteUrl) {
+        throw new Error('remoteUrl is required');
+      }
 
-    if (options.ignoreAdd) {
-      throw new TypeError(
-        'Palindrom: `ignoreAdd` is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136'
-      );
-    }
-    Object.defineProperty(this, 'ignoreAdd', {
-      set: function() {
+      if (options.ignoreAdd) {
         throw new TypeError(
-          "Palindrom: Can't set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136"
+          'Palindrom: `ignoreAdd` is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136'
         );
       }
-    });
 
-    this.debug = options.debug != undefined ? options.debug : true;
+      this.debug = options.debug != undefined ? options.debug : true;
 
-    var noop = function noOpFunction() {};
+      const noop = function noOpFunction() {};
 
-    this.isObserving = false;
-    this.onLocalChange = options.onLocalChange || noop;
-    this.onRemoteChange = options.onRemoteChange || noop;
-    this.onStateReset = options.onStateReset || options.callback || noop;
-    this.filterLocalChange =
-      options.filterLocalChange || (operation => operation);
-    if (options.callback) {
-      console.warn(
-        'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
-      );
-    }
+      this.isObserving = false;
+      this.onLocalChange = options.onLocalChange || noop;
+      this.onRemoteChange = options.onRemoteChange || noop;
+      this.onStateReset = options.onStateReset || options.callback || noop;
+      this.filterLocalChange =
+        options.filterLocalChange || (operation => operation);
 
-    this.onPatchReceived = options.onPatchReceived || noop;
-    this.onPatchSent = options.onPatchSent || noop;
-    this.onSocketStateChanged = options.onSocketStateChanged || noop;
-    this.onConnectionError = options.onConnectionError || noop;
-    this.retransmissionThreshold = options.retransmissionThreshold || 3;
-    this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
-    this.onReconnectionEnd = options.onReconnectionEnd || noop;
-    this.onSocketOpened = options.onSocketOpened || noop;
-    this.onIncomingPatchValidationError =
-      options.onIncomingPatchValidationError || noop;
-    this.onOutgoingPatchValidationError =
-      options.onOutgoingPatchValidationError || noop;
-
-    this.reconnector = new Reconnector(
-      function() {
-        makeReconnection(this);
-      }.bind(this),
-      this.onReconnectionCountdown,
-      this.onReconnectionEnd
-    );
-
-    if (options.pingIntervalS) {
-      const intervalMs = options.pingIntervalS * 1000;
-      this.heartbeat = new Heartbeat(
-        this.ping.bind(this),
-        this.handleConnectionError.bind(this),
-        intervalMs,
-        intervalMs
-      );
-    } else {
-      this.heartbeat = new NoHeartbeat();
-    }
-
-    this.network = new PalindromNetworkChannel(
-      this, // palindrom instance TODO: to be removed, used for error reporting
-      options.remoteUrl,
-      options.useWebSocket || false, // useWebSocket
-      this.handleRemoteChange.bind(this), //onReceive
-      this.onPatchSent.bind(this), //onSend,
-      this.handleConnectionError.bind(this), //onConnectionError,
-      this.onSocketOpened.bind(this),
-      this.handleFatalError.bind(this), //onFatalError,
-      this.onSocketStateChanged.bind(this) //onStateChange
-    );
-
-    Object.defineProperty(this, 'useWebSocket', {
-      get: function() {
-        return this.network.useWebSocket;
-      },
-      set: function(newValue) {
-        this.network.useWebSocket = newValue;
+      if (options.callback) {
+        console.warn(
+          'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
+        );
       }
-    });
-    /**
-     * how many OT operations are there in each patch 0, 1 or 2
-     */
-    this.OTPatchIndexOffset = 0;
-    // choose queuing engine
-    if (options.localVersionPath) {
-      if (!options.remoteVersionPath) {
-        this.OTPatchIndexOffset = 1;
-        // just versioning
-        this.queue = new JSONPatchQueueSynchronous(
-          this.obj,
-          options.localVersionPath,
-          this.validateAndApplySequence.bind(this),
-          options.purity
+
+      this.onPatchReceived = options.onPatchReceived || noop;
+      this.onPatchSent = options.onPatchSent || noop;
+      this.onSocketStateChanged = options.onSocketStateChanged || noop;
+      this.onConnectionError = options.onConnectionError || noop;
+      this.retransmissionThreshold = options.retransmissionThreshold || 3;
+      this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
+      this.onReconnectionEnd = options.onReconnectionEnd || noop;
+      this.onSocketOpened = options.onSocketOpened || noop;
+      this.onIncomingPatchValidationError =
+        options.onIncomingPatchValidationError || noop;
+      this.onOutgoingPatchValidationError =
+        options.onOutgoingPatchValidationError || noop;
+
+      this.reconnector = new Reconnector(
+        () => makeReconnection(this),
+        this.onReconnectionCountdown,
+        this.onReconnectionEnd
+      );
+
+      if (options.pingIntervalS) {
+        const intervalMs = options.pingIntervalS * 1000;
+        this.heartbeat = new Heartbeat(
+          this.ping.bind(this),
+          this.handleConnectionError.bind(this),
+          intervalMs,
+          intervalMs
         );
       } else {
-        this.OTPatchIndexOffset = 2;
-        // double versioning or OT
-        this.queue = options.ot
-          ? new JSONPatchOTAgent(
-              this.obj,
-              JSONPatchOT.transform,
-              [options.localVersionPath, options.remoteVersionPath],
-              this.validateAndApplySequence.bind(this),
-              options.purity
-            )
-          : new JSONPatchQueue(
-              this.obj,
-              [options.localVersionPath, options.remoteVersionPath],
-              this.validateAndApplySequence.bind(this),
-              options.purity
-            ); // full or noop OT
+        this.heartbeat = new NoHeartbeat();
       }
-    } else {
-      // no queue - just api
-      this.queue = new NoQueue(
-        this.obj,
-        this.validateAndApplySequence.bind(this)
+
+      this.network = new PalindromNetworkChannel(
+        this, // palindrom instance TODO: to be removed, used for error reporting
+        options.remoteUrl,
+        options.useWebSocket || false, // useWebSocket
+        this.handleRemoteChange.bind(this), //onReceive
+        this.onPatchSent.bind(this), //onSend,
+        this.handleConnectionError.bind(this), //onConnectionError,
+        this.onSocketOpened.bind(this),
+        this.handleFatalError.bind(this), //onFatalError,
+        this.onSocketStateChanged.bind(this) //onStateChange
+      );
+      /**
+       * how many OT operations are there in each patch 0, 1 or 2
+       */
+      this.OTPatchIndexOffset = 0;
+      // choose queuing engine
+      if (options.localVersionPath) {
+        if (!options.remoteVersionPath) {
+          this.OTPatchIndexOffset = 1;
+          // just versioning
+          this.queue = new JSONPatchQueueSynchronous(
+            this.obj,
+            options.localVersionPath,
+            this.validateAndApplySequence.bind(this),
+            options.purity
+          );
+        } else {
+          this.OTPatchIndexOffset = 2;
+          // double versioning or OT
+          this.queue = options.ot
+            ? new JSONPatchOTAgent(
+                this.obj,
+                JSONPatchOT.transform,
+                [options.localVersionPath, options.remoteVersionPath],
+                this.validateAndApplySequence.bind(this),
+                options.purity
+              )
+            : new JSONPatchQueue(
+                this.obj,
+                [options.localVersionPath, options.remoteVersionPath],
+                this.validateAndApplySequence.bind(this),
+                options.purity
+              ); // full or noop OT
+        }
+      } else {
+        // no queue - just api
+        this.queue = new NoQueue(
+          this.obj,
+          this.validateAndApplySequence.bind(this)
+        );
+      }
+      makeInitialConnection(this);
+    }
+    set ignoreAdd(newValue) {
+      throw new TypeError(
+        "Palindrom: Can't set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136"
       );
     }
-    makeInitialConnection(this);
+    get useWebSocket() {
+      return this.network.useWebSocket;
+    }
+    set useWebSocket(newValue) {
+      this.network.useWebSocket = newValue;
+    }
+    ping() {
+      sendPatches(this, []); // sends empty message to server
+    }
+
+    prepareProxifiedObject(obj) {
+      if (!obj) {
+        obj = {};
+      }
+      /* wrap a new object with a proxy observer */
+      this.jsonPatcherProxy = new JSONPatcherProxy(obj);
+
+      const proxifiedObj = this.jsonPatcherProxy.observe(false, operation => {
+        const filtered = this.filterLocalChange(operation);
+        // totally ignore falsy (didn't pass the filter) JSON Patch operations
+        filtered && this.handleLocalChange(filtered);
+      });
+
+      /* make it read-only and expose it as `obj` */
+      Object.defineProperty(this, 'obj', {
+        get() {
+          return proxifiedObj;
+        },
+        set() {
+          throw new Error('palindrom.obj is readonly');
+        },
+        /* so that we can redefine it */
+        configurable: true
+      });
+      /* JSONPatcherProxy default state is observing */
+      this.isObserving = true;
+    }
+
+    observe() {
+      this.jsonPatcherProxy && this.jsonPatcherProxy.resume();
+      this.isObserving = true;
+    }
+
+    unobserve() {
+      this.jsonPatcherProxy && this.jsonPatcherProxy.pause();
+      this.isObserving = false;
+    }
+
+    handleLocalChange(operation) {
+      // it's a single operation, we need to check only it's value
+      operation.value &&
+        findRangeErrors(operation.value, this.onOutgoingPatchValidationError);
+
+      const patches = [operation];
+      if (this.debug) {
+        this.validateSequence(this.remoteObj, patches);
+      }
+      sendPatches(this, this.queue.send(patches));
+      this.onLocalChange(patches);
+    }
+
+    validateAndApplySequence(tree, sequence) {
+      // we don't want this changes to generate patches since they originate from server, not client
+      try {
+        this.unobserve();
+        const results = applyPatch(tree, sequence, this.debug);
+        // notifications have to happen only where observe has been re-enabled
+        // otherwise some listener might produce changes that would go unnoticed
+        this.observe();
+        // the state was fully replaced
+        if (results.newDocument !== tree) {
+          // object was reset, proxify it again
+          this.prepareProxifiedObject(results.newDocument);
+
+          this.queue.obj = this.obj;
+
+          // validate json response
+          findRangeErrors(this.obj, this.onIncomingPatchValidationError);
+
+          //notify people about it
+          this.onStateReset(this.obj);
+        }
+        this.onRemoteChange(sequence, results);
+      } catch (error) {
+        if (this.debug) {
+          this.onIncomingPatchValidationError(error);
+          return;
+        } else {
+          throw error;
+        }
+      }
+      return this.obj;
+    }
+
+    validateSequence(tree, sequence) {
+      const error = validate(sequence, tree);
+      if (error) {
+        this.onOutgoingPatchValidationError(error);
+      }
+    }
+
+    /**
+     * Handle an error which is probably caused by random disconnection
+     */
+    handleConnectionError() {
+      this.heartbeat.stop();
+      this.reconnector.triggerReconnection();
+    }
+
+    /**
+     * Handle an error which probably won't go away on itself (basically forward upstream)
+     */
+    handleFatalError(data, url, method) {
+      this.heartbeat.stop();
+      this.reconnector.stopReconnecting();
+      if (this.onConnectionError) {
+        this.onConnectionError(data, url, method);
+      }
+    }
+
+    reconnectNow() {
+      this.reconnector.reconnectNow();
+    }
+
+    showWarning(heading, description) {
+      if (this.debug && global.console && console.warn) {
+        if (description) {
+          heading += ` (${description})`;
+        }
+        console.warn(`Palindrom warning: ${heading}`);
+      }
+    }
+
+    handleRemoteChange(data, url, method) {
+      this.heartbeat.notifyReceive();
+      const patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
+
+      validateNumericsRangesInPatch(
+        patches,
+        this.onIncomingPatchValidationError,
+        this.OTPatchIndexOffset
+      );
+
+      if (patches.length === 0) {
+        // ping message
+        return;
+      }
+
+      if (this.onPatchReceived) {
+        this.onPatchReceived(data, url, method);
+      }
+
+      // apply only if we're still watching
+      if (!this.isObserving) {
+        return;
+      }
+      this.queue.receive(patches);
+      if (
+        this.queue.pending &&
+        this.queue.pending.length &&
+        this.queue.pending.length > this.retransmissionThreshold
+      ) {
+        // remote counterpart probably failed to receive one of earlier messages, because it has been receiving
+        // (but not acknowledging messages for some time
+        this.queue.pending.forEach(sendPatches.bind(null, this));
+      }
+
+      if (this.debug) {
+        this.remoteObj = JSON.parse(JSON.stringify(this.obj));
+      }
+    }
   }
+
   /**
    * Iterates a JSON-Patch, traversing every patch value looking for out-of-range numbers
    * @param {JSONPatch} patch patch to check
    * @param {Function} errorHandler the error handler callback
    * @param {*} startFrom the index where iteration starts
    */
-  function validateNumericsRangesInPatch(
-    patch,
-    errorHandler,
-    startFrom
-  ) {
+  function validateNumericsRangesInPatch(patch, errorHandler, startFrom) {
     for (let i = startFrom, len = patch.length; i < len; i++) {
       findRangeErrors(patch[i].value, errorHandler);
     }
-  };
+  }
 
   /**
    * Traverses/checks value looking for out-of-range numbers, throws a RangeError if it finds any
@@ -4634,196 +4785,32 @@ var Palindrom = (function() {
    * @param {Function} errorHandler 
    */
   function findRangeErrors(val, errorHandler) {
-      const type = typeof val;
-      if (type == 'object') {
-        for(const key in val) {
-          if(val.hasOwnProperty(key)) {
-            findRangeErrors(val[key], errorHandler)
-          }
+    const type = typeof val;
+    if (type == 'object') {
+      for (const key in val) {
+        if (val.hasOwnProperty(key)) {
+          findRangeErrors(val[key], errorHandler);
         }
-      } else if (type === 'number' && (val > Number.MAX_SAFE_INTEGER || val < Number.MIN_SAFE_INTEGER)) {
-        errorHandler(
-          new RangeError(
-            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}`
-          )
-        );
       }
+    } else if (
+      type === 'number' &&
+      (val > Number.MAX_SAFE_INTEGER || val < Number.MIN_SAFE_INTEGER)
+    ) {
+      errorHandler(
+        new RangeError(
+          `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}`
+        )
+      );
     }
-
-  Palindrom.prototype.ping = function() {
-    sendPatches(this, []); // sends empty message to server
-  };
-  Palindrom.prototype.prepareProxifiedObject = function(obj) {
-    if (!obj) {
-      obj = {};
-    }
-    /* wrap a new object with a proxy observer */
-    this.jsonPatcherProxy = new JSONPatcherProxy(obj);
-
-    const proxifiedObj = this.jsonPatcherProxy.observe(false, operation => {
-      const filtered = this.filterLocalChange(operation);
-      // totally ignore falsy (didn't pass the filter) JSON Patch operations
-      filtered && this.handleLocalChange(filtered);
-    });
-
-    /* make it read-only and expose it as `obj` */
-    Object.defineProperty(this, 'obj', {
-      get: function() {
-        return proxifiedObj;
-      },
-      set: function() {
-        throw new Error('palindrom.obj is readonly');
-      },
-      /* so that we can redefine it */
-      configurable: true
-    });
-    /* JSONPatcherProxy default state is observing */
-    this.isObserving = true;
-  };
-
-  Palindrom.prototype.observe = function() {
-    this.jsonPatcherProxy && this.jsonPatcherProxy.resume();
-    this.isObserving = true;
-  };
-  Palindrom.prototype.unobserve = function() {
-    this.jsonPatcherProxy && this.jsonPatcherProxy.pause();
-    this.isObserving = false;
-  };
+  }
 
   function sendPatches(palindrom, patches) {
-    var txt = JSON.stringify(patches);
+    const txt = JSON.stringify(patches);
     palindrom.unobserve();
     palindrom.heartbeat.notifySend();
     palindrom.network.send(txt);
     palindrom.observe();
   }
-
-  Palindrom.prototype.handleLocalChange = function(operation) {
-    // it's a single operation, we need to check only it's value
-    operation.value &&
-      findRangeErrors(
-        operation.value,
-        this.onOutgoingPatchValidationError
-      );
-
-    const patches = [operation];
-    if (this.debug) {
-      this.validateSequence(this.remoteObj, patches);
-    }
-    sendPatches(this, this.queue.send(patches));
-    this.onLocalChange(patches);
-  };
-
-  Palindrom.prototype.validateAndApplySequence = function(tree, sequence) {
-    // we don't want this changes to generate patches since they originate from server, not client
-    try {
-      this.unobserve();
-      var results = applyPatch(tree, sequence, this.debug);
-      // notifications have to happen only where observe has been re-enabled
-      // otherwise some listener might produce changes that would go unnoticed
-      this.observe();
-      // the state was fully replaced
-      if (results.newDocument !== tree) {
-        // object was reset, proxify it again
-        this.prepareProxifiedObject(results.newDocument);
-
-        this.queue.obj = this.obj;
-
-        // validate json response
-        findRangeErrors(this.obj, this.onIncomingPatchValidationError);
-
-        //notify people about it
-        this.onStateReset(this.obj);
-      }
-      this.onRemoteChange(sequence, results);
-    } catch (error) {
-      if (this.debug) {
-        this.onIncomingPatchValidationError(error);
-        return;
-      } else {
-        throw error;
-      }
-    }
-    return this.obj;
-  };
-
-  Palindrom.prototype.validateSequence = function(tree, sequence) {
-    var error = validate(sequence, tree);
-    if (error) {
-      this.onOutgoingPatchValidationError(error);
-    }
-  };
-
-  /**
-   * Handle an error which is probably caused by random disconnection
-   */
-  Palindrom.prototype.handleConnectionError = function() {
-    this.heartbeat.stop();
-    this.reconnector.triggerReconnection();
-  };
-
-  /**
-   * Handle an error which probably won't go away on itself (basically forward upstream)
-   */
-  Palindrom.prototype.handleFatalError = function(data, url, method) {
-    this.heartbeat.stop();
-    this.reconnector.stopReconnecting();
-    if (this.onConnectionError) {
-      this.onConnectionError(data, url, method);
-    }
-  };
-
-  Palindrom.prototype.reconnectNow = function() {
-    this.reconnector.reconnectNow();
-  };
-
-  Palindrom.prototype.showWarning = function(heading, description) {
-    if (this.debug && global.console && console.warn) {
-      if (description) {
-        heading += ' (' + description + ')';
-      }
-      console.warn('Palindrom warning: ' + heading);
-    }
-  };
-
-  Palindrom.prototype.handleRemoteChange = function(data, url, method) {
-    this.heartbeat.notifyReceive();
-    var patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
-
-    validateNumericsRangesInPatch(
-      patches,
-      this.onIncomingPatchValidationError,
-      this.OTPatchIndexOffset
-    );
-
-    if (patches.length === 0) {
-      // ping message
-      return;
-    }
-
-    if (this.onPatchReceived) {
-      this.onPatchReceived(data, url, method);
-    }
-
-    // apply only if we're still watching
-    if (!this.isObserving) {
-      return;
-    }
-    this.queue.receive(patches);
-    if (
-      this.queue.pending &&
-      this.queue.pending.length &&
-      this.queue.pending.length > this.retransmissionThreshold
-    ) {
-      // remote counterpart probably failed to receive one of earlier messages, because it has been receiving
-      // (but not acknowledging messages for some time
-      this.queue.pending.forEach(sendPatches.bind(null, this));
-    }
-
-    if (this.debug) {
-      this.remoteObj = JSON.parse(JSON.stringify(this.obj));
-    }
-  };
 
   /* backward compatibility */
   global.Puppet = Palindrom;
@@ -4831,12 +4818,9 @@ var Palindrom = (function() {
   return Palindrom;
 })();
 
-if (true) {
-  module.exports = Palindrom;
-  module.exports.default = Palindrom;
-  module.exports.__esModule = true;
-}
-
+module.exports = Palindrom;
+module.exports.default = Palindrom;
+module.exports.__esModule = true;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
@@ -12401,59 +12385,65 @@ module.exports = __webpack_amd_options__;
  * (c) 2017 Joachim Wester
  * MIT license
  */
-if (true) {
-  var Palindrom = __webpack_require__(6);
-}
+const Palindrom = __webpack_require__(6);
 
-var PalindromDOM = (function() {
+const PalindromDOM = (() => {
   /**
    * PalindromDOM
    * @extends {Palindrom}
    * @param {Object} [options] map of arguments. See README.md for description
    */
-  var PalindromDOM = function(options) {
-    if (typeof options !== 'object') {
-      throw new Error('PalindromDOM constructor requires an object argument.');
-    }
-    if (!options.remoteUrl) {
-      throw new Error('remoteUrl is required');
-    }
-    var onStateReset = options.onStateReset || options.callback;
-    if (options.callback) {
-      console.warn(
-        'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
+  class PalindromDOM extends Palindrom {
+    constructor(options) {
+      if (typeof options !== 'object') {
+        throw new Error(
+          'PalindromDOM constructor requires an object argument.'
+        );
+      }
+      if (!options.remoteUrl) {
+        throw new Error('remoteUrl is required');
+      }
+      const onStateReset = options.onStateReset || options.callback;
+      if (options.callback) {
+        console.warn(
+          'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
+        );
+      }
+
+      options.onStateReset = function addDOMListeners(obj) {
+        this.listen();
+        onStateReset && onStateReset.call(this, obj);
+      };
+
+      // construct Palindrom
+      super(options);
+
+      this.element = options.listenTo || document.body;
+      this.clickHandler = this.clickHandler.bind(this);
+      this.historyHandler = this.historyHandler.bind(this);
+
+      this.historyHandlerDeprecated = () => {
+        console.warn(
+          "`puppet-redirect-pushstate` event is deprecated, please use `palindrom-redirect-pushstate`, if you're using `puppet-redirect`, please upgrade to `palindrom-redirect`"
+        );
+        this.historyHandler();
+      };
+
+      /* in some cases, people emit redirect requests before `listen` is called */
+      this.element.addEventListener(
+        'palindrom-redirect-pushstate',
+        this.historyHandler
+      );
+      /* backward compatibility: for people using old puppet-redirect */
+      this.element.addEventListener(
+        'puppet-redirect-pushstate',
+        this.historyHandlerDeprecated
       );
     }
-    this.element = options.listenTo || document.body;
-    var clickHandler = this.clickHandler.bind(this);
-    this.historyHandler = this.historyHandler.bind(this);
 
-    this.historyHandlerDeprecated = function() {
-      console.warn(
-        "`puppet-redirect-pushstate` event is deprecated, please use `palindrom-redirect-pushstate`, if you're using `puppet-redirect`, please upgrade to `palindrom-redirect`"
-      );
-      this.historyHandler();
-    }.bind(this);
-
-    /* in some cases, people emit redirect requests before `listen` is called */
-    this.element.addEventListener(
-      'palindrom-redirect-pushstate',
-      this.historyHandler
-    );
-    /* backward compatibility: for people using old puppet-redirect */
-    this.element.addEventListener(
-      'puppet-redirect-pushstate',
-      this.historyHandlerDeprecated
-    );
-
-    options.onStateReset = function addDOMListeners(obj) {
-      this.listen();
-      onStateReset && onStateReset.call(this, obj);
-    };
-
-    this.listen = function() {
+    listen() {
       this.listening = true;
-      this.element.addEventListener('click', clickHandler);
+      this.element.addEventListener('click', this.clickHandler);
       window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
 
       this.element.addEventListener(
@@ -12466,11 +12456,11 @@ var PalindromDOM = (function() {
         'puppet-redirect-pushstate',
         this.historyHandlerDeprecated
       );
-    };
-    this.unlisten = function() {
+    }
+    unlisten() {
       this.listening = false;
 
-      this.element.removeEventListener('click', clickHandler);
+      this.element.removeEventListener('click', this.clickHandler);
       window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
       this.element.removeEventListener(
         'palindrom-redirect-pushstate',
@@ -12482,126 +12472,126 @@ var PalindromDOM = (function() {
         'puppet-redirect-pushstate',
         this.historyHandlerDeprecated
       );
-    };
+    }
 
     //TODO move fallback to window.location.href from PalindromNetworkChannel to here (PalindromDOM)
 
-    Palindrom.call(this, options);
-  };
-  PalindromDOM.prototype = Object.create(Palindrom.prototype);
-
-  /**
-   * DISABLED FOR NOW: we don't know when rendering actually finishes.
-   * It's left here for the hope of having synchronous rendering at some point in the future.
-   * ====
-   * we need to scroll asynchronously, because we need the document rendered to search for the anchored element
-   * and even though onReceive + applyPatch are sync, Polymer is not, it renders async-ly
-  PalindromDOM.prototype.scrollToAnchorOrTopAsync = function(link) {
-    this.scrollAsyncTimeout && clearTimeout(this.scrollAsyncTimeout);
-    if (window && window.document) {
-      var anchorIndex;
-      var anchor;
-      // does the URL have an anchor
-      if (link && (anchorIndex = link.indexOf('#')) > -1) {
-        anchor = link.substr(anchorIndex);
+    /**
+     * DISABLED FOR NOW: we don't know when rendering actually finishes.
+     * It's left here for the hope of having synchronous rendering at some point in the future.
+     * ====
+     * we need to scroll asynchronously, because we need the document rendered to search for the anchored element
+     * and even though onReceive + applyPatch are sync, Polymer is not, it renders async-ly
+    PalindromDOM.prototype.scrollToAnchorOrTopAsync = function(link) {
+      this.scrollAsyncTimeout && clearTimeout(this.scrollAsyncTimeout);
+      if (window && window.document) {
+        var anchorIndex;
+        var anchor;
+        // does the URL have an anchor
+        if (link && (anchorIndex = link.indexOf('#')) > -1) {
+          anchor = link.substr(anchorIndex);
+        }
+        if (!anchor) {
+          window.scrollTo(0, 0);
+        } else {
+          // if somehow someone manages to navigate twice in a 100ms,
+          // we don't scroll for their first navigation, i.e de-bouncing 
+          
+          this.scrollAsyncTimeout = setTimeout(() => {
+            // does that anchor exist in the page?
+            const anchorTarget = document.querySelector(anchor); // look for #element-id
+            if (anchorTarget) {
+              anchorTarget.scrollIntoView();
+            } else {
+              window.scrollTo(0, 0);
+            }
+          }, 100);
+        }
       }
-      if (!anchor) {
-        window.scrollTo(0, 0);
-      } else {
-        // if somehow someone manages to navigate twice in a 100ms,
-        // we don't scroll for their first navigation, i.e de-bouncing 
-        
-        this.scrollAsyncTimeout = setTimeout(() => {
-          // does that anchor exist in the page?
-          const anchorTarget = document.querySelector(anchor); // look for #element-id
-          if (anchorTarget) {
-            anchorTarget.scrollIntoView();
-          } else {
-            window.scrollTo(0, 0);
+    };
+    */
+    /**
+     * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
+     * so that the URL handlers can be executed on the remote
+     * @param url
+     */
+    morphUrl(url) {
+      history.pushState(null, null, url);
+      this.network.getPatchUsingHTTP(url);
+      window && window.scrollTo(0, 0);
+    }
+
+    clickHandler(event) {
+      //Don't morph ctrl/cmd + click & middle mouse button
+      if (event.ctrlKey || event.metaKey || event.which == 2) {
+        return;
+      }
+
+      if (event.detail && event.detail.target) {
+        //detail is Polymer
+        event = event.detail;
+      }
+
+      let target = event.target;
+
+      if (target.nodeName !== 'A') {
+        for (let i = 0; i < event.path.length; i++) {
+          if (event.path[i].nodeName == 'A') {
+            target = event.path[i];
+            break;
           }
-        }, 100);
+        }
       }
-    }
-  };
-  */
-  /**
-   * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
-   * so that the URL handlers can be executed on the remote
-   * @param url
-   */
-  PalindromDOM.prototype.morphUrl = function(url) {
-    history.pushState(null, null, url);
-    this.network.getPatchUsingHTTP(url);
-    window && window.scrollTo(0, 0);
-  };
-  PalindromDOM.prototype.clickHandler = function(event) {
-    //Don't morph ctrl/cmd + click & middle mouse button
-    if (event.ctrlKey || event.metaKey || event.which == 2) {
-      return;
-    }
+      const anchorTarget = target.target || target.getAttribute('target');
 
-    if (event.detail && event.detail.target) {
-      //detail is Polymer
-      event = event.detail;
-    }
-
-    var target = event.target;
-
-    if (target.nodeName !== 'A') {
-      for (var i = 0; i < event.path.length; i++) {
-        if (event.path[i].nodeName == 'A') {
-          target = event.path[i];
-          break;
+      if (!anchorTarget || anchorTarget === '_self') {
+        //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
+        //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
+        //while target.getAttribute("href") returns desired href (as string)
+        const href = target.href || target.getAttribute('href');
+        if (href && PalindromDOM.isApplicationLink(href)) {
+          event.preventDefault();
+          event.stopPropagation();
+          this.morphUrl(href);
+        } else if (target.type === 'submit') {
+          event.preventDefault();
         }
       }
     }
-    var anchorTarget = target.target || target.getAttribute('target');
 
-    if (!anchorTarget || anchorTarget === '_self') {
-      //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
-      //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
-      //while target.getAttribute("href") returns desired href (as string)
-      var href = target.href || target.getAttribute('href');
-      if (href && PalindromDOM.isApplicationLink(href)) {
-        event.preventDefault();
-        event.stopPropagation();
-        this.morphUrl(href);
-      } else if (target.type === 'submit') {
-        event.preventDefault();
-      }
+    historyHandler() /*event*/ {
+      this.network.getPatchUsingHTTP(location.href);
     }
-  };
 
-  PalindromDOM.prototype.historyHandler = function(/*event*/) {
-    this.network.getPatchUsingHTTP(location.href);
-  };
+    /**
+     * Returns information if a given element is an internal application link that Palindrom should intercept into a history push
+     * @param elem HTMLElement or String
+     * @returns {boolean}
+     */
+    static isApplicationLink(elem) {
+      if (typeof elem === 'string') {
+        //type string is reported in Polymer / Canary (Web Platform features disabled)
+        const parser = document.createElement('A');
+        parser.href = elem;
 
-  /**
-   * Returns information if a given element is an internal application link that Palindrom should intercept into a history push
-   * @param elem HTMLElement or String
-   * @returns {boolean}
-   */
-  PalindromDOM.isApplicationLink = function(elem) {
-    if (typeof elem === 'string') {
-      //type string is reported in Polymer / Canary (Web Platform features disabled)
-      var parser = document.createElement('A');
-      parser.href = elem;
+        // @see http://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
+        // IE doesn't populate all link properties when setting .href with a relative URL,
+        // however .href will return an absolute URL which then can be used on itself
+        // to populate these additional fields.
+        if (parser.host == '') {
+          parser.href = parser.href;
+        }
 
-      // @see http://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
-      // IE doesn't populate all link properties when setting .href with a relative URL,
-      // however .href will return an absolute URL which then can be used on itself
-      // to populate these additional fields.
-      if (parser.host == '') {
-        parser.href = parser.href;
+        elem = parser;
       }
-
-      elem = parser;
+      return (
+        elem.protocol == window.location.protocol &&
+        elem.host == window.location.host
+      );
     }
-    return (
-      elem.protocol == window.location.protocol &&
-      elem.host == window.location.host
-    );
-  };
+  }
+
+  PalindromDOM.prototype = Object.create(Palindrom.prototype);
 
   /* backward compatibility, not sure if this is good practice */
   if (typeof global === 'undefined') {
@@ -12622,11 +12612,9 @@ var PalindromDOM = (function() {
   return PalindromDOM;
 })();
 
-if (true) {
-  module.exports = PalindromDOM;
-  module.exports.default = PalindromDOM;
-  module.exports.__esModule = true;
-}
+module.exports = PalindromDOM;
+module.exports.default = PalindromDOM;
+module.exports.__esModule = true;
 
 
 /***/ }),
@@ -12781,8 +12769,8 @@ if (typeof window !== 'undefined') {
               setTimeout(function() {
                 expect(historySpy.callCount).to.equal(1);
                 done();
-              }, 50);
-            }, 50);
+              }, 5);
+            }, 5);
           });
 
           it('absolute path', function() {
@@ -12853,7 +12841,7 @@ if (typeof window !== 'undefined') {
             const href = protocol + '//' + window.location.host + '/test'; //https://localhost:8888/test
             createAndClickOnLink(href);
             expect(historySpy.callCount).to.equal(0);
-            setTimeout(done, 10);
+            setTimeout(done, 2);
           });
         });
 
@@ -12864,9 +12852,9 @@ if (typeof window !== 'undefined') {
 
               setTimeout(function() {
                 expect(historySpy.callCount).to.equal(1);
-                setTimeout(done, 10);
-              }, 50);
-            }, 50);
+                setTimeout(done, 2);
+              }, 5);
+            }, 5);
           });
         });
 
@@ -12876,7 +12864,7 @@ if (typeof window !== 'undefined') {
           palindrom.unlisten();
           createAndClickOnLink('#will_not_get_caught_by_palindrom');
           expect(historySpy.callCount).to.equal(0);
-          setTimeout(done, 50);
+          setTimeout(done, 5);
         });
 
         it('should start listening to DOM changes after `.listen()` was called', function(
@@ -12886,7 +12874,7 @@ if (typeof window !== 'undefined') {
           palindrom.listen();
           createAndClickOnLink('#will_get_caught_by_palindrom');
           expect(historySpy.callCount).to.equal(1);
-          setTimeout(done, 50);
+          setTimeout(done, 5);
         });
       });
     });
@@ -12923,7 +12911,7 @@ if (typeof window !== 'undefined') {
           listenTo: palindromNode
         });
 
-        setTimeout(done, 50);
+        setTimeout(done, 5);
       });
 
       afterEach(function() {
@@ -13506,7 +13494,6 @@ describe("Callbacks, onPatchSent and onPatchReceived", () => {
     });
   });
 });
-
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
@@ -13765,7 +13752,7 @@ describe('Palindrom', () => {
               1}`
           );
           done();
-        }, 2);
+        }, 10);
       });
       it('Outgoing HTTP patches: out of range numbers should call onOutgoingPatchValidationError with a RangeError', done => {
         moxios.stubRequest('http://localhost/testURL', {
@@ -13794,7 +13781,7 @@ describe('Palindrom', () => {
               1}`
           );
           done();
-        }, 10);
+        }, 15);
       });
       it('Outgoing socket patches: out of range numbers should call onOutgoingPatchValidationError with a RangeError', function(
         done
@@ -13828,7 +13815,7 @@ describe('Palindrom', () => {
               1}`
           );
           server.stop(done);
-        }, 50);
+        }, 15);
       });
       it('Incoming socket patches: out of range numbers should call onIncomingPatchValidationError with a RangeError', function(
         done
@@ -13863,7 +13850,7 @@ describe('Palindrom', () => {
               1}`
           );
           server.stop(done);
-        }, 5);
+        }, 15);
       });
     });
   });
@@ -13913,7 +13900,7 @@ describe('Palindrom', () => {
           setTimeout(() => {
             assert(spy.calledOnce);
             done();
-          }, 20);
+          }, 1);
         }
       });
     });
@@ -13945,8 +13932,8 @@ describe('Palindrom', () => {
             setTimeout(() => {
               assert(moxios.requests.count() === 2);
               done();
-            }, 20);
-          }, 20);
+            }, 1);
+          }, 1);
         }
       });
     });
@@ -14010,8 +13997,8 @@ describe('Palindrom', () => {
               // no further requests
               assert(moxios.requests.count() === 2);
               done();
-            }, 20);
-          }, 20);
+            }, 1);
+          }, 1);
         }
       });
     });
@@ -14165,7 +14152,7 @@ describe("Palindrom", () => {
         /* setting the object should throw an error */
         assert.throws(() => palindrom.obj = {}, Error, "palindrom.obj is readonly");
         done();
-      }, 10);
+      }, 1);
     });
   });
 });
@@ -14371,7 +14358,7 @@ describe('Palindrom', () => {
       setTimeout(() => {
         assert(spy.notCalled);
         done();
-      }, 10);
+      }, 1);
     });
 
     it('replacing a nonexisting property should cause OPERATION_PATH_UNRESOLVABLE (test built into Fast-JSON-Patch)', done => {
@@ -14400,7 +14387,7 @@ describe('Palindrom', () => {
         assert(spy.calledOnce);
         assert.equal('OPERATION_PATH_UNRESOLVABLE', spy.lastCall.args[0].name);
         done();
-      }, 10);
+      }, 1);
     });
 
     it('undefined value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', done => {
