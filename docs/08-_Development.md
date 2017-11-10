@@ -27,7 +27,7 @@ npm publish
 
 You can test Palindrom using three methods depending on your need (what you've modified):
 
-1. **CLI testing:** it is perfect for testing Palindrom only (as opposed to testing Palindrom + PalindromDOM). It's the fastest and the easiet to run, all you need to do is run:
+1. **CLI testing:** it is perfect for testing Palindrom only (as opposed to testing Palindrom + PalindromDOM). It's the fastest and the easiest to run, all you need to do is run:
 
 ```sh
 npm run test
