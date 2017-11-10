@@ -2,7 +2,7 @@
 
 Palindrom is a JavaScript library that binds client-side view-models to server side view-models. While Palindrom is a JavaScript library, the server may or may not be built with JavaScript. And this can result in some differences in data types, particularly in numbers. To quote MDN's [Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number) page:
 
->```
+```js
 var biggestInt = 9007199254740991;
 var smallestInt = -9007199254740991
 ```
