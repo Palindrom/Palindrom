@@ -2131,8 +2131,8 @@ const JSONPatcherProxy = (function() {
    * @param {Object} obj the object you need to find its path
    */
   function findObjectPath(instance, obj) {
-    var pathComponents = [];
-    var parentAndPath = instance.parenthoodMap.get(obj);
+    const pathComponents = [];
+    let parentAndPath = instance.parenthoodMap.get(obj);
     while (parentAndPath && parentAndPath.path) {
       // because we're walking up-tree, we need to use the array as a stack
       pathComponents.unshift(parentAndPath.path);
@@ -2155,17 +2155,17 @@ const JSONPatcherProxy = (function() {
   function setTrap(instance, target, key, newValue) {
     const parentPath = findObjectPath(instance, target);
 
-    var destinationPropKey = parentPath + '/' + escapePathComponent(key);
-    {
-      if (instance.proxifiedObjectsMap.has(newValue)) {
-        var newValueOriginalObject = instance.proxifiedObjectsMap.get(newValue);
+    const destinationPropKey = parentPath + '/' + escapePathComponent(key);
 
-        instance.parenthoodMap.set(newValueOriginalObject.originalObject, {
-          parent: target,
-          path: key
-        });
-      }
-      /*
+    if (instance.proxifiedObjectsMap.has(newValue)) {
+      const newValueOriginalObject = instance.proxifiedObjectsMap.get(newValue);
+
+      instance.parenthoodMap.set(newValueOriginalObject.originalObject, {
+        parent: target,
+        path: key
+      });
+    }
+    /*
         mark already proxified values as inherited.
         rationale: proxy.arr.shift()
         will emit
@@ -2175,22 +2175,22 @@ const JSONPatcherProxy = (function() {
         by default, the second operation would revoke the proxy, and this renders arr revoked.
         That's why we need to remember the proxies that are inherited.
       */
-      const revokableInstance = instance.proxifiedObjectsMap.get(newValue);
-      /*
-          Why do we need to check instance.isProxifyingTreeNow?
+    const revokableInstance = instance.proxifiedObjectsMap.get(newValue);
+    /*
+    Why do we need to check instance.isProxifyingTreeNow?
 
-          We need to make sure we mark revokables as inherited ONLY when we're observing,
-          because throughout the first proxification, a sub-object is proxified and then assigned to 
-          its parent object. This assignment of a pre-proxified object can fool us into thinking
-          that it's a proxified object moved around, while in fact it's the first assignment ever. 
+    We need to make sure we mark revokables as inherited ONLY when we're observing,
+    because throughout the first proxification, a sub-object is proxified and then assigned to 
+    its parent object. This assignment of a pre-proxified object can fool us into thinking
+    that it's a proxified object moved around, while in fact it's the first assignment ever. 
 
-          Checking isProxifyingTreeNow ensures this is not happening in the first proxification, 
-          but in fact is is a proxified object moved around the tree
-          */
-      if (revokableInstance && !instance.isProxifyingTreeNow) {
-        revokableInstance.inherited = true;
-      }
+    Checking isProxifyingTreeNow ensures this is not happening in the first proxification, 
+    but in fact is is a proxified object moved around the tree
+    */
+    if (revokableInstance && !instance.isProxifyingTreeNow) {
+      revokableInstance.inherited = true;
     }
+
     // if the new value is an object, make sure to watch it
     if (
       newValue &&
@@ -2204,29 +2204,34 @@ const JSONPatcherProxy = (function() {
       newValue = instance._proxifyObjectTreeRecursively(target, newValue, key);
     }
     if (typeof newValue == 'undefined') {
+      let reflectionResult;
+      let operation;
       if (target.hasOwnProperty(key)) {
         // when array element is set to `undefined`, should generate replace to `null`
         if (Array.isArray(target)) {
+          reflectionResult = Reflect.set(target, key, newValue);
           //undefined array elements are JSON.stringified to `null`
-          instance.defaultCallback({
+          operation = {
             op: 'replace',
             path: destinationPropKey,
             value: null
-          });
+          };
         } else {
-          instance.defaultCallback({
+          reflectionResult = Reflect.set(target, key, newValue);
+          operation = {
             op: 'remove',
             path: destinationPropKey
-          });
+          };
         }
         const oldValue = instance.proxifiedObjectsMap.get(target[key]);
         // was the deleted a proxified object?
-        if(oldValue) { 
+        if (oldValue) {
           instance.parenthoodMap.delete(target[key]);
           instance.disableTrapsForProxy(oldValue);
           instance.proxifiedObjectsMap.delete(oldValue);
         }
-        return Reflect.set(target, key, newValue);
+        instance.defaultCallback(operation);
+        return reflectionResult;
       } else if (!Array.isArray(target)) {
         return Reflect.set(target, key, newValue);
       }
@@ -2235,37 +2240,48 @@ const JSONPatcherProxy = (function() {
     if (Array.isArray(target) && !Number.isInteger(+key.toString())) {
       return Reflect.set(target, key, newValue);
     }
+    let reflectionResult;
+    let operation;
     if (target.hasOwnProperty(key)) {
       if (typeof target[key] == 'undefined') {
         if (Array.isArray(target)) {
-          instance.defaultCallback({
+          reflectionResult = Reflect.set(target, key, newValue);
+          operation = {
             op: 'replace',
             path: destinationPropKey,
             value: newValue
-          });
+          };
         } else {
-          instance.defaultCallback({
+          reflectionResult = Reflect.set(target, key, newValue);
+          operation = {
             op: 'add',
             path: destinationPropKey,
             value: newValue
-          });
+          };
         }
-        return Reflect.set(target, key, newValue);
+        instance.defaultCallback(operation);
+        return reflectionResult;
       } else {
-        instance.defaultCallback({
-          op: 'replace',
-          path: destinationPropKey,
-          value: newValue
-        });
-        return Reflect.set(target, key, newValue);
+        reflectionResult = Reflect.set(target, key, newValue);
+        instance.defaultCallback(
+          /* operation = */ {
+            op: 'replace',
+            path: destinationPropKey,
+            value: newValue
+          }
+        );
+        return reflectionResult;
       }
     } else {
-      instance.defaultCallback({
-        op: 'add',
-        path: destinationPropKey,
-        value: newValue
-      });
-      return Reflect.set(target, key, newValue);
+      reflectionResult = Reflect.set(target, key, newValue);
+      instance.defaultCallback(
+        /* operation = */ {
+          op: 'add',
+          path: destinationPropKey,
+          value: newValue
+        }
+      );
+      return reflectionResult;
     }
   }
   /**
@@ -2278,13 +2294,8 @@ const JSONPatcherProxy = (function() {
   function deleteTrap(instance, target, key) {
     if (typeof target[key] !== 'undefined') {
       const parentPath = findObjectPath(instance, target);
-
       const destinationPropKey = parentPath + '/' + escapePathComponent(key);
 
-      instance.defaultCallback({
-        op: 'remove',
-        path: destinationPropKey
-      });
       const revokableProxyInstance = instance.proxifiedObjectsMap.get(
         target[key]
       );
@@ -2293,7 +2304,7 @@ const JSONPatcherProxy = (function() {
         if (revokableProxyInstance.inherited) {
           /*
             this is an inherited proxy (an already proxified object that was moved around), 
-            we shouldn't revoke it, because even though it was removed from path1, it is indeed used in path2.
+            we shouldn't revoke it, because even though it was removed from path1, it is still used in path2.
             And we know that because we mark moved proxies with `inherited` flag when we move them
 
             it is a good idea to remove this flag if we come across it here, in deleteProperty trap.
@@ -2306,8 +2317,15 @@ const JSONPatcherProxy = (function() {
           instance.proxifiedObjectsMap.delete(target[key]);
         }
       }
+      const reflectionResult = Reflect.deleteProperty(target, key);
+
+      instance.defaultCallback({
+        op: 'remove',
+        path: destinationPropKey
+      });
+
+      return reflectionResult;
     }
-    return Reflect.deleteProperty(target, key);
   }
   /* pre-define resume and pause functions to enhance constructors performance */
   function resume() {
@@ -2359,11 +2377,10 @@ const JSONPatcherProxy = (function() {
     if (!obj) {
       return obj;
     }
-    const instance = this;
     const traps = {
       set: (target, key, value, receiver) =>
-        setTrap(instance, target, key, value, receiver),
-      deleteProperty: (target, key) => deleteTrap(instance, target, key)
+        setTrap(this, target, key, value, receiver),
+      deleteProperty: (target, key) => deleteTrap(this, target, key)
     };
     const revocableInstance = Proxy.revocable(obj, traps);
     // cache traps object to disable them later.
@@ -4179,21 +4196,28 @@ var Palindrom = (function() {
       })
       .catch(function(error) {
         const res = error.response;
+
         if (res) {
-          that.onFatalError(
-            {
-              statusCode: res.status,
-              statusText: res.statusText,
-              reason: res.data
-            },
-            url,
-            method
-          );
+          var statusCode = res.status;
+          var statusText = res.statusText;
+          var reason = res.data;
+        } else {
+          // no sufficient error information, we need to create on our own
+          var statusCode = -1;
+          var statusText = `An unknown network error has occurred. Raw message: ${error.message}`;
+          var reason = 'Maybe you lost connection with the server';
+          // log it for verbosity
+          console.error(error);
         }
-        // not a network error; an error that is swallowed by Promise catch
-        if (!res) {
-          throw error;
-        }
+        that.onFatalError(
+          {
+            statusCode,
+            statusText,
+            reason
+          },
+          url,
+          method
+        );
       });
 
     this.onSend(data, url, method);
@@ -4257,10 +4281,10 @@ var Palindrom = (function() {
    */
   function Palindrom(options) {
     if (typeof options !== 'object') {
-      throw new Error('Palindrom constructor requires an object argument.');
+      throw new TypeError('Palindrom constructor requires an object argument.');
     }
     if (!options.remoteUrl) {
-      throw new Error('remoteUrl is required');
+      throw new TypeError('remoteUrl is required');
     }
 
     if (options.ignoreAdd) {
@@ -4393,15 +4417,11 @@ var Palindrom = (function() {
    * @param {Function} errorHandler the error handler callback
    * @param {*} startFrom the index where iteration starts
    */
-  function validateNumericsRangesInPatch(
-    patch,
-    errorHandler,
-    startFrom
-  ) {
+  function validateNumericsRangesInPatch(patch, errorHandler, startFrom) {
     for (let i = startFrom, len = patch.length; i < len; i++) {
       findRangeErrors(patch[i].value, errorHandler);
     }
-  };
+  }
 
   /**
    * Traverses/checks value looking for out-of-range numbers, throws a RangeError if it finds any
@@ -4409,21 +4429,24 @@ var Palindrom = (function() {
    * @param {Function} errorHandler 
    */
   function findRangeErrors(val, errorHandler) {
-      const type = typeof val;
-      if (type == 'object') {
-        for(const key in val) {
-          if(val.hasOwnProperty(key)) {
-            findRangeErrors(val[key], errorHandler)
-          }
+    const type = typeof val;
+    if (type == 'object') {
+      for (const key in val) {
+        if (val.hasOwnProperty(key)) {
+          findRangeErrors(val[key], errorHandler);
         }
-      } else if (type === 'number' && (val > Number.MAX_SAFE_INTEGER || val < Number.MIN_SAFE_INTEGER)) {
-        errorHandler(
-          new RangeError(
-            `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}`
-          )
-        );
       }
+    } else if (
+      type === 'number' &&
+      (val > Number.MAX_SAFE_INTEGER || val < Number.MIN_SAFE_INTEGER)
+    ) {
+      errorHandler(
+        new RangeError(
+          `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}`
+        )
+      );
     }
+  }
 
   Palindrom.prototype.ping = function() {
     sendPatches(this, []); // sends empty message to server
@@ -4476,10 +4499,7 @@ var Palindrom = (function() {
   Palindrom.prototype.handleLocalChange = function(operation) {
     // it's a single operation, we need to check only it's value
     operation.value &&
-      findRangeErrors(
-        operation.value,
-        this.onOutgoingPatchValidationError
-      );
+      findRangeErrors(operation.value, this.onOutgoingPatchValidationError);
 
     const patches = [operation];
     if (this.debug) {
@@ -4508,7 +4528,14 @@ var Palindrom = (function() {
         findRangeErrors(this.obj, this.onIncomingPatchValidationError);
 
         //notify people about it
-        this.onStateReset(this.obj);
+        try {
+          this.onStateReset(this.obj);
+        } catch (error) {
+          // to prevent the promise's catch from swallowing errors inside onStateReset 
+          error.message = `Palindrom: Error inside onStateReset callback: ${error.message}`
+          this.onConnectionError(error);
+          console.error(error);
+        }
       }
       this.onRemoteChange(sequence, results);
     } catch (error) {
