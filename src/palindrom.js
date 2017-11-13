@@ -427,27 +427,33 @@ const Palindrom = (() => {
         })
         .catch(error => {
           const res = error.response;
+
           if (res) {
-            this.onFatalError(
-              {
-                statusCode: res.status,
-                statusText: res.statusText,
-                reason: res.data
-              },
-              url,
-              method
-            );
+            var statusCode = res.status;
+            var statusText = res.statusText;
+            var reason = res.data;
+          } else {
+            // no sufficient error information, we need to create on our own
+            var statusCode = -1;
+            var statusText = `An unknown network error has occurred. Raw message: ${error.message}`;
+            var reason = 'Maybe you lost connection with the server';
+            // log it for verbosity
+            console.error(error);
           }
-          // not a network error; an error that is swallowed by Promise catch
-          if (!res) {
-            throw error;
-          }
+          this.onFatalError(
+            {
+              statusCode,
+              statusText,
+              reason
+            },
+            url,
+            method
+          );
         });
 
       this.onSend(data, url, method);
     }
   }
-
   // TODO: auto-configure here #38 (tomalec)
   function establish(network, url, body, bootstrap) {
     return network.xhr(url, 'application/json', body, res => {
@@ -530,10 +536,12 @@ const Palindrom = (() => {
   class Palindrom {
     constructor(options) {
       if (typeof options !== 'object') {
-        throw new Error('Palindrom constructor requires an object argument.');
+        throw new TypeError(
+          'Palindrom constructor requires an object argument.'
+        );
       }
       if (!options.remoteUrl) {
-        throw new Error('remoteUrl is required');
+        throw new TypeError('remoteUrl is required');
       }
 
       if (options.ignoreAdd) {
@@ -728,7 +736,14 @@ const Palindrom = (() => {
           findRangeErrors(this.obj, this.onIncomingPatchValidationError);
 
           //notify people about it
-          this.onStateReset(this.obj);
+          try {
+            this.onStateReset(this.obj);
+          } catch (error) {
+            // to prevent the promise's catch from swallowing errors inside onStateReset
+            error.message = `Palindrom: Error inside onStateReset callback: ${error.message}`;
+            this.onConnectionError(error);
+            console.error(error);
+          }
         }
         this.onRemoteChange(sequence, results);
       } catch (error) {

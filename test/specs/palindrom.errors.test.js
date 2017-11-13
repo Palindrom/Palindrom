@@ -25,9 +25,6 @@ describe('Palindrom', () => {
           responseText: 'Custom message'
         });
 
-        let tempObject;
-        const that = this;
-
         const palindrom = new Palindrom({
           remoteUrl: 'http://localhost/testURL',
           onConnectionError: spy
@@ -49,7 +46,6 @@ describe('Palindrom', () => {
           responseText: 'Custom message'
         });
 
-        let tempObject;
         const that = this;
 
         const palindrom = new Palindrom({
@@ -60,6 +56,30 @@ describe('Palindrom', () => {
         /* onConnectionError should be called once now */
         setTimeout(() => {
           assert(spy.calledOnce);
+          done();
+        }, 5);
+      });
+      it('should call onConnectionError with a clear message about errors inside onStateReset', function(done) {
+        const spy = sinon.spy();
+
+        moxios.stubRequest('http://localhost/testURL', {
+          status: 200,
+          headers: { Location: 'http://localhost/testURL' },
+          responseText: `{"value": ${Number.MAX_SAFE_INTEGER + 1}}`
+        });
+
+        const palindrom = new Palindrom({
+          remoteUrl: 'http://localhost/testURL',
+          onStateReset: () => { throw new Error(); },
+          onConnectionError: spy
+        });
+
+        /* onConnectionError should be called once now */
+        setTimeout(() => {
+          assert(spy.calledOnce);
+          const errorPassed = spy.getCall(0).args[0];
+          assert(errorPassed instanceof Error);
+          assert(errorPassed.message.indexOf(`Palindrom: Error inside onStateReset callback:`) > -1)
           done();
         }, 5);
       });

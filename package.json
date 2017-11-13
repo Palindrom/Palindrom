@@ -1,6 +1,6 @@
 {
   "name": "palindrom",
-  "version": "3.0.7",
+  "version": "3.0.8",
   "description": "",
   "license": "MIT",
   "homepage": "https://github.com/palindrom/Palindrom",
@@ -54,7 +54,7 @@
     "saucelabs": "^1.4.0",
     "selenium-webdriver": "^3.3.0",
     "sinon": "^2.1.0",
-    "webpack": "^2.2.1"
+    "webpack": "^2.7.0"
   },
   "scripts": {
     "version": "webpack && git add -A",

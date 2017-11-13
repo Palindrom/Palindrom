@@ -50,6 +50,7 @@ module.exports = [
       library: "PalindromDOM",
       libraryTarget: "var"
     },
+    devtool: 'source-map',
     resolve: {
       extensions: [".js"]
     },
@@ -64,6 +65,7 @@ module.exports = [
       library: "Tests",
       libraryTarget: "var"
     },
+    devtool: 'source-map',
     externals: { websocket: "WebSocket", './URL': 'URL' },
     resolve: {
       extensions: [".js"]
