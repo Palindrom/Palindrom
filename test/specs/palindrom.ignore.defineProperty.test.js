@@ -49,8 +49,8 @@ describe('Palindrom', () => {
               // no further requests
               assert(moxios.requests.count() === 2);
               done();
-            }, 20);
-          }, 20);
+            }, 1);
+          }, 1);
         }
       });
     });

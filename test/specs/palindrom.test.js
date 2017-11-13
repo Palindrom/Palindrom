@@ -82,7 +82,7 @@ describe("Palindrom", () => {
         /* setting the object should throw an error */
         assert.throws(() => palindrom.obj = {}, Error, "palindrom.obj is readonly");
         done();
-      }, 10);
+      }, 1);
     });
   });
 });

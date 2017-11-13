@@ -146,8 +146,8 @@ if (typeof window !== 'undefined') {
               setTimeout(function() {
                 expect(historySpy.callCount).to.equal(1);
                 done();
-              }, 50);
-            }, 50);
+              }, 5);
+            }, 5);
           });
 
           it('absolute path', function() {
@@ -218,7 +218,7 @@ if (typeof window !== 'undefined') {
             const href = protocol + '//' + window.location.host + '/test'; //https://localhost:8888/test
             createAndClickOnLink(href);
             expect(historySpy.callCount).to.equal(0);
-            setTimeout(done, 10);
+            setTimeout(done, 2);
           });
         });
 
@@ -229,9 +229,9 @@ if (typeof window !== 'undefined') {
 
               setTimeout(function() {
                 expect(historySpy.callCount).to.equal(1);
-                setTimeout(done, 10);
-              }, 50);
-            }, 50);
+                setTimeout(done, 2);
+              }, 5);
+            }, 5);
           });
         });
 
@@ -241,7 +241,7 @@ if (typeof window !== 'undefined') {
           palindrom.unlisten();
           createAndClickOnLink('#will_not_get_caught_by_palindrom');
           expect(historySpy.callCount).to.equal(0);
-          setTimeout(done, 50);
+          setTimeout(done, 5);
         });
 
         it('should start listening to DOM changes after `.listen()` was called', function(
@@ -251,7 +251,7 @@ if (typeof window !== 'undefined') {
           palindrom.listen();
           createAndClickOnLink('#will_get_caught_by_palindrom');
           expect(historySpy.callCount).to.equal(1);
-          setTimeout(done, 50);
+          setTimeout(done, 5);
         });
       });
     });
@@ -288,7 +288,7 @@ if (typeof window !== 'undefined') {
           listenTo: palindromNode
         });
 
-        setTimeout(done, 50);
+        setTimeout(done, 5);
       });
 
       afterEach(function() {

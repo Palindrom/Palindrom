@@ -185,7 +185,7 @@ describe('Palindrom', () => {
               1}`
           );
           done();
-        }, 2);
+        }, 10);
       });
       it('Outgoing HTTP patches: out of range numbers should call onOutgoingPatchValidationError with a RangeError', done => {
         moxios.stubRequest('http://localhost/testURL', {
@@ -214,7 +214,7 @@ describe('Palindrom', () => {
               1}`
           );
           done();
-        }, 10);
+        }, 15);
       });
       it('Outgoing socket patches: out of range numbers should call onOutgoingPatchValidationError with a RangeError', function(
         done
@@ -248,7 +248,7 @@ describe('Palindrom', () => {
               1}`
           );
           server.stop(done);
-        }, 50);
+        }, 15);
       });
       it('Incoming socket patches: out of range numbers should call onIncomingPatchValidationError with a RangeError', function(
         done
@@ -283,7 +283,7 @@ describe('Palindrom', () => {
               1}`
           );
           server.stop(done);
-        }, 5);
+        }, 15);
       });
     });
   });

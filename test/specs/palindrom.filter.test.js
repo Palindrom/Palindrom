@@ -36,7 +36,7 @@ describe('Palindrom', () => {
           setTimeout(() => {
             assert(spy.calledOnce);
             done();
-          }, 20);
+          }, 1);
         }
       });
     });
@@ -68,8 +68,8 @@ describe('Palindrom', () => {
             setTimeout(() => {
               assert(moxios.requests.count() === 2);
               done();
-            }, 20);
-          }, 20);
+            }, 1);
+          }, 1);
         }
       });
     });
