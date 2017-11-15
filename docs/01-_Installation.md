@@ -1,4 +1,4 @@
-### Installation
+# Installation
 
 #### You can install using [bower](http://bower.io/) and [NPM](http://npmjs.com/):
 

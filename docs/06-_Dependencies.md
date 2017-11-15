@@ -1,4 +1,4 @@
-### Dependencies
+# Dependencies
 
 It depends on Native [ES6 Proxies](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy). Check usability on [caniuse](http://www.caniuse.com/#search=Proxy).
 

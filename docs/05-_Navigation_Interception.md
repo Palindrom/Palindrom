@@ -1,4 +1,4 @@
-## Navigation Interception
+# Navigation Interception
 
 PalindromDOM gives a regular HTML document the benefits of a single-page application by adding a special optimisation to the internal web links.  
 

@@ -1,4 +1,4 @@
-### Development
+# Development
 
 1. Make a local clone of this repo: `git clone git@github.com:Palindrom/Palindrom.git`
 2. Go to the directory: `cd Palindrom`
