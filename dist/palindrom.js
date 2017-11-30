@@ -2518,19 +2518,19 @@ module.exports = g;
 /* 18 */
 /***/ (function(module, exports) {
 
-module.exports = {"name":"palindrom","version":"3.0.9","description":"","license":"MIT","homepage":"https://github.com/palindrom/Palindrom","keywords":["json","patch","http","rest"],"repository":{"type":"git","url":"git://github.com/Palindrom/Palindrom.git"},"bugs":{"url":"https://github.com/Palindrom/Palindrom/issues"},"author":{"name":"Joachim Wester","email":"joachimwester@me.com","url":"http://www.starcounter.com/"},"licenses":[{"type":"MIT","url":"http://www.opensource.org/licenses/MIT"}],"main":"./src/palindrom.js","dependencies":{"axios":"^0.15.3","events":"^1.1.1","fast-json-patch":"^2.0.5","json-patch-ot":"^1.0.1","json-patch-ot-agent":"2.0.0-rc.0","jsonpatcherproxy":"^0.0.9","url":"^0.11.0","websocket":"^1.0.24"},"devDependencies":{"babili-webpack-plugin":"^0.1.1","bluebird":"^3.5.0","bluebird-retry":"^0.10.1","chai":"^3.5.0","colors":"^1.1.2","jasmine":"^2.4.0","json-loader":"^0.5.4","mocha":"^3.2.0","mock-socket":"6.0.4","moxios":"^0.3.0","polyserve":"^0.16.0","saucelabs":"^1.4.0","selenium-webdriver":"^3.3.0","sinon":"^2.1.0","webpack":"^2.7.0"},"scripts":{"version":"webpack && git add -A","test-sauce":"webpack && node test/Sauce/Runner.js","test":"mocha test/runner.js","test-full":"mocha test/runner.js && webpack && node test/Sauce/Runner.js","build":"webpack"}}
+module.exports = URL;
 
 /***/ }),
 /* 19 */
 /***/ (function(module, exports) {
 
-module.exports = URL;
+module.exports = WebSocket;
 
 /***/ }),
 /* 20 */
 /***/ (function(module, exports) {
 
-module.exports = WebSocket;
+module.exports = {version: '3.0.9'};
 
 /***/ }),
 /* 21 */
@@ -3715,16 +3715,16 @@ const JSONPatchQueueSynchronous = __webpack_require__(1)
 const JSONPatchQueue = __webpack_require__(1).JSONPatchQueue;
 const JSONPatchOT = __webpack_require__(15);
 const JSONPatchOTAgent = __webpack_require__(14);
-const URL = __webpack_require__(19);
+const URL = __webpack_require__(18);
 const axios = __webpack_require__(12);
-const version = __webpack_require__(18).version;
+const version = __webpack_require__(20).version;
 
 /* We are going to hand `websocket` lib as an external to webpack
   (see: https://webpack.js.org/configuration/externals/), 
   this will make `w3cwebsocket` property `undefined`, 
   and this will lead Palindrom to use Browser's WebSocket when it is used 
   from the bundle. And use `websocket` lib in Node environment */
-const NodeWebSocket = __webpack_require__(20).w3cwebsocket;
+const NodeWebSocket = __webpack_require__(19).w3cwebsocket;
 
 /* this allows us to stub WebSockets */
 if (!global.WebSocket && NodeWebSocket) {
