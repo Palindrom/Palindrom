@@ -13,6 +13,7 @@ const JSONPatchOT = require('json-patch-ot');
 const JSONPatchOTAgent = require('json-patch-ot-agent');
 const URL = require('./URL');
 const axios = require('axios');
+const version = require('../package.json').version;
 
 /* We are going to hand `websocket` lib as an external to webpack
   (see: https://webpack.js.org/configuration/externals/), 
@@ -534,7 +535,19 @@ const Palindrom = (() => {
    * @param {Object} [options] map of arguments. See README.md for description
    */
   class Palindrom {
+    /**
+     * Palindrom version
+     */
+    static get version() { 
+      return version
+    }
+
     constructor(options) {
+      /**
+       * Palindrom instance version
+       */
+      this.version = version;
+
       if (typeof options !== 'object') {
         throw new TypeError(
           'Palindrom constructor requires an object argument.'

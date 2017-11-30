@@ -65,7 +65,7 @@ var Palindrom =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 41);
+/******/ 	return __webpack_require__(__webpack_require__.s = 42);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -381,8 +381,8 @@ module.exports = {
 /**
  * version: 3.0.0-rc.0
  */
-var queue = __webpack_require__(40);
-var sync = __webpack_require__(39);
+var queue = __webpack_require__(41);
+var sync = __webpack_require__(40);
 
 module.exports = { JSONPatchQueue: queue, JSONPatchQueueSynchronous: sync, /* Babel demands this */__esModule:  true };
 
@@ -395,7 +395,7 @@ module.exports = { JSONPatchQueue: queue, JSONPatchQueueSynchronous: sync, /* Ba
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(0);
-var normalizeHeaderName = __webpack_require__(34);
+var normalizeHeaderName = __webpack_require__(35);
 
 var PROTECTION_PREFIX = /^\)\]\}',?\n/;
 var DEFAULT_CONTENT_TYPE = {
@@ -661,12 +661,12 @@ exports.PatchError = PatchError;
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(26);
-var buildURL = __webpack_require__(29);
-var parseHeaders = __webpack_require__(35);
-var isURLSameOrigin = __webpack_require__(33);
+var settle = __webpack_require__(27);
+var buildURL = __webpack_require__(30);
+var parseHeaders = __webpack_require__(36);
+var isURLSameOrigin = __webpack_require__(34);
 var createError = __webpack_require__(7);
-var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(28);
+var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(29);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -762,7 +762,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(31);
+      var cookies = __webpack_require__(32);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -883,7 +883,7 @@ module.exports = function isCancel(value) {
 "use strict";
 
 
-var enhanceError = __webpack_require__(25);
+var enhanceError = __webpack_require__(26);
 
 /**
  * Create an Error with the specified message, config, error code, and response.
@@ -923,8 +923,8 @@ module.exports = function bind(fn, thisArg) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var pSlice = Array.prototype.slice;
-var objectKeys = __webpack_require__(38);
-var isArguments = __webpack_require__(37);
+var objectKeys = __webpack_require__(39);
+var isArguments = __webpack_require__(38);
 
 var deepEqual = module.exports = function (actual, expected, opts) {
   if (!opts) opts = {};
@@ -1595,7 +1595,7 @@ process.umask = function() { return 0; };
 /* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(20);
+module.exports = __webpack_require__(21);
 
 /***/ }),
 /* 13 */
@@ -2518,16 +2518,22 @@ module.exports = g;
 /* 18 */
 /***/ (function(module, exports) {
 
-module.exports = URL;
+module.exports = {"name":"palindrom","version":"3.0.9","description":"","license":"MIT","homepage":"https://github.com/palindrom/Palindrom","keywords":["json","patch","http","rest"],"repository":{"type":"git","url":"git://github.com/Palindrom/Palindrom.git"},"bugs":{"url":"https://github.com/Palindrom/Palindrom/issues"},"author":{"name":"Joachim Wester","email":"joachimwester@me.com","url":"http://www.starcounter.com/"},"licenses":[{"type":"MIT","url":"http://www.opensource.org/licenses/MIT"}],"main":"./src/palindrom.js","dependencies":{"axios":"^0.15.3","events":"^1.1.1","fast-json-patch":"^2.0.5","json-patch-ot":"^1.0.1","json-patch-ot-agent":"2.0.0-rc.0","jsonpatcherproxy":"^0.0.9","url":"^0.11.0","websocket":"^1.0.24"},"devDependencies":{"babili-webpack-plugin":"^0.1.1","bluebird":"^3.5.0","bluebird-retry":"^0.10.1","chai":"^3.5.0","colors":"^1.1.2","jasmine":"^2.4.0","json-loader":"^0.5.4","mocha":"^3.2.0","mock-socket":"6.0.4","moxios":"^0.3.0","polyserve":"^0.16.0","saucelabs":"^1.4.0","selenium-webdriver":"^3.3.0","sinon":"^2.1.0","webpack":"^2.7.0"},"scripts":{"version":"webpack && git add -A","test-sauce":"webpack && node test/Sauce/Runner.js","test":"mocha test/runner.js","test-full":"mocha test/runner.js && webpack && node test/Sauce/Runner.js","build":"webpack"}}
 
 /***/ }),
 /* 19 */
 /***/ (function(module, exports) {
 
-module.exports = WebSocket;
+module.exports = URL;
 
 /***/ }),
 /* 20 */
+/***/ (function(module, exports) {
+
+module.exports = WebSocket;
+
+/***/ }),
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2535,7 +2541,7 @@ module.exports = WebSocket;
 
 var utils = __webpack_require__(0);
 var bind = __webpack_require__(8);
-var Axios = __webpack_require__(22);
+var Axios = __webpack_require__(23);
 var defaults = __webpack_require__(2);
 
 /**
@@ -2570,14 +2576,14 @@ axios.create = function create(instanceConfig) {
 
 // Expose Cancel & CancelToken
 axios.Cancel = __webpack_require__(5);
-axios.CancelToken = __webpack_require__(21);
+axios.CancelToken = __webpack_require__(22);
 axios.isCancel = __webpack_require__(6);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(36);
+axios.spread = __webpack_require__(37);
 
 module.exports = axios;
 
@@ -2586,7 +2592,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2650,7 +2656,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2658,10 +2664,10 @@ module.exports = CancelToken;
 
 var defaults = __webpack_require__(2);
 var utils = __webpack_require__(0);
-var InterceptorManager = __webpack_require__(23);
-var dispatchRequest = __webpack_require__(24);
-var isAbsoluteURL = __webpack_require__(32);
-var combineURLs = __webpack_require__(30);
+var InterceptorManager = __webpack_require__(24);
+var dispatchRequest = __webpack_require__(25);
+var isAbsoluteURL = __webpack_require__(33);
+var combineURLs = __webpack_require__(31);
 
 /**
  * Create a new instance of Axios
@@ -2742,7 +2748,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2801,14 +2807,14 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var transformData = __webpack_require__(27);
+var transformData = __webpack_require__(28);
 var isCancel = __webpack_require__(6);
 var defaults = __webpack_require__(2);
 
@@ -2887,7 +2893,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2913,7 +2919,7 @@ module.exports = function enhanceError(error, config, code, response) {
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2945,7 +2951,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2972,7 +2978,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3015,7 +3021,7 @@ module.exports = btoa;
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3090,7 +3096,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3109,7 +3115,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3169,7 +3175,7 @@ module.exports = (
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3190,7 +3196,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3265,7 +3271,7 @@ module.exports = (
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3284,7 +3290,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3328,7 +3334,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3362,7 +3368,7 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports) {
 
 var supportsArgumentsClass = (function(){
@@ -3388,7 +3394,7 @@ function unsupported(object){
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports) {
 
 exports = module.exports = typeof Object.keys === 'function'
@@ -3403,7 +3409,7 @@ function shim (obj) {
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -3540,7 +3546,7 @@ if(true) {
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -3693,7 +3699,7 @@ if(true) {
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/*! Palindrom 
@@ -3709,15 +3715,16 @@ const JSONPatchQueueSynchronous = __webpack_require__(1)
 const JSONPatchQueue = __webpack_require__(1).JSONPatchQueue;
 const JSONPatchOT = __webpack_require__(15);
 const JSONPatchOTAgent = __webpack_require__(14);
-const URL = __webpack_require__(18);
+const URL = __webpack_require__(19);
 const axios = __webpack_require__(12);
+const version = __webpack_require__(18).version;
 
 /* We are going to hand `websocket` lib as an external to webpack
   (see: https://webpack.js.org/configuration/externals/), 
   this will make `w3cwebsocket` property `undefined`, 
   and this will lead Palindrom to use Browser's WebSocket when it is used 
   from the bundle. And use `websocket` lib in Node environment */
-const NodeWebSocket = __webpack_require__(19).w3cwebsocket;
+const NodeWebSocket = __webpack_require__(20).w3cwebsocket;
 
 /* this allows us to stub WebSockets */
 if (!global.WebSocket && NodeWebSocket) {
@@ -4232,7 +4239,19 @@ const Palindrom = (() => {
    * @param {Object} [options] map of arguments. See README.md for description
    */
   class Palindrom {
+    /**
+     * Palindrom version
+     */
+    static get version() { 
+      return version
+    }
+
     constructor(options) {
+      /**
+       * Palindrom instance version
+       */
+      this.version = version;
+
       if (typeof options !== 'object') {
         throw new TypeError(
           'Palindrom constructor requires an object argument.'

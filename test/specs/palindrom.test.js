@@ -5,8 +5,20 @@ const assert = require("assert");
 const moxios = require("moxios");
 const sinon = require("sinon");
 const expect = require("chai").expect;
+const currentVersion = require('../../package.json').version;
 
 describe("Palindrom", () => {
+  describe('Expose version', function() {
+    it("Palindrom class should contain the version", function() {
+      assert.equal(currentVersion, Palindrom.version)
+    })
+    it("Palindrom instance should contain the version", function() {
+      const palindrom = new Palindrom({
+        remoteUrl: "http://localhost/testURL",
+      });
+      assert.equal(currentVersion, palindrom.version)
+    })
+  })
   describe("#constructor", () => {
     beforeEach(() => {
       moxios.install();
