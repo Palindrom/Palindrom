@@ -1,6 +1,6 @@
 const webpack = require("webpack");
 const BabiliPlugin = require('babili-webpack-plugin');
-const package = require('./package.json');
+const version = require('./package.json').version;
 
 module.exports = [
   {
@@ -15,7 +15,7 @@ module.exports = [
     },
     /* (see: https://webpack.js.org/configuration/externals/) */
     externals: { websocket: "WebSocket", './URL': 'URL' },
-    plugins: [new webpack.BannerPlugin('Palindrom, version: ' + package['version'])]    
+    plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]    
   },
   {
     entry: "./src/palindrom.js",
@@ -28,7 +28,7 @@ module.exports = [
       extensions: [".js"]
     },
     externals: { websocket: "WebSocket", './URL': 'URL' },
-    plugins: [new BabiliPlugin(), new webpack.BannerPlugin('Palindrom, version: ' + package['version'])]
+    plugins: [new BabiliPlugin(), new webpack.BannerPlugin('Palindrom, version: ' + version)]
   },
   {
     entry: "./src/palindrom-dom.js",
@@ -41,7 +41,7 @@ module.exports = [
       extensions: [".js"]
     },
     externals: { websocket: "WebSocket", './URL': 'URL' },
-    plugins: [new webpack.BannerPlugin('Palindrom, version: ' + package['version'])]
+    plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
   },
   {
     entry: "./src/palindrom-dom.js",
@@ -55,7 +55,7 @@ module.exports = [
       extensions: [".js"]
     },
     externals: { websocket: "WebSocket", './URL': 'URL' },
-    plugins: [new BabiliPlugin(), new webpack.BannerPlugin('Palindrom, version: ' + package['version'])]
+    plugins: [new BabiliPlugin(), new webpack.BannerPlugin('Palindrom, version: ' + version)]
   },
   /* bundle tests for browser */
   {
@@ -70,6 +70,6 @@ module.exports = [
     resolve: {
       extensions: [".js"]
     },
-    plugins: [new webpack.BannerPlugin('Palindrom, version: ' + package['version'])]
+    plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
   }
 ];

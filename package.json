@@ -57,7 +57,7 @@
     "webpack": "^2.7.0"
   },
   "scripts": {
-    "version": "webpack && git add -A",
+    "version": "node ./bump-version.js && webpack && git add -A",
     "test-sauce": "webpack && node test/Sauce/Runner.js",
     "test": "mocha test/runner.js",
     "test-full": "mocha test/runner.js && webpack && node test/Sauce/Runner.js",

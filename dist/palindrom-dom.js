@@ -1601,6 +1601,8 @@ process.umask = function() { return 0; };
  * MIT license
  */
 
+const palindromVersion = '3.0.9'
+
 const { applyPatch, validate } = __webpack_require__(33);
 const JSONPatcherProxy = __webpack_require__(38);
 const JSONPatchQueueSynchronous = __webpack_require__(3)
@@ -2131,7 +2133,19 @@ const Palindrom = (() => {
    * @param {Object} [options] map of arguments. See README.md for description
    */
   class Palindrom {
+    /**
+     * Palindrom version
+     */
+    static get version() { 
+      return palindromVersion
+    }
+
     constructor(options) {
+      /**
+       * Palindrom instance version
+       */
+      this.version = palindromVersion;
+
       if (typeof options !== 'object') {
         throw new TypeError(
           'Palindrom constructor requires an object argument.'

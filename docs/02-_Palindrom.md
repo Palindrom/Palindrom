@@ -80,6 +80,7 @@ Attribute             | Type       | Default                | Description
 `onConnectionError`   | *Function* |                        | See above
 `onIncomingPatchValidationError`   | *Function* |           | See above
 `onOutgoingPatchValidationError`   | *Function* |           | See above
+`version`             | *String `semver`*   |                        | Contains current Palindrom version, available statically too (i.e: `Palindrom.version`)
 
 * **_ Note 1: `palindrom.obj` becomes only available after `options.onStateReset` is called._**
 * **_ Note 2: `palindrom.obj` is a constant (as in `const`) property, you can modify its properties but you can't assign it again or `delete` it. `palindrom.obj = {}` would throw an error._**
