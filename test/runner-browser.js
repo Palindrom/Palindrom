@@ -3950,6 +3950,8 @@ exports.addBehavior = function (name, fn) {
  * MIT license
  */
 
+const palindromVersion = '3.0.9'
+
 const { applyPatch, validate } = __webpack_require__(57);
 const JSONPatcherProxy = __webpack_require__(145);
 const JSONPatchQueueSynchronous = __webpack_require__(30)
@@ -3959,7 +3961,6 @@ const JSONPatchOT = __webpack_require__(142);
 const JSONPatchOTAgent = __webpack_require__(141);
 const URL = __webpack_require__(175);
 const axios = __webpack_require__(40);
-const version = __webpack_require__(177).version;
 
 /* We are going to hand `websocket` lib as an external to webpack
   (see: https://webpack.js.org/configuration/externals/), 
@@ -4485,14 +4486,14 @@ const Palindrom = (() => {
      * Palindrom version
      */
     static get version() { 
-      return version
+      return palindromVersion
     }
 
     constructor(options) {
       /**
        * Palindrom instance version
        */
-      this.version = version;
+      this.version = palindromVersion;
 
       if (typeof options !== 'object') {
         throw new TypeError(
@@ -31877,7 +31878,7 @@ function hasOwnProperty(obj, prop) {
 /* 173 */
 /***/ (function(module, exports) {
 
-module.exports = {"name":"palindrom","version":"3.0.9","description":"","license":"MIT","homepage":"https://github.com/palindrom/Palindrom","keywords":["json","patch","http","rest"],"repository":{"type":"git","url":"git://github.com/Palindrom/Palindrom.git"},"bugs":{"url":"https://github.com/Palindrom/Palindrom/issues"},"author":{"name":"Joachim Wester","email":"joachimwester@me.com","url":"http://www.starcounter.com/"},"licenses":[{"type":"MIT","url":"http://www.opensource.org/licenses/MIT"}],"main":"./src/palindrom.js","dependencies":{"axios":"^0.15.3","events":"^1.1.1","fast-json-patch":"^2.0.5","json-patch-ot":"^1.0.1","json-patch-ot-agent":"2.0.0-rc.0","jsonpatcherproxy":"^0.0.9","url":"^0.11.0","websocket":"^1.0.24"},"devDependencies":{"babili-webpack-plugin":"^0.1.1","bluebird":"^3.5.0","bluebird-retry":"^0.10.1","chai":"^3.5.0","colors":"^1.1.2","jasmine":"^2.4.0","json-loader":"^0.5.4","mocha":"^3.2.0","mock-socket":"6.0.4","moxios":"^0.3.0","polyserve":"^0.16.0","saucelabs":"^1.4.0","selenium-webdriver":"^3.3.0","sinon":"^2.1.0","webpack":"^2.7.0"},"scripts":{"version":"webpack && git add -A","test-sauce":"webpack && node test/Sauce/Runner.js","test":"mocha test/runner.js","test-full":"mocha test/runner.js && webpack && node test/Sauce/Runner.js","build":"webpack"}}
+module.exports = {"name":"palindrom","version":"3.0.9","description":"","license":"MIT","homepage":"https://github.com/palindrom/Palindrom","keywords":["json","patch","http","rest"],"repository":{"type":"git","url":"git://github.com/Palindrom/Palindrom.git"},"bugs":{"url":"https://github.com/Palindrom/Palindrom/issues"},"author":{"name":"Joachim Wester","email":"joachimwester@me.com","url":"http://www.starcounter.com/"},"licenses":[{"type":"MIT","url":"http://www.opensource.org/licenses/MIT"}],"main":"./src/palindrom.js","dependencies":{"axios":"^0.15.3","events":"^1.1.1","fast-json-patch":"^2.0.5","json-patch-ot":"^1.0.1","json-patch-ot-agent":"2.0.0-rc.0","jsonpatcherproxy":"^0.0.9","url":"^0.11.0","websocket":"^1.0.24"},"devDependencies":{"babili-webpack-plugin":"^0.1.1","bluebird":"^3.5.0","bluebird-retry":"^0.10.1","chai":"^3.5.0","colors":"^1.1.2","jasmine":"^2.4.0","json-loader":"^0.5.4","mocha":"^3.2.0","mock-socket":"6.0.4","moxios":"^0.3.0","polyserve":"^0.16.0","saucelabs":"^1.4.0","selenium-webdriver":"^3.3.0","sinon":"^2.1.0","webpack":"^2.7.0"},"scripts":{"version":"./bump-version.js && webpack && git add -A","test-sauce":"webpack && node test/Sauce/Runner.js","test":"mocha test/runner.js","test-full":"mocha test/runner.js && webpack && node test/Sauce/Runner.js","build":"webpack"}}
 
 /***/ }),
 /* 174 */
@@ -31907,12 +31908,6 @@ module.exports = URL;
 /***/ (function(module, exports) {
 
 module.exports = WebSocket;
-
-/***/ }),
-/* 177 */
-/***/ (function(module, exports) {
-
-module.exports = {version: '3.0.9'};
 
 /***/ })
 /******/ ]);

@@ -4,6 +4,9 @@
  * MIT license
  */
 
+/* this variable is bumped automatically when you call npm version */
+const palindromVersion = '3.0.9';
+
 const { applyPatch, validate } = require('fast-json-patch');
 const JSONPatcherProxy = require('jsonpatcherproxy');
 const JSONPatchQueueSynchronous = require('json-patch-queue')
@@ -13,7 +16,6 @@ const JSONPatchOT = require('json-patch-ot');
 const JSONPatchOTAgent = require('json-patch-ot-agent');
 const URL = require('./URL');
 const axios = require('axios');
-const version = require('../package.json').version;
 
 /* We are going to hand `websocket` lib as an external to webpack
   (see: https://webpack.js.org/configuration/externals/), 
@@ -539,14 +541,14 @@ const Palindrom = (() => {
      * Palindrom version
      */
     static get version() { 
-      return version
+      return palindromVersion
     }
 
     constructor(options) {
       /**
        * Palindrom instance version
        */
-      this.version = version;
+      this.version = palindromVersion;
 
       if (typeof options !== 'object') {
         throw new TypeError(

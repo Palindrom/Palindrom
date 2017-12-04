@@ -1601,6 +1601,8 @@ process.umask = function() { return 0; };
  * MIT license
  */
 
+const palindromVersion = '3.0.9'
+
 const { applyPatch, validate } = __webpack_require__(33);
 const JSONPatcherProxy = __webpack_require__(38);
 const JSONPatchQueueSynchronous = __webpack_require__(3)
@@ -1610,7 +1612,6 @@ const JSONPatchOT = __webpack_require__(35);
 const JSONPatchOTAgent = __webpack_require__(34);
 const URL = __webpack_require__(41);
 const axios = __webpack_require__(13);
-const version = __webpack_require__(43).version;
 
 /* We are going to hand `websocket` lib as an external to webpack
   (see: https://webpack.js.org/configuration/externals/), 
@@ -2136,14 +2137,14 @@ const Palindrom = (() => {
      * Palindrom version
      */
     static get version() { 
-      return version
+      return palindromVersion
     }
 
     constructor(options) {
       /**
        * Palindrom instance version
        */
-      this.version = version;
+      this.version = palindromVersion;
 
       if (typeof options !== 'object') {
         throw new TypeError(
@@ -4844,12 +4845,6 @@ module.exports = URL;
 /***/ (function(module, exports) {
 
 module.exports = WebSocket;
-
-/***/ }),
-/* 43 */
-/***/ (function(module, exports) {
-
-module.exports = {version: '3.0.9'};
 
 /***/ })
 /******/ ]);
