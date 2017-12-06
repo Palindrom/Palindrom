@@ -72,7 +72,7 @@ Palindrom uses the HTML5 history API to update the URL in the browser address ba
 
 Sometimes, it's tedious to locate the `PalindromDOM` instance in your application using `querySelector`, making it bothersome to call `palindrom.morphUrl`. In this case, you can dispatch an event to `palindrom.listenTo` element if you set one, or to `document.body` if you haven't, and `PaldinromDOM` with handle it and morph the URL.
 
-Example,:
+Example:
 
 ```js
 document.body.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url: yourURL}}))
