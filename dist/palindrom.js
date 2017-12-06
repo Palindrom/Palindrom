@@ -3702,7 +3702,8 @@ if(true) {
  * MIT license
  */
 
-const palindromVersion = '3.0.9'
+/* this variable is bumped automatically when you call npm version */
+const palindromVersion = '3.0.9';
 
 const { applyPatch, validate } = __webpack_require__(13);
 const JSONPatcherProxy = __webpack_require__(16);
