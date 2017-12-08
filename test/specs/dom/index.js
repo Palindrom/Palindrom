@@ -162,6 +162,7 @@ if (typeof window !== 'undefined') {
             createAndClickOnLink(href);
             expect(historySpy.callCount).to.equal(1);
           });
+
         });
         describe('Links with targets', function() {
           it('should not intercept links with a set target', function() {
@@ -471,6 +472,30 @@ if (typeof window !== 'undefined') {
           const request = moxios.requests.mostRecent();
           expect(request.url).to.equal('/newUrl');
           expect(window.location.pathname).to.equal('/newUrl');
+          done();
+        }, 5);
+      });
+    });
+
+    describe('palindrom-morph-url event', function() {
+      beforeEach(function(done) {
+        // wait for Palindrom to call .listen (after finishing the ajax request)
+        setTimeout(done, 300)
+      })
+      it('Dispatching it should call PalindromDOM.morphUrl and issue a request', function(done) {
+
+        const morphUrlStub = sinon.spy(palindrom, "morphUrl");
+
+        document.body.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url: '/new-palindrom-url'}}));
+
+        assert(morphUrlStub.calledOnce, `morphUrlStub should be called once, it was called ${morphUrlStub.callCount} times`);
+
+        setTimeout(function() {
+          const request = moxios.requests.mostRecent();
+          expect(request.url).to.equal('/new-palindrom-url');
+          expect(window.location.pathname + location.hash).to.equal(
+            '/new-palindrom-url'
+          );
           done();
         }, 5);
       });

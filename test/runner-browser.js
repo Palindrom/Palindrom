@@ -3950,7 +3950,8 @@ exports.addBehavior = function (name, fn) {
  * MIT license
  */
 
-const palindromVersion = '3.0.9'
+/* this variable is bumped automatically when you call npm version */
+const palindromVersion = '3.0.9';
 
 const { applyPatch, validate } = __webpack_require__(57);
 const JSONPatcherProxy = __webpack_require__(145);
@@ -12415,6 +12416,7 @@ module.exports = __webpack_amd_options__;
  * (c) 2017 Joachim Wester
  * MIT license
  */
+
 const Palindrom = __webpack_require__(6);
 
 const PalindromDOM = (() => {
@@ -12451,6 +12453,7 @@ const PalindromDOM = (() => {
       this.element = options.listenTo || document.body;
       this.clickHandler = this.clickHandler.bind(this);
       this.historyHandler = this.historyHandler.bind(this);
+      this.morphUrlEventHandler = this.morphUrlEventHandler.bind(this);
 
       this.historyHandlerDeprecated = () => {
         console.warn(
@@ -12464,6 +12467,7 @@ const PalindromDOM = (() => {
         'palindrom-redirect-pushstate',
         this.historyHandler
       );
+
       /* backward compatibility: for people using old puppet-redirect */
       this.element.addEventListener(
         'puppet-redirect-pushstate',
@@ -12475,6 +12479,11 @@ const PalindromDOM = (() => {
       this.listening = true;
       this.element.addEventListener('click', this.clickHandler);
       window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
+
+      this.element.addEventListener(
+        'palindrom-morph-url',
+        this.morphUrlEventHandler
+      );
 
       this.element.addEventListener(
         'palindrom-redirect-pushstate',
@@ -12495,6 +12504,11 @@ const PalindromDOM = (() => {
       this.element.removeEventListener(
         'palindrom-redirect-pushstate',
         this.historyHandler
+      );
+
+      this.element.removeEventListener(
+        'palindrom-morph-url',
+        this.morphUrlEventHandler
       );
 
       /* backward compatibility: for people using old puppet-redirect */
@@ -12525,8 +12539,8 @@ const PalindromDOM = (() => {
           window.scrollTo(0, 0);
         } else {
           // if somehow someone manages to navigate twice in a 100ms,
-          // we don't scroll for their first navigation, i.e de-bouncing 
-          
+          // we don't scroll for their first navigation, i.e de-bouncing
+
           this.scrollAsyncTimeout = setTimeout(() => {
             // does that anchor exist in the page?
             const anchorTarget = document.querySelector(anchor); // look for #element-id
@@ -12549,6 +12563,10 @@ const PalindromDOM = (() => {
       history.pushState(null, null, url);
       this.network.getPatchUsingHTTP(url);
       window && window.scrollTo(0, 0);
+    }
+
+    morphUrlEventHandler(event) {
+      this.morphUrl(event.detail.url);
     }
 
     clickHandler(event) {
@@ -12815,6 +12833,7 @@ if (typeof window !== 'undefined') {
             createAndClickOnLink(href);
             expect(historySpy.callCount).to.equal(1);
           });
+
         });
         describe('Links with targets', function() {
           it('should not intercept links with a set target', function() {
@@ -13124,6 +13143,30 @@ if (typeof window !== 'undefined') {
           const request = moxios.requests.mostRecent();
           expect(request.url).to.equal('/newUrl');
           expect(window.location.pathname).to.equal('/newUrl');
+          done();
+        }, 5);
+      });
+    });
+
+    describe('palindrom-morph-url event', function() {
+      beforeEach(function(done) {
+        // wait for Palindrom to call .listen (after finishing the ajax request)
+        setTimeout(done, 300)
+      })
+      it('Dispatching it should call PalindromDOM.morphUrl and issue a request', function(done) {
+
+        const morphUrlStub = sinon.spy(palindrom, "morphUrl");
+
+        document.body.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url: '/new-palindrom-url'}}));
+
+        assert(morphUrlStub.calledOnce, `morphUrlStub should be called once, it was called ${morphUrlStub.callCount} times`);
+
+        setTimeout(function() {
+          const request = moxios.requests.mostRecent();
+          expect(request.url).to.equal('/new-palindrom-url');
+          expect(window.location.pathname + location.hash).to.equal(
+            '/new-palindrom-url'
+          );
           done();
         }, 5);
       });
@@ -31878,7 +31921,7 @@ function hasOwnProperty(obj, prop) {
 /* 173 */
 /***/ (function(module, exports) {
 
-module.exports = {"name":"palindrom","version":"3.0.9","description":"","license":"MIT","homepage":"https://github.com/palindrom/Palindrom","keywords":["json","patch","http","rest"],"repository":{"type":"git","url":"git://github.com/Palindrom/Palindrom.git"},"bugs":{"url":"https://github.com/Palindrom/Palindrom/issues"},"author":{"name":"Joachim Wester","email":"joachimwester@me.com","url":"http://www.starcounter.com/"},"licenses":[{"type":"MIT","url":"http://www.opensource.org/licenses/MIT"}],"main":"./src/palindrom.js","dependencies":{"axios":"^0.15.3","events":"^1.1.1","fast-json-patch":"^2.0.5","json-patch-ot":"^1.0.1","json-patch-ot-agent":"2.0.0-rc.0","jsonpatcherproxy":"^0.0.9","url":"^0.11.0","websocket":"^1.0.24"},"devDependencies":{"babili-webpack-plugin":"^0.1.1","bluebird":"^3.5.0","bluebird-retry":"^0.10.1","chai":"^3.5.0","colors":"^1.1.2","jasmine":"^2.4.0","json-loader":"^0.5.4","mocha":"^3.2.0","mock-socket":"6.0.4","moxios":"^0.3.0","polyserve":"^0.16.0","saucelabs":"^1.4.0","selenium-webdriver":"^3.3.0","sinon":"^2.1.0","webpack":"^2.7.0"},"scripts":{"version":"./bump-version.js && webpack && git add -A","test-sauce":"webpack && node test/Sauce/Runner.js","test":"mocha test/runner.js","test-full":"mocha test/runner.js && webpack && node test/Sauce/Runner.js","build":"webpack"}}
+module.exports = {"name":"palindrom","version":"3.0.9","description":"","license":"MIT","homepage":"https://github.com/palindrom/Palindrom","keywords":["json","patch","http","rest"],"repository":{"type":"git","url":"git://github.com/Palindrom/Palindrom.git"},"bugs":{"url":"https://github.com/Palindrom/Palindrom/issues"},"author":{"name":"Joachim Wester","email":"joachimwester@me.com","url":"http://www.starcounter.com/"},"licenses":[{"type":"MIT","url":"http://www.opensource.org/licenses/MIT"}],"main":"./src/palindrom.js","dependencies":{"axios":"^0.15.3","events":"^1.1.1","fast-json-patch":"^2.0.5","json-patch-ot":"^1.0.1","json-patch-ot-agent":"2.0.0-rc.0","jsonpatcherproxy":"^0.0.9","url":"^0.11.0","websocket":"^1.0.24"},"devDependencies":{"babili-webpack-plugin":"^0.1.1","bluebird":"^3.5.0","bluebird-retry":"^0.10.1","chai":"^3.5.0","colors":"^1.1.2","jasmine":"^2.4.0","json-loader":"^0.5.4","mocha":"^3.2.0","mock-socket":"6.0.4","moxios":"^0.3.0","polyserve":"^0.16.0","saucelabs":"^1.4.0","selenium-webdriver":"^3.3.0","sinon":"^2.1.0","webpack":"^2.7.0"},"scripts":{"version":"node ./bump-version.js && webpack && git add -A","test-sauce":"webpack && node test/Sauce/Runner.js","test":"mocha test/runner.js","test-full":"mocha test/runner.js && webpack && node test/Sauce/Runner.js","build":"webpack"}}
 
 /***/ }),
 /* 174 */

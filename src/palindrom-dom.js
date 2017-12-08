@@ -3,6 +3,7 @@
  * (c) 2017 Joachim Wester
  * MIT license
  */
+
 const Palindrom = require('./palindrom');
 
 const PalindromDOM = (() => {
@@ -39,6 +40,7 @@ const PalindromDOM = (() => {
       this.element = options.listenTo || document.body;
       this.clickHandler = this.clickHandler.bind(this);
       this.historyHandler = this.historyHandler.bind(this);
+      this.morphUrlEventHandler = this.morphUrlEventHandler.bind(this);
 
       this.historyHandlerDeprecated = () => {
         console.warn(
@@ -52,6 +54,7 @@ const PalindromDOM = (() => {
         'palindrom-redirect-pushstate',
         this.historyHandler
       );
+
       /* backward compatibility: for people using old puppet-redirect */
       this.element.addEventListener(
         'puppet-redirect-pushstate',
@@ -63,6 +66,11 @@ const PalindromDOM = (() => {
       this.listening = true;
       this.element.addEventListener('click', this.clickHandler);
       window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
+
+      this.element.addEventListener(
+        'palindrom-morph-url',
+        this.morphUrlEventHandler
+      );
 
       this.element.addEventListener(
         'palindrom-redirect-pushstate',
@@ -83,6 +91,11 @@ const PalindromDOM = (() => {
       this.element.removeEventListener(
         'palindrom-redirect-pushstate',
         this.historyHandler
+      );
+
+      this.element.removeEventListener(
+        'palindrom-morph-url',
+        this.morphUrlEventHandler
       );
 
       /* backward compatibility: for people using old puppet-redirect */
@@ -113,8 +126,8 @@ const PalindromDOM = (() => {
           window.scrollTo(0, 0);
         } else {
           // if somehow someone manages to navigate twice in a 100ms,
-          // we don't scroll for their first navigation, i.e de-bouncing 
-          
+          // we don't scroll for their first navigation, i.e de-bouncing
+
           this.scrollAsyncTimeout = setTimeout(() => {
             // does that anchor exist in the page?
             const anchorTarget = document.querySelector(anchor); // look for #element-id
@@ -137,6 +150,14 @@ const PalindromDOM = (() => {
       history.pushState(null, null, url);
       this.network.getPatchUsingHTTP(url);
       window && window.scrollTo(0, 0);
+    }
+
+    /**
+     * Handles `palindrom-morph-url` event and channels its `detail.url` to `morphUrl`
+     * @param {palindrom-morph-url Event} event 
+     */
+    morphUrlEventHandler(event) {
+      this.morphUrl(event.detail.url);
     }
 
     clickHandler(event) {

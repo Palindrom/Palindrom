@@ -4,3 +4,4 @@
 bower.json
 .travis.yml
 .gitignore
+package-lock.json

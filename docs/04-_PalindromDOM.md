@@ -67,3 +67,24 @@ Palindrom uses the HTML5 history API to update the URL in the browser address ba
  * call `palindrom.morph(url)` - that will call `pushState` and update palindrom's state for you,
  * trigger `palindrom-redirect-pushstate` with `{url: "/new/url"}` on `window` after your `history.pushState(url)`,
  * or use [`<palindrom-redirect>`](https://github.com/Palindrom/palindrom-redirect) Custom Element that does it for you.
+
+#### Morph URL with an event
+
+Sometimes, it's tedious to locate the `PalindromDOM` instance in your application using `querySelector`, making it bothersome to call `palindrom.morphUrl`. In this case, you can dispatch an event to `palindrom.listenTo` element if you set one, or to `document.body` if you haven't, and `PaldinromDOM` with handle it and morph the URL.
+
+Example:
+
+```js
+document.body.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url: yourURL}}))
+```
+
+Or you can create a helper function:
+
+```js
+function morph(url) {
+  document.body.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url}}))
+}
+
+// then
+morph(yourURL);
+ ```
