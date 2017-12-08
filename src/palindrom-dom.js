@@ -152,6 +152,10 @@ const PalindromDOM = (() => {
       window && window.scrollTo(0, 0);
     }
 
+    /**
+     * Handles `palindrom-morph-url` event and channels its `detail.url` to `morphUrl`
+     * @param {palindrom-morph-url Event} event 
+     */
     morphUrlEventHandler(event) {
       this.morphUrl(event.detail.url);
     }
