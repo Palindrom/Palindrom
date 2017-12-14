@@ -12739,8 +12739,8 @@ if (typeof window !== 'undefined') {
     const a = document.createElement('A');
     a.innerHTML = 'Link';
     a.href = href;
-    (target || target === '') && (a.target = target);
-    (download || download === '') && (a.download = download);    
+    (target || target === '') && (a.setAttribute('target', target));
+    (download || download === '') && (a.setAttribute('download', download));    
     parent.appendChild(a);
     clickElement(a);
     parent.removeChild(a);
@@ -12895,9 +12895,9 @@ if (typeof window !== 'undefined') {
         });
         describe('Links with download attribute', function() {
           it('should not intercept links with download attribute', function() {
-            const href = 'https://upload.wikimedia.org/wikipedia/en/a/a9/Example.jpg';
+            const href = '/components/Palindrom/test/tests-logo.png';
             
-            createAndClickOnLinkWithoutPrevention(href, null, false, 'Example.jpg');
+            createAndClickOnLinkWithoutPrevention(href, null, false, 'tests-logo.png');
 
             expect(historySpy.callCount).to.equal(0);
           });
