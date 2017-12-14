@@ -1818,7 +1818,29 @@ const Palindrom = (() => {
       onFatalError && (this.onFatalError = onFatalError);
       onStateChange && (this.onStateChange = onStateChange);
       onSocketOpened && (this.onSocketOpened = onSocketOpened);
-      this._useWebSocket = useWebSocket || false;
+      
+      Object.defineProperty(this, 'useWebSocket', {
+        get: function() {
+          return useWebSocket;
+        },
+        set: (newValue) => {
+          useWebSocket = newValue;
+  
+          if (newValue == false) {
+            if (this._ws) {
+              this._ws.onclose = function() {
+                //overwrites the previous onclose
+                this._ws = null;
+              };
+              this._ws.close();
+            }
+            // define wsUrl if needed
+          } else if (!this.wsUrl) {
+            this.wsUrl = toWebSocketURL(this.remoteUrl.href);
+          }
+          return useWebSocket;
+        }
+      });
     }
     get useWebSocket() {
       return this._useWebSocket;
@@ -1879,7 +1901,7 @@ const Palindrom = (() => {
      * @param {String} [JSONPatch_sequences] message with Array of JSONPatches that were send by remote.
      * @return {[type]} [description]
      */
-    onReceive() /*String_with_JSONPatch_sequences*/ {
+    onReceive(/*String_with_JSONPatch_sequences*/) {
     }
 
     onSend() {}
@@ -1906,8 +1928,13 @@ const Palindrom = (() => {
         onSocketOpenCallback && onSocketOpenCallback(event);
       };
       this._ws.onmessage = event => {
-        const parsedMessage = JSON.parse(event.data);
-        this.onReceive(parsedMessage, this._ws.url, 'WS');
+        try {
+          const parsedMessage = JSON.parse(event.data);
+          this.onReceive(parsedMessage, this._ws.url, 'WS');
+        }
+        catch (e) {
+          this.onFatalError(event.data, upgradeURL, 'WS');
+        }
       };
       this._ws.onerror = event => {
         this.onStateChange(this._ws.readyState, upgradeURL, event.data);
@@ -4752,6 +4779,10 @@ const PalindromDOM = (() => {
       window && window.scrollTo(0, 0);
     }
 
+    /**
+     * Handles `palindrom-morph-url` event and channels its `detail.url` to `morphUrl`
+     * @param {palindrom-morph-url Event} event 
+     */
     morphUrlEventHandler(event) {
       this.morphUrl(event.detail.url);
     }

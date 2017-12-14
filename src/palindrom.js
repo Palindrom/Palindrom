@@ -331,8 +331,13 @@ const Palindrom = (() => {
         onSocketOpenCallback && onSocketOpenCallback(event);
       };
       this._ws.onmessage = event => {
-        const parsedMessage = JSON.parse(event.data);
-        this.onReceive(parsedMessage, this._ws.url, 'WS');
+        try {
+          const parsedMessage = JSON.parse(event.data);
+          this.onReceive(parsedMessage, this._ws.url, 'WS');
+        }
+        catch (e) {
+          this.onFatalError(event.data, upgradeURL, 'WS');
+        }
       };
       this._ws.onerror = event => {
         this.onStateChange(this._ws.readyState, upgradeURL, event.data);
