@@ -1818,7 +1818,29 @@ const Palindrom = (() => {
       onFatalError && (this.onFatalError = onFatalError);
       onStateChange && (this.onStateChange = onStateChange);
       onSocketOpened && (this.onSocketOpened = onSocketOpened);
-      this._useWebSocket = useWebSocket || false;
+      
+      Object.defineProperty(this, 'useWebSocket', {
+        get: function() {
+          return useWebSocket;
+        },
+        set: (newValue) => {
+          useWebSocket = newValue;
+  
+          if (newValue == false) {
+            if (this._ws) {
+              this._ws.onclose = function() {
+                //overwrites the previous onclose
+                this._ws = null;
+              };
+              this._ws.close();
+            }
+            // define wsUrl if needed
+          } else if (!this.wsUrl) {
+            this.wsUrl = toWebSocketURL(this.remoteUrl.href);
+          }
+          return useWebSocket;
+        }
+      });
     }
     get useWebSocket() {
       return this._useWebSocket;
@@ -1879,7 +1901,7 @@ const Palindrom = (() => {
      * @param {String} [JSONPatch_sequences] message with Array of JSONPatches that were send by remote.
      * @return {[type]} [description]
      */
-    onReceive() /*String_with_JSONPatch_sequences*/ {
+    onReceive(/*String_with_JSONPatch_sequences*/) {
     }
 
     onSend() {}
@@ -4752,6 +4774,10 @@ const PalindromDOM = (() => {
       window && window.scrollTo(0, 0);
     }
 
+    /**
+     * Handles `palindrom-morph-url` event and channels its `detail.url` to `morphUrl`
+     * @param {palindrom-morph-url Event} event 
+     */
     morphUrlEventHandler(event) {
       this.morphUrl(event.detail.url);
     }
@@ -4778,8 +4804,9 @@ const PalindromDOM = (() => {
         }
       }
       const anchorTarget = target.target || target.getAttribute('target');
+      const hasDownloadAttribute = target.hasAttribute('download');
 
-      if (!anchorTarget || anchorTarget === '_self') {
+      if (!hasDownloadAttribute && (!anchorTarget || anchorTarget === '_self')) {
         //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
         //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
         //while target.getAttribute("href") returns desired href (as string)

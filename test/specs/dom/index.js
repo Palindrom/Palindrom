@@ -6,12 +6,13 @@ if (typeof window !== 'undefined') {
   const sinon = require('sinon');
   const expect = require('chai').expect;
 
-  function createAndClickOnLinkWithoutPrevention(href, parent, target) {
+  function createAndClickOnLinkWithoutPrevention(href, parent, target, download) {
     parent = parent || document.body;
     const a = document.createElement('A');
     a.innerHTML = 'Link';
     a.href = href;
     (target || target === '') && (a.target = target);
+    (download || download === '') && (a.download = download);    
     parent.appendChild(a);
     clickElement(a);
     parent.removeChild(a);
@@ -163,6 +164,15 @@ if (typeof window !== 'undefined') {
             expect(historySpy.callCount).to.equal(1);
           });
 
+        });
+        describe('Links with download attribute', function() {
+          it('should not intercept links with download attribute', function() {
+            const href = 'https://upload.wikimedia.org/wikipedia/en/a/a9/Example.jpg';
+            
+            createAndClickOnLinkWithoutPrevention(href, null, false, 'Example.jpg');
+
+            expect(historySpy.callCount).to.equal(0);
+          });
         });
         describe('Links with targets', function() {
           it('should not intercept links with a set target', function() {
