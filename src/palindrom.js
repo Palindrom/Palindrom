@@ -336,7 +336,7 @@ const Palindrom = (() => {
           this.onReceive(parsedMessage, this._ws.url, 'WS');
         }
         catch (e) {
-          this.onFatalError(event.data, upgradeURL, 'WS');
+          this.onFatalError(event.data, this._ws.url, 'WS');
         }
       };
       this._ws.onerror = event => {
