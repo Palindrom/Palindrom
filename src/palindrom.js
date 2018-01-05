@@ -5,7 +5,7 @@
  */
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '3.0.9';
+const palindromVersion = '3.1.0';
 
 const { applyPatch, validate } = require('fast-json-patch');
 const JSONPatcherProxy = require('jsonpatcherproxy');

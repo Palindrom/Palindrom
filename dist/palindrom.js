@@ -1,4 +1,4 @@
-/*! Palindrom, version: 3.0.9 */
+/*! Palindrom, version: 3.1.0 */
 var Palindrom =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -3703,7 +3703,7 @@ if(true) {
  */
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '3.0.9';
+const palindromVersion = '3.1.0';
 
 const { applyPatch, validate } = __webpack_require__(13);
 const JSONPatcherProxy = __webpack_require__(16);
