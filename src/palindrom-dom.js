@@ -174,9 +174,14 @@ const PalindromDOM = (() => {
       let target = event.target;
 
       if (target.nodeName !== 'A') {
-        for (let i = 0; i < event.path.length; i++) {
-          if (event.path[i].nodeName == 'A') {
-            target = event.path[i];
+        let eventPath = event.composedPath && event.composedPath();
+        if(!eventPath) {
+          // for backwards compatibility with SDv0
+          eventPath = event.path;
+        }
+        for (let i = 0; i < eventPath.length; i++) {
+          if (eventPath[i].nodeName == 'A') {
+            target = eventPath[i];
             break;
           }
         }
