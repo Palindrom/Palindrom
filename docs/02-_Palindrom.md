@@ -1,6 +1,6 @@
 # Palindrom
 
-> Binds client side view models to server side view models using JSON-Patch and HTTP PATCH/WebSocket.
+> Palindrom is a library for two-way data binding between local and remote JSON models. It uses JSON-Patch for data updates and Operational Transformation for versioning and data consistency. It operates via HTTP or WebSocket or both.
 
 
 ### Usage
