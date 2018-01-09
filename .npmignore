@@ -5,3 +5,9 @@ bower.json
 .travis.yml
 .gitignore
 package-lock.json
+docs
+dist
+test
+exp
+bump-version.js
+webpack.config.js
