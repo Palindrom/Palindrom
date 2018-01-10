@@ -16,6 +16,11 @@ const JSONPatchOT = require('json-patch-ot');
 const JSONPatchOTAgent = require('json-patch-ot-agent');
 const URL = require('./URL');
 const axios = require('axios');
+const {
+  PalindromError,
+  PalindromConnectionError,
+  PalindromValidationError
+} = require('./palindrom-errors');
 
 /* We are going to hand `websocket` lib as an external to webpack
   (see: https://webpack.js.org/configuration/externals/), 
@@ -136,7 +141,7 @@ const Palindrom = (() => {
    * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
    * @param timeoutMs should a response fail to arrive in this time, `onError` will be called
    * @constructor
-     */
+   */
   function Heartbeat(sendHeartbeatAction, onError, intervalMs, timeoutMs) {
     let scheduledSend;
     let scheduledError;
@@ -163,9 +168,16 @@ const Palindrom = (() => {
       if (scheduledError) {
         return;
       }
-      scheduledError = setTimeout(() => {
+      var scheduledError = setTimeout(() => {
         scheduledError = null;
-        onError(); // timeout has passed and response hasn't arrived
+        onError(
+          new PalindromConnectionError(
+            "Timeout has passed and response hasn't arrived",
+            'Client',
+            this.remoteUrl,
+            'Unknown'
+          )
+        ); // timeout has passed and response hasn't arrived
       }, timeoutMs);
     };
 
@@ -221,14 +233,14 @@ const Palindrom = (() => {
       onFatalError && (this.onFatalError = onFatalError);
       onStateChange && (this.onStateChange = onStateChange);
       onSocketOpened && (this.onSocketOpened = onSocketOpened);
-      
+
       Object.defineProperty(this, 'useWebSocket', {
         get: function() {
           return useWebSocket;
         },
-        set: (newValue) => {
+        set: newValue => {
           useWebSocket = newValue;
-  
+
           if (newValue == false) {
             if (this._ws) {
               this._ws.onclose = function() {
@@ -304,8 +316,7 @@ const Palindrom = (() => {
      * @param {String} [JSONPatch_sequences] message with Array of JSONPatches that were send by remote.
      * @return {[type]} [description]
      */
-    onReceive(/*String_with_JSONPatch_sequences*/) {
-    }
+    onReceive(/*String_with_JSONPatch_sequences*/) {}
 
     onSend() {}
     onStateChange() {}
@@ -334,9 +345,15 @@ const Palindrom = (() => {
         try {
           const parsedMessage = JSON.parse(event.data);
           this.onReceive(parsedMessage, this._ws.url, 'WS');
-        }
-        catch (e) {
-          this.onFatalError(event.data, this._ws.url, 'WS');
+        } catch (e) {
+          this.onFatalError(
+            new PalindromConnectionError(
+              event.data,
+              'Server',
+              this._ws.url,
+              'WS'
+            )
+          );
         }
       };
       this._ws.onerror = event => {
@@ -346,13 +363,12 @@ const Palindrom = (() => {
           return;
         }
 
-        const m = {
-          statusText: 'WebSocket connection could not be made.',
-          readyState: this._ws.readyState,
-          url: upgradeURL
-        };
-
-        this.onFatalError(m, upgradeURL, 'WS');
+        const message = `WebSocket connection could not be made.\nreadyState: ${
+          this._ws.readyState
+        }`;
+        this.onFatalError(
+          new PalindromConnectionError(message, 'Client', upgradeURL, 'WS')
+        );
       };
       this._ws.onclose = event => {
         this.onStateChange(
@@ -363,18 +379,28 @@ const Palindrom = (() => {
           event.reason
         );
 
-        const m = {
-          statusText: 'WebSocket connection closed.',
-          readyState: this._ws.readyState,
-          url: upgradeURL,
-          statusCode: event.code,
-          reason: event.reason
-        };
-
         if (event.reason) {
-          this.onFatalError(m, upgradeURL, 'WS');
+          const message = [
+            'WebSocket connection closed unexpectedly.',
+            ` reason: ${event.reason}`,
+            ` readyState: ${this._ws.readyState}`,
+            ` stateCode: ${event.code}`
+          ].join('\n');
+
+          this.onFatalError(
+            new PalindromConnectionError(message, 'Server', upgradeURL, 'WS')
+          );
         } else if (!event.wasClean) {
-          this.onConnectionError();
+          const message = [
+            'WebSocket connection closed unexpectedly.',
+            ` reason: ${event.reason}`,
+            ` readyState: ${this._ws.readyState}`,
+            ` stateCode: ${event.code}`
+          ].join('\n');
+
+          this.onConnectionError(
+            new PalindromConnectionError(message, 'Server', upgradeURL, 'WS')
+          );
         }
       };
     }
@@ -401,10 +427,17 @@ const Palindrom = (() => {
     // TODO:(tomalec)[cleanup] hide from public API.
     setRemoteUrl(remoteUrl) {
       if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
-        throw new Error(
-          `Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: ${this
-            .remoteUrl}\nNew session ID: ${remoteUrl}`
-        );
+
+        const message = [
+          'Session lost.',
+          ' Server replied with a different session ID than the already set one.',
+          ' Possibly a server restart happened while you were working.',
+          ' Please reload the page.'
+          ` Previous session ID: ${this.remoteUrl}`
+          ` New session ID: ${remoteUrl}`
+        ].join('\n');
+
+        throw new PalindromError(message);
       }
       this.remoteUrlSet = true;
       this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
@@ -460,24 +493,28 @@ const Palindrom = (() => {
 
           if (res) {
             var statusCode = res.status;
-            var statusText = res.statusText;
+            var statusText = res.statusText || res.data;
             var reason = res.data;
           } else {
             // no sufficient error information, we need to create on our own
             var statusCode = -1;
-            var statusText = `An unknown network error has occurred. Raw message: ${error.message}`;
+            var statusText = `An unknown network error has occurred. Raw message: ${
+              error.message
+            }`;
             var reason = 'Maybe you lost connection with the server';
             // log it for verbosity
             console.error(error);
           }
+
+          const message = [
+            statusText,
+            `statusCode: ${statusCode}`,            
+            `reason: ${reason}`,
+            `url: ${res.url}`
+          ].join('\n');
+
           this.onFatalError(
-            {
-              statusCode,
-              statusText,
-              reason
-            },
-            url,
-            method
+            new PalindromConnectionError(message, 'Client', res.config.url, method)
           );
         });
 
@@ -567,8 +604,8 @@ const Palindrom = (() => {
     /**
      * Palindrom version
      */
-    static get version() { 
-      return palindromVersion
+    static get version() {
+      return palindromVersion;
     }
 
     constructor(options) {
@@ -621,6 +658,7 @@ const Palindrom = (() => {
         options.onIncomingPatchValidationError || noop;
       this.onOutgoingPatchValidationError =
         options.onOutgoingPatchValidationError || noop;
+      this.onError = options.onError || noop;
 
       this.reconnector = new Reconnector(
         () => makeReconnection(this),
@@ -782,8 +820,13 @@ const Palindrom = (() => {
             this.onStateReset(this.obj);
           } catch (error) {
             // to prevent the promise's catch from swallowing errors inside onStateReset
-            error.message = `Palindrom: Error inside onStateReset callback: ${error.message}`;
-            this.onConnectionError(error);
+            this.onError(
+              new PalindromError(
+                `Palindrom: Error inside onStateReset callback: ${
+                  error.message
+                }`
+              )
+            );
             console.error(error);
           }
         }
@@ -802,7 +845,9 @@ const Palindrom = (() => {
     validateSequence(tree, sequence) {
       const error = validate(sequence, tree);
       if (error) {
-        this.onOutgoingPatchValidationError(error);
+        this.onOutgoingPatchValidationError(
+          new PalindromValidationError(error.message, 'Outgoing')
+        );
       }
     }
 
@@ -816,12 +861,13 @@ const Palindrom = (() => {
 
     /**
      * Handle an error which probably won't go away on itself (basically forward upstream)
+     * @param {PalindromConnectionError} palindromError
      */
-    handleFatalError(data, url, method) {
+    handleFatalError(palindromError) {
       this.heartbeat.stop();
       this.reconnector.stopReconnecting();
       if (this.onConnectionError) {
-        this.onConnectionError(data, url, method);
+        this.onConnectionError(palindromError);
       }
     }
 
@@ -892,8 +938,8 @@ const Palindrom = (() => {
 
   /**
    * Traverses/checks value looking for out-of-range numbers, throws a RangeError if it finds any
-   * @param {*} val value 
-   * @param {Function} errorHandler 
+   * @param {*} val value
+   * @param {Function} errorHandler
    */
   function findRangeErrors(val, errorHandler) {
     const type = typeof val;

@@ -6,6 +6,7 @@ const moxios = require('moxios');
 const sinon = require('sinon');
 const expect = require('chai').expect;
 const MockSocketServer = require('mock-socket').Server;
+const {PalindromError} = require('../../src/palindrom-errors');
 
 describe('Palindrom', () => {
   describe('#error responses', () => {
@@ -32,7 +33,7 @@ describe('Palindrom', () => {
 
         /* onConnectionError should be called once now */
         setTimeout(() => {
-          assert(spy.calledOnce);
+          assert.equal(spy.callCount, 1);
           done();
         }, 5);
       });
@@ -71,15 +72,15 @@ describe('Palindrom', () => {
         const palindrom = new Palindrom({
           remoteUrl: 'http://localhost/testURL',
           onStateReset: () => { throw new Error(); },
-          onConnectionError: spy
+          onError: spy
         });
 
         /* onConnectionError should be called once now */
         setTimeout(() => {
           assert(spy.calledOnce);
           const errorPassed = spy.getCall(0).args[0];
-          assert(errorPassed instanceof Error);
-          assert(errorPassed.message.indexOf(`Palindrom: Error inside onStateReset callback:`) > -1)
+          assert(errorPassed instanceof PalindromError);
+          assert(errorPassed.message.includes(`Palindrom: Error inside onStateReset callback:`))
           done();
         }, 5);
       });

@@ -5,6 +5,7 @@ const Palindrom = require('../../src/palindrom');
 const assert = require('assert');
 const moxios = require('moxios');
 const sinon = require('sinon');
+const {PalindromConnectionError} = require('../../src/palindrom-errors')
 
 describe('Sockets', () => {
   beforeEach(() => {
@@ -371,7 +372,11 @@ describe('Sockets', () => {
 
             /* Now! */
             assert(spy.calledOnce);
-            assert(spy.calledWith(`Some error message from the server`));
+            
+            const error = spy.lastCall.args[0];
+            
+            assert(error instanceof PalindromConnectionError);
+            assert.equal(error.message, 'Server error: Some error message from the server');
 
             server.stop(done);
 

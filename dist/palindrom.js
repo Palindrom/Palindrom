@@ -65,7 +65,7 @@ var Palindrom =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 41);
+/******/ 	return __webpack_require__(__webpack_require__.s = 42);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -381,8 +381,8 @@ module.exports = {
 /**
  * version: 3.0.0-rc.0
  */
-var queue = __webpack_require__(40);
-var sync = __webpack_require__(39);
+var queue = __webpack_require__(41);
+var sync = __webpack_require__(40);
 
 module.exports = { JSONPatchQueue: queue, JSONPatchQueueSynchronous: sync, /* Babel demands this */__esModule:  true };
 
@@ -395,7 +395,7 @@ module.exports = { JSONPatchQueue: queue, JSONPatchQueueSynchronous: sync, /* Ba
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(0);
-var normalizeHeaderName = __webpack_require__(34);
+var normalizeHeaderName = __webpack_require__(35);
 
 var PROTECTION_PREFIX = /^\)\]\}',?\n/;
 var DEFAULT_CONTENT_TYPE = {
@@ -661,12 +661,12 @@ exports.PatchError = PatchError;
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(0);
-var settle = __webpack_require__(26);
-var buildURL = __webpack_require__(29);
-var parseHeaders = __webpack_require__(35);
-var isURLSameOrigin = __webpack_require__(33);
+var settle = __webpack_require__(27);
+var buildURL = __webpack_require__(30);
+var parseHeaders = __webpack_require__(36);
+var isURLSameOrigin = __webpack_require__(34);
 var createError = __webpack_require__(7);
-var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(28);
+var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(29);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -762,7 +762,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(31);
+      var cookies = __webpack_require__(32);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -883,7 +883,7 @@ module.exports = function isCancel(value) {
 "use strict";
 
 
-var enhanceError = __webpack_require__(25);
+var enhanceError = __webpack_require__(26);
 
 /**
  * Create an Error with the specified message, config, error code, and response.
@@ -923,8 +923,8 @@ module.exports = function bind(fn, thisArg) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var pSlice = Array.prototype.slice;
-var objectKeys = __webpack_require__(38);
-var isArguments = __webpack_require__(37);
+var objectKeys = __webpack_require__(39);
+var isArguments = __webpack_require__(38);
 
 var deepEqual = module.exports = function (actual, expected, opts) {
   if (!opts) opts = {};
@@ -1595,7 +1595,7 @@ process.umask = function() { return 0; };
 /* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(20);
+module.exports = __webpack_require__(21);
 
 /***/ }),
 /* 13 */
@@ -2518,16 +2518,72 @@ module.exports = g;
 /* 18 */
 /***/ (function(module, exports) {
 
-module.exports = URL;
+class PalindromError extends Error {
+  constructor(message) {
+    super(message);
+    this.message = message;
+  }
+}
+
+class PalindromConnectionError extends PalindromError {
+  /**
+   * 
+   * @param {String} message the message that describes the error
+   * @param {String} side <Server|Client> the side where the error occured
+   * @param {String} url The relevant URL
+   * @param {String} connectionType <WebSocket|HTTP>
+   */
+  constructor(message, side, url = window.location.href, connectionType) {
+    if (!side || !['Server', 'Client'].includes(side)) {
+      throw new TypeError(
+        "Error constructing PalindromConnectionError, `side` parameter is required and can either be 'Server' or 'Client'"
+      );
+    }
+    super(message);
+    this.side = side;
+    this.message = `${side} error: ${message}`;
+  }
+}
+
+class PalindromValidationError extends PalindromError {
+  /**
+   * 
+   * @param {String} message the message that describes the error
+   * @param {String} direction <Outgoing|Incoming>
+   */
+  constructor(message, direction) {
+    if (!direction || !['Outgoing', 'Incoming'].includes(direction)) {
+      throw new TypeError(
+        "Error constructing PalindromValidationError, `direction` parameter is required and can either be 'Outgoing' or 'Incoming'"
+      );
+    }
+    super(message);
+    this.message = `${direction}PatchValidationError: ${message}`;
+    this.direction = direction;
+  }
+}
+
+module.exports = {
+  PalindromError,
+  PalindromConnectionError,
+  PalindromValidationError
+};
+
 
 /***/ }),
 /* 19 */
 /***/ (function(module, exports) {
 
-module.exports = WebSocket;
+module.exports = URL;
 
 /***/ }),
 /* 20 */
+/***/ (function(module, exports) {
+
+module.exports = WebSocket;
+
+/***/ }),
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2535,7 +2591,7 @@ module.exports = WebSocket;
 
 var utils = __webpack_require__(0);
 var bind = __webpack_require__(8);
-var Axios = __webpack_require__(22);
+var Axios = __webpack_require__(23);
 var defaults = __webpack_require__(2);
 
 /**
@@ -2570,14 +2626,14 @@ axios.create = function create(instanceConfig) {
 
 // Expose Cancel & CancelToken
 axios.Cancel = __webpack_require__(5);
-axios.CancelToken = __webpack_require__(21);
+axios.CancelToken = __webpack_require__(22);
 axios.isCancel = __webpack_require__(6);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(36);
+axios.spread = __webpack_require__(37);
 
 module.exports = axios;
 
@@ -2586,7 +2642,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2650,7 +2706,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2658,10 +2714,10 @@ module.exports = CancelToken;
 
 var defaults = __webpack_require__(2);
 var utils = __webpack_require__(0);
-var InterceptorManager = __webpack_require__(23);
-var dispatchRequest = __webpack_require__(24);
-var isAbsoluteURL = __webpack_require__(32);
-var combineURLs = __webpack_require__(30);
+var InterceptorManager = __webpack_require__(24);
+var dispatchRequest = __webpack_require__(25);
+var isAbsoluteURL = __webpack_require__(33);
+var combineURLs = __webpack_require__(31);
 
 /**
  * Create a new instance of Axios
@@ -2742,7 +2798,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2801,14 +2857,14 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(0);
-var transformData = __webpack_require__(27);
+var transformData = __webpack_require__(28);
 var isCancel = __webpack_require__(6);
 var defaults = __webpack_require__(2);
 
@@ -2887,7 +2943,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2913,7 +2969,7 @@ module.exports = function enhanceError(error, config, code, response) {
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2945,7 +3001,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2972,7 +3028,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3015,7 +3071,7 @@ module.exports = btoa;
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3090,7 +3146,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3109,7 +3165,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3169,7 +3225,7 @@ module.exports = (
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3190,7 +3246,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3265,7 +3321,7 @@ module.exports = (
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3284,7 +3340,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3328,7 +3384,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3362,7 +3418,7 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports) {
 
 var supportsArgumentsClass = (function(){
@@ -3388,7 +3444,7 @@ function unsupported(object){
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports) {
 
 exports = module.exports = typeof Object.keys === 'function'
@@ -3403,7 +3459,7 @@ function shim (obj) {
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -3540,7 +3596,7 @@ if(true) {
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -3693,7 +3749,7 @@ if(true) {
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/*! Palindrom 
@@ -3712,15 +3768,20 @@ const JSONPatchQueueSynchronous = __webpack_require__(1)
 const JSONPatchQueue = __webpack_require__(1).JSONPatchQueue;
 const JSONPatchOT = __webpack_require__(15);
 const JSONPatchOTAgent = __webpack_require__(14);
-const URL = __webpack_require__(18);
+const URL = __webpack_require__(19);
 const axios = __webpack_require__(12);
+const {
+  PalindromError,
+  PalindromConnectionError,
+  PalindromValidationError
+} = __webpack_require__(18);
 
 /* We are going to hand `websocket` lib as an external to webpack
   (see: https://webpack.js.org/configuration/externals/), 
   this will make `w3cwebsocket` property `undefined`, 
   and this will lead Palindrom to use Browser's WebSocket when it is used 
   from the bundle. And use `websocket` lib in Node environment */
-const NodeWebSocket = __webpack_require__(19).w3cwebsocket;
+const NodeWebSocket = __webpack_require__(20).w3cwebsocket;
 
 /* this allows us to stub WebSockets */
 if (!global.WebSocket && NodeWebSocket) {
@@ -3834,7 +3895,7 @@ const Palindrom = (() => {
    * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
    * @param timeoutMs should a response fail to arrive in this time, `onError` will be called
    * @constructor
-     */
+   */
   function Heartbeat(sendHeartbeatAction, onError, intervalMs, timeoutMs) {
     let scheduledSend;
     let scheduledError;
@@ -3861,9 +3922,16 @@ const Palindrom = (() => {
       if (scheduledError) {
         return;
       }
-      scheduledError = setTimeout(() => {
+      var scheduledError = setTimeout(() => {
         scheduledError = null;
-        onError(); // timeout has passed and response hasn't arrived
+        onError(
+          new PalindromConnectionError(
+            "Timeout has passed and response hasn't arrived",
+            'Client',
+            this.remoteUrl,
+            'Unknown'
+          )
+        ); // timeout has passed and response hasn't arrived
       }, timeoutMs);
     };
 
@@ -3919,14 +3987,14 @@ const Palindrom = (() => {
       onFatalError && (this.onFatalError = onFatalError);
       onStateChange && (this.onStateChange = onStateChange);
       onSocketOpened && (this.onSocketOpened = onSocketOpened);
-      
+
       Object.defineProperty(this, 'useWebSocket', {
         get: function() {
           return useWebSocket;
         },
-        set: (newValue) => {
+        set: newValue => {
           useWebSocket = newValue;
-  
+
           if (newValue == false) {
             if (this._ws) {
               this._ws.onclose = function() {
@@ -4002,8 +4070,7 @@ const Palindrom = (() => {
      * @param {String} [JSONPatch_sequences] message with Array of JSONPatches that were send by remote.
      * @return {[type]} [description]
      */
-    onReceive(/*String_with_JSONPatch_sequences*/) {
-    }
+    onReceive(/*String_with_JSONPatch_sequences*/) {}
 
     onSend() {}
     onStateChange() {}
@@ -4032,9 +4099,15 @@ const Palindrom = (() => {
         try {
           const parsedMessage = JSON.parse(event.data);
           this.onReceive(parsedMessage, this._ws.url, 'WS');
-        }
-        catch (e) {
-          this.onFatalError(event.data, upgradeURL, 'WS');
+        } catch (e) {
+          this.onFatalError(
+            new PalindromConnectionError(
+              event.data,
+              'Server',
+              this._ws.url,
+              'WS'
+            )
+          );
         }
       };
       this._ws.onerror = event => {
@@ -4044,13 +4117,12 @@ const Palindrom = (() => {
           return;
         }
 
-        const m = {
-          statusText: 'WebSocket connection could not be made.',
-          readyState: this._ws.readyState,
-          url: upgradeURL
-        };
-
-        this.onFatalError(m, upgradeURL, 'WS');
+        const message = `WebSocket connection could not be made.\nreadyState: ${
+          this._ws.readyState
+        }`;
+        this.onFatalError(
+          new PalindromConnectionError(message, 'Client', upgradeURL, 'WS')
+        );
       };
       this._ws.onclose = event => {
         this.onStateChange(
@@ -4061,18 +4133,28 @@ const Palindrom = (() => {
           event.reason
         );
 
-        const m = {
-          statusText: 'WebSocket connection closed.',
-          readyState: this._ws.readyState,
-          url: upgradeURL,
-          statusCode: event.code,
-          reason: event.reason
-        };
-
         if (event.reason) {
-          this.onFatalError(m, upgradeURL, 'WS');
+          const message = [
+            'WebSocket connection closed unexpectedly.',
+            ` reason: ${event.reason}`,
+            ` readyState: ${this._ws.readyState}`,
+            ` stateCode: ${event.code}`
+          ].join('\n');
+
+          this.onFatalError(
+            new PalindromConnectionError(message, 'Server', upgradeURL, 'WS')
+          );
         } else if (!event.wasClean) {
-          this.onConnectionError();
+          const message = [
+            'WebSocket connection closed unexpectedly.',
+            ` reason: ${event.reason}`,
+            ` readyState: ${this._ws.readyState}`,
+            ` stateCode: ${event.code}`
+          ].join('\n');
+
+          this.onConnectionError(
+            new PalindromConnectionError(message, 'Server', upgradeURL, 'WS')
+          );
         }
       };
     }
@@ -4099,10 +4181,17 @@ const Palindrom = (() => {
     // TODO:(tomalec)[cleanup] hide from public API.
     setRemoteUrl(remoteUrl) {
       if (this.remoteUrlSet && this.remoteUrl && this.remoteUrl != remoteUrl) {
-        throw new Error(
-          `Session lost. Server replied with a different session ID that was already set. \nPossibly a server restart happened while you were working. \nPlease reload the page.\n\nPrevious session ID: ${this
-            .remoteUrl}\nNew session ID: ${remoteUrl}`
-        );
+
+        const message = [
+          'Session lost.',
+          ' Server replied with a different session ID than the already set one.',
+          ' Possibly a server restart happened while you were working.',
+          ' Please reload the page.'
+          ` Previous session ID: ${this.remoteUrl}`
+          ` New session ID: ${remoteUrl}`
+        ].join('\n');
+
+        throw new PalindromError(message);
       }
       this.remoteUrlSet = true;
       this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
@@ -4158,24 +4247,28 @@ const Palindrom = (() => {
 
           if (res) {
             var statusCode = res.status;
-            var statusText = res.statusText;
+            var statusText = res.statusText || res.data;
             var reason = res.data;
           } else {
             // no sufficient error information, we need to create on our own
             var statusCode = -1;
-            var statusText = `An unknown network error has occurred. Raw message: ${error.message}`;
+            var statusText = `An unknown network error has occurred. Raw message: ${
+              error.message
+            }`;
             var reason = 'Maybe you lost connection with the server';
             // log it for verbosity
             console.error(error);
           }
+
+          const message = [
+            statusText,
+            `statusCode: ${statusCode}`,            
+            `reason: ${reason}`,
+            `url: ${res.url}`
+          ].join('\n');
+
           this.onFatalError(
-            {
-              statusCode,
-              statusText,
-              reason
-            },
-            url,
-            method
+            new PalindromConnectionError(message, 'Client', res.config.url, method)
           );
         });
 
@@ -4265,8 +4358,8 @@ const Palindrom = (() => {
     /**
      * Palindrom version
      */
-    static get version() { 
-      return palindromVersion
+    static get version() {
+      return palindromVersion;
     }
 
     constructor(options) {
@@ -4319,6 +4412,7 @@ const Palindrom = (() => {
         options.onIncomingPatchValidationError || noop;
       this.onOutgoingPatchValidationError =
         options.onOutgoingPatchValidationError || noop;
+      this.onError = options.onError || noop;
 
       this.reconnector = new Reconnector(
         () => makeReconnection(this),
@@ -4480,8 +4574,13 @@ const Palindrom = (() => {
             this.onStateReset(this.obj);
           } catch (error) {
             // to prevent the promise's catch from swallowing errors inside onStateReset
-            error.message = `Palindrom: Error inside onStateReset callback: ${error.message}`;
-            this.onConnectionError(error);
+            this.onError(
+              new PalindromError(
+                `Palindrom: Error inside onStateReset callback: ${
+                  error.message
+                }`
+              )
+            );
             console.error(error);
           }
         }
@@ -4500,7 +4599,9 @@ const Palindrom = (() => {
     validateSequence(tree, sequence) {
       const error = validate(sequence, tree);
       if (error) {
-        this.onOutgoingPatchValidationError(error);
+        this.onOutgoingPatchValidationError(
+          new PalindromValidationError(error.message, 'Outgoing')
+        );
       }
     }
 
@@ -4514,12 +4615,13 @@ const Palindrom = (() => {
 
     /**
      * Handle an error which probably won't go away on itself (basically forward upstream)
+     * @param {PalindromConnectionError} palindromError
      */
-    handleFatalError(data, url, method) {
+    handleFatalError(palindromError) {
       this.heartbeat.stop();
       this.reconnector.stopReconnecting();
       if (this.onConnectionError) {
-        this.onConnectionError(data, url, method);
+        this.onConnectionError(palindromError);
       }
     }
 
@@ -4590,8 +4692,8 @@ const Palindrom = (() => {
 
   /**
    * Traverses/checks value looking for out-of-range numbers, throws a RangeError if it finds any
-   * @param {*} val value 
-   * @param {Function} errorHandler 
+   * @param {*} val value
+   * @param {Function} errorHandler
    */
   function findRangeErrors(val, errorHandler) {
     const type = typeof val;
