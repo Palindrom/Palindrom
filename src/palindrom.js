@@ -363,9 +363,11 @@ const Palindrom = (() => {
           return;
         }
 
-        const message = `WebSocket connection could not be made.\nreadyState: ${
-          this._ws.readyState
-        }`;
+        const message = [
+          `WebSocket connection could not be made`,
+          ` readyState: ${this._ws.readyState}`
+        ].join('\n');
+
         this.onFatalError(
           new PalindromConnectionError(message, 'Client', upgradeURL, 'WS')
         );
@@ -508,9 +510,9 @@ const Palindrom = (() => {
 
           const message = [
             statusText,
-            `statusCode: ${statusCode}`,            
-            `reason: ${reason}`,
-            `url: ${res.url}`
+            ` statusCode: ${statusCode}`,            
+            ` reason: ${reason}`,
+            ` url: ${res.url}`
           ].join('\n');
 
           this.onFatalError(
