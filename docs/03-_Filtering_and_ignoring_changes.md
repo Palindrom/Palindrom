@@ -1,4 +1,4 @@
-# Filtering Patches
+# Filtering and ignoring changes
 
 Palindrom deeply observes changes made to the `palindrom.obj` object and converts them to patches. If you have a need to ignore some kind of changes, there are two ways to do it. Either make the changes in non-enumerable property or use a filtering function to ignore changes made in the enumerable properties.
 

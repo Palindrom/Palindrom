@@ -2,9 +2,9 @@
 <p align="center">
   <img title="Palindrom" alt="Palindrom Logo" src="https://cloud.githubusercontent.com/assets/17054134/25017514/5f22bcd4-2084-11e7-816c-ee249e1b3164.png">
 </p>
-
-## Binds client side view models to server side view models using JSON-Patch and HTTP PATCH/WebSocket.
-
+<h4 align="center">
+Library for two-way data binding between local and remote JSON models. It uses JSON-Patch for data updates and Operational Transformation for versioning and data consistency. It operates via HTTP or WebSocket or both.
+</h4>
 
 [![Build Status](https://travis-ci.org/Palindrom/Palindrom.svg?branch=master)](https://travis-ci.org/Palindrom/Palindrom)
 [![npm version](https://badge.fury.io/js/palindrom.svg)](https://badge.fury.io/js/palindrom)

@@ -1,4 +1,4 @@
-/*! Palindrom, version: 3.0.9 */
+/*! Palindrom, version: 3.1.0 */
 var PalindromDOM =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -1602,7 +1602,7 @@ process.umask = function() { return 0; };
  */
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '3.0.9';
+const palindromVersion = '3.1.0';
 
 const { applyPatch, validate } = __webpack_require__(33);
 const JSONPatcherProxy = __webpack_require__(38);
@@ -4847,16 +4847,22 @@ const PalindromDOM = (() => {
       let target = event.target;
 
       if (target.nodeName !== 'A') {
-        for (let i = 0; i < event.path.length; i++) {
-          if (event.path[i].nodeName == 'A') {
-            target = event.path[i];
+        let eventPath = event.composedPath && event.composedPath();
+        if(!eventPath) {
+          // for backwards compatibility with SDv0
+          eventPath = event.path;
+        }
+        for (let i = 0; i < eventPath.length; i++) {
+          if (eventPath[i].nodeName == 'A') {
+            target = eventPath[i];
             break;
           }
         }
       }
       const anchorTarget = target.target || target.getAttribute('target');
+      const hasDownloadAttribute = target.hasAttribute('download');
 
-      if (!anchorTarget || anchorTarget === '_self') {
+      if (!hasDownloadAttribute && (!anchorTarget || anchorTarget === '_self')) {
         //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
         //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
         //while target.getAttribute("href") returns desired href (as string)
