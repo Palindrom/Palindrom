@@ -343,8 +343,7 @@ const Palindrom = (() => {
       };
       this._ws.onmessage = event => {
         try {
-          const parsedMessage = JSON.parse(event.data);
-          this.onReceive(parsedMessage, this._ws.url, 'WS');
+          var parsedMessage = JSON.parse(event.data);
         } catch (e) {
           this.onFatalError(
             new PalindromConnectionError(
@@ -354,7 +353,9 @@ const Palindrom = (() => {
               'WS'
             )
           );
+          return;
         }
+        this.onReceive(parsedMessage, this._ws.url, 'WS');        
       };
       this._ws.onerror = event => {
         this.onStateChange(this._ws.readyState, upgradeURL, event.data);
