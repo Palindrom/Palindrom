@@ -376,7 +376,7 @@ describe('Sockets', () => {
             const error = spy.lastCall.args[0];
             
             assert(error instanceof PalindromConnectionError);
-            assert.equal(error.message, 'Server error: Some error message from the server');
+            assert.equal(error.message, 'Server error\n\tSome error message from the server');
 
             server.stop(done);
 

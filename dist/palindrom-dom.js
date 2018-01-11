@@ -35,9 +35,6 @@ var PalindromDOM =
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
 /******/
-/******/ 	// identity function for calling harmony imports with the correct context
-/******/ 	__webpack_require__.i = function(value) { return value; };
-/******/
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
@@ -65,7 +62,7 @@ var PalindromDOM =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 40);
+/******/ 	return __webpack_require__(__webpack_require__.s = 12);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -75,7 +72,7 @@ var PalindromDOM =
 "use strict";
 
 
-var bind = __webpack_require__(8);
+var bind = __webpack_require__(6);
 
 /*global toString:true*/
 
@@ -376,107 +373,6 @@ module.exports = {
 
 /***/ }),
 /* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
-
-var utils = __webpack_require__(0);
-var normalizeHeaderName = __webpack_require__(27);
-
-var PROTECTION_PREFIX = /^\)\]\}',?\n/;
-var DEFAULT_CONTENT_TYPE = {
-  'Content-Type': 'application/x-www-form-urlencoded'
-};
-
-function setContentTypeIfUnset(headers, value) {
-  if (!utils.isUndefined(headers) && utils.isUndefined(headers['Content-Type'])) {
-    headers['Content-Type'] = value;
-  }
-}
-
-function getDefaultAdapter() {
-  var adapter;
-  if (typeof XMLHttpRequest !== 'undefined') {
-    // For browsers use XHR adapter
-    adapter = __webpack_require__(4);
-  } else if (typeof process !== 'undefined') {
-    // For node use HTTP adapter
-    adapter = __webpack_require__(4);
-  }
-  return adapter;
-}
-
-var defaults = {
-  adapter: getDefaultAdapter(),
-
-  transformRequest: [function transformRequest(data, headers) {
-    normalizeHeaderName(headers, 'Content-Type');
-    if (utils.isFormData(data) ||
-      utils.isArrayBuffer(data) ||
-      utils.isStream(data) ||
-      utils.isFile(data) ||
-      utils.isBlob(data)
-    ) {
-      return data;
-    }
-    if (utils.isArrayBufferView(data)) {
-      return data.buffer;
-    }
-    if (utils.isURLSearchParams(data)) {
-      setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
-      return data.toString();
-    }
-    if (utils.isObject(data)) {
-      setContentTypeIfUnset(headers, 'application/json;charset=utf-8');
-      return JSON.stringify(data);
-    }
-    return data;
-  }],
-
-  transformResponse: [function transformResponse(data) {
-    /*eslint no-param-reassign:0*/
-    if (typeof data === 'string') {
-      data = data.replace(PROTECTION_PREFIX, '');
-      try {
-        data = JSON.parse(data);
-      } catch (e) { /* Ignore */ }
-    }
-    return data;
-  }],
-
-  timeout: 0,
-
-  xsrfCookieName: 'XSRF-TOKEN',
-  xsrfHeaderName: 'X-XSRF-TOKEN',
-
-  maxContentLength: -1,
-
-  validateStatus: function validateStatus(status) {
-    return status >= 200 && status < 300;
-  }
-};
-
-defaults.headers = {
-  common: {
-    'Accept': 'application/json, text/plain, */*'
-  }
-};
-
-utils.forEach(['delete', 'get', 'head'], function forEachMehtodNoData(method) {
-  defaults.headers[method] = {};
-});
-
-utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
-  defaults.headers[method] = utils.merge(DEFAULT_CONTENT_TYPE);
-});
-
-module.exports = defaults;
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(38)))
-
-/***/ }),
-/* 2 */
 /***/ (function(module, exports) {
 
 var __extends = (this && this.__extends) || function (d, b) {
@@ -641,289 +537,126 @@ exports.PatchError = PatchError;
 
 
 /***/ }),
-/* 3 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
  * version: 3.0.0-rc.0
  */
-var queue = __webpack_require__(36);
-var sync = __webpack_require__(35);
+var queue = __webpack_require__(19);
+var sync = __webpack_require__(20);
 
 module.exports = { JSONPatchQueue: queue, JSONPatchQueueSynchronous: sync, /* Babel demands this */__esModule:  true };
 
 
 /***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+var utils = __webpack_require__(0);
+var normalizeHeaderName = __webpack_require__(27);
+
+var PROTECTION_PREFIX = /^\)\]\}',?\n/;
+var DEFAULT_CONTENT_TYPE = {
+  'Content-Type': 'application/x-www-form-urlencoded'
+};
+
+function setContentTypeIfUnset(headers, value) {
+  if (!utils.isUndefined(headers) && utils.isUndefined(headers['Content-Type'])) {
+    headers['Content-Type'] = value;
+  }
+}
+
+function getDefaultAdapter() {
+  var adapter;
+  if (typeof XMLHttpRequest !== 'undefined') {
+    // For browsers use XHR adapter
+    adapter = __webpack_require__(8);
+  } else if (typeof process !== 'undefined') {
+    // For node use HTTP adapter
+    adapter = __webpack_require__(8);
+  }
+  return adapter;
+}
+
+var defaults = {
+  adapter: getDefaultAdapter(),
+
+  transformRequest: [function transformRequest(data, headers) {
+    normalizeHeaderName(headers, 'Content-Type');
+    if (utils.isFormData(data) ||
+      utils.isArrayBuffer(data) ||
+      utils.isStream(data) ||
+      utils.isFile(data) ||
+      utils.isBlob(data)
+    ) {
+      return data;
+    }
+    if (utils.isArrayBufferView(data)) {
+      return data.buffer;
+    }
+    if (utils.isURLSearchParams(data)) {
+      setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
+      return data.toString();
+    }
+    if (utils.isObject(data)) {
+      setContentTypeIfUnset(headers, 'application/json;charset=utf-8');
+      return JSON.stringify(data);
+    }
+    return data;
+  }],
+
+  transformResponse: [function transformResponse(data) {
+    /*eslint no-param-reassign:0*/
+    if (typeof data === 'string') {
+      data = data.replace(PROTECTION_PREFIX, '');
+      try {
+        data = JSON.parse(data);
+      } catch (e) { /* Ignore */ }
+    }
+    return data;
+  }],
+
+  timeout: 0,
+
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
+
+  maxContentLength: -1,
+
+  validateStatus: function validateStatus(status) {
+    return status >= 200 && status < 300;
+  }
+};
+
+defaults.headers = {
+  common: {
+    'Accept': 'application/json, text/plain, */*'
+  }
+};
+
+utils.forEach(['delete', 'get', 'head'], function forEachMehtodNoData(method) {
+  defaults.headers[method] = {};
+});
+
+utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
+  defaults.headers[method] = utils.merge(DEFAULT_CONTENT_TYPE);
+});
+
+module.exports = defaults;
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7)))
+
+/***/ }),
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
-var utils = __webpack_require__(0);
-var settle = __webpack_require__(19);
-var buildURL = __webpack_require__(22);
-var parseHeaders = __webpack_require__(28);
-var isURLSameOrigin = __webpack_require__(26);
-var createError = __webpack_require__(7);
-var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(21);
-
-module.exports = function xhrAdapter(config) {
-  return new Promise(function dispatchXhrRequest(resolve, reject) {
-    var requestData = config.data;
-    var requestHeaders = config.headers;
-
-    if (utils.isFormData(requestData)) {
-      delete requestHeaders['Content-Type']; // Let the browser set it
-    }
-
-    var request = new XMLHttpRequest();
-    var loadEvent = 'onreadystatechange';
-    var xDomain = false;
-
-    // For IE 8/9 CORS support
-    // Only supports POST and GET calls and doesn't returns the response headers.
-    // DON'T do this for testing b/c XMLHttpRequest is mocked, not XDomainRequest.
-    if ("production" !== 'test' &&
-        typeof window !== 'undefined' &&
-        window.XDomainRequest && !('withCredentials' in request) &&
-        !isURLSameOrigin(config.url)) {
-      request = new window.XDomainRequest();
-      loadEvent = 'onload';
-      xDomain = true;
-      request.onprogress = function handleProgress() {};
-      request.ontimeout = function handleTimeout() {};
-    }
-
-    // HTTP basic authentication
-    if (config.auth) {
-      var username = config.auth.username || '';
-      var password = config.auth.password || '';
-      requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
-    }
-
-    request.open(config.method.toUpperCase(), buildURL(config.url, config.params, config.paramsSerializer), true);
-
-    // Set the request timeout in MS
-    request.timeout = config.timeout;
-
-    // Listen for ready state
-    request[loadEvent] = function handleLoad() {
-      if (!request || (request.readyState !== 4 && !xDomain)) {
-        return;
-      }
-
-      // The request errored out and we didn't get a response, this will be
-      // handled by onerror instead
-      // With one exception: request that using file: protocol, most browsers
-      // will return status as 0 even though it's a successful request
-      if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
-        return;
-      }
-
-      // Prepare the response
-      var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
-      var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
-      var response = {
-        data: responseData,
-        // IE sends 1223 instead of 204 (https://github.com/mzabriskie/axios/issues/201)
-        status: request.status === 1223 ? 204 : request.status,
-        statusText: request.status === 1223 ? 'No Content' : request.statusText,
-        headers: responseHeaders,
-        config: config,
-        request: request
-      };
-
-      settle(resolve, reject, response);
-
-      // Clean up request
-      request = null;
-    };
-
-    // Handle low level network errors
-    request.onerror = function handleError() {
-      // Real errors are hidden from us by the browser
-      // onerror should only fire if it's a network error
-      reject(createError('Network Error', config));
-
-      // Clean up request
-      request = null;
-    };
-
-    // Handle timeout
-    request.ontimeout = function handleTimeout() {
-      reject(createError('timeout of ' + config.timeout + 'ms exceeded', config, 'ECONNABORTED'));
-
-      // Clean up request
-      request = null;
-    };
-
-    // Add xsrf header
-    // This is only done if running in a standard browser environment.
-    // Specifically not if we're in a web worker, or react-native.
-    if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(24);
-
-      // Add xsrf header
-      var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
-          cookies.read(config.xsrfCookieName) :
-          undefined;
-
-      if (xsrfValue) {
-        requestHeaders[config.xsrfHeaderName] = xsrfValue;
-      }
-    }
-
-    // Add headers to the request
-    if ('setRequestHeader' in request) {
-      utils.forEach(requestHeaders, function setRequestHeader(val, key) {
-        if (typeof requestData === 'undefined' && key.toLowerCase() === 'content-type') {
-          // Remove Content-Type if data is undefined
-          delete requestHeaders[key];
-        } else {
-          // Otherwise add header to the request
-          request.setRequestHeader(key, val);
-        }
-      });
-    }
-
-    // Add withCredentials to request if needed
-    if (config.withCredentials) {
-      request.withCredentials = true;
-    }
-
-    // Add responseType to request if needed
-    if (config.responseType) {
-      try {
-        request.responseType = config.responseType;
-      } catch (e) {
-        if (request.responseType !== 'json') {
-          throw e;
-        }
-      }
-    }
-
-    // Handle progress if needed
-    if (typeof config.onDownloadProgress === 'function') {
-      request.addEventListener('progress', config.onDownloadProgress);
-    }
-
-    // Not all browsers support upload events
-    if (typeof config.onUploadProgress === 'function' && request.upload) {
-      request.upload.addEventListener('progress', config.onUploadProgress);
-    }
-
-    if (config.cancelToken) {
-      // Handle cancellation
-      config.cancelToken.promise.then(function onCanceled(cancel) {
-        if (!request) {
-          return;
-        }
-
-        request.abort();
-        reject(cancel);
-        // Clean up request
-        request = null;
-      });
-    }
-
-    if (requestData === undefined) {
-      requestData = null;
-    }
-
-    // Send the request
-    request.send(requestData);
-  });
-};
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/**
- * A `Cancel` is an object that is thrown when an operation is canceled.
- *
- * @class
- * @param {string=} message The message.
- */
-function Cancel(message) {
-  this.message = message;
-}
-
-Cancel.prototype.toString = function toString() {
-  return 'Cancel' + (this.message ? ': ' + this.message : '');
-};
-
-Cancel.prototype.__CANCEL__ = true;
-
-module.exports = Cancel;
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function isCancel(value) {
-  return !!(value && value.__CANCEL__);
-};
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var enhanceError = __webpack_require__(18);
-
-/**
- * Create an Error with the specified message, config, error code, and response.
- *
- * @param {string} message The error message.
- * @param {Object} config The config.
- * @param {string} [code] The error code (for example, 'ECONNABORTED').
- @ @param {Object} [response] The response.
- * @returns {Error} The created error.
- */
-module.exports = function createError(message, config, code, response) {
-  var error = new Error(message);
-  return enhanceError(error, config, code, response);
-};
-
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = function bind(fn, thisArg) {
-  return function wrap() {
-    var args = new Array(arguments.length);
-    for (var i = 0; i < args.length; i++) {
-      args[i] = arguments[i];
-    }
-    return fn.apply(thisArg, args);
-  };
-};
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
 var pSlice = Array.prototype.slice;
-var objectKeys = __webpack_require__(31);
-var isArguments = __webpack_require__(30);
+var objectKeys = __webpack_require__(16);
+var isArguments = __webpack_require__(17);
 
 var deepEqual = module.exports = function (actual, expected, opts) {
   if (!opts) opts = {};
@@ -1018,15 +751,15 @@ function objEquiv(a, b, opts) {
 
 
 /***/ }),
-/* 10 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var equalsOptions = { strict: true };
-var _equals = __webpack_require__(9);
+var _equals = __webpack_require__(4);
 var areEquals = function (a, b) {
     return _equals(a, b, equalsOptions);
 };
-var helpers_1 = __webpack_require__(2);
+var helpers_1 = __webpack_require__(1);
 exports.JsonPatchError = helpers_1.PatchError;
 exports.deepClone = helpers_1._deepClone;
 /* We use a Javascript hash to store each
@@ -1401,7 +1134,730 @@ exports.validate = validate;
 
 
 /***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function bind(fn, thisArg) {
+  return function wrap() {
+    var args = new Array(arguments.length);
+    for (var i = 0; i < args.length; i++) {
+      args[i] = arguments[i];
+    }
+    return fn.apply(thisArg, args);
+  };
+};
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
+
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+var utils = __webpack_require__(0);
+var settle = __webpack_require__(28);
+var buildURL = __webpack_require__(30);
+var parseHeaders = __webpack_require__(31);
+var isURLSameOrigin = __webpack_require__(32);
+var createError = __webpack_require__(9);
+var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(33);
+
+module.exports = function xhrAdapter(config) {
+  return new Promise(function dispatchXhrRequest(resolve, reject) {
+    var requestData = config.data;
+    var requestHeaders = config.headers;
+
+    if (utils.isFormData(requestData)) {
+      delete requestHeaders['Content-Type']; // Let the browser set it
+    }
+
+    var request = new XMLHttpRequest();
+    var loadEvent = 'onreadystatechange';
+    var xDomain = false;
+
+    // For IE 8/9 CORS support
+    // Only supports POST and GET calls and doesn't returns the response headers.
+    // DON'T do this for testing b/c XMLHttpRequest is mocked, not XDomainRequest.
+    if (process.env.NODE_ENV !== 'test' &&
+        typeof window !== 'undefined' &&
+        window.XDomainRequest && !('withCredentials' in request) &&
+        !isURLSameOrigin(config.url)) {
+      request = new window.XDomainRequest();
+      loadEvent = 'onload';
+      xDomain = true;
+      request.onprogress = function handleProgress() {};
+      request.ontimeout = function handleTimeout() {};
+    }
+
+    // HTTP basic authentication
+    if (config.auth) {
+      var username = config.auth.username || '';
+      var password = config.auth.password || '';
+      requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
+    }
+
+    request.open(config.method.toUpperCase(), buildURL(config.url, config.params, config.paramsSerializer), true);
+
+    // Set the request timeout in MS
+    request.timeout = config.timeout;
+
+    // Listen for ready state
+    request[loadEvent] = function handleLoad() {
+      if (!request || (request.readyState !== 4 && !xDomain)) {
+        return;
+      }
+
+      // The request errored out and we didn't get a response, this will be
+      // handled by onerror instead
+      // With one exception: request that using file: protocol, most browsers
+      // will return status as 0 even though it's a successful request
+      if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
+        return;
+      }
+
+      // Prepare the response
+      var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
+      var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
+      var response = {
+        data: responseData,
+        // IE sends 1223 instead of 204 (https://github.com/mzabriskie/axios/issues/201)
+        status: request.status === 1223 ? 204 : request.status,
+        statusText: request.status === 1223 ? 'No Content' : request.statusText,
+        headers: responseHeaders,
+        config: config,
+        request: request
+      };
+
+      settle(resolve, reject, response);
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle low level network errors
+    request.onerror = function handleError() {
+      // Real errors are hidden from us by the browser
+      // onerror should only fire if it's a network error
+      reject(createError('Network Error', config));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle timeout
+    request.ontimeout = function handleTimeout() {
+      reject(createError('timeout of ' + config.timeout + 'ms exceeded', config, 'ECONNABORTED'));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Add xsrf header
+    // This is only done if running in a standard browser environment.
+    // Specifically not if we're in a web worker, or react-native.
+    if (utils.isStandardBrowserEnv()) {
+      var cookies = __webpack_require__(34);
+
+      // Add xsrf header
+      var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
+          cookies.read(config.xsrfCookieName) :
+          undefined;
+
+      if (xsrfValue) {
+        requestHeaders[config.xsrfHeaderName] = xsrfValue;
+      }
+    }
+
+    // Add headers to the request
+    if ('setRequestHeader' in request) {
+      utils.forEach(requestHeaders, function setRequestHeader(val, key) {
+        if (typeof requestData === 'undefined' && key.toLowerCase() === 'content-type') {
+          // Remove Content-Type if data is undefined
+          delete requestHeaders[key];
+        } else {
+          // Otherwise add header to the request
+          request.setRequestHeader(key, val);
+        }
+      });
+    }
+
+    // Add withCredentials to request if needed
+    if (config.withCredentials) {
+      request.withCredentials = true;
+    }
+
+    // Add responseType to request if needed
+    if (config.responseType) {
+      try {
+        request.responseType = config.responseType;
+      } catch (e) {
+        if (request.responseType !== 'json') {
+          throw e;
+        }
+      }
+    }
+
+    // Handle progress if needed
+    if (typeof config.onDownloadProgress === 'function') {
+      request.addEventListener('progress', config.onDownloadProgress);
+    }
+
+    // Not all browsers support upload events
+    if (typeof config.onUploadProgress === 'function' && request.upload) {
+      request.upload.addEventListener('progress', config.onUploadProgress);
+    }
+
+    if (config.cancelToken) {
+      // Handle cancellation
+      config.cancelToken.promise.then(function onCanceled(cancel) {
+        if (!request) {
+          return;
+        }
+
+        request.abort();
+        reject(cancel);
+        // Clean up request
+        request = null;
+      });
+    }
+
+    if (requestData === undefined) {
+      requestData = null;
+    }
+
+    // Send the request
+    request.send(requestData);
+  });
+};
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7)))
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var enhanceError = __webpack_require__(29);
+
+/**
+ * Create an Error with the specified message, config, error code, and response.
+ *
+ * @param {string} message The error message.
+ * @param {Object} config The config.
+ * @param {string} [code] The error code (for example, 'ECONNABORTED').
+ @ @param {Object} [response] The response.
+ * @returns {Error} The created error.
+ */
+module.exports = function createError(message, config, code, response) {
+  var error = new Error(message);
+  return enhanceError(error, config, code, response);
+};
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = function isCancel(value) {
+  return !!(value && value.__CANCEL__);
+};
+
+
+/***/ }),
 /* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * A `Cancel` is an object that is thrown when an operation is canceled.
+ *
+ * @class
+ * @param {string=} message The message.
+ */
+function Cancel(message) {
+  this.message = message;
+}
+
+Cancel.prototype.toString = function toString() {
+  return 'Cancel' + (this.message ? ': ' + this.message : '');
+};
+
+Cancel.prototype.__CANCEL__ = true;
+
+module.exports = Cancel;
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/*! Palindrom
+ * https://github.com/Palindrom/Palindrom
+ * (c) 2017 Joachim Wester
+ * MIT license
+ */
+
+const Palindrom = __webpack_require__(13);
+
+const PalindromDOM = (() => {
+  /**
+   * PalindromDOM
+   * @extends {Palindrom}
+   * @param {Object} [options] map of arguments. See README.md for description
+   */
+  class PalindromDOM extends Palindrom {
+    constructor(options) {
+      if (typeof options !== 'object') {
+        throw new Error(
+          'PalindromDOM constructor requires an object argument.'
+        );
+      }
+      if (!options.remoteUrl) {
+        throw new Error('remoteUrl is required');
+      }
+      const onStateReset = options.onStateReset || options.callback;
+      if (options.callback) {
+        console.warn(
+          'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
+        );
+      }
+
+      options.onStateReset = function addDOMListeners(obj) {
+        this.listen();
+        onStateReset && onStateReset.call(this, obj);
+      };
+
+      // construct Palindrom
+      super(options);
+
+      this.element = options.listenTo || document.body;
+      this.clickHandler = this.clickHandler.bind(this);
+      this.historyHandler = this.historyHandler.bind(this);
+      this.morphUrlEventHandler = this.morphUrlEventHandler.bind(this);
+
+      this.historyHandlerDeprecated = () => {
+        console.warn(
+          "`puppet-redirect-pushstate` event is deprecated, please use `palindrom-redirect-pushstate`, if you're using `puppet-redirect`, please upgrade to `palindrom-redirect`"
+        );
+        this.historyHandler();
+      };
+
+      /* in some cases, people emit redirect requests before `listen` is called */
+      this.element.addEventListener(
+        'palindrom-redirect-pushstate',
+        this.historyHandler
+      );
+
+      /* backward compatibility: for people using old puppet-redirect */
+      this.element.addEventListener(
+        'puppet-redirect-pushstate',
+        this.historyHandlerDeprecated
+      );
+    }
+
+    listen() {
+      this.listening = true;
+      this.element.addEventListener('click', this.clickHandler);
+      window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
+
+      this.element.addEventListener(
+        'palindrom-morph-url',
+        this.morphUrlEventHandler
+      );
+
+      this.element.addEventListener(
+        'palindrom-redirect-pushstate',
+        this.historyHandler
+      );
+
+      /* backward compatibility: for people using old puppet-redirect */
+      this.element.addEventListener(
+        'puppet-redirect-pushstate',
+        this.historyHandlerDeprecated
+      );
+    }
+    unlisten() {
+      this.listening = false;
+
+      this.element.removeEventListener('click', this.clickHandler);
+      window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
+      this.element.removeEventListener(
+        'palindrom-redirect-pushstate',
+        this.historyHandler
+      );
+
+      this.element.removeEventListener(
+        'palindrom-morph-url',
+        this.morphUrlEventHandler
+      );
+
+      /* backward compatibility: for people using old puppet-redirect */
+      this.element.removeEventListener(
+        'puppet-redirect-pushstate',
+        this.historyHandlerDeprecated
+      );
+    }
+
+    //TODO move fallback to window.location.href from PalindromNetworkChannel to here (PalindromDOM)
+
+    /**
+     * DISABLED FOR NOW: we don't know when rendering actually finishes.
+     * It's left here for the hope of having synchronous rendering at some point in the future.
+     * ====
+     * we need to scroll asynchronously, because we need the document rendered to search for the anchored element
+     * and even though onReceive + applyPatch are sync, Polymer is not, it renders async-ly
+    PalindromDOM.prototype.scrollToAnchorOrTopAsync = function(link) {
+      this.scrollAsyncTimeout && clearTimeout(this.scrollAsyncTimeout);
+      if (window && window.document) {
+        var anchorIndex;
+        var anchor;
+        // does the URL have an anchor
+        if (link && (anchorIndex = link.indexOf('#')) > -1) {
+          anchor = link.substr(anchorIndex);
+        }
+        if (!anchor) {
+          window.scrollTo(0, 0);
+        } else {
+          // if somehow someone manages to navigate twice in a 100ms,
+          // we don't scroll for their first navigation, i.e de-bouncing
+
+          this.scrollAsyncTimeout = setTimeout(() => {
+            // does that anchor exist in the page?
+            const anchorTarget = document.querySelector(anchor); // look for #element-id
+            if (anchorTarget) {
+              anchorTarget.scrollIntoView();
+            } else {
+              window.scrollTo(0, 0);
+            }
+          }, 100);
+        }
+      }
+    };
+    */
+    /**
+     * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
+     * so that the URL handlers can be executed on the remote
+     * @param url
+     */
+    morphUrl(url) {
+      history.pushState(null, null, url);
+      this.network.getPatchUsingHTTP(url);
+      window && window.scrollTo(0, 0);
+    }
+
+    /**
+     * Handles `palindrom-morph-url` event and channels its `detail.url` to `morphUrl`
+     * @param {palindrom-morph-url Event} event 
+     */
+    morphUrlEventHandler(event) {
+      this.morphUrl(event.detail.url);
+    }
+
+    clickHandler(event) {
+      //Don't morph ctrl/cmd + click & middle mouse button
+      if (event.ctrlKey || event.metaKey || event.which == 2) {
+        return;
+      }
+
+      if (event.detail && event.detail.target) {
+        //detail is Polymer
+        event = event.detail;
+      }
+
+      let target = event.target;
+
+      if (target.nodeName !== 'A') {
+        let eventPath = event.composedPath && event.composedPath();
+        if(!eventPath) {
+          // for backwards compatibility with SDv0
+          eventPath = event.path;
+        }
+        for (let i = 0; i < eventPath.length; i++) {
+          if (eventPath[i].nodeName == 'A') {
+            target = eventPath[i];
+            break;
+          }
+        }
+      }
+      const anchorTarget = target.target || target.getAttribute('target');
+      const hasDownloadAttribute = target.hasAttribute('download');
+
+      if (!hasDownloadAttribute && (!anchorTarget || anchorTarget === '_self')) {
+        //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
+        //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
+        //while target.getAttribute("href") returns desired href (as string)
+        const href = target.href || target.getAttribute('href');
+        if (href && PalindromDOM.isApplicationLink(href)) {
+          event.preventDefault();
+          event.stopPropagation();
+          this.morphUrl(href);
+        } else if (target.type === 'submit') {
+          event.preventDefault();
+        }
+      }
+    }
+
+    historyHandler() /*event*/ {
+      this.network.getPatchUsingHTTP(location.href);
+    }
+
+    /**
+     * Returns information if a given element is an internal application link that Palindrom should intercept into a history push
+     * @param elem HTMLElement or String
+     * @returns {boolean}
+     */
+    static isApplicationLink(elem) {
+      if (typeof elem === 'string') {
+        //type string is reported in Polymer / Canary (Web Platform features disabled)
+        const parser = document.createElement('A');
+        parser.href = elem;
+
+        // @see http://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
+        // IE doesn't populate all link properties when setting .href with a relative URL,
+        // however .href will return an absolute URL which then can be used on itself
+        // to populate these additional fields.
+        if (parser.host == '') {
+          parser.href = parser.href;
+        }
+
+        elem = parser;
+      }
+      return (
+        elem.protocol == window.location.protocol &&
+        elem.host == window.location.host
+      );
+    }
+  }
+
+  PalindromDOM.prototype = Object.create(Palindrom.prototype);
+
+  /* backward compatibility, not sure if this is good practice */
+  if (typeof global === 'undefined') {
+    if (typeof window !== 'undefined') {
+      /* incase neither window nor global existed, e.g React Native */
+      var global = window;
+    } else {
+      var global = {};
+    }
+  }
+  global.PuppetDOM = PalindromDOM;
+
+  /* Since we have Palindrom bundled,
+  let's expose it in case anyone needs it */
+  global.Puppet = Palindrom;
+  global.Palindrom = Palindrom;
+
+  return PalindromDOM;
+})();
+
+module.exports = PalindromDOM;
+module.exports.default = PalindromDOM;
+module.exports.__esModule = true;
+
+
+/***/ }),
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/*! Palindrom 
@@ -1413,19 +1869,19 @@ exports.validate = validate;
 /* this variable is bumped automatically when you call npm version */
 const palindromVersion = '3.1.0';
 
-const { applyPatch, validate } = __webpack_require__(32);
-const JSONPatcherProxy = __webpack_require__(37);
-const JSONPatchQueueSynchronous = __webpack_require__(3)
+const { applyPatch, validate } = __webpack_require__(15);
+const JSONPatcherProxy = __webpack_require__(18);
+const JSONPatchQueueSynchronous = __webpack_require__(2)
   .JSONPatchQueueSynchronous;
-const JSONPatchQueue = __webpack_require__(3).JSONPatchQueue;
-const JSONPatchOT = __webpack_require__(34);
-const JSONPatchOTAgent = __webpack_require__(33);
-const URL = __webpack_require__(42);
-const axios = __webpack_require__(12);
+const JSONPatchQueue = __webpack_require__(2).JSONPatchQueue;
+const JSONPatchOT = __webpack_require__(21);
+const JSONPatchOTAgent = __webpack_require__(22);
+const URL = __webpack_require__(23);
+const axios = __webpack_require__(24);
 const {
   PalindromError,
   PalindromConnectionError
-} = __webpack_require__(41);
+} = __webpack_require__(42);
 
 /* We are going to hand `websocket` lib as an external to webpack
   (see: https://webpack.js.org/configuration/externals/), 
@@ -1770,8 +2226,8 @@ const Palindrom = (() => {
         }
 
         const message = [
-          `WebSocket connection could not be made`,
-          `readyState: ${this._ws.readyState}`
+          'WebSocket connection could not be made',
+          'readyState: ' + this._ws.readyState
         ].join('\n');
 
         this.onFatalError(
@@ -1792,19 +2248,21 @@ const Palindrom = (() => {
 
           const message = [
             'WebSocket connection closed unexpectedly.',
-            `reason: ${event.reason}`,
-            `readyState: ${this._ws.readyState}`,
-            `stateCode: ${event.code}`
+            'reason: ' + event.reason,
+            'readyState: ' + this._ws.readyState, 
+            'stateCode: ' + event.code
           ].join('\n');
+
           this.onFatalError(
             new PalindromConnectionError(message, 'Server', upgradeURL, 'WS')
           );
+          
         } else if (!event.wasClean) {
           const message = [
             'WebSocket connection closed unexpectedly.',
-            `reason: ${event.reason}`,
-            `readyState: ${this._ws.readyState}`,
-            `stateCode: ${event.code}`
+            'reason: ' + event.reason,
+            'readyState: ' + this._ws.readyState,
+            'stateCode: ' + event.code
           ].join('\n');
 
           this.onConnectionError(
@@ -1841,9 +2299,9 @@ const Palindrom = (() => {
           'Session lost.',
           'Server replied with a different session ID than the already set one.',
           'Possibly a server restart happened while you were working.',
-          'Please reload the page.'
-          `Previous session ID: ${this.remoteUrl}`
-          `New session ID: ${remoteUrl}`
+          'Please reload the page.',
+          'Previous session ID: ' + this.remoteUrl,
+          'New session ID: ' + remoteUrl
         ].join('\n');
 
         throw new PalindromError(message);
@@ -1917,10 +2375,10 @@ const Palindrom = (() => {
 
           const message = [
             statusText,
-            `statusCode: ${statusCode}`,            
-            `reason: ${reason}`,
-            `url: ${url}`,
-            `HTTP method: ${method}`,            
+            'statusCode: ' + statusCode,
+            'reason: ' + reason,
+            'url: ' + url,
+            'HTTP method: ' + method
           ].join('\n');
 
           this.onFatalError(
@@ -2387,903 +2845,48 @@ module.exports = Palindrom;
 module.exports.default = Palindrom;
 module.exports.__esModule = true;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(39)))
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(13);
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(0);
-var bind = __webpack_require__(8);
-var Axios = __webpack_require__(15);
-var defaults = __webpack_require__(1);
-
-/**
- * Create an instance of Axios
- *
- * @param {Object} defaultConfig The default config for the instance
- * @return {Axios} A new instance of Axios
- */
-function createInstance(defaultConfig) {
-  var context = new Axios(defaultConfig);
-  var instance = bind(Axios.prototype.request, context);
-
-  // Copy axios.prototype to instance
-  utils.extend(instance, Axios.prototype, context);
-
-  // Copy context to instance
-  utils.extend(instance, context);
-
-  return instance;
-}
-
-// Create the default instance to be exported
-var axios = createInstance(defaults);
-
-// Expose Axios class to allow class inheritance
-axios.Axios = Axios;
-
-// Factory for creating new instances
-axios.create = function create(instanceConfig) {
-  return createInstance(utils.merge(defaults, instanceConfig));
-};
-
-// Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(5);
-axios.CancelToken = __webpack_require__(14);
-axios.isCancel = __webpack_require__(6);
-
-// Expose all/spread
-axios.all = function all(promises) {
-  return Promise.all(promises);
-};
-axios.spread = __webpack_require__(29);
-
-module.exports = axios;
-
-// Allow use of default import syntax in TypeScript
-module.exports.default = axios;
-
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(14)))
 
 /***/ }),
 /* 14 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-"use strict";
+var g;
 
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
 
-var Cancel = __webpack_require__(5);
-
-/**
- * A `CancelToken` is an object that can be used to request cancellation of an operation.
- *
- * @class
- * @param {Function} executor The executor function.
- */
-function CancelToken(executor) {
-  if (typeof executor !== 'function') {
-    throw new TypeError('executor must be a function.');
-  }
-
-  var resolvePromise;
-  this.promise = new Promise(function promiseExecutor(resolve) {
-    resolvePromise = resolve;
-  });
-
-  var token = this;
-  executor(function cancel(message) {
-    if (token.reason) {
-      // Cancellation has already been requested
-      return;
-    }
-
-    token.reason = new Cancel(message);
-    resolvePromise(token.reason);
-  });
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
 }
 
-/**
- * Throws a `Cancel` if cancellation has been requested.
- */
-CancelToken.prototype.throwIfRequested = function throwIfRequested() {
-  if (this.reason) {
-    throw this.reason;
-  }
-};
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
 
-/**
- * Returns an object that contains a new `CancelToken` and a function that, when called,
- * cancels the `CancelToken`.
- */
-CancelToken.source = function source() {
-  var cancel;
-  var token = new CancelToken(function executor(c) {
-    cancel = c;
-  });
-  return {
-    token: token,
-    cancel: cancel
-  };
-};
-
-module.exports = CancelToken;
+module.exports = g;
 
 
 /***/ }),
 /* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
-var defaults = __webpack_require__(1);
-var utils = __webpack_require__(0);
-var InterceptorManager = __webpack_require__(16);
-var dispatchRequest = __webpack_require__(17);
-var isAbsoluteURL = __webpack_require__(25);
-var combineURLs = __webpack_require__(23);
-
-/**
- * Create a new instance of Axios
- *
- * @param {Object} instanceConfig The default config for the instance
- */
-function Axios(instanceConfig) {
-  this.defaults = instanceConfig;
-  this.interceptors = {
-    request: new InterceptorManager(),
-    response: new InterceptorManager()
-  };
-}
-
-/**
- * Dispatch a request
- *
- * @param {Object} config The config specific for this request (merged with this.defaults)
- */
-Axios.prototype.request = function request(config) {
-  /*eslint no-param-reassign:0*/
-  // Allow for axios('example/url'[, config]) a la fetch API
-  if (typeof config === 'string') {
-    config = utils.merge({
-      url: arguments[0]
-    }, arguments[1]);
-  }
-
-  config = utils.merge(defaults, this.defaults, { method: 'get' }, config);
-
-  // Support baseURL config
-  if (config.baseURL && !isAbsoluteURL(config.url)) {
-    config.url = combineURLs(config.baseURL, config.url);
-  }
-
-  // Hook up interceptors middleware
-  var chain = [dispatchRequest, undefined];
-  var promise = Promise.resolve(config);
-
-  this.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
-    chain.unshift(interceptor.fulfilled, interceptor.rejected);
-  });
-
-  this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
-    chain.push(interceptor.fulfilled, interceptor.rejected);
-  });
-
-  while (chain.length) {
-    promise = promise.then(chain.shift(), chain.shift());
-  }
-
-  return promise;
-};
-
-// Provide aliases for supported request methods
-utils.forEach(['delete', 'get', 'head'], function forEachMethodNoData(method) {
-  /*eslint func-names:0*/
-  Axios.prototype[method] = function(url, config) {
-    return this.request(utils.merge(config || {}, {
-      method: method,
-      url: url
-    }));
-  };
-});
-
-utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
-  /*eslint func-names:0*/
-  Axios.prototype[method] = function(url, data, config) {
-    return this.request(utils.merge(config || {}, {
-      method: method,
-      url: url,
-      data: data
-    }));
-  };
-});
-
-module.exports = Axios;
-
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(0);
-
-function InterceptorManager() {
-  this.handlers = [];
-}
-
-/**
- * Add a new interceptor to the stack
- *
- * @param {Function} fulfilled The function to handle `then` for a `Promise`
- * @param {Function} rejected The function to handle `reject` for a `Promise`
- *
- * @return {Number} An ID used to remove interceptor later
- */
-InterceptorManager.prototype.use = function use(fulfilled, rejected) {
-  this.handlers.push({
-    fulfilled: fulfilled,
-    rejected: rejected
-  });
-  return this.handlers.length - 1;
-};
-
-/**
- * Remove an interceptor from the stack
- *
- * @param {Number} id The ID that was returned by `use`
- */
-InterceptorManager.prototype.eject = function eject(id) {
-  if (this.handlers[id]) {
-    this.handlers[id] = null;
-  }
-};
-
-/**
- * Iterate over all the registered interceptors
- *
- * This method is particularly useful for skipping over any
- * interceptors that may have become `null` calling `eject`.
- *
- * @param {Function} fn The function to call for each interceptor
- */
-InterceptorManager.prototype.forEach = function forEach(fn) {
-  utils.forEach(this.handlers, function forEachHandler(h) {
-    if (h !== null) {
-      fn(h);
-    }
-  });
-};
-
-module.exports = InterceptorManager;
-
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(0);
-var transformData = __webpack_require__(20);
-var isCancel = __webpack_require__(6);
-var defaults = __webpack_require__(1);
-
-/**
- * Throws a `Cancel` if cancellation has been requested.
- */
-function throwIfCancellationRequested(config) {
-  if (config.cancelToken) {
-    config.cancelToken.throwIfRequested();
-  }
-}
-
-/**
- * Dispatch a request to the server using the configured adapter.
- *
- * @param {object} config The config that is to be used for the request
- * @returns {Promise} The Promise to be fulfilled
- */
-module.exports = function dispatchRequest(config) {
-  throwIfCancellationRequested(config);
-
-  // Ensure headers exist
-  config.headers = config.headers || {};
-
-  // Transform request data
-  config.data = transformData(
-    config.data,
-    config.headers,
-    config.transformRequest
-  );
-
-  // Flatten headers
-  config.headers = utils.merge(
-    config.headers.common || {},
-    config.headers[config.method] || {},
-    config.headers || {}
-  );
-
-  utils.forEach(
-    ['delete', 'get', 'head', 'post', 'put', 'patch', 'common'],
-    function cleanHeaderConfig(method) {
-      delete config.headers[method];
-    }
-  );
-
-  var adapter = config.adapter || defaults.adapter;
-
-  return adapter(config).then(function onAdapterResolution(response) {
-    throwIfCancellationRequested(config);
-
-    // Transform response data
-    response.data = transformData(
-      response.data,
-      response.headers,
-      config.transformResponse
-    );
-
-    return response;
-  }, function onAdapterRejection(reason) {
-    if (!isCancel(reason)) {
-      throwIfCancellationRequested(config);
-
-      // Transform response data
-      if (reason && reason.response) {
-        reason.response.data = transformData(
-          reason.response.data,
-          reason.response.headers,
-          config.transformResponse
-        );
-      }
-    }
-
-    return Promise.reject(reason);
-  });
-};
-
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/**
- * Update an Error with the specified config, error code, and response.
- *
- * @param {Error} error The error to update.
- * @param {Object} config The config.
- * @param {string} [code] The error code (for example, 'ECONNABORTED').
- @ @param {Object} [response] The response.
- * @returns {Error} The error.
- */
-module.exports = function enhanceError(error, config, code, response) {
-  error.config = config;
-  if (code) {
-    error.code = code;
-  }
-  error.response = response;
-  return error;
-};
-
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var createError = __webpack_require__(7);
-
-/**
- * Resolve or reject a Promise based on response status.
- *
- * @param {Function} resolve A function that resolves the promise.
- * @param {Function} reject A function that rejects the promise.
- * @param {object} response The response.
- */
-module.exports = function settle(resolve, reject, response) {
-  var validateStatus = response.config.validateStatus;
-  // Note: status is not exposed by XDomainRequest
-  if (!response.status || !validateStatus || validateStatus(response.status)) {
-    resolve(response);
-  } else {
-    reject(createError(
-      'Request failed with status code ' + response.status,
-      response.config,
-      null,
-      response
-    ));
-  }
-};
-
-
-/***/ }),
-/* 20 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(0);
-
-/**
- * Transform the data for a request or a response
- *
- * @param {Object|String} data The data to be transformed
- * @param {Array} headers The headers for the request or response
- * @param {Array|Function} fns A single function or Array of functions
- * @returns {*} The resulting transformed data
- */
-module.exports = function transformData(data, headers, fns) {
-  /*eslint no-param-reassign:0*/
-  utils.forEach(fns, function transform(fn) {
-    data = fn(data, headers);
-  });
-
-  return data;
-};
-
-
-/***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-// btoa polyfill for IE<10 courtesy https://github.com/davidchambers/Base64.js
-
-var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-
-function E() {
-  this.message = 'String contains an invalid character';
-}
-E.prototype = new Error;
-E.prototype.code = 5;
-E.prototype.name = 'InvalidCharacterError';
-
-function btoa(input) {
-  var str = String(input);
-  var output = '';
-  for (
-    // initialize result and counter
-    var block, charCode, idx = 0, map = chars;
-    // if the next str index does not exist:
-    //   change the mapping table to "="
-    //   check if d has no fractional digits
-    str.charAt(idx | 0) || (map = '=', idx % 1);
-    // "8 - idx % 1 * 8" generates the sequence 2, 4, 6, 8
-    output += map.charAt(63 & block >> 8 - idx % 1 * 8)
-  ) {
-    charCode = str.charCodeAt(idx += 3 / 4);
-    if (charCode > 0xFF) {
-      throw new E();
-    }
-    block = block << 8 | charCode;
-  }
-  return output;
-}
-
-module.exports = btoa;
-
-
-/***/ }),
-/* 22 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(0);
-
-function encode(val) {
-  return encodeURIComponent(val).
-    replace(/%40/gi, '@').
-    replace(/%3A/gi, ':').
-    replace(/%24/g, '$').
-    replace(/%2C/gi, ',').
-    replace(/%20/g, '+').
-    replace(/%5B/gi, '[').
-    replace(/%5D/gi, ']');
-}
-
-/**
- * Build a URL by appending params to the end
- *
- * @param {string} url The base of the url (e.g., http://www.google.com)
- * @param {object} [params] The params to be appended
- * @returns {string} The formatted url
- */
-module.exports = function buildURL(url, params, paramsSerializer) {
-  /*eslint no-param-reassign:0*/
-  if (!params) {
-    return url;
-  }
-
-  var serializedParams;
-  if (paramsSerializer) {
-    serializedParams = paramsSerializer(params);
-  } else if (utils.isURLSearchParams(params)) {
-    serializedParams = params.toString();
-  } else {
-    var parts = [];
-
-    utils.forEach(params, function serialize(val, key) {
-      if (val === null || typeof val === 'undefined') {
-        return;
-      }
-
-      if (utils.isArray(val)) {
-        key = key + '[]';
-      }
-
-      if (!utils.isArray(val)) {
-        val = [val];
-      }
-
-      utils.forEach(val, function parseValue(v) {
-        if (utils.isDate(v)) {
-          v = v.toISOString();
-        } else if (utils.isObject(v)) {
-          v = JSON.stringify(v);
-        }
-        parts.push(encode(key) + '=' + encode(v));
-      });
-    });
-
-    serializedParams = parts.join('&');
-  }
-
-  if (serializedParams) {
-    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
-  }
-
-  return url;
-};
-
-
-/***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/**
- * Creates a new URL by combining the specified URLs
- *
- * @param {string} baseURL The base URL
- * @param {string} relativeURL The relative URL
- * @returns {string} The combined URL
- */
-module.exports = function combineURLs(baseURL, relativeURL) {
-  return baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '');
-};
-
-
-/***/ }),
-/* 24 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(0);
-
-module.exports = (
-  utils.isStandardBrowserEnv() ?
-
-  // Standard browser envs support document.cookie
-  (function standardBrowserEnv() {
-    return {
-      write: function write(name, value, expires, path, domain, secure) {
-        var cookie = [];
-        cookie.push(name + '=' + encodeURIComponent(value));
-
-        if (utils.isNumber(expires)) {
-          cookie.push('expires=' + new Date(expires).toGMTString());
-        }
-
-        if (utils.isString(path)) {
-          cookie.push('path=' + path);
-        }
-
-        if (utils.isString(domain)) {
-          cookie.push('domain=' + domain);
-        }
-
-        if (secure === true) {
-          cookie.push('secure');
-        }
-
-        document.cookie = cookie.join('; ');
-      },
-
-      read: function read(name) {
-        var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
-        return (match ? decodeURIComponent(match[3]) : null);
-      },
-
-      remove: function remove(name) {
-        this.write(name, '', Date.now() - 86400000);
-      }
-    };
-  })() :
-
-  // Non standard browser env (web workers, react-native) lack needed support.
-  (function nonStandardBrowserEnv() {
-    return {
-      write: function write() {},
-      read: function read() { return null; },
-      remove: function remove() {}
-    };
-  })()
-);
-
-
-/***/ }),
-/* 25 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/**
- * Determines whether the specified URL is absolute
- *
- * @param {string} url The URL to test
- * @returns {boolean} True if the specified URL is absolute, otherwise false
- */
-module.exports = function isAbsoluteURL(url) {
-  // A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
-  // RFC 3986 defines scheme name as a sequence of characters beginning with a letter and followed
-  // by any combination of letters, digits, plus, period, or hyphen.
-  return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
-};
-
-
-/***/ }),
-/* 26 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(0);
-
-module.exports = (
-  utils.isStandardBrowserEnv() ?
-
-  // Standard browser envs have full support of the APIs needed to test
-  // whether the request URL is of the same origin as current location.
-  (function standardBrowserEnv() {
-    var msie = /(msie|trident)/i.test(navigator.userAgent);
-    var urlParsingNode = document.createElement('a');
-    var originURL;
-
-    /**
-    * Parse a URL to discover it's components
-    *
-    * @param {String} url The URL to be parsed
-    * @returns {Object}
-    */
-    function resolveURL(url) {
-      var href = url;
-
-      if (msie) {
-        // IE needs attribute set twice to normalize properties
-        urlParsingNode.setAttribute('href', href);
-        href = urlParsingNode.href;
-      }
-
-      urlParsingNode.setAttribute('href', href);
-
-      // urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
-      return {
-        href: urlParsingNode.href,
-        protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, '') : '',
-        host: urlParsingNode.host,
-        search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, '') : '',
-        hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, '') : '',
-        hostname: urlParsingNode.hostname,
-        port: urlParsingNode.port,
-        pathname: (urlParsingNode.pathname.charAt(0) === '/') ?
-                  urlParsingNode.pathname :
-                  '/' + urlParsingNode.pathname
-      };
-    }
-
-    originURL = resolveURL(window.location.href);
-
-    /**
-    * Determine if a URL shares the same origin as the current location
-    *
-    * @param {String} requestURL The URL to test
-    * @returns {boolean} True if URL shares the same origin, otherwise false
-    */
-    return function isURLSameOrigin(requestURL) {
-      var parsed = (utils.isString(requestURL)) ? resolveURL(requestURL) : requestURL;
-      return (parsed.protocol === originURL.protocol &&
-            parsed.host === originURL.host);
-    };
-  })() :
-
-  // Non standard browser envs (web workers, react-native) lack needed support.
-  (function nonStandardBrowserEnv() {
-    return function isURLSameOrigin() {
-      return true;
-    };
-  })()
-);
-
-
-/***/ }),
-/* 27 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(0);
-
-module.exports = function normalizeHeaderName(headers, normalizedName) {
-  utils.forEach(headers, function processHeader(value, name) {
-    if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
-      headers[normalizedName] = value;
-      delete headers[name];
-    }
-  });
-};
-
-
-/***/ }),
-/* 28 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(0);
-
-/**
- * Parse headers into an object
- *
- * ```
- * Date: Wed, 27 Aug 2014 08:58:49 GMT
- * Content-Type: application/json
- * Connection: keep-alive
- * Transfer-Encoding: chunked
- * ```
- *
- * @param {String} headers Headers needing to be parsed
- * @returns {Object} Headers parsed into an object
- */
-module.exports = function parseHeaders(headers) {
-  var parsed = {};
-  var key;
-  var val;
-  var i;
-
-  if (!headers) { return parsed; }
-
-  utils.forEach(headers.split('\n'), function parser(line) {
-    i = line.indexOf(':');
-    key = utils.trim(line.substr(0, i)).toLowerCase();
-    val = utils.trim(line.substr(i + 1));
-
-    if (key) {
-      parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
-    }
-  });
-
-  return parsed;
-};
-
-
-/***/ }),
-/* 29 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/**
- * Syntactic sugar for invoking a function and expanding an array for arguments.
- *
- * Common use case would be to use `Function.prototype.apply`.
- *
- *  ```js
- *  function f(x, y, z) {}
- *  var args = [1, 2, 3];
- *  f.apply(null, args);
- *  ```
- *
- * With `spread` this example can be re-written.
- *
- *  ```js
- *  spread(function(x, y, z) {})([1, 2, 3]);
- *  ```
- *
- * @param {Function} callback
- * @returns {Function}
- */
-module.exports = function spread(callback) {
-  return function wrap(arr) {
-    return callback.apply(null, arr);
-  };
-};
-
-
-/***/ }),
-/* 30 */
-/***/ (function(module, exports) {
-
-var supportsArgumentsClass = (function(){
-  return Object.prototype.toString.call(arguments)
-})() == '[object Arguments]';
-
-exports = module.exports = supportsArgumentsClass ? supported : unsupported;
-
-exports.supported = supported;
-function supported(object) {
-  return Object.prototype.toString.call(object) == '[object Arguments]';
-};
-
-exports.unsupported = unsupported;
-function unsupported(object){
-  return object &&
-    typeof object == 'object' &&
-    typeof object.length == 'number' &&
-    Object.prototype.hasOwnProperty.call(object, 'callee') &&
-    !Object.prototype.propertyIsEnumerable.call(object, 'callee') ||
-    false;
-};
-
-
-/***/ }),
-/* 31 */
-/***/ (function(module, exports) {
-
-exports = module.exports = typeof Object.keys === 'function'
-  ? Object.keys : shim;
-
-exports.shim = shim;
-function shim (obj) {
-  var keys = [];
-  for (var key in obj) keys.push(key);
-  return keys;
-}
-
-
-/***/ }),
-/* 32 */
-/***/ (function(module, exports, __webpack_require__) {
-
 var equalsOptions = { strict: true };
-var _equals = __webpack_require__(9);
+var _equals = __webpack_require__(4);
 var areEquals = function (a, b) {
     return _equals(a, b, equalsOptions);
 };
-var helpers_1 = __webpack_require__(2);
-var core_1 = __webpack_require__(10);
+var helpers_1 = __webpack_require__(1);
+var core_1 = __webpack_require__(5);
 /* export all core functions */
-var core_2 = __webpack_require__(10);
+var core_2 = __webpack_require__(5);
 exports.applyOperation = core_2.applyOperation;
 exports.applyPatch = core_2.applyPatch;
 exports.applyReducer = core_2.applyReducer;
@@ -3291,7 +2894,7 @@ exports.getValueByPointer = core_2.getValueByPointer;
 exports.validate = core_2.validate;
 exports.validator = core_2.validator;
 /* export some helpers */
-var helpers_2 = __webpack_require__(2);
+var helpers_2 = __webpack_require__(1);
 exports.JsonPatchError = helpers_2.PatchError;
 exports.deepClone = helpers_2._deepClone;
 exports.escapePathComponent = helpers_2.escapePathComponent;
@@ -3492,569 +3095,48 @@ exports.compare = compare;
 
 
 /***/ }),
-/* 33 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 16 */
+/***/ (function(module, exports) {
 
-if(typeof JSONPatchQueue === 'undefined') {
-	if(true) {
-		var JSONPatchQueue = __webpack_require__(3).JSONPatchQueue;
-	}
-	else {
-		throw new Error('You need to reference JSONPatchQueue before JSONPatchOTAgent');
-	}
-}
+exports = module.exports = typeof Object.keys === 'function'
+  ? Object.keys : shim;
 
-/**
- * [JSONPatchOTAgent description]
- * @param {Object} obj The target object where patches are applied
- * @param {Function} transform function(seqenceA, sequences) that transforms `seqenceA` against `sequences`.
- * @param {Array<JSON-Pointer>} versionPaths JSON-Pointers to version numbers [local, remote]
- * @param {function} apply apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object. Must return the final state of the object.
- * @param {Boolean} purity 
- * @constructor
- * @extends {JSONPatchQueue}
- * @version: 2.0.0-rc.0
- */
-var JSONPatchOTAgent = function(obj, transform, versionPaths, apply, purity){
-	JSONPatchQueue.call(this, obj, versionPaths, apply, purity);
-	this.transform = transform;
-	/**
-	 * History of performed JSON Patch sequences that might not yet be acknowledged by Peer
-	 * @type {Array<JSONPatch>}
-	 */
-	this.pending = [];
-
-};
-JSONPatchOTAgent.prototype = Object.create(JSONPatchQueue.prototype);
-JSONPatchOTAgent.prototype.constructor = JSONPatchOTAgent;
-JSONPatchOTAgent.prototype.ackLocalVersion = 0;
-
-/**
- * Wraps JSON Patch sequence with version related operation objects
- * @param  {JSONPatch} sequence JSON Patch sequence to wrap
- * @return {VersionedJSONPatch}
- */
-JSONPatchOTAgent.prototype.send = function(sequence){
-	var newSequence = sequence.slice(0);
-	newSequence.unshift({ // test for conflict resolutions
-		op: "test",
-		path: this.remotePath,
-		value: this.remoteVersion
-	});
-	var versionedJSONPatch = JSONPatchQueue.prototype.send.call(this, newSequence);
-	this.pending.push(versionedJSONPatch);
-    return versionedJSONPatch;
-};
-
-
-/**
- * Process received versioned JSON Patch
- * Adds to queue, transform and apply when applicable.
- * @param  {Object} obj object to apply patches to
- * @param  {JSONPatch} versionedJsonPatch patch to be applied
- * @param  {Function} [applyCallback] optional `function(object, consecutiveTransformedPatch)` to be called when applied, must return the final state of the object, if not given #apply will be called
- */
-JSONPatchOTAgent.prototype.receive = function(versionedJsonPatch, applyCallback){
-	var apply = applyCallback || this.apply,
-		queue = this;
-
-	return JSONPatchQueue.prototype.receive.call(this, versionedJsonPatch,
-		function applyOT(obj, remoteVersionedJsonPatch){
-			// console.log("applyPatch", queue, arguments);
-	        // transforming / applying
-	        var consecutivePatch = remoteVersionedJsonPatch.slice(0);
-
-	        // shift first operation object as it should contain test for our local version.
-	        // ! We assume correct sequence structure, and queuing applied before.
-	        //
-	        // Latest local version acknowledged by remote
-	        // Thanks to the queue version may only be higher or equal to current.
-	        var localVersionAckByRemote = consecutivePatch.shift().value;
-	        var ackDistance = localVersionAckByRemote - queue.ackLocalVersion;
-	        queue.ackLocalVersion = localVersionAckByRemote;
-
-	        //clear pending operations
-	        queue.pending.splice(0,ackDistance);
-	        if(queue.pending.length){// is there any pending local operation?
-	            // => Remote sent us something based on outdated versionDistance
-	            // console.info("Transformation needed", consecutivePatch, 'by', queue.nonAckList);
-	            consecutivePatch = queue.transform(
-	                    consecutivePatch,
-	                    queue.pending
-	                );
-			}
-			return queue.obj = apply(queue.obj, consecutivePatch);
-		});
-};
-
-/**
- * Reset queue internals and object to new, given state
- * @param newState versioned object representing desired state along with versions
- */
-JSONPatchOTAgent.prototype.reset = function(newState){
-	this.ackLocalVersion = JSONPatchQueue.getPropertyByJsonPointer(newState, this.localPath);
-	this.pending = [];
-	return this.obj = JSONPatchQueue.prototype.reset.call(this, newState);
-};
-if(true) {
-	module.exports = JSONPatchOTAgent;
-	module.exports.default = JSONPatchOTAgent;
-	module.exports.__esModule = true;
-}
-
-/***/ }),
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/*!
- * https://github.com/Palindrom/JSONPatchOT
- * JSON-Patch-OT version: 1.0.1
- * (c) 2017 Tomek Wytrebowicz
- * MIT license
- */
-
-var JSONPatchOT = (function(){
-
-  var debug = false;
-  var JSONPatchOT = JSONPatchOT || {};
-  JSONPatchOT.transform = function (sequenceA, sequences) {
-    var concatAllSequences = [];
-    concatAllSequences = concatAllSequences.concat.apply(concatAllSequences, sequences);
-    // var clonedPatch = JSON.parse(JSON.stringify(this.patch)); // clone needed for debugging and visualization
-    var clonedPatch = JSON.parse(JSON.stringify(sequenceA)); // clone needed for debugging and visualization
-    var result = concatAllSequences.reduce(composeJSONPatches, clonedPatch); // <=> composeJSONPatches(this, operations.concat() )
-    return result;
-    // return new JSONPatchOperation(result, this.localRevision, operations[operations.length-1].localRevision, this.localRevPropName, this.remoteRevPropName);
-  };
-  JSONPatchOT.transformAgainstSingleOp = function(sequenceA, operationObj){
-
-  };
-  var composeJSONPatches = function( original, operationObj ){
-
-      // basic validation (as in fast-json-patch)
-      if (operationObj.value === undefined && (operationObj.op === "add" || operationObj.op === "replace" || operationObj.op === "test")) {
-          throw new Error("'value' MUST be defined");
-      }
-      if (operationObj.from === undefined && (operationObj.op === "copy" || operationObj.op === "move")) {
-          throw new Error("'from' MUST be defined");
-      }
-
-      // apply patch operation to all original ops
-      if(transformAgainst[operationObj.op]){ // if we have any function to transform operationObj.op at all
-        if(typeof transformAgainst[operationObj.op] == "function"){ //not perfectly performant but gives easier maintenance and flexibility with transformations
-          transformAgainst[operationObj.op](operationObj, original);
-        } else {
-          var orgOpsLen = original.length, currentOp = 0;
-          while (currentOp < orgOpsLen) {
-            var originalOp = original[currentOp];
-            currentOp++;
-
-            if( transformAgainst[operationObj.op][originalOp.op] ){
-              transformAgainst[operationObj.op][originalOp.op](operationObj, originalOp)
-            } else{
-              debug && console.log("No function to transform " + originalOp.op + "against" + operationObj.op);
-            }
-          }
-        }
-      } else {
-        debug && console.log("No function to transform against " + operationObj.op)
-      }
-      return original;
-    };
-    var transformAgainst = {
-      remove: function(patchOp, original){
-        debug && console.log("Transforming ", JSON.stringify(original) ," against `remove` ", patchOp);
-        var orgOpsLen = original.length, currentOp = 0, originalOp;
-        // remove operation objects
-        while (originalOp = original[currentOp]) {
-
-
-          // TODO: `move`, and `copy` (`from`) may not be covered well (tomalec)
-          debug && console.log("TODO: `move`, and `copy` (`from`) may not be covered well (tomalec)");
-          if( (originalOp.op === 'add' || originalOp.op === 'test') && patchOp.path === originalOp.path ){
-            // do nothing ? (tomalec)
-          } else
-          // node in question was removed
-          if( originalOp.from &&
-                  (originalOp.from === patchOp.path || originalOp.from.indexOf(patchOp.path + "/") === 0 ) ||
-              ( patchOp.path === originalOp.path || originalOp.path.indexOf(patchOp.path + "/") === 0 ) ){
-            debug && console.log("Removing ", originalOp);
-            original.splice(currentOp,1);
-            orgOpsLen--;
-            currentOp--;
-          }
-          currentOp++;
-        }
-        // shift indexes
-        // var match = patchOp.path.match(/(.*\/)(\d+)$/); // last element is a number
-        var lastSlash = patchOp.path.lastIndexOf("/");
-        if( lastSlash > -1){
-          var index = patchOp.path.substr(lastSlash+1);
-          var arrayPath = patchOp.path.substr(0,lastSlash+1);
-          if( isValidIndex(index)){
-            debug && console.warn("Bug prone guessing that, as number given in path, this is an array!");
-
-            debug && console.log("Shifting array indexes");
-            orgOpsLen = original.length;
-            currentOp = 0;
-            while (currentOp < orgOpsLen) {
-              originalOp = original[currentOp];
-              currentOp++;
-
-              if(originalOp.path.indexOf(arrayPath) === 0){//item from the same array
-                originalOp.path = replacePathIfHigher(originalOp.path, arrayPath, index);
-              }
-              if(originalOp.from && originalOp.from.indexOf(arrayPath) === 0){//item from the same array
-                originalOp.from = replacePathIfHigher(originalOp.from, arrayPath, index);
-              }
-            }
-          }
-        }
-
-      },
-      replace: function(patchOp, original){
-        debug && console.log("Transforming ", JSON.stringify(original) ," against `replace` ", patchOp);
-        var currentOp = 0, originalOp;
-        // remove operation objects withing replaced JSON node
-        while (originalOp = original[currentOp]) {
-
-
-          // TODO: `move`, and `copy` (`from`) may not be covered well (tomalec)
-          debug && console.log("TODO: `move`, and `copy` (`from`) may not be covered well (tomalec)");
-          // node in question was removed
-          // IT:
-          // if( patchOp.path === originalOp.path || originalOp.path.indexOf(patchOp.path + "/") === 0 ){
-          if( originalOp.from &&
-                  (originalOp.from === patchOp.path || originalOp.from.indexOf(patchOp.path + "/") === 0 ) ||
-              originalOp.path.indexOf(patchOp.path + "/") === 0 ){
-            debug && console.log("Removing ", originalOp);
-            original.splice(currentOp,1);
-            currentOp--;
-          }
-          currentOp++;
-        }
-
-      }
-    };
-    function replacePathIfHigher(path, repl, index){
-      var result = path.substr(repl.length);
-      // var match = result.match(/^(\d+)(.*)/);
-      // if(match && match[1] > index){
-      var eoindex = result.indexOf("/");
-      eoindex > -1 || (eoindex = result.length);
-      var oldIndex = result.substr(0, eoindex);
-      var rest  = result.substr(eoindex);
-      if(isValidIndex(oldIndex) && oldIndex > index){
-        return repl + (oldIndex -1) + rest;
-      } else {
-        return path;
-      }
-    }
-    function isValidIndex(str) {
-        var n = ~~Number(str);
-        return String(n) === str && n >= 0;
-    }
-    return JSONPatchOT;
-}());
-
-if(true) {
-  module.exports = JSONPatchOT;
-  module.exports.default = JSONPatchOT;
-  module.exports.__esModule = true;
-}
-
-/***/ }),
-/* 35 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * JSON Patch Queue for synchronous operations, and asynchronous networking.
- * version: 3.0.0-rc.0
- * @param {Object} Obj The target object where patches are applied
- * @param {JSON-Pointer} versionPath JSON-Pointers to version numbers
- * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
- * @param {Boolean} [purist]       If set to true adds test operation before replace.
- */
-var JSONPatchQueueSynchronous = function(obj, versionPath, apply, purist){
-
-	/**
-	 * The target object where patches are applied
-	 * @type {Object}
-	 */
-	this.obj = obj;
-
-	/**
-	 * Queue of consecutive JSON Patch sequences. May contain gaps.
-	 * Item with index 0 has 1 sequence version gap to `this.version`.
-	 * @type {Array}
-	 */
-	this.waiting = [];
-	/**
-	 * JSON-Pointer to local version in shared JSON document
-	 * @type {JSONPointer}
-	 */
-	this.versionPath = versionPath;
-	/**
-	 * Function to apply JSONPatchSequence to JSON object
-	 * @type {Function}
-	 */
-	this.apply = apply;
-	/**
-	 * If set to true adds test operation before replace.
-	 * @type {Bool}
-	 */
-	this.purist = purist;
-};
-/** JSON version */
-JSONPatchQueueSynchronous.prototype.version = 0;
-//JSONPatchQueueSynchronous.prototype.purist = false;
-// instance property
-//  JSONPatchQueueSynchronous.prototype.waiting = [];
-/**
- * Process received versioned JSON Patch.
- * Applies or adds to queue.
- * @param  {JSONPatch} versionedJsonPatch patch to be applied
- * @param  {Function} [applyCallback]     optional `function(object, consecutivePatch)` to be called when applied, if not given #apply will be called
- */
-JSONPatchQueueSynchronous.prototype.receive = function(versionedJsonPatch, applyCallback){
-	var apply = applyCallback || this.apply,
-		consecutivePatch = versionedJsonPatch.slice(0);
-	// strip Versioned JSON Patch specyfiv operation objects from given sequence
-		if(this.purist){
-			var testRemote = consecutivePatch.shift();
-		}
-		var replaceVersion = consecutivePatch.shift(),
-			newVersion = replaceVersion.value;
-
-	// TODO: perform versionedPath validation if needed (tomalec)
-
-	if( newVersion <= this.version){
-	// someone is trying to change something that was already updated
-    	throw new Error("Given version was already applied.");
-	} else if ( newVersion == this.version + 1 ){
-	// consecutive new version
-		while( consecutivePatch ){// process consecutive patch(-es)
-			this.version++;
-			this.obj = apply(this.obj, consecutivePatch);
-			consecutivePatch = this.waiting.shift();
-		}
-	} else {
-	// add sequence to queue in correct position.
-		this.waiting[newVersion - this.version -2] = consecutivePatch;
-	}
-};
-/**
- * Wraps JSON Patch sequence with version related operation objects
- * @param  {JSONPatch} sequence JSON Patch sequence to wrap
- * @return {VersionedJSONPatch}
- */
-JSONPatchQueueSynchronous.prototype.send = function(sequence){
-	this.version++;
-	var newSequence = sequence.slice(0);
-	newSequence.unshift({
-		op: "replace",
-		path: this.versionPath,
-		value: this.version
-	});
-	if(this.purist){
-		newSequence.unshift({ // test for purist
-			op: "test",
-			path: this.versionPath,
-			value: this.version-1
-		});
-	}
-	return newSequence;
-};
-
-JSONPatchQueueSynchronous.getPropertyByJsonPointer = function(obj, pointer) {
-	var parts = pointer.split('/');
-	if(parts[0] === "") {
-		parts.shift();
-	}
-	var target = obj;
-	while(parts.length) {
-		var path = parts.shift().replace('~1', '/').replace('~0', '~');
-		if(parts.length) {
-			target = target[path];
-		}
-	}
-	return target[path];
-};
-
-/**
- * Reset queue internals and object to new, given state
- * @param newState versioned object representing desired state along with versions
- */
-JSONPatchQueueSynchronous.prototype.reset = function(newState){
-	this.version = JSONPatchQueueSynchronous.getPropertyByJsonPointer(newState, this.versionPath);
-	this.waiting = [];
-	var patch = [{ op: "replace", path: "", value: newState }];
-	return this.obj = this.apply(this.obj, patch);
-};
-
-if(true) {
-	module.exports = JSONPatchQueueSynchronous;
-	module.exports.default = JSONPatchQueueSynchronous;
-	/* Babel demands this */
-	module.exports.__esModule = true;
+exports.shim = shim;
+function shim (obj) {
+  var keys = [];
+  for (var key in obj) keys.push(key);
+  return keys;
 }
 
 
 /***/ }),
-/* 36 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 17 */
+/***/ (function(module, exports) {
 
-/**
- * JSON Patch Queue for asynchronous operations, and asynchronous networking.
- * version: 3.0.0-rc.0
- * @param {Object} obj The target object where patches are applied
- * @param {Array<JSON-Pointer>} versionPaths JSON-Pointers to version numbers [local, remote]
- * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
- * @param {Boolean} [purist]       If set to true adds test operation before replace.
- */
-var JSONPatchQueue = function(obj, versionPaths, apply, purist){
+var supportsArgumentsClass = (function(){
+  return Object.prototype.toString.call(arguments)
+})() == '[object Arguments]';
 
-	/**
-	 * The target object where patches are applied
-	 * @type {Object}
-	 */
-	this.obj = obj;
-	/**
-	 * Queue of consecutive JSON Patch sequences. May contain gaps.
-	 * Item with index 0 has 1 version gap to this.remoteVersion.
-	 * @type {Array}
-	 */
-	this.waiting = [];
-	/**
-	 * JSON-Pointer to local version in shared JSON document
-	 * @type {JSONPointer}
-	 */
-	this.localPath = versionPaths[0];
-	/**
-	 * JSON-Pointer to remote version in shared JSON document
-	 * @type {JSONPointer}
-	 */
-	this.remotePath = versionPaths[1];
-	/**
-	 * Function to apply JSONPatchSequence to JSON object
-	 * @type {Function}
-	 */
-	this.apply = apply;
-	/**
-	 * If set to true adds test operation before replace.
-	 * @type {Bool}
-	 */
-	this.purist = purist;
+exports = module.exports = supportsArgumentsClass ? supported : unsupported;
 
-};
-/** local version */
-JSONPatchQueue.prototype.localVersion = 0;
-/** Latest localVersion that we know that was acknowledged by remote */
-// JSONPatchQueue.prototype.ackVersion = 0;
-/** Latest acknowledged remote version */
-JSONPatchQueue.prototype.remoteVersion = 0;
-
-// instance property
-//  JSONPatchQueue.prototype.waiting = [];
-/** needed? OT only? */
-// JSONPatchQueue.prototype.pending = [];
-/**
- * Process received versioned JSON Patch
- * Applies or adds to queue.
- * @param  {JSONPatch} versionedJsonPatch patch to be applied
- * @param  {Function} [applyCallback]     optional `function(object, consecutivePatch)` to be called when applied, if not given #apply will be called
- */
-JSONPatchQueue.prototype.receive = function(versionedJsonPatch, applyCallback){
-	var apply = applyCallback || this.apply,
-		consecutivePatch = versionedJsonPatch.slice(0);
-	// strip Versioned JSON Patch specyfiv operation objects from given sequence
-		if(this.purist){
-			var testRemote = consecutivePatch.shift();
-		}
-		var replaceRemote = consecutivePatch.shift(),
-			newRemoteVersion = replaceRemote.value;
-
-	// TODO: perform versionedPath validation if needed (tomalec)
-
-	if( newRemoteVersion <= this.remoteVersion){
-	// someone is trying to change something that was already updated
-    	throw new Error("Given version was already applied.");
-	} else if ( newRemoteVersion == this.remoteVersion + 1 ){
-	// consecutive new version
-		while( consecutivePatch ){// process consecutive patch(-es)
-			this.remoteVersion++;
-			this.obj = apply(this.obj, consecutivePatch);
-			consecutivePatch = this.waiting.shift();
-		}
-	} else {
-	// add sequence to queue in correct position.
-		this.waiting[newRemoteVersion - this.remoteVersion -2] = consecutivePatch;
-	}
-};
-/**
- * Wraps JSON Patch sequence with version related operation objects
- * @param  {JSONPatch} sequence JSON Patch sequence to wrap
- * @return {VersionedJSONPatch}
- */
-JSONPatchQueue.prototype.send = function(sequence){
-	this.localVersion++;
-	var newSequence = sequence.slice(0);
-	if(this.purist){
-		newSequence.unshift({ // test for consecutiveness
-			op: "test",
-			path: this.localPath,
-			value: this.localVersion - 1
-		},{ // replace for queue
-			op: "replace",
-			path: this.localPath,
-			value: this.localVersion
-		});
-	} else {
-		newSequence.unshift({ // replace for queue (+assumed test for consecutiveness_)
-			op: "replace",
-			path: this.localPath,
-			value: this.localVersion
-		});
-	}
-	return newSequence;
+exports.supported = supported;
+function supported(object) {
+  return Object.prototype.toString.call(object) == '[object Arguments]';
 };
 
-JSONPatchQueue.getPropertyByJsonPointer = function(obj, pointer) {
-	var parts = pointer.split('/');
-	if(parts[0] === "") {
-		parts.shift();
-	}
-	var target = obj;
-	while(parts.length) {
-		var path = parts.shift().replace('~1', '/').replace('~0', '~');
-		if(parts.length) {
-			target = target[path];
-		}
-	}
-	return target[path];
+exports.unsupported = unsupported;
+function unsupported(object){
+  return object &&
+    typeof object == 'object' &&
+    typeof object.length == 'number' &&
+    Object.prototype.hasOwnProperty.call(object, 'callee') &&
+    !Object.prototype.propertyIsEnumerable.call(object, 'callee') ||
+    false;
 };
-
-/**
- * Reset queue internals and object to new, given state
- * @param newState versioned object representing desired state along with versions
- */
-JSONPatchQueue.prototype.reset = function(newState){
-	this.remoteVersion = JSONPatchQueue.getPropertyByJsonPointer(newState, this.remotePath);
-	this.waiting = [];
-	var patch = [{ op: "replace", path: "", value: newState }];
-	return this.obj = this.apply(this.obj, patch);
-};
-
-if(true) {
-	module.exports = JSONPatchQueue;
-	module.exports.default = JSONPatchQueue;
-	/* Babel demands this */
-	module.exports.__esModule = true;
-}
 
 
 /***/ }),
-/* 37 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4452,492 +3534,1416 @@ if (true) {
 
 
 /***/ }),
-/* 38 */
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * JSON Patch Queue for asynchronous operations, and asynchronous networking.
+ * version: 3.0.0-rc.0
+ * @param {Object} obj The target object where patches are applied
+ * @param {Array<JSON-Pointer>} versionPaths JSON-Pointers to version numbers [local, remote]
+ * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
+ * @param {Boolean} [purist]       If set to true adds test operation before replace.
+ */
+var JSONPatchQueue = function(obj, versionPaths, apply, purist){
+
+	/**
+	 * The target object where patches are applied
+	 * @type {Object}
+	 */
+	this.obj = obj;
+	/**
+	 * Queue of consecutive JSON Patch sequences. May contain gaps.
+	 * Item with index 0 has 1 version gap to this.remoteVersion.
+	 * @type {Array}
+	 */
+	this.waiting = [];
+	/**
+	 * JSON-Pointer to local version in shared JSON document
+	 * @type {JSONPointer}
+	 */
+	this.localPath = versionPaths[0];
+	/**
+	 * JSON-Pointer to remote version in shared JSON document
+	 * @type {JSONPointer}
+	 */
+	this.remotePath = versionPaths[1];
+	/**
+	 * Function to apply JSONPatchSequence to JSON object
+	 * @type {Function}
+	 */
+	this.apply = apply;
+	/**
+	 * If set to true adds test operation before replace.
+	 * @type {Bool}
+	 */
+	this.purist = purist;
+
+};
+/** local version */
+JSONPatchQueue.prototype.localVersion = 0;
+/** Latest localVersion that we know that was acknowledged by remote */
+// JSONPatchQueue.prototype.ackVersion = 0;
+/** Latest acknowledged remote version */
+JSONPatchQueue.prototype.remoteVersion = 0;
+
+// instance property
+//  JSONPatchQueue.prototype.waiting = [];
+/** needed? OT only? */
+// JSONPatchQueue.prototype.pending = [];
+/**
+ * Process received versioned JSON Patch
+ * Applies or adds to queue.
+ * @param  {JSONPatch} versionedJsonPatch patch to be applied
+ * @param  {Function} [applyCallback]     optional `function(object, consecutivePatch)` to be called when applied, if not given #apply will be called
+ */
+JSONPatchQueue.prototype.receive = function(versionedJsonPatch, applyCallback){
+	var apply = applyCallback || this.apply,
+		consecutivePatch = versionedJsonPatch.slice(0);
+	// strip Versioned JSON Patch specyfiv operation objects from given sequence
+		if(this.purist){
+			var testRemote = consecutivePatch.shift();
+		}
+		var replaceRemote = consecutivePatch.shift(),
+			newRemoteVersion = replaceRemote.value;
+
+	// TODO: perform versionedPath validation if needed (tomalec)
+
+	if( newRemoteVersion <= this.remoteVersion){
+	// someone is trying to change something that was already updated
+    	throw new Error("Given version was already applied.");
+	} else if ( newRemoteVersion == this.remoteVersion + 1 ){
+	// consecutive new version
+		while( consecutivePatch ){// process consecutive patch(-es)
+			this.remoteVersion++;
+			this.obj = apply(this.obj, consecutivePatch);
+			consecutivePatch = this.waiting.shift();
+		}
+	} else {
+	// add sequence to queue in correct position.
+		this.waiting[newRemoteVersion - this.remoteVersion -2] = consecutivePatch;
+	}
+};
+/**
+ * Wraps JSON Patch sequence with version related operation objects
+ * @param  {JSONPatch} sequence JSON Patch sequence to wrap
+ * @return {VersionedJSONPatch}
+ */
+JSONPatchQueue.prototype.send = function(sequence){
+	this.localVersion++;
+	var newSequence = sequence.slice(0);
+	if(this.purist){
+		newSequence.unshift({ // test for consecutiveness
+			op: "test",
+			path: this.localPath,
+			value: this.localVersion - 1
+		},{ // replace for queue
+			op: "replace",
+			path: this.localPath,
+			value: this.localVersion
+		});
+	} else {
+		newSequence.unshift({ // replace for queue (+assumed test for consecutiveness_)
+			op: "replace",
+			path: this.localPath,
+			value: this.localVersion
+		});
+	}
+	return newSequence;
+};
+
+JSONPatchQueue.getPropertyByJsonPointer = function(obj, pointer) {
+	var parts = pointer.split('/');
+	if(parts[0] === "") {
+		parts.shift();
+	}
+	var target = obj;
+	while(parts.length) {
+		var path = parts.shift().replace('~1', '/').replace('~0', '~');
+		if(parts.length) {
+			target = target[path];
+		}
+	}
+	return target[path];
+};
+
+/**
+ * Reset queue internals and object to new, given state
+ * @param newState versioned object representing desired state along with versions
+ */
+JSONPatchQueue.prototype.reset = function(newState){
+	this.remoteVersion = JSONPatchQueue.getPropertyByJsonPointer(newState, this.remotePath);
+	this.waiting = [];
+	var patch = [{ op: "replace", path: "", value: newState }];
+	return this.obj = this.apply(this.obj, patch);
+};
+
+if(true) {
+	module.exports = JSONPatchQueue;
+	module.exports.default = JSONPatchQueue;
+	/* Babel demands this */
+	module.exports.__esModule = true;
+}
+
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * JSON Patch Queue for synchronous operations, and asynchronous networking.
+ * version: 3.0.0-rc.0
+ * @param {Object} Obj The target object where patches are applied
+ * @param {JSON-Pointer} versionPath JSON-Pointers to version numbers
+ * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
+ * @param {Boolean} [purist]       If set to true adds test operation before replace.
+ */
+var JSONPatchQueueSynchronous = function(obj, versionPath, apply, purist){
+
+	/**
+	 * The target object where patches are applied
+	 * @type {Object}
+	 */
+	this.obj = obj;
+
+	/**
+	 * Queue of consecutive JSON Patch sequences. May contain gaps.
+	 * Item with index 0 has 1 sequence version gap to `this.version`.
+	 * @type {Array}
+	 */
+	this.waiting = [];
+	/**
+	 * JSON-Pointer to local version in shared JSON document
+	 * @type {JSONPointer}
+	 */
+	this.versionPath = versionPath;
+	/**
+	 * Function to apply JSONPatchSequence to JSON object
+	 * @type {Function}
+	 */
+	this.apply = apply;
+	/**
+	 * If set to true adds test operation before replace.
+	 * @type {Bool}
+	 */
+	this.purist = purist;
+};
+/** JSON version */
+JSONPatchQueueSynchronous.prototype.version = 0;
+//JSONPatchQueueSynchronous.prototype.purist = false;
+// instance property
+//  JSONPatchQueueSynchronous.prototype.waiting = [];
+/**
+ * Process received versioned JSON Patch.
+ * Applies or adds to queue.
+ * @param  {JSONPatch} versionedJsonPatch patch to be applied
+ * @param  {Function} [applyCallback]     optional `function(object, consecutivePatch)` to be called when applied, if not given #apply will be called
+ */
+JSONPatchQueueSynchronous.prototype.receive = function(versionedJsonPatch, applyCallback){
+	var apply = applyCallback || this.apply,
+		consecutivePatch = versionedJsonPatch.slice(0);
+	// strip Versioned JSON Patch specyfiv operation objects from given sequence
+		if(this.purist){
+			var testRemote = consecutivePatch.shift();
+		}
+		var replaceVersion = consecutivePatch.shift(),
+			newVersion = replaceVersion.value;
+
+	// TODO: perform versionedPath validation if needed (tomalec)
+
+	if( newVersion <= this.version){
+	// someone is trying to change something that was already updated
+    	throw new Error("Given version was already applied.");
+	} else if ( newVersion == this.version + 1 ){
+	// consecutive new version
+		while( consecutivePatch ){// process consecutive patch(-es)
+			this.version++;
+			this.obj = apply(this.obj, consecutivePatch);
+			consecutivePatch = this.waiting.shift();
+		}
+	} else {
+	// add sequence to queue in correct position.
+		this.waiting[newVersion - this.version -2] = consecutivePatch;
+	}
+};
+/**
+ * Wraps JSON Patch sequence with version related operation objects
+ * @param  {JSONPatch} sequence JSON Patch sequence to wrap
+ * @return {VersionedJSONPatch}
+ */
+JSONPatchQueueSynchronous.prototype.send = function(sequence){
+	this.version++;
+	var newSequence = sequence.slice(0);
+	newSequence.unshift({
+		op: "replace",
+		path: this.versionPath,
+		value: this.version
+	});
+	if(this.purist){
+		newSequence.unshift({ // test for purist
+			op: "test",
+			path: this.versionPath,
+			value: this.version-1
+		});
+	}
+	return newSequence;
+};
+
+JSONPatchQueueSynchronous.getPropertyByJsonPointer = function(obj, pointer) {
+	var parts = pointer.split('/');
+	if(parts[0] === "") {
+		parts.shift();
+	}
+	var target = obj;
+	while(parts.length) {
+		var path = parts.shift().replace('~1', '/').replace('~0', '~');
+		if(parts.length) {
+			target = target[path];
+		}
+	}
+	return target[path];
+};
+
+/**
+ * Reset queue internals and object to new, given state
+ * @param newState versioned object representing desired state along with versions
+ */
+JSONPatchQueueSynchronous.prototype.reset = function(newState){
+	this.version = JSONPatchQueueSynchronous.getPropertyByJsonPointer(newState, this.versionPath);
+	this.waiting = [];
+	var patch = [{ op: "replace", path: "", value: newState }];
+	return this.obj = this.apply(this.obj, patch);
+};
+
+if(true) {
+	module.exports = JSONPatchQueueSynchronous;
+	module.exports.default = JSONPatchQueueSynchronous;
+	/* Babel demands this */
+	module.exports.__esModule = true;
+}
+
+
+/***/ }),
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/*!
+ * https://github.com/Palindrom/JSONPatchOT
+ * JSON-Patch-OT version: 1.0.1
+ * (c) 2017 Tomek Wytrebowicz
+ * MIT license
+ */
+
+var JSONPatchOT = (function(){
+
+  var debug = false;
+  var JSONPatchOT = JSONPatchOT || {};
+  JSONPatchOT.transform = function (sequenceA, sequences) {
+    var concatAllSequences = [];
+    concatAllSequences = concatAllSequences.concat.apply(concatAllSequences, sequences);
+    // var clonedPatch = JSON.parse(JSON.stringify(this.patch)); // clone needed for debugging and visualization
+    var clonedPatch = JSON.parse(JSON.stringify(sequenceA)); // clone needed for debugging and visualization
+    var result = concatAllSequences.reduce(composeJSONPatches, clonedPatch); // <=> composeJSONPatches(this, operations.concat() )
+    return result;
+    // return new JSONPatchOperation(result, this.localRevision, operations[operations.length-1].localRevision, this.localRevPropName, this.remoteRevPropName);
+  };
+  JSONPatchOT.transformAgainstSingleOp = function(sequenceA, operationObj){
+
+  };
+  var composeJSONPatches = function( original, operationObj ){
+
+      // basic validation (as in fast-json-patch)
+      if (operationObj.value === undefined && (operationObj.op === "add" || operationObj.op === "replace" || operationObj.op === "test")) {
+          throw new Error("'value' MUST be defined");
+      }
+      if (operationObj.from === undefined && (operationObj.op === "copy" || operationObj.op === "move")) {
+          throw new Error("'from' MUST be defined");
+      }
+
+      // apply patch operation to all original ops
+      if(transformAgainst[operationObj.op]){ // if we have any function to transform operationObj.op at all
+        if(typeof transformAgainst[operationObj.op] == "function"){ //not perfectly performant but gives easier maintenance and flexibility with transformations
+          transformAgainst[operationObj.op](operationObj, original);
+        } else {
+          var orgOpsLen = original.length, currentOp = 0;
+          while (currentOp < orgOpsLen) {
+            var originalOp = original[currentOp];
+            currentOp++;
+
+            if( transformAgainst[operationObj.op][originalOp.op] ){
+              transformAgainst[operationObj.op][originalOp.op](operationObj, originalOp)
+            } else{
+              debug && console.log("No function to transform " + originalOp.op + "against" + operationObj.op);
+            }
+          }
+        }
+      } else {
+        debug && console.log("No function to transform against " + operationObj.op)
+      }
+      return original;
+    };
+    var transformAgainst = {
+      remove: function(patchOp, original){
+        debug && console.log("Transforming ", JSON.stringify(original) ," against `remove` ", patchOp);
+        var orgOpsLen = original.length, currentOp = 0, originalOp;
+        // remove operation objects
+        while (originalOp = original[currentOp]) {
+
+
+          // TODO: `move`, and `copy` (`from`) may not be covered well (tomalec)
+          debug && console.log("TODO: `move`, and `copy` (`from`) may not be covered well (tomalec)");
+          if( (originalOp.op === 'add' || originalOp.op === 'test') && patchOp.path === originalOp.path ){
+            // do nothing ? (tomalec)
+          } else
+          // node in question was removed
+          if( originalOp.from &&
+                  (originalOp.from === patchOp.path || originalOp.from.indexOf(patchOp.path + "/") === 0 ) ||
+              ( patchOp.path === originalOp.path || originalOp.path.indexOf(patchOp.path + "/") === 0 ) ){
+            debug && console.log("Removing ", originalOp);
+            original.splice(currentOp,1);
+            orgOpsLen--;
+            currentOp--;
+          }
+          currentOp++;
+        }
+        // shift indexes
+        // var match = patchOp.path.match(/(.*\/)(\d+)$/); // last element is a number
+        var lastSlash = patchOp.path.lastIndexOf("/");
+        if( lastSlash > -1){
+          var index = patchOp.path.substr(lastSlash+1);
+          var arrayPath = patchOp.path.substr(0,lastSlash+1);
+          if( isValidIndex(index)){
+            debug && console.warn("Bug prone guessing that, as number given in path, this is an array!");
+
+            debug && console.log("Shifting array indexes");
+            orgOpsLen = original.length;
+            currentOp = 0;
+            while (currentOp < orgOpsLen) {
+              originalOp = original[currentOp];
+              currentOp++;
+
+              if(originalOp.path.indexOf(arrayPath) === 0){//item from the same array
+                originalOp.path = replacePathIfHigher(originalOp.path, arrayPath, index);
+              }
+              if(originalOp.from && originalOp.from.indexOf(arrayPath) === 0){//item from the same array
+                originalOp.from = replacePathIfHigher(originalOp.from, arrayPath, index);
+              }
+            }
+          }
+        }
+
+      },
+      replace: function(patchOp, original){
+        debug && console.log("Transforming ", JSON.stringify(original) ," against `replace` ", patchOp);
+        var currentOp = 0, originalOp;
+        // remove operation objects withing replaced JSON node
+        while (originalOp = original[currentOp]) {
+
+
+          // TODO: `move`, and `copy` (`from`) may not be covered well (tomalec)
+          debug && console.log("TODO: `move`, and `copy` (`from`) may not be covered well (tomalec)");
+          // node in question was removed
+          // IT:
+          // if( patchOp.path === originalOp.path || originalOp.path.indexOf(patchOp.path + "/") === 0 ){
+          if( originalOp.from &&
+                  (originalOp.from === patchOp.path || originalOp.from.indexOf(patchOp.path + "/") === 0 ) ||
+              originalOp.path.indexOf(patchOp.path + "/") === 0 ){
+            debug && console.log("Removing ", originalOp);
+            original.splice(currentOp,1);
+            currentOp--;
+          }
+          currentOp++;
+        }
+
+      }
+    };
+    function replacePathIfHigher(path, repl, index){
+      var result = path.substr(repl.length);
+      // var match = result.match(/^(\d+)(.*)/);
+      // if(match && match[1] > index){
+      var eoindex = result.indexOf("/");
+      eoindex > -1 || (eoindex = result.length);
+      var oldIndex = result.substr(0, eoindex);
+      var rest  = result.substr(eoindex);
+      if(isValidIndex(oldIndex) && oldIndex > index){
+        return repl + (oldIndex -1) + rest;
+      } else {
+        return path;
+      }
+    }
+    function isValidIndex(str) {
+        var n = ~~Number(str);
+        return String(n) === str && n >= 0;
+    }
+    return JSONPatchOT;
+}());
+
+if(true) {
+  module.exports = JSONPatchOT;
+  module.exports.default = JSONPatchOT;
+  module.exports.__esModule = true;
+}
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports, __webpack_require__) {
+
+if(typeof JSONPatchQueue === 'undefined') {
+	if(true) {
+		var JSONPatchQueue = __webpack_require__(2).JSONPatchQueue;
+	}
+	else {
+		throw new Error('You need to reference JSONPatchQueue before JSONPatchOTAgent');
+	}
+}
+
+/**
+ * [JSONPatchOTAgent description]
+ * @param {Object} obj The target object where patches are applied
+ * @param {Function} transform function(seqenceA, sequences) that transforms `seqenceA` against `sequences`.
+ * @param {Array<JSON-Pointer>} versionPaths JSON-Pointers to version numbers [local, remote]
+ * @param {function} apply apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object. Must return the final state of the object.
+ * @param {Boolean} purity 
+ * @constructor
+ * @extends {JSONPatchQueue}
+ * @version: 2.0.0-rc.0
+ */
+var JSONPatchOTAgent = function(obj, transform, versionPaths, apply, purity){
+	JSONPatchQueue.call(this, obj, versionPaths, apply, purity);
+	this.transform = transform;
+	/**
+	 * History of performed JSON Patch sequences that might not yet be acknowledged by Peer
+	 * @type {Array<JSONPatch>}
+	 */
+	this.pending = [];
+
+};
+JSONPatchOTAgent.prototype = Object.create(JSONPatchQueue.prototype);
+JSONPatchOTAgent.prototype.constructor = JSONPatchOTAgent;
+JSONPatchOTAgent.prototype.ackLocalVersion = 0;
+
+/**
+ * Wraps JSON Patch sequence with version related operation objects
+ * @param  {JSONPatch} sequence JSON Patch sequence to wrap
+ * @return {VersionedJSONPatch}
+ */
+JSONPatchOTAgent.prototype.send = function(sequence){
+	var newSequence = sequence.slice(0);
+	newSequence.unshift({ // test for conflict resolutions
+		op: "test",
+		path: this.remotePath,
+		value: this.remoteVersion
+	});
+	var versionedJSONPatch = JSONPatchQueue.prototype.send.call(this, newSequence);
+	this.pending.push(versionedJSONPatch);
+    return versionedJSONPatch;
+};
+
+
+/**
+ * Process received versioned JSON Patch
+ * Adds to queue, transform and apply when applicable.
+ * @param  {Object} obj object to apply patches to
+ * @param  {JSONPatch} versionedJsonPatch patch to be applied
+ * @param  {Function} [applyCallback] optional `function(object, consecutiveTransformedPatch)` to be called when applied, must return the final state of the object, if not given #apply will be called
+ */
+JSONPatchOTAgent.prototype.receive = function(versionedJsonPatch, applyCallback){
+	var apply = applyCallback || this.apply,
+		queue = this;
+
+	return JSONPatchQueue.prototype.receive.call(this, versionedJsonPatch,
+		function applyOT(obj, remoteVersionedJsonPatch){
+			// console.log("applyPatch", queue, arguments);
+	        // transforming / applying
+	        var consecutivePatch = remoteVersionedJsonPatch.slice(0);
+
+	        // shift first operation object as it should contain test for our local version.
+	        // ! We assume correct sequence structure, and queuing applied before.
+	        //
+	        // Latest local version acknowledged by remote
+	        // Thanks to the queue version may only be higher or equal to current.
+	        var localVersionAckByRemote = consecutivePatch.shift().value;
+	        var ackDistance = localVersionAckByRemote - queue.ackLocalVersion;
+	        queue.ackLocalVersion = localVersionAckByRemote;
+
+	        //clear pending operations
+	        queue.pending.splice(0,ackDistance);
+	        if(queue.pending.length){// is there any pending local operation?
+	            // => Remote sent us something based on outdated versionDistance
+	            // console.info("Transformation needed", consecutivePatch, 'by', queue.nonAckList);
+	            consecutivePatch = queue.transform(
+	                    consecutivePatch,
+	                    queue.pending
+	                );
+			}
+			return queue.obj = apply(queue.obj, consecutivePatch);
+		});
+};
+
+/**
+ * Reset queue internals and object to new, given state
+ * @param newState versioned object representing desired state along with versions
+ */
+JSONPatchOTAgent.prototype.reset = function(newState){
+	this.ackLocalVersion = JSONPatchQueue.getPropertyByJsonPointer(newState, this.localPath);
+	this.pending = [];
+	return this.obj = JSONPatchQueue.prototype.reset.call(this, newState);
+};
+if(true) {
+	module.exports = JSONPatchOTAgent;
+	module.exports.default = JSONPatchOTAgent;
+	module.exports.__esModule = true;
+}
+
+/***/ }),
+/* 23 */
 /***/ (function(module, exports) {
 
-// shim for using process in browser
-var process = module.exports = {};
+module.exports = URL;
 
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
+/***/ }),
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
 
-var cachedSetTimeout;
-var cachedClearTimeout;
+module.exports = __webpack_require__(25);
 
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(0);
+var bind = __webpack_require__(6);
+var Axios = __webpack_require__(26);
+var defaults = __webpack_require__(3);
+
+/**
+ * Create an instance of Axios
+ *
+ * @param {Object} defaultConfig The default config for the instance
+ * @return {Axios} A new instance of Axios
+ */
+function createInstance(defaultConfig) {
+  var context = new Axios(defaultConfig);
+  var instance = bind(Axios.prototype.request, context);
+
+  // Copy axios.prototype to instance
+  utils.extend(instance, Axios.prototype, context);
+
+  // Copy context to instance
+  utils.extend(instance, context);
+
+  return instance;
 }
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
+
+// Create the default instance to be exported
+var axios = createInstance(defaults);
+
+// Expose Axios class to allow class inheritance
+axios.Axios = Axios;
+
+// Factory for creating new instances
+axios.create = function create(instanceConfig) {
+  return createInstance(utils.merge(defaults, instanceConfig));
+};
+
+// Expose Cancel & CancelToken
+axios.Cancel = __webpack_require__(11);
+axios.CancelToken = __webpack_require__(40);
+axios.isCancel = __webpack_require__(10);
+
+// Expose all/spread
+axios.all = function all(promises) {
+  return Promise.all(promises);
+};
+axios.spread = __webpack_require__(41);
+
+module.exports = axios;
+
+// Allow use of default import syntax in TypeScript
+module.exports.default = axios;
+
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var defaults = __webpack_require__(3);
+var utils = __webpack_require__(0);
+var InterceptorManager = __webpack_require__(35);
+var dispatchRequest = __webpack_require__(36);
+var isAbsoluteURL = __webpack_require__(38);
+var combineURLs = __webpack_require__(39);
+
+/**
+ * Create a new instance of Axios
+ *
+ * @param {Object} instanceConfig The default config for the instance
+ */
+function Axios(instanceConfig) {
+  this.defaults = instanceConfig;
+  this.interceptors = {
+    request: new InterceptorManager(),
+    response: new InterceptorManager()
+  };
 }
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
+
+/**
+ * Dispatch a request
+ *
+ * @param {Object} config The config specific for this request (merged with this.defaults)
+ */
+Axios.prototype.request = function request(config) {
+  /*eslint no-param-reassign:0*/
+  // Allow for axios('example/url'[, config]) a la fetch API
+  if (typeof config === 'string') {
+    config = utils.merge({
+      url: arguments[0]
+    }, arguments[1]);
+  }
+
+  config = utils.merge(defaults, this.defaults, { method: 'get' }, config);
+
+  // Support baseURL config
+  if (config.baseURL && !isAbsoluteURL(config.url)) {
+    config.url = combineURLs(config.baseURL, config.url);
+  }
+
+  // Hook up interceptors middleware
+  var chain = [dispatchRequest, undefined];
+  var promise = Promise.resolve(config);
+
+  this.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
+    chain.unshift(interceptor.fulfilled, interceptor.rejected);
+  });
+
+  this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
+    chain.push(interceptor.fulfilled, interceptor.rejected);
+  });
+
+  while (chain.length) {
+    promise = promise.then(chain.shift(), chain.shift());
+  }
+
+  return promise;
+};
+
+// Provide aliases for supported request methods
+utils.forEach(['delete', 'get', 'head'], function forEachMethodNoData(method) {
+  /*eslint func-names:0*/
+  Axios.prototype[method] = function(url, config) {
+    return this.request(utils.merge(config || {}, {
+      method: method,
+      url: url
+    }));
+  };
+});
+
+utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
+  /*eslint func-names:0*/
+  Axios.prototype[method] = function(url, data, config) {
+    return this.request(utils.merge(config || {}, {
+      method: method,
+      url: url,
+      data: data
+    }));
+  };
+});
+
+module.exports = Axios;
 
 
+/***/ }),
+/* 27 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(0);
+
+module.exports = function normalizeHeaderName(headers, normalizedName) {
+  utils.forEach(headers, function processHeader(value, name) {
+    if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
+      headers[normalizedName] = value;
+      delete headers[name];
+    }
+  });
+};
+
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var createError = __webpack_require__(9);
+
+/**
+ * Resolve or reject a Promise based on response status.
+ *
+ * @param {Function} resolve A function that resolves the promise.
+ * @param {Function} reject A function that rejects the promise.
+ * @param {object} response The response.
+ */
+module.exports = function settle(resolve, reject, response) {
+  var validateStatus = response.config.validateStatus;
+  // Note: status is not exposed by XDomainRequest
+  if (!response.status || !validateStatus || validateStatus(response.status)) {
+    resolve(response);
+  } else {
+    reject(createError(
+      'Request failed with status code ' + response.status,
+      response.config,
+      null,
+      response
+    ));
+  }
+};
+
+
+/***/ }),
+/* 29 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * Update an Error with the specified config, error code, and response.
+ *
+ * @param {Error} error The error to update.
+ * @param {Object} config The config.
+ * @param {string} [code] The error code (for example, 'ECONNABORTED').
+ @ @param {Object} [response] The response.
+ * @returns {Error} The error.
+ */
+module.exports = function enhanceError(error, config, code, response) {
+  error.config = config;
+  if (code) {
+    error.code = code;
+  }
+  error.response = response;
+  return error;
+};
+
+
+/***/ }),
+/* 30 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(0);
+
+function encode(val) {
+  return encodeURIComponent(val).
+    replace(/%40/gi, '@').
+    replace(/%3A/gi, ':').
+    replace(/%24/g, '$').
+    replace(/%2C/gi, ',').
+    replace(/%20/g, '+').
+    replace(/%5B/gi, '[').
+    replace(/%5D/gi, ']');
 }
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
 
+/**
+ * Build a URL by appending params to the end
+ *
+ * @param {string} url The base of the url (e.g., http://www.google.com)
+ * @param {object} [params] The params to be appended
+ * @returns {string} The formatted url
+ */
+module.exports = function buildURL(url, params, paramsSerializer) {
+  /*eslint no-param-reassign:0*/
+  if (!params) {
+    return url;
+  }
 
+  var serializedParams;
+  if (paramsSerializer) {
+    serializedParams = paramsSerializer(params);
+  } else if (utils.isURLSearchParams(params)) {
+    serializedParams = params.toString();
+  } else {
+    var parts = [];
 
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
+    utils.forEach(params, function serialize(val, key) {
+      if (val === null || typeof val === 'undefined') {
         return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
+      }
 
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
+      if (utils.isArray(val)) {
+        key = key + '[]';
+      }
 
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
+      if (!utils.isArray(val)) {
+        val = [val];
+      }
+
+      utils.forEach(val, function parseValue(v) {
+        if (utils.isDate(v)) {
+          v = v.toISOString();
+        } else if (utils.isObject(v)) {
+          v = JSON.stringify(v);
         }
-        queueIndex = -1;
-        len = queue.length;
+        parts.push(encode(key) + '=' + encode(v));
+      });
+    });
+
+    serializedParams = parts.join('&');
+  }
+
+  if (serializedParams) {
+    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
+  }
+
+  return url;
+};
+
+
+/***/ }),
+/* 31 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(0);
+
+/**
+ * Parse headers into an object
+ *
+ * ```
+ * Date: Wed, 27 Aug 2014 08:58:49 GMT
+ * Content-Type: application/json
+ * Connection: keep-alive
+ * Transfer-Encoding: chunked
+ * ```
+ *
+ * @param {String} headers Headers needing to be parsed
+ * @returns {Object} Headers parsed into an object
+ */
+module.exports = function parseHeaders(headers) {
+  var parsed = {};
+  var key;
+  var val;
+  var i;
+
+  if (!headers) { return parsed; }
+
+  utils.forEach(headers.split('\n'), function parser(line) {
+    i = line.indexOf(':');
+    key = utils.trim(line.substr(0, i)).toLowerCase();
+    val = utils.trim(line.substr(i + 1));
+
+    if (key) {
+      parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
     }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
+  });
+
+  return parsed;
+};
+
+
+/***/ }),
+/* 32 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(0);
+
+module.exports = (
+  utils.isStandardBrowserEnv() ?
+
+  // Standard browser envs have full support of the APIs needed to test
+  // whether the request URL is of the same origin as current location.
+  (function standardBrowserEnv() {
+    var msie = /(msie|trident)/i.test(navigator.userAgent);
+    var urlParsingNode = document.createElement('a');
+    var originURL;
+
+    /**
+    * Parse a URL to discover it's components
+    *
+    * @param {String} url The URL to be parsed
+    * @returns {Object}
+    */
+    function resolveURL(url) {
+      var href = url;
+
+      if (msie) {
+        // IE needs attribute set twice to normalize properties
+        urlParsingNode.setAttribute('href', href);
+        href = urlParsingNode.href;
+      }
+
+      urlParsingNode.setAttribute('href', href);
+
+      // urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
+      return {
+        href: urlParsingNode.href,
+        protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, '') : '',
+        host: urlParsingNode.host,
+        search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, '') : '',
+        hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, '') : '',
+        hostname: urlParsingNode.hostname,
+        port: urlParsingNode.port,
+        pathname: (urlParsingNode.pathname.charAt(0) === '/') ?
+                  urlParsingNode.pathname :
+                  '/' + urlParsingNode.pathname
+      };
+    }
+
+    originURL = resolveURL(window.location.href);
+
+    /**
+    * Determine if a URL shares the same origin as the current location
+    *
+    * @param {String} requestURL The URL to test
+    * @returns {boolean} True if URL shares the same origin, otherwise false
+    */
+    return function isURLSameOrigin(requestURL) {
+      var parsed = (utils.isString(requestURL)) ? resolveURL(requestURL) : requestURL;
+      return (parsed.protocol === originURL.protocol &&
+            parsed.host === originURL.host);
+    };
+  })() :
+
+  // Non standard browser envs (web workers, react-native) lack needed support.
+  (function nonStandardBrowserEnv() {
+    return function isURLSameOrigin() {
+      return true;
+    };
+  })()
+);
+
+
+/***/ }),
+/* 33 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+// btoa polyfill for IE<10 courtesy https://github.com/davidchambers/Base64.js
+
+var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+
+function E() {
+  this.message = 'String contains an invalid character';
+}
+E.prototype = new Error;
+E.prototype.code = 5;
+E.prototype.name = 'InvalidCharacterError';
+
+function btoa(input) {
+  var str = String(input);
+  var output = '';
+  for (
+    // initialize result and counter
+    var block, charCode, idx = 0, map = chars;
+    // if the next str index does not exist:
+    //   change the mapping table to "="
+    //   check if d has no fractional digits
+    str.charAt(idx | 0) || (map = '=', idx % 1);
+    // "8 - idx % 1 * 8" generates the sequence 2, 4, 6, 8
+    output += map.charAt(63 & block >> 8 - idx % 1 * 8)
+  ) {
+    charCode = str.charCodeAt(idx += 3 / 4);
+    if (charCode > 0xFF) {
+      throw new E();
+    }
+    block = block << 8 | charCode;
+  }
+  return output;
 }
 
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
+module.exports = btoa;
+
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(0);
+
+module.exports = (
+  utils.isStandardBrowserEnv() ?
+
+  // Standard browser envs support document.cookie
+  (function standardBrowserEnv() {
+    return {
+      write: function write(name, value, expires, path, domain, secure) {
+        var cookie = [];
+        cookie.push(name + '=' + encodeURIComponent(value));
+
+        if (utils.isNumber(expires)) {
+          cookie.push('expires=' + new Date(expires).toGMTString());
         }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
 
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
+        if (utils.isString(path)) {
+          cookie.push('path=' + path);
+        }
+
+        if (utils.isString(domain)) {
+          cookie.push('domain=' + domain);
+        }
+
+        if (secure === true) {
+          cookie.push('secure');
+        }
+
+        document.cookie = cookie.join('; ');
+      },
+
+      read: function read(name) {
+        var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+        return (match ? decodeURIComponent(match[3]) : null);
+      },
+
+      remove: function remove(name) {
+        this.write(name, '', Date.now() - 86400000);
+      }
+    };
+  })() :
+
+  // Non standard browser env (web workers, react-native) lack needed support.
+  (function nonStandardBrowserEnv() {
+    return {
+      write: function write() {},
+      read: function read() { return null; },
+      remove: function remove() {}
+    };
+  })()
+);
+
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(0);
+
+function InterceptorManager() {
+  this.handlers = [];
 }
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
 
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-process.prependListener = noop;
-process.prependOnceListener = noop;
-
-process.listeners = function (name) { return [] }
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
+/**
+ * Add a new interceptor to the stack
+ *
+ * @param {Function} fulfilled The function to handle `then` for a `Promise`
+ * @param {Function} rejected The function to handle `reject` for a `Promise`
+ *
+ * @return {Number} An ID used to remove interceptor later
+ */
+InterceptorManager.prototype.use = function use(fulfilled, rejected) {
+  this.handlers.push({
+    fulfilled: fulfilled,
+    rejected: rejected
+  });
+  return this.handlers.length - 1;
 };
 
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
+/**
+ * Remove an interceptor from the stack
+ *
+ * @param {Number} id The ID that was returned by `use`
+ */
+InterceptorManager.prototype.eject = function eject(id) {
+  if (this.handlers[id]) {
+    this.handlers[id] = null;
+  }
 };
-process.umask = function() { return 0; };
+
+/**
+ * Iterate over all the registered interceptors
+ *
+ * This method is particularly useful for skipping over any
+ * interceptors that may have become `null` calling `eject`.
+ *
+ * @param {Function} fn The function to call for each interceptor
+ */
+InterceptorManager.prototype.forEach = function forEach(fn) {
+  utils.forEach(this.handlers, function forEachHandler(h) {
+    if (h !== null) {
+      fn(h);
+    }
+  });
+};
+
+module.exports = InterceptorManager;
+
+
+/***/ }),
+/* 36 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(0);
+var transformData = __webpack_require__(37);
+var isCancel = __webpack_require__(10);
+var defaults = __webpack_require__(3);
+
+/**
+ * Throws a `Cancel` if cancellation has been requested.
+ */
+function throwIfCancellationRequested(config) {
+  if (config.cancelToken) {
+    config.cancelToken.throwIfRequested();
+  }
+}
+
+/**
+ * Dispatch a request to the server using the configured adapter.
+ *
+ * @param {object} config The config that is to be used for the request
+ * @returns {Promise} The Promise to be fulfilled
+ */
+module.exports = function dispatchRequest(config) {
+  throwIfCancellationRequested(config);
+
+  // Ensure headers exist
+  config.headers = config.headers || {};
+
+  // Transform request data
+  config.data = transformData(
+    config.data,
+    config.headers,
+    config.transformRequest
+  );
+
+  // Flatten headers
+  config.headers = utils.merge(
+    config.headers.common || {},
+    config.headers[config.method] || {},
+    config.headers || {}
+  );
+
+  utils.forEach(
+    ['delete', 'get', 'head', 'post', 'put', 'patch', 'common'],
+    function cleanHeaderConfig(method) {
+      delete config.headers[method];
+    }
+  );
+
+  var adapter = config.adapter || defaults.adapter;
+
+  return adapter(config).then(function onAdapterResolution(response) {
+    throwIfCancellationRequested(config);
+
+    // Transform response data
+    response.data = transformData(
+      response.data,
+      response.headers,
+      config.transformResponse
+    );
+
+    return response;
+  }, function onAdapterRejection(reason) {
+    if (!isCancel(reason)) {
+      throwIfCancellationRequested(config);
+
+      // Transform response data
+      if (reason && reason.response) {
+        reason.response.data = transformData(
+          reason.response.data,
+          reason.response.headers,
+          config.transformResponse
+        );
+      }
+    }
+
+    return Promise.reject(reason);
+  });
+};
+
+
+/***/ }),
+/* 37 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(0);
+
+/**
+ * Transform the data for a request or a response
+ *
+ * @param {Object|String} data The data to be transformed
+ * @param {Array} headers The headers for the request or response
+ * @param {Array|Function} fns A single function or Array of functions
+ * @returns {*} The resulting transformed data
+ */
+module.exports = function transformData(data, headers, fns) {
+  /*eslint no-param-reassign:0*/
+  utils.forEach(fns, function transform(fn) {
+    data = fn(data, headers);
+  });
+
+  return data;
+};
+
+
+/***/ }),
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * Determines whether the specified URL is absolute
+ *
+ * @param {string} url The URL to test
+ * @returns {boolean} True if the specified URL is absolute, otherwise false
+ */
+module.exports = function isAbsoluteURL(url) {
+  // A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
+  // RFC 3986 defines scheme name as a sequence of characters beginning with a letter and followed
+  // by any combination of letters, digits, plus, period, or hyphen.
+  return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
+};
 
 
 /***/ }),
 /* 39 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-var g;
+"use strict";
 
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
 
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
+/**
+ * Creates a new URL by combining the specified URLs
+ *
+ * @param {string} baseURL The base URL
+ * @param {string} relativeURL The relative URL
+ * @returns {string} The combined URL
+ */
+module.exports = function combineURLs(baseURL, relativeURL) {
+  return baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '');
+};
 
 
 /***/ }),
 /* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/*! Palindrom
- * https://github.com/Palindrom/Palindrom
- * (c) 2017 Joachim Wester
- * MIT license
+"use strict";
+
+
+var Cancel = __webpack_require__(11);
+
+/**
+ * A `CancelToken` is an object that can be used to request cancellation of an operation.
+ *
+ * @class
+ * @param {Function} executor The executor function.
  */
-
-const Palindrom = __webpack_require__(11);
-
-const PalindromDOM = (() => {
-  /**
-   * PalindromDOM
-   * @extends {Palindrom}
-   * @param {Object} [options] map of arguments. See README.md for description
-   */
-  class PalindromDOM extends Palindrom {
-    constructor(options) {
-      if (typeof options !== 'object') {
-        throw new Error(
-          'PalindromDOM constructor requires an object argument.'
-        );
-      }
-      if (!options.remoteUrl) {
-        throw new Error('remoteUrl is required');
-      }
-      const onStateReset = options.onStateReset || options.callback;
-      if (options.callback) {
-        console.warn(
-          'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
-        );
-      }
-
-      options.onStateReset = function addDOMListeners(obj) {
-        this.listen();
-        onStateReset && onStateReset.call(this, obj);
-      };
-
-      // construct Palindrom
-      super(options);
-
-      this.element = options.listenTo || document.body;
-      this.clickHandler = this.clickHandler.bind(this);
-      this.historyHandler = this.historyHandler.bind(this);
-      this.morphUrlEventHandler = this.morphUrlEventHandler.bind(this);
-
-      this.historyHandlerDeprecated = () => {
-        console.warn(
-          "`puppet-redirect-pushstate` event is deprecated, please use `palindrom-redirect-pushstate`, if you're using `puppet-redirect`, please upgrade to `palindrom-redirect`"
-        );
-        this.historyHandler();
-      };
-
-      /* in some cases, people emit redirect requests before `listen` is called */
-      this.element.addEventListener(
-        'palindrom-redirect-pushstate',
-        this.historyHandler
-      );
-
-      /* backward compatibility: for people using old puppet-redirect */
-      this.element.addEventListener(
-        'puppet-redirect-pushstate',
-        this.historyHandlerDeprecated
-      );
-    }
-
-    listen() {
-      this.listening = true;
-      this.element.addEventListener('click', this.clickHandler);
-      window.addEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
-
-      this.element.addEventListener(
-        'palindrom-morph-url',
-        this.morphUrlEventHandler
-      );
-
-      this.element.addEventListener(
-        'palindrom-redirect-pushstate',
-        this.historyHandler
-      );
-
-      /* backward compatibility: for people using old puppet-redirect */
-      this.element.addEventListener(
-        'puppet-redirect-pushstate',
-        this.historyHandlerDeprecated
-      );
-    }
-    unlisten() {
-      this.listening = false;
-
-      this.element.removeEventListener('click', this.clickHandler);
-      window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
-      this.element.removeEventListener(
-        'palindrom-redirect-pushstate',
-        this.historyHandler
-      );
-
-      this.element.removeEventListener(
-        'palindrom-morph-url',
-        this.morphUrlEventHandler
-      );
-
-      /* backward compatibility: for people using old puppet-redirect */
-      this.element.removeEventListener(
-        'puppet-redirect-pushstate',
-        this.historyHandlerDeprecated
-      );
-    }
-
-    //TODO move fallback to window.location.href from PalindromNetworkChannel to here (PalindromDOM)
-
-    /**
-     * DISABLED FOR NOW: we don't know when rendering actually finishes.
-     * It's left here for the hope of having synchronous rendering at some point in the future.
-     * ====
-     * we need to scroll asynchronously, because we need the document rendered to search for the anchored element
-     * and even though onReceive + applyPatch are sync, Polymer is not, it renders async-ly
-    PalindromDOM.prototype.scrollToAnchorOrTopAsync = function(link) {
-      this.scrollAsyncTimeout && clearTimeout(this.scrollAsyncTimeout);
-      if (window && window.document) {
-        var anchorIndex;
-        var anchor;
-        // does the URL have an anchor
-        if (link && (anchorIndex = link.indexOf('#')) > -1) {
-          anchor = link.substr(anchorIndex);
-        }
-        if (!anchor) {
-          window.scrollTo(0, 0);
-        } else {
-          // if somehow someone manages to navigate twice in a 100ms,
-          // we don't scroll for their first navigation, i.e de-bouncing
-
-          this.scrollAsyncTimeout = setTimeout(() => {
-            // does that anchor exist in the page?
-            const anchorTarget = document.querySelector(anchor); // look for #element-id
-            if (anchorTarget) {
-              anchorTarget.scrollIntoView();
-            } else {
-              window.scrollTo(0, 0);
-            }
-          }, 100);
-        }
-      }
-    };
-    */
-    /**
-     * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
-     * so that the URL handlers can be executed on the remote
-     * @param url
-     */
-    morphUrl(url) {
-      history.pushState(null, null, url);
-      this.network.getPatchUsingHTTP(url);
-      window && window.scrollTo(0, 0);
-    }
-
-    /**
-     * Handles `palindrom-morph-url` event and channels its `detail.url` to `morphUrl`
-     * @param {palindrom-morph-url Event} event 
-     */
-    morphUrlEventHandler(event) {
-      this.morphUrl(event.detail.url);
-    }
-
-    clickHandler(event) {
-      //Don't morph ctrl/cmd + click & middle mouse button
-      if (event.ctrlKey || event.metaKey || event.which == 2) {
-        return;
-      }
-
-      if (event.detail && event.detail.target) {
-        //detail is Polymer
-        event = event.detail;
-      }
-
-      let target = event.target;
-
-      if (target.nodeName !== 'A') {
-        let eventPath = event.composedPath && event.composedPath();
-        if(!eventPath) {
-          // for backwards compatibility with SDv0
-          eventPath = event.path;
-        }
-        for (let i = 0; i < eventPath.length; i++) {
-          if (eventPath[i].nodeName == 'A') {
-            target = eventPath[i];
-            break;
-          }
-        }
-      }
-      const anchorTarget = target.target || target.getAttribute('target');
-      const hasDownloadAttribute = target.hasAttribute('download');
-
-      if (!hasDownloadAttribute && (!anchorTarget || anchorTarget === '_self')) {
-        //needed since Polymer 0.2.0 in Chrome stable / Web Plaftorm features disabled
-        //because target.href returns undefined for <polymer-ui-menu-item href="..."> (which is an error)
-        //while target.getAttribute("href") returns desired href (as string)
-        const href = target.href || target.getAttribute('href');
-        if (href && PalindromDOM.isApplicationLink(href)) {
-          event.preventDefault();
-          event.stopPropagation();
-          this.morphUrl(href);
-        } else if (target.type === 'submit') {
-          event.preventDefault();
-        }
-      }
-    }
-
-    historyHandler() /*event*/ {
-      this.network.getPatchUsingHTTP(location.href);
-    }
-
-    /**
-     * Returns information if a given element is an internal application link that Palindrom should intercept into a history push
-     * @param elem HTMLElement or String
-     * @returns {boolean}
-     */
-    static isApplicationLink(elem) {
-      if (typeof elem === 'string') {
-        //type string is reported in Polymer / Canary (Web Platform features disabled)
-        const parser = document.createElement('A');
-        parser.href = elem;
-
-        // @see http://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
-        // IE doesn't populate all link properties when setting .href with a relative URL,
-        // however .href will return an absolute URL which then can be used on itself
-        // to populate these additional fields.
-        if (parser.host == '') {
-          parser.href = parser.href;
-        }
-
-        elem = parser;
-      }
-      return (
-        elem.protocol == window.location.protocol &&
-        elem.host == window.location.host
-      );
-    }
+function CancelToken(executor) {
+  if (typeof executor !== 'function') {
+    throw new TypeError('executor must be a function.');
   }
 
-  PalindromDOM.prototype = Object.create(Palindrom.prototype);
+  var resolvePromise;
+  this.promise = new Promise(function promiseExecutor(resolve) {
+    resolvePromise = resolve;
+  });
 
-  /* backward compatibility, not sure if this is good practice */
-  if (typeof global === 'undefined') {
-    if (typeof window !== 'undefined') {
-      /* incase neither window nor global existed, e.g React Native */
-      var global = window;
-    } else {
-      var global = {};
+  var token = this;
+  executor(function cancel(message) {
+    if (token.reason) {
+      // Cancellation has already been requested
+      return;
     }
+
+    token.reason = new Cancel(message);
+    resolvePromise(token.reason);
+  });
+}
+
+/**
+ * Throws a `Cancel` if cancellation has been requested.
+ */
+CancelToken.prototype.throwIfRequested = function throwIfRequested() {
+  if (this.reason) {
+    throw this.reason;
   }
-  global.PuppetDOM = PalindromDOM;
+};
 
-  /* Since we have Palindrom bundled,
-  let's expose it in case anyone needs it */
-  global.Puppet = Palindrom;
-  global.Palindrom = Palindrom;
+/**
+ * Returns an object that contains a new `CancelToken` and a function that, when called,
+ * cancels the `CancelToken`.
+ */
+CancelToken.source = function source() {
+  var cancel;
+  var token = new CancelToken(function executor(c) {
+    cancel = c;
+  });
+  return {
+    token: token,
+    cancel: cancel
+  };
+};
 
-  return PalindromDOM;
-})();
-
-module.exports = PalindromDOM;
-module.exports.default = PalindromDOM;
-module.exports.__esModule = true;
+module.exports = CancelToken;
 
 
 /***/ }),
 /* 41 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * Syntactic sugar for invoking a function and expanding an array for arguments.
+ *
+ * Common use case would be to use `Function.prototype.apply`.
+ *
+ *  ```js
+ *  function f(x, y, z) {}
+ *  var args = [1, 2, 3];
+ *  f.apply(null, args);
+ *  ```
+ *
+ * With `spread` this example can be re-written.
+ *
+ *  ```js
+ *  spread(function(x, y, z) {})([1, 2, 3]);
+ *  ```
+ *
+ * @param {Function} callback
+ * @returns {Function}
+ */
+module.exports = function spread(callback) {
+  return function wrap(arr) {
+    return callback.apply(null, arr);
+  };
+};
+
+
+/***/ }),
+/* 42 */
 /***/ (function(module, exports) {
 
 class PalindromError extends Error {
@@ -4972,12 +4978,6 @@ module.exports = {
   PalindromConnectionError
 };
 
-
-/***/ }),
-/* 42 */
-/***/ (function(module, exports) {
-
-module.exports = URL;
 
 /***/ }),
 /* 43 */

@@ -1,5 +1,5 @@
 const webpack = require("webpack");
-const BabiliPlugin = require('babili-webpack-plugin');
+const MinifyPlugin = require('babel-minify-webpack-plugin');
 const version = require('./package.json').version;
 
 module.exports = [
@@ -28,7 +28,7 @@ module.exports = [
       extensions: [".js"]
     },
     externals: { websocket: "WebSocket", './URL': 'URL' },
-    plugins: [new BabiliPlugin(), new webpack.BannerPlugin('Palindrom, version: ' + version)]
+    plugins: [new MinifyPlugin(), new webpack.BannerPlugin('Palindrom, version: ' + version)]
   },
   {
     entry: "./src/palindrom-dom.js",
@@ -50,12 +50,11 @@ module.exports = [
       library: "PalindromDOM",
       libraryTarget: "var"
     },
-    devtool: 'source-map',
     resolve: {
       extensions: [".js"]
     },
     externals: { websocket: "WebSocket", './URL': 'URL' },
-    plugins: [new BabiliPlugin(), new webpack.BannerPlugin('Palindrom, version: ' + version)]
+    plugins: [new MinifyPlugin(), new webpack.BannerPlugin('Palindrom, version: ' + version)]
   },
   /* bundle tests for browser */
   {
@@ -65,7 +64,6 @@ module.exports = [
       library: "Tests",
       libraryTarget: "var"
     },
-    devtool: 'source-map',
     externals: { websocket: "WebSocket", './URL': 'URL' },
     resolve: {
       extensions: [".js"]
