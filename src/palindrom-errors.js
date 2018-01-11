@@ -25,26 +25,7 @@ class PalindromConnectionError extends PalindromError {
   }
 }
 
-class PalindromValidationError extends PalindromError {
-  /**
-   * 
-   * @param {String} message the message that describes the error
-   * @param {String} direction <Outgoing|Incoming>
-   */
-  constructor(message, direction) {
-    if (!direction || !['Outgoing', 'Incoming'].includes(direction)) {
-      throw new TypeError(
-        "Error constructing PalindromValidationError, `direction` parameter is required and can either be 'Outgoing' or 'Incoming'"
-      );
-    }
-    super(message);
-    this.message = `${direction}PatchValidationError: ${message}`;
-    this.direction = direction;
-  }
-}
-
 module.exports = {
   PalindromError,
-  PalindromConnectionError,
-  PalindromValidationError
+  PalindromConnectionError
 };

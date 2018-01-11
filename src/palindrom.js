@@ -18,8 +18,7 @@ const URL = require('./URL');
 const axios = require('axios');
 const {
   PalindromError,
-  PalindromConnectionError,
-  PalindromValidationError
+  PalindromConnectionError
 } = require('./palindrom-errors');
 
 /* We are going to hand `websocket` lib as an external to webpack
@@ -848,9 +847,7 @@ const Palindrom = (() => {
     validateSequence(tree, sequence) {
       const error = validate(sequence, tree);
       if (error) {
-        this.onOutgoingPatchValidationError(
-          new PalindromValidationError(error.message, 'Outgoing')
-        );
+        this.onOutgoingPatchValidationError(error);
       }
     }
 

@@ -3964,8 +3964,7 @@ const URL = __webpack_require__(176);
 const axios = __webpack_require__(43);
 const {
   PalindromError,
-  PalindromConnectionError,
-  PalindromValidationError
+  PalindromConnectionError
 } = __webpack_require__(41);
 
 /* We are going to hand `websocket` lib as an external to webpack
@@ -4289,8 +4288,7 @@ const Palindrom = (() => {
       };
       this._ws.onmessage = event => {
         try {
-          const parsedMessage = JSON.parse(event.data);
-          this.onReceive(parsedMessage, this._ws.url, 'WS');
+          var parsedMessage = JSON.parse(event.data);
         } catch (e) {
           this.onFatalError(
             new PalindromConnectionError(
@@ -4300,7 +4298,9 @@ const Palindrom = (() => {
               'WS'
             )
           );
+          return;
         }
+        this.onReceive(parsedMessage, this._ws.url, 'WS');        
       };
       this._ws.onerror = event => {
         this.onStateChange(this._ws.readyState, upgradeURL, event.data);
@@ -4309,9 +4309,11 @@ const Palindrom = (() => {
           return;
         }
 
-        const message = `WebSocket connection could not be made.\nreadyState: ${
-          this._ws.readyState
-        }`;
+        const message = [
+          `WebSocket connection could not be made`,
+          ` readyState: ${this._ws.readyState}`
+        ].join('\n');
+
         this.onFatalError(
           new PalindromConnectionError(message, 'Client', upgradeURL, 'WS')
         );
@@ -4454,9 +4456,9 @@ const Palindrom = (() => {
 
           const message = [
             statusText,
-            `statusCode: ${statusCode}`,            
-            `reason: ${reason}`,
-            `url: ${res.url}`
+            ` statusCode: ${statusCode}`,            
+            ` reason: ${reason}`,
+            ` url: ${res.url}`
           ].join('\n');
 
           this.onFatalError(
@@ -4791,9 +4793,7 @@ const Palindrom = (() => {
     validateSequence(tree, sequence) {
       const error = validate(sequence, tree);
       if (error) {
-        this.onOutgoingPatchValidationError(
-          new PalindromValidationError(error.message, 'Outgoing')
-        );
+        this.onOutgoingPatchValidationError(error);
       }
     }
 
@@ -9485,28 +9485,9 @@ class PalindromConnectionError extends PalindromError {
   }
 }
 
-class PalindromValidationError extends PalindromError {
-  /**
-   * 
-   * @param {String} message the message that describes the error
-   * @param {String} direction <Outgoing|Incoming>
-   */
-  constructor(message, direction) {
-    if (!direction || !['Outgoing', 'Incoming'].includes(direction)) {
-      throw new TypeError(
-        "Error constructing PalindromValidationError, `direction` parameter is required and can either be 'Outgoing' or 'Incoming'"
-      );
-    }
-    super(message);
-    this.message = `${direction}PatchValidationError: ${message}`;
-    this.direction = direction;
-  }
-}
-
 module.exports = {
   PalindromError,
-  PalindromConnectionError,
-  PalindromValidationError
+  PalindromConnectionError
 };
 
 
@@ -9643,7 +9624,7 @@ module.exports = __webpack_require__(86);
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
+
 
 var utils = __webpack_require__(2);
 var settle = __webpack_require__(92);
@@ -9669,7 +9650,7 @@ module.exports = function xhrAdapter(config) {
     // For IE 8/9 CORS support
     // Only supports POST and GET calls and doesn't returns the response headers.
     // DON'T do this for testing b/c XMLHttpRequest is mocked, not XDomainRequest.
-    if (process.env.NODE_ENV !== 'test' &&
+    if ("production" !== 'test' &&
         typeof window !== 'undefined' &&
         window.XDomainRequest && !('withCredentials' in request) &&
         !isURLSameOrigin(config.url)) {
@@ -9821,7 +9802,6 @@ module.exports = function xhrAdapter(config) {
   });
 };
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(16)))
 
 /***/ }),
 /* 45 */
