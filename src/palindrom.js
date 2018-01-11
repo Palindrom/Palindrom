@@ -365,7 +365,7 @@ const Palindrom = (() => {
 
         const message = [
           `WebSocket connection could not be made`,
-          ` readyState: ${this._ws.readyState}`
+          `readyState: ${this._ws.readyState}`
         ].join('\n');
 
         this.onFatalError(
@@ -373,6 +373,7 @@ const Palindrom = (() => {
         );
       };
       this._ws.onclose = event => {
+
         this.onStateChange(
           this._ws.readyState,
           upgradeURL,
@@ -382,22 +383,22 @@ const Palindrom = (() => {
         );
 
         if (event.reason) {
+
           const message = [
             'WebSocket connection closed unexpectedly.',
-            ` reason: ${event.reason}`,
-            ` readyState: ${this._ws.readyState}`,
-            ` stateCode: ${event.code}`
+            `reason: ${event.reason}`,
+            `readyState: ${this._ws.readyState}`,
+            `stateCode: ${event.code}`
           ].join('\n');
-
           this.onFatalError(
             new PalindromConnectionError(message, 'Server', upgradeURL, 'WS')
           );
         } else if (!event.wasClean) {
           const message = [
             'WebSocket connection closed unexpectedly.',
-            ` reason: ${event.reason}`,
-            ` readyState: ${this._ws.readyState}`,
-            ` stateCode: ${event.code}`
+            `reason: ${event.reason}`,
+            `readyState: ${this._ws.readyState}`,
+            `stateCode: ${event.code}`
           ].join('\n');
 
           this.onConnectionError(
@@ -432,11 +433,11 @@ const Palindrom = (() => {
 
         const message = [
           'Session lost.',
-          ' Server replied with a different session ID than the already set one.',
-          ' Possibly a server restart happened while you were working.',
-          ' Please reload the page.'
-          ` Previous session ID: ${this.remoteUrl}`
-          ` New session ID: ${remoteUrl}`
+          'Server replied with a different session ID than the already set one.',
+          'Possibly a server restart happened while you were working.',
+          'Please reload the page.'
+          `Previous session ID: ${this.remoteUrl}`
+          `New session ID: ${remoteUrl}`
         ].join('\n');
 
         throw new PalindromError(message);
@@ -510,13 +511,14 @@ const Palindrom = (() => {
 
           const message = [
             statusText,
-            ` statusCode: ${statusCode}`,            
-            ` reason: ${reason}`,
-            ` url: ${res.url}`
+            `statusCode: ${statusCode}`,            
+            `reason: ${reason}`,
+            `url: ${url}`,
+            `HTTP method: ${method}`,            
           ].join('\n');
 
           this.onFatalError(
-            new PalindromConnectionError(message, 'Client', res.config.url, method)
+            new PalindromConnectionError(message, 'Client', url, method)
           );
         });
 
