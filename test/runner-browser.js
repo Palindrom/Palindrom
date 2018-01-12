@@ -7454,7 +7454,7 @@ class PalindromConnectionError extends PalindromError {
     this.side = side;
     this.message = `${side} error\n\t${message.replace(/\n/g, '\n\t')}`;
     this.url = url;
-    this.connectionType = type;
+    this.connectionType = connectionType;
   }
 }
 
@@ -31011,7 +31011,7 @@ describe('Palindrom', () => {
           assert(spy.calledOnce);
           const errorPassed = spy.getCall(0).args[0];
           assert(errorPassed instanceof PalindromError);
-          assert(errorPassed.message.includes(`Palindrom: Error inside onStateReset callback:`))
+          assert(errorPassed.message.includes(`Error inside onStateReset callback:`))
           done();
         }, 5);
       });
@@ -31111,10 +31111,11 @@ describe('Palindrom', () => {
           assert(spy.calledOnce);
           const errorPassed = spy.getCall(0).args[0];
           assert(errorPassed instanceof RangeError);
+          debugger
           assert.equal(
             errorPassed.message,
             `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
-              1}`
+              1}, variable path is: /value`
           );
           done();
         }, 10);
@@ -31143,7 +31144,7 @@ describe('Palindrom', () => {
           assert.equal(
             errorPassed.message,
             `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
-              1}`
+              1}, variable path is: /val`
           );
           done();
         }, 15);
@@ -31177,7 +31178,7 @@ describe('Palindrom', () => {
           assert.equal(
             errorPassed.message,
             `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
-              1}`
+              1}, variable path is: /value`
           );
           server.stop(done);
         }, 15);
@@ -31212,7 +31213,7 @@ describe('Palindrom', () => {
           assert.equal(
             errorPassed.message,
             `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
-              1}`
+              1}, variable path is: /val`
           );
           server.stop(done);
         }, 15);
