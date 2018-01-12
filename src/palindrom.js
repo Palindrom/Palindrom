@@ -793,7 +793,7 @@ const Palindrom = (() => {
     handleLocalChange(operation) {
       // it's a single operation, we need to check only it's value
       operation.value &&
-        findRangeErrors(operation.value, this.onOutgoingPatchValidationError);
+        findRangeErrors(operation.value, this.onOutgoingPatchValidationError, operation.path);
 
       const patches = [operation];
       if (this.debug) {
@@ -936,7 +936,7 @@ const Palindrom = (() => {
    */
   function validateNumericsRangesInPatch(patch, errorHandler, startFrom) {
     for (let i = startFrom, len = patch.length; i < len; i++) {
-      findRangeErrors(patch[i].value, errorHandler);
+      findRangeErrors(patch[i].value, errorHandler, patch[i].path);
     }
   }
 
@@ -945,12 +945,12 @@ const Palindrom = (() => {
    * @param {*} val value
    * @param {Function} errorHandler
    */
-  function findRangeErrors(val, errorHandler) {
+  function findRangeErrors(val, errorHandler, variablePath = "") {
     const type = typeof val;
     if (type == 'object') {
       for (const key in val) {
         if (val.hasOwnProperty(key)) {
-          findRangeErrors(val[key], errorHandler);
+          findRangeErrors(val[key], errorHandler, variablePath + '/' + key);
         }
       }
     } else if (
@@ -959,7 +959,7 @@ const Palindrom = (() => {
     ) {
       errorHandler(
         new RangeError(
-          `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}`
+          `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}, variable path is: ${variablePath}`
         )
       );
     }

@@ -1761,7 +1761,7 @@ const Palindrom = (() => {
       if (scheduledError) {
         return;
       }
-      var scheduledError = setTimeout(() => {
+      scheduledError = setTimeout(() => {
         scheduledError = null;
         onError(
           new PalindromConnectionError(
@@ -2018,7 +2018,7 @@ const Palindrom = (() => {
 
     changeState(href) {
       console.warn(
-        "Palindrom: changeState was renamed to `getPatchUsingHTTP`, and they're both not recommended to use, please use `PalindromDOM.morphUrl` instead"
+        "changeState was renamed to `getPatchUsingHTTP`, and they're both not recommended to use, please use `PalindromDOM.morphUrl` instead"
       );
       return this.getPatchUsingHTTP(href);
     }
@@ -2225,7 +2225,7 @@ const Palindrom = (() => {
 
       if (options.ignoreAdd) {
         throw new TypeError(
-          'Palindrom: `ignoreAdd` is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136'
+          '`ignoreAdd` is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136'
         );
       }
 
@@ -2242,7 +2242,7 @@ const Palindrom = (() => {
 
       if (options.callback) {
         console.warn(
-          'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
+          'options.callback is deprecated. Please use `onStateReset` instead'
         );
       }
 
@@ -2333,7 +2333,7 @@ const Palindrom = (() => {
     }
     set ignoreAdd(newValue) {
       throw new TypeError(
-        "Palindrom: Can't set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136"
+        "Can't set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136"
       );
     }
     get useWebSocket() {
@@ -2387,7 +2387,7 @@ const Palindrom = (() => {
     handleLocalChange(operation) {
       // it's a single operation, we need to check only it's value
       operation.value &&
-        findRangeErrors(operation.value, this.onOutgoingPatchValidationError);
+        findRangeErrors(operation.value, this.onOutgoingPatchValidationError, operation.path);
 
       const patches = [operation];
       if (this.debug) {
@@ -2422,7 +2422,7 @@ const Palindrom = (() => {
             // to prevent the promise's catch from swallowing errors inside onStateReset
             this.onError(
               new PalindromError(
-                `Palindrom: Error inside onStateReset callback: ${
+                `Error inside onStateReset callback: ${
                   error.message
                 }`
               )
@@ -2530,7 +2530,7 @@ const Palindrom = (() => {
    */
   function validateNumericsRangesInPatch(patch, errorHandler, startFrom) {
     for (let i = startFrom, len = patch.length; i < len; i++) {
-      findRangeErrors(patch[i].value, errorHandler);
+      findRangeErrors(patch[i].value, errorHandler, patch[i].path);
     }
   }
 
@@ -2539,12 +2539,12 @@ const Palindrom = (() => {
    * @param {*} val value
    * @param {Function} errorHandler
    */
-  function findRangeErrors(val, errorHandler) {
+  function findRangeErrors(val, errorHandler, variablePath = "") {
     const type = typeof val;
     if (type == 'object') {
       for (const key in val) {
         if (val.hasOwnProperty(key)) {
-          findRangeErrors(val[key], errorHandler);
+          findRangeErrors(val[key], errorHandler, variablePath + '/' + key);
         }
       }
     } else if (
@@ -2553,7 +2553,7 @@ const Palindrom = (() => {
     ) {
       errorHandler(
         new RangeError(
-          `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}`
+          `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${val}, variable path is: ${variablePath}`
         )
       );
     }
@@ -4702,6 +4702,8 @@ class PalindromConnectionError extends PalindromError {
     super(message);
     this.side = side;
     this.message = `${side} error\n\t${message.replace(/\n/g, '\n\t')}`;
+    this.url = url;
+    this.connectionType = type;
   }
 }
 
