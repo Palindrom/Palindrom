@@ -22,6 +22,8 @@ class PalindromConnectionError extends PalindromError {
     super(message);
     this.side = side;
     this.message = `${side} error\n\t${message.replace(/\n/g, '\n\t')}`;
+    this.url = url;
+    this.connectionType = type;
   }
 }
 

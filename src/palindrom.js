@@ -167,7 +167,7 @@ const Palindrom = (() => {
       if (scheduledError) {
         return;
       }
-      var scheduledError = setTimeout(() => {
+      scheduledError = setTimeout(() => {
         scheduledError = null;
         onError(
           new PalindromConnectionError(
@@ -424,7 +424,7 @@ const Palindrom = (() => {
 
     changeState(href) {
       console.warn(
-        "Palindrom: changeState was renamed to `getPatchUsingHTTP`, and they're both not recommended to use, please use `PalindromDOM.morphUrl` instead"
+        "changeState was renamed to `getPatchUsingHTTP`, and they're both not recommended to use, please use `PalindromDOM.morphUrl` instead"
       );
       return this.getPatchUsingHTTP(href);
     }
@@ -631,7 +631,7 @@ const Palindrom = (() => {
 
       if (options.ignoreAdd) {
         throw new TypeError(
-          'Palindrom: `ignoreAdd` is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136'
+          '`ignoreAdd` is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136'
         );
       }
 
@@ -648,7 +648,7 @@ const Palindrom = (() => {
 
       if (options.callback) {
         console.warn(
-          'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
+          'options.callback is deprecated. Please use `onStateReset` instead'
         );
       }
 
@@ -739,7 +739,7 @@ const Palindrom = (() => {
     }
     set ignoreAdd(newValue) {
       throw new TypeError(
-        "Palindrom: Can't set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136"
+        "Can't set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136"
       );
     }
     get useWebSocket() {
@@ -828,7 +828,7 @@ const Palindrom = (() => {
             // to prevent the promise's catch from swallowing errors inside onStateReset
             this.onError(
               new PalindromError(
-                `Palindrom: Error inside onStateReset callback: ${
+                `Error inside onStateReset callback: ${
                   error.message
                 }`
               )
