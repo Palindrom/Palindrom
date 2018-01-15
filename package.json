@@ -40,7 +40,7 @@
     "websocket": "^1.0.24"
   },
   "devDependencies": {
-    "babili-webpack-plugin": "0.1.1",
+    "babel-minify-webpack-plugin": "^0.2.0",
     "bluebird": "^3.5.0",
     "bluebird-retry": "^0.10.1",
     "chai": "^3.5.0",
@@ -54,7 +54,7 @@
     "saucelabs": "^1.4.0",
     "selenium-webdriver": "^3.3.0",
     "sinon": "^2.1.0",
-    "webpack": "^2.7.0"
+    "webpack": "^3.10.0"
   },
   "scripts": {
     "version": "node ./bump-version.js && webpack && git add -A",

@@ -5,6 +5,7 @@ const Palindrom = require('../../src/palindrom');
 const assert = require('assert');
 const moxios = require('moxios');
 const sinon = require('sinon');
+const {PalindromConnectionError} = require('../../src/palindrom-errors')
 
 describe('Sockets', () => {
   beforeEach(() => {
@@ -311,32 +312,77 @@ describe('Sockets', () => {
         });
       });
       describe('Sockets events', () => {
-        describe('if `useWebSocket` flag is provided', () => {
-          it('onSocketOpened callback should be called', function(done) {
-            const server = new MockSocketServer('ws://localhost/testURL');
+        it('onSocketOpened callback should be called', function(done) {
+          const server = new MockSocketServer('ws://localhost/testURL');
 
-            moxios.stubRequest('http://localhost/testURL', {
-              status: 200,
-              headers: { location: 'http://localhost/testURL' },
-              responseText: '{"hello": "world"}'
-            });
+          moxios.stubRequest('http://localhost/testURL', {
+            status: 200,
+            headers: { location: 'http://localhost/testURL' },
+            responseText: '{"hello": "world"}'
+          });
 
-            var spy = sinon.spy();
-            var palindrom = new Palindrom({
-              remoteUrl: 'http://localhost/testURL',
-              useWebSocket: true,
-              onSocketOpened: spy
-            });
-            /* socket should be undefined before XHR delay */
+          var spy = sinon.spy();
+          var palindrom = new Palindrom({
+            remoteUrl: 'http://localhost/testURL',
+            useWebSocket: true,
+            onSocketOpened: spy
+          });
+          /* socket should be undefined before XHR delay */
+          assert(spy.notCalled);
+
+          setTimeout(() => {
+            /* socket should NOT be undefined after XHR delay */
+            assert(spy.calledOnce);
+            server.stop(done);
+          }, 50);
+        });
+
+        it('Should call onConnectionError when a non-JSON message is sent', function(done) {
+          const server = new MockSocketServer('ws://localhost/testURL');
+
+          moxios.stubRequest('http://localhost/testURL', {
+            status: 200,
+            headers: { location: 'http://localhost/testURL' },
+            responseText: '{"hello": "world"}'
+          });
+
+          var spy = sinon.spy();
+          var palindrom = new Palindrom({
+            remoteUrl: 'http://localhost/testURL',
+            useWebSocket: true,
+            onConnectionError: spy
+          });
+          /* no issues so far */
+          assert(spy.notCalled);
+
+          setTimeout(() => {
+
+            server.send(
+              `[{"op": "replace", "path": "/hello", "value": "bye"}]`
+            );
+            
+            assert.equal(palindrom.obj.hello, "bye");
+
+            /* no issues so far */
             assert(spy.notCalled);
 
-            setTimeout(() => {
-              /* socket should NOT be undefined after XHR delay */
-              assert(spy.calledOnce);
-              server.stop(done);
-            }, 50);
-          });
+            server.send(
+              `Some error message from the server`
+            );
+
+            /* Now! */
+            assert(spy.calledOnce);
+            
+            const error = spy.lastCall.args[0];
+            
+            assert(error instanceof PalindromConnectionError);
+            assert.equal(error.message, 'Server error\n\tSome error message from the server');
+
+            server.stop(done);
+
+          }, 50);
         });
+
       });
       describe('After connection is established', () => {
         it('should send new changes over WebSocket', function(done) {

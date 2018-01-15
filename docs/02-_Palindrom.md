@@ -35,17 +35,18 @@ var palindrom = new Palindrom({attribute: value});
 
 Attribute              | Type          | Default                | Description
 ---                    | ---           | ---                    | ---
-`remoteUrl`            | *String*      |  **Required**          | PATCH server URL
+`remoteUrl`            | **`String`**      |  **Required**          | PATCH server URL
 `onStateReset`         | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established), **it can be called again if the state was reset by a root-replacing patch**.
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
 `debug`                | *Boolean*     | `true`                 | Toggle debugging mode
 `filterLocalChange`            | *Function*      |       | A function that is called with every local change and allows you to filter (ignore) some changes. See [Filtering Patches](https://palindrom.github.io/#/docs/master/04-Filtering Patches) section.
 `onLocalChange`        | *Function*    |                        | Helper callback triggered each time a change is observed locally
 `onRemoteChange`       | *Function*    |                        | Helper callback triggered each time a change is received from the server and applied.
-`onPatchReceived`      | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts three parameters: (*String* `data`, *String* `url`, *String*, `method`)
-`onPatchSent`          | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (*String* `data`, *String* `url`, *String*, `method`)
-`onSocketStateChanged` | *Function*    |                        | Helper callback triggered when socket state changes, accepts next parameters: (*int* `state`, *String* `url`, *String* `data`, *int* `code`, *String* `reason`)
-`onConnectionError`    | *Function*    |                        | Helper callback triggered when socket connection closed, socket connection failed to establish, http requiest failed. Accepts next parameters: (*Object* `data`, *String* `url`, *String*, `method`). The data object contains the following properties: *String* `statusText` (HTTP response status code reason phrase or WebSocket error title), *String* `statusCode` (HTTP response status code or WS error code), *Number* `readyState`, *String* `url`, *String* `reason` (HTTP error response body or WebSocket disconnection reason message)
+`onPatchReceived`      | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts three parameters: (**`String`** `data`, **`String`** `url`, **`String`** `method`)
+`onPatchSent`          | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (**`String`** `data`, **`String`** `url`, **`String`** `method`)
+`onSocketStateChanged` | *Function*    |                        | Helper callback triggered when socket state changes, accepts next parameters: (**`int`** `state`, **`String`** `url`, **`String`** `data`, **`int`** `code`, **`String`** `reason`)
+`onError`    | *Function*    |                        | Helper callback triggered when a generic error occurs. Accepts one parameter: (*PalindromError* `error`) `PalindromError` has the following properties: (**`String`** `message`) it extends ES6 Error, it has the stack trace with all the information `Error` class offers.
+`onConnectionError`    | *Function*    |                        | Helper callback triggered when socket connection closed, socket connection failed to establish, http requiest failed. Accepts one parameter: (**`PalindromConnectionError`** `error`). `PalindromConnectionError` has the following properties: (**`String`** `message`, **`String`** `side <Server\|Client>`, **`String`** `url`, **`String`** `connectionType`). It extends ES6 Error class, it has the stack trace with all the information `Error` class offers.
 `onIncomingPatchValidationError`    | *Function*    |                        | Helper callback triggered when a wrong patch is received. It accepts one `Error` parameter.
 `onOutgoingPatchValidationError`    | *Function*    |                        | Helper callback triggered when a wrong patch is locally issued. It accepts one `Error` parameter.
 `localVersionPath`     | *JSONPointer* | `disabled`             | local version path, set it to enable Versioned JSON Patch communication
@@ -69,7 +70,7 @@ palindrom.property
 ```
 Attribute             | Type       | Default                | Description
 ---                   | ---        | ---                    | ---
-`remoteUrl`           | *String*   | **Required**           | See above
+`remoteUrl`           | **`String`**   | **Required**           | See above
 `obj [readonly]`      | *Object*   | `{}`                   | Your initial state object, _**please read notes below**_.
 `useWebSocket`        | *Boolean*  | `false`                | See above
 `debug`               | *Boolean*  | `true`                 | See above
