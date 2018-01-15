@@ -180,7 +180,6 @@ describe('Palindrom', () => {
           assert(spy.calledOnce);
           const errorPassed = spy.getCall(0).args[0];
           assert(errorPassed instanceof RangeError);
-          debugger
           assert.equal(
             errorPassed.message,
             `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
