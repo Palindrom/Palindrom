@@ -7,6 +7,10 @@
 /* this variable is bumped automatically when you call npm version */
 const palindromVersion = '3.1.0';
 
+const CLIENT = 'Client';
+const SERVER = 'Server';
+
+
 const { applyPatch, validate } = require('fast-json-patch');
 const JSONPatcherProxy = require('jsonpatcherproxy');
 const JSONPatchQueueSynchronous = require('json-patch-queue')
@@ -172,7 +176,7 @@ const Palindrom = (() => {
         onError(
           new PalindromConnectionError(
             "Timeout has passed and response hasn't arrived",
-            'Client',
+            CLIENT,
             this.remoteUrl,
             'Unknown'
           )
@@ -347,7 +351,7 @@ const Palindrom = (() => {
           this.onFatalError(
             new PalindromConnectionError(
               event.data,
-              'Server',
+              SERVER,
               this._ws.url,
               'WS'
             )
@@ -369,7 +373,7 @@ const Palindrom = (() => {
         ].join('\n');
 
         this.onFatalError(
-          new PalindromConnectionError(message, 'Client', upgradeURL, 'WS')
+          new PalindromConnectionError(message, CLIENT, upgradeURL, 'WS')
         );
       };
       this._ws.onclose = event => {
@@ -392,7 +396,7 @@ const Palindrom = (() => {
           ].join('\n');
 
           this.onFatalError(
-            new PalindromConnectionError(message, 'Server', upgradeURL, 'WS')
+            new PalindromConnectionError(message, SERVER, upgradeURL, 'WS')
           );
           
         } else if (!event.wasClean) {
@@ -404,7 +408,7 @@ const Palindrom = (() => {
           ].join('\n');
 
           this.onConnectionError(
-            new PalindromConnectionError(message, 'Server', upgradeURL, 'WS')
+            new PalindromConnectionError(message, SERVER, upgradeURL, 'WS')
           );
         }
       };
@@ -520,7 +524,7 @@ const Palindrom = (() => {
           ].join('\n');
 
           this.onFatalError(
-            new PalindromConnectionError(message, 'Client', url, method)
+            new PalindromConnectionError(message, CLIENT, url, method)
           );
         });
 
