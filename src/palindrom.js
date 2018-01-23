@@ -893,6 +893,11 @@ const Palindrom = (() => {
     }
 
     handleRemoteChange(data, url, method) {
+    
+      if (this.onPatchReceived) {
+        this.onPatchReceived(data, url, method);
+      }
+
       this.heartbeat.notifyReceive();
       const patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
 
@@ -905,10 +910,6 @@ const Palindrom = (() => {
       if (patches.length === 0) {
         // ping message
         return;
-      }
-
-      if (this.onPatchReceived) {
-        this.onPatchReceived(data, url, method);
       }
 
       // apply only if we're still watching
