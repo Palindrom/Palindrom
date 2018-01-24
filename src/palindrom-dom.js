@@ -42,23 +42,10 @@ const PalindromDOM = (() => {
       this.historyHandler = this.historyHandler.bind(this);
       this.morphUrlEventHandler = this.morphUrlEventHandler.bind(this);
 
-      this.historyHandlerDeprecated = () => {
-        console.warn(
-          "`puppet-redirect-pushstate` event is deprecated, please use `palindrom-redirect-pushstate`, if you're using `puppet-redirect`, please upgrade to `palindrom-redirect`"
-        );
-        this.historyHandler();
-      };
-
       /* in some cases, people emit redirect requests before `listen` is called */
       this.element.addEventListener(
         'palindrom-redirect-pushstate',
         this.historyHandler
-      );
-
-      /* backward compatibility: for people using old puppet-redirect */
-      this.element.addEventListener(
-        'puppet-redirect-pushstate',
-        this.historyHandlerDeprecated
       );
     }
 
@@ -76,12 +63,6 @@ const PalindromDOM = (() => {
         'palindrom-redirect-pushstate',
         this.historyHandler
       );
-
-      /* backward compatibility: for people using old puppet-redirect */
-      this.element.addEventListener(
-        'puppet-redirect-pushstate',
-        this.historyHandlerDeprecated
-      );
     }
     unlisten() {
       this.listening = false;
@@ -96,12 +77,6 @@ const PalindromDOM = (() => {
       this.element.removeEventListener(
         'palindrom-morph-url',
         this.morphUrlEventHandler
-      );
-
-      /* backward compatibility: for people using old puppet-redirect */
-      this.element.removeEventListener(
-        'puppet-redirect-pushstate',
-        this.historyHandlerDeprecated
       );
     }
 
@@ -236,24 +211,9 @@ const PalindromDOM = (() => {
     }
   }
 
-  PalindromDOM.prototype = Object.create(Palindrom.prototype);
-
-  /* backward compatibility, not sure if this is good practice */
-  if (typeof global === 'undefined') {
-    if (typeof window !== 'undefined') {
-      /* incase neither window nor global existed, e.g React Native */
-      var global = window;
-    } else {
-      var global = {};
-    }
-  }
-  global.PuppetDOM = PalindromDOM;
-
   /* Since we have Palindrom bundled,
   let's expose it in case anyone needs it */
-  global.Puppet = Palindrom;
-  global.Palindrom = Palindrom;
-
+  PalindromDOM.Palindrom = Palindrom;
   return PalindromDOM;
 })();
 
