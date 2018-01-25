@@ -1,4 +1,4 @@
-/*! Palindrom, version: 4.0.0 */
+/*! Palindrom, version: 5.0.0 */
 var PalindromDOM =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -1636,23 +1636,10 @@ const PalindromDOM = (() => {
       this.historyHandler = this.historyHandler.bind(this);
       this.morphUrlEventHandler = this.morphUrlEventHandler.bind(this);
 
-      this.historyHandlerDeprecated = () => {
-        console.warn(
-          "`puppet-redirect-pushstate` event is deprecated, please use `palindrom-redirect-pushstate`, if you're using `puppet-redirect`, please upgrade to `palindrom-redirect`"
-        );
-        this.historyHandler();
-      };
-
       /* in some cases, people emit redirect requests before `listen` is called */
       this.element.addEventListener(
         'palindrom-redirect-pushstate',
         this.historyHandler
-      );
-
-      /* backward compatibility: for people using old puppet-redirect */
-      this.element.addEventListener(
-        'puppet-redirect-pushstate',
-        this.historyHandlerDeprecated
       );
     }
 
@@ -1670,12 +1657,6 @@ const PalindromDOM = (() => {
         'palindrom-redirect-pushstate',
         this.historyHandler
       );
-
-      /* backward compatibility: for people using old puppet-redirect */
-      this.element.addEventListener(
-        'puppet-redirect-pushstate',
-        this.historyHandlerDeprecated
-      );
     }
     unlisten() {
       this.listening = false;
@@ -1690,12 +1671,6 @@ const PalindromDOM = (() => {
       this.element.removeEventListener(
         'palindrom-morph-url',
         this.morphUrlEventHandler
-      );
-
-      /* backward compatibility: for people using old puppet-redirect */
-      this.element.removeEventListener(
-        'puppet-redirect-pushstate',
-        this.historyHandlerDeprecated
       );
     }
 
@@ -1829,25 +1804,7 @@ const PalindromDOM = (() => {
       );
     }
   }
-
-  PalindromDOM.prototype = Object.create(Palindrom.prototype);
-
-  /* backward compatibility, not sure if this is good practice */
-  if (typeof global === 'undefined') {
-    if (typeof window !== 'undefined') {
-      /* incase neither window nor global existed, e.g React Native */
-      var global = window;
-    } else {
-      var global = {};
-    }
-  }
-  global.PuppetDOM = PalindromDOM;
-
-  /* Since we have Palindrom bundled,
-  let's expose it in case anyone needs it */
-  global.Puppet = Palindrom;
-  global.Palindrom = Palindrom;
-
+  
   return PalindromDOM;
 })();
 
@@ -1867,7 +1824,7 @@ module.exports.__esModule = true;
  */
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '4.0.0';
+const palindromVersion = '5.0.0';
 
 const CLIENT = 'Client';
 const SERVER = 'Server';
@@ -1896,7 +1853,7 @@ const NodeWebSocket = __webpack_require__(43).w3cwebsocket;
 
 /* this allows us to stub WebSockets */
 if (!global.WebSocket && NodeWebSocket) {
-  /* we are in production env */
+  /* we are in Node production env */
   var WebSocket = NodeWebSocket;
 } else if (global.WebSocket) {
   /* we are in testing env */
@@ -2755,6 +2712,11 @@ const Palindrom = (() => {
     }
 
     handleRemoteChange(data, url, method) {
+    
+      if (this.onPatchReceived) {
+        this.onPatchReceived(data, url, method);
+      }
+
       this.heartbeat.notifyReceive();
       const patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
 
@@ -2767,10 +2729,6 @@ const Palindrom = (() => {
       if (patches.length === 0) {
         // ping message
         return;
-      }
-
-      if (this.onPatchReceived) {
-        this.onPatchReceived(data, url, method);
       }
 
       // apply only if we're still watching
@@ -2838,9 +2796,6 @@ const Palindrom = (() => {
     palindrom.network.send(txt);
     palindrom.observe();
   }
-
-  /* backward compatibility */
-  global.Puppet = Palindrom;
 
   return Palindrom;
 })();
