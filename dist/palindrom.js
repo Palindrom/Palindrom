@@ -1,4 +1,4 @@
-/*! Palindrom, version: 4.0.0 */
+/*! Palindrom, version: 5.0.0 */
 var Palindrom =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -1599,7 +1599,7 @@ module.exports = Cancel;
  */
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '4.0.0';
+const palindromVersion = '5.0.0';
 
 const CLIENT = 'Client';
 const SERVER = 'Server';
@@ -1628,7 +1628,7 @@ const NodeWebSocket = __webpack_require__(42).w3cwebsocket;
 
 /* this allows us to stub WebSockets */
 if (!global.WebSocket && NodeWebSocket) {
-  /* we are in production env */
+  /* we are in Node production env */
   var WebSocket = NodeWebSocket;
 } else if (global.WebSocket) {
   /* we are in testing env */
@@ -2487,6 +2487,11 @@ const Palindrom = (() => {
     }
 
     handleRemoteChange(data, url, method) {
+    
+      if (this.onPatchReceived) {
+        this.onPatchReceived(data, url, method);
+      }
+
       this.heartbeat.notifyReceive();
       const patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
 
@@ -2499,10 +2504,6 @@ const Palindrom = (() => {
       if (patches.length === 0) {
         // ping message
         return;
-      }
-
-      if (this.onPatchReceived) {
-        this.onPatchReceived(data, url, method);
       }
 
       // apply only if we're still watching
@@ -2570,9 +2571,6 @@ const Palindrom = (() => {
     palindrom.network.send(txt);
     palindrom.observe();
   }
-
-  /* backward compatibility */
-  global.Puppet = Palindrom;
 
   return Palindrom;
 })();
