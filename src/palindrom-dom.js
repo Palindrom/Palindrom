@@ -210,10 +210,7 @@ const PalindromDOM = (() => {
       );
     }
   }
-
-  /* Since we have Palindrom bundled,
-  let's expose it in case anyone needs it */
-  PalindromDOM.Palindrom = Palindrom;
+  
   return PalindromDOM;
 })();
 
