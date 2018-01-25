@@ -34,7 +34,7 @@ const NodeWebSocket = require('websocket').w3cwebsocket;
 
 /* this allows us to stub WebSockets */
 if (!global.WebSocket && NodeWebSocket) {
-  /* we are in production env */
+  /* we are in Node production env */
   var WebSocket = NodeWebSocket;
 } else if (global.WebSocket) {
   /* we are in testing env */
@@ -977,9 +977,6 @@ const Palindrom = (() => {
     palindrom.network.send(txt);
     palindrom.observe();
   }
-
-  /* backward compatibility */
-  global.Puppet = Palindrom;
 
   return Palindrom;
 })();
