@@ -12595,7 +12595,7 @@ const PalindromDOM = (() => {
       // construct Palindrom
       super(options);
 
-      this.element = options.listenTo || document.body;
+      this.element = options.listenTo || document;
       this.clickHandler = this.clickHandler.bind(this);
       this.historyHandler = this.historyHandler.bind(this);
       this.morphUrlEventHandler = this.morphUrlEventHandler.bind(this);
@@ -12687,7 +12687,7 @@ const PalindromDOM = (() => {
 
     /**
      * Handles `palindrom-morph-url` event and channels its `detail.url` to `morphUrl`
-     * @param {palindrom-morph-url Event} event 
+     * @param {palindrom-morph-url Event} event
      */
     morphUrlEventHandler(event) {
       this.morphUrl(event.detail.url);
@@ -12768,7 +12768,7 @@ const PalindromDOM = (() => {
       );
     }
   }
-  
+
   return PalindromDOM;
 })();
 
@@ -31491,7 +31491,7 @@ if (typeof window !== 'undefined') {
     a.innerHTML = 'Link';
     a.href = href;
     (target || target === '') && (a.setAttribute('target', target));
-    (download || download === '') && (a.setAttribute('download', download));    
+    (download || download === '') && (a.setAttribute('download', download));
     parent.appendChild(a);
     clickElement(a);
     parent.removeChild(a);
@@ -31568,7 +31568,7 @@ if (typeof window !== 'undefined') {
     });
 
     describe('PalindromDOM - Links - ', function() {
-      describe('when attached to default node - `document.body`', function() {
+      describe('when attached to default node - `document`', function() {
         let palindrom;
         let historySpy;
 
@@ -31596,8 +31596,8 @@ if (typeof window !== 'undefined') {
           moxios.uninstall();
         });
 
-        it('its `.element` should point to `document.body`', function() {
-          assert(palindrom.element === document.body);
+        it('its `.element` should point to `document`', function() {
+          assert(palindrom.element === document);
         });
         describe('should intercept links to use History API', function() {
           it('relative path', function() {
@@ -31647,7 +31647,7 @@ if (typeof window !== 'undefined') {
         describe('Links with download attribute', function() {
           it('should not intercept links with download attribute', function() {
             const href = '/components/Palindrom/test/tests-logo.png';
-            
+
             createAndClickOnLinkWithoutPrevention(href, null, false, 'tests-logo.png');
 
             expect(historySpy.callCount).to.equal(0);
@@ -31975,7 +31975,7 @@ if (typeof window !== 'undefined') {
 
         const morphUrlStub = sinon.spy(palindrom, "morphUrl");
 
-        document.body.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url: '/new-palindrom-url'}}));
+        document.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url: '/new-palindrom-url'}}));
 
         assert(morphUrlStub.calledOnce, `morphUrlStub should be called once, it was called ${morphUrlStub.callCount} times`);
 
@@ -32067,7 +32067,7 @@ if (typeof window !== 'undefined') {
           responseText: '[]'
         });
 
-        document.body.dispatchEvent(
+        document.dispatchEvent(
           new CustomEvent('palindrom-redirect-pushstate', {
             detail: { url: '/newUrl-palindrom' },
             bubbles: true

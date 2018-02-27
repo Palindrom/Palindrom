@@ -36,7 +36,7 @@ var palindrom = new PalindromDOM({attribute: value});
 
 Attribute           | Type          | Default                | Description
 ---                 | ---           | ---                    | ---
-`listenTo`          | *HTMLElement* | `document.body`        | DOM node, that indicates a root of subtree to listen to events.
+`listenTo`          | *HTMLElement* | `document`             | DOM node, that indicates a root of subtree to listen to events.
 
 most of them are accessible also in runtime:
 
@@ -45,10 +45,10 @@ most of them are accessible also in runtime:
 ```javascript
 palindrom.property
 ```
-Property   | Type          | Default         | Description
----         | ---           | ---             | ---
-`element`   | *HTMLElement* | `document.body` | See `listenTo` above
-`listening` | *Boolean*     | `true`          | Is listening on
+Property    | Type          | Default    | Description
+---         | ---           | ---        | ---
+`element`   | *HTMLElement* | `document` | See `listenTo` above
+`listening` | *Boolean*     | `true`     | Is listening on
 
 #### Methods
 
@@ -70,19 +70,19 @@ Palindrom uses the HTML5 history API to update the URL in the browser address ba
 
 #### Morph URL with an event
 
-Sometimes, it's tedious to locate the `PalindromDOM` instance in your application using `querySelector`, making it bothersome to call `palindrom.morphUrl`. In this case, you can dispatch an event to `palindrom.listenTo` element if you set one, or to `document.body` if you haven't, and `PaldinromDOM` with handle it and morph the URL.
+Sometimes, it's tedious to locate the `PalindromDOM` instance in your application using `querySelector`, making it bothersome to call `palindrom.morphUrl`. In this case, you can dispatch an event to `palindrom.listenTo` element if you set one, or to `document` if you haven't, and `PaldinromDOM` with handle it and morph the URL.
 
 Example:
 
 ```js
-document.body.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url: yourURL}}))
+document.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url: yourURL}}))
 ```
 
 Or you can create a helper function:
 
 ```js
 function morph(url) {
-  document.body.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url}}))
+  document.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url}}))
 }
 
 // then
