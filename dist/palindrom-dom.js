@@ -1631,7 +1631,7 @@ const PalindromDOM = (() => {
       // construct Palindrom
       super(options);
 
-      this.element = options.listenTo || document.body;
+      this.element = options.listenTo || document;
       this.clickHandler = this.clickHandler.bind(this);
       this.historyHandler = this.historyHandler.bind(this);
       this.morphUrlEventHandler = this.morphUrlEventHandler.bind(this);
@@ -1723,7 +1723,7 @@ const PalindromDOM = (() => {
 
     /**
      * Handles `palindrom-morph-url` event and channels its `detail.url` to `morphUrl`
-     * @param {palindrom-morph-url Event} event 
+     * @param {palindrom-morph-url Event} event
      */
     morphUrlEventHandler(event) {
       this.morphUrl(event.detail.url);
@@ -1804,7 +1804,7 @@ const PalindromDOM = (() => {
       );
     }
   }
-  
+
   return PalindromDOM;
 })();
 
