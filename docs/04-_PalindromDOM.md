@@ -64,7 +64,7 @@ Attribute   | Type          | Description
 
 Palindrom uses the HTML5 history API to update the URL in the browser address bar to reflect the new page. It also listens to a `popstate` event so it could ask the server for new JSON-Patch to morph the page back to previous state. Due to lack of native `pushstate` event you need to either:
  * call `palindrom.changeState(url)` after your `history.pushState(url)`,
- * call `palindrom.morph(url)` - that will call `pushState` and update palindrom's state for you,
+ * call `palindrom.morphUrl(url)` - that will call `pushState` and update palindrom's state for you,
  * trigger `palindrom-redirect-pushstate` with `{url: "/new/url"}` on `window` after your `history.pushState(url)`,
  * or use [`<palindrom-redirect>`](https://github.com/Palindrom/palindrom-redirect) Custom Element that does it for you.
 
@@ -87,4 +87,4 @@ function morph(url) {
 
 // then
 morph(yourURL);
- ```
+```
