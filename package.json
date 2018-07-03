@@ -37,24 +37,24 @@
     "json-patch-ot-agent": "2.0.0-rc.0",
     "jsonpatcherproxy": "^0.0.9",
     "url": "^0.11.0",
-    "websocket": "^1.0.24"
+    "websocket": "^1.0.26"
   },
   "devDependencies": {
     "babel-minify-webpack-plugin": "^0.2.0",
     "bluebird": "^3.5.0",
     "bluebird-retry": "^0.10.1",
-    "chai": "^3.5.0",
-    "colors": "^1.1.2",
-    "jasmine": "^2.4.0",
+    "chai": "^4.0.0",
+    "colors": "^1.3.0",
+    "jasmine": "^2.99.0",
     "json-loader": "^0.5.4",
-    "mocha": "^3.2.0",
+    "mocha": "^5.2.0",
     "mock-socket": "6.0.4",
     "moxios": "^0.3.0",
     "polyserve": "^0.16.0",
-    "saucelabs": "^1.4.0",
+    "saucelabs": "^1.5.0",
     "selenium-webdriver": "^3.3.0",
     "sinon": "^2.1.0",
-    "webpack": "^3.10.0"
+    "webpack": "^3.12.0"
   },
   "scripts": {
     "version": "node ./bump-version.js && webpack && git add -A",
