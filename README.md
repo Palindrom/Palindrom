@@ -2,6 +2,7 @@
 <p align="center">
   <img title="Palindrom" alt="Palindrom Logo" src="https://cloud.githubusercontent.com/assets/17054134/25017514/5f22bcd4-2084-11e7-816c-ee249e1b3164.png">
 </p>
+
 <h4 align="center">
 Library for two-way data binding between local and remote JSON models. It uses JSON-Patch for data updates and Operational Transformation for versioning and data consistency. It operates via HTTP or WebSocket or both.
 </h4>
