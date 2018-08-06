@@ -50,7 +50,7 @@
     "mocha": "^5.2.0",
     "mock-socket": "6.0.4",
     "moxios": "^0.3.0",
-    "polyserve": "^0.16.0",
+    "polyserve": "^0.27.12",
     "saucelabs": "^1.5.0",
     "selenium-webdriver": "^3.3.0",
     "sinon": "^2.1.0",
