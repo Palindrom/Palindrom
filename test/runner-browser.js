@@ -10385,10 +10385,10 @@ exports.JsonPatchError = helpers_2.PatchError;
 exports.deepClone = helpers_2._deepClone;
 exports.escapePathComponent = helpers_2.escapePathComponent;
 exports.unescapePathComponent = helpers_2.unescapePathComponent;
-var beforeDict = [];
+var beforeDict = new WeakMap();
 var Mirror = (function () {
     function Mirror(obj) {
-        this.observers = [];
+        this.observers = new Map();
         this.obj = obj;
     }
     return Mirror;
@@ -10401,26 +10401,13 @@ var ObserverInfo = (function () {
     return ObserverInfo;
 }());
 function getMirror(obj) {
-    for (var i = 0, length = beforeDict.length; i < length; i++) {
-        if (beforeDict[i].obj === obj) {
-            return beforeDict[i];
-        }
-    }
+    return beforeDict.get(obj);
 }
 function getObserverFromMirror(mirror, callback) {
-    for (var j = 0, length = mirror.observers.length; j < length; j++) {
-        if (mirror.observers[j].callback === callback) {
-            return mirror.observers[j].observer;
-        }
-    }
+    return mirror.observers.get(callback);
 }
 function removeObserverFromMirror(mirror, observer) {
-    for (var j = 0, length = mirror.observers.length; j < length; j++) {
-        if (mirror.observers[j].observer === observer) {
-            mirror.observers.splice(j, 1);
-            return;
-        }
-    }
+    mirror.observers.delete(observer.callback);
 }
 /**
  * Detach an observer from an object
@@ -10434,15 +10421,15 @@ exports.unobserve = unobserve;
  */
 function observe(obj, callback) {
     var patches = [];
-    var root = obj;
     var observer;
     var mirror = getMirror(obj);
     if (!mirror) {
         mirror = new Mirror(obj);
-        beforeDict.push(mirror);
+        beforeDict.set(obj, mirror);
     }
     else {
-        observer = getObserverFromMirror(mirror, callback);
+        var observerInfo = getObserverFromMirror(mirror, callback);
+        observer = observerInfo && observerInfo.observer;
     }
     if (observer) {
         return observer;
@@ -10497,7 +10484,7 @@ function observe(obj, callback) {
             }
         }
     };
-    mirror.observers.push(new ObserverInfo(callback, observer));
+    mirror.observers.set(callback, new ObserverInfo(callback, observer));
     return observer;
 }
 exports.observe = observe;
@@ -10505,13 +10492,7 @@ exports.observe = observe;
  * Generate an array of patches from an observer
  */
 function generate(observer) {
-    var mirror;
-    for (var i = 0, length = beforeDict.length; i < length; i++) {
-        if (beforeDict[i].obj === observer.object) {
-            mirror = beforeDict[i];
-            break;
-        }
-    }
+    var mirror = beforeDict.get(observer.object);
     _generate(mirror.value, observer.object, observer.patches, "");
     if (observer.patches.length) {
         core_1.applyPatch(mirror.value, observer.patches);
@@ -13785,6 +13766,9 @@ const JSONPatcherProxy = (function() {
     } else {
       if (Array.isArray(target) && !Number.isInteger(+key.toString())) {
         /* array props (as opposed to indices) don't emit any patches, to avoid needless `length` patches */
+        if(key != 'length') {
+          console.warn('JSONPatcherProxy noticed a non-integer prop was set for an array. This will not emit a patch');
+        }
         return Reflect.set(target, key, newValue);
       }
       operation.op = 'add';
@@ -32562,7 +32546,7 @@ module.exports = function (chai, util) {
 /* 166 */
 /***/ (function(module, exports) {
 
-module.exports = {"name":"palindrom","version":"5.1.2","description":"","license":"MIT","homepage":"https://github.com/palindrom/Palindrom","keywords":["json","patch","http","rest"],"repository":{"type":"git","url":"git://github.com/Palindrom/Palindrom.git"},"bugs":{"url":"https://github.com/Palindrom/Palindrom/issues"},"author":{"name":"Joachim Wester","email":"joachimwester@me.com","url":"http://www.starcounter.com/"},"licenses":[{"type":"MIT","url":"http://www.opensource.org/licenses/MIT"}],"main":"./src/palindrom.js","dependencies":{"axios":"^0.15.3","events":"^1.1.1","fast-json-patch":"^2.0.5","json-patch-ot":"^1.0.1","json-patch-ot-agent":"2.0.0-rc.0","jsonpatcherproxy":"^0.0.9","url":"^0.11.0","websocket":"^1.0.26"},"devDependencies":{"babel-minify-webpack-plugin":"^0.2.0","bluebird":"^3.5.0","bluebird-retry":"^0.10.1","chai":"^4.0.0","colors":"^1.3.0","jasmine":"^2.99.0","json-loader":"^0.5.4","mocha":"^5.2.0","mock-socket":"6.0.4","moxios":"^0.3.0","polyserve":"^0.27.12","saucelabs":"^1.5.0","selenium-webdriver":"^3.3.0","sinon":"^2.1.0","webpack":"^3.12.0"},"scripts":{"version":"node ./bump-version.js && webpack && git add -A","test-sauce":"webpack && node test/Sauce/Runner.js","test":"mocha test/runner.js","test-full":"mocha test/runner.js && webpack && node test/Sauce/Runner.js","build":"webpack"}}
+module.exports = {"name":"palindrom","version":"5.1.2","description":"","license":"MIT","homepage":"https://github.com/palindrom/Palindrom","keywords":["json","patch","http","rest"],"repository":{"type":"git","url":"git://github.com/Palindrom/Palindrom.git"},"bugs":{"url":"https://github.com/Palindrom/Palindrom/issues"},"author":{"name":"Joachim Wester","email":"joachimwester@me.com","url":"http://www.starcounter.com/"},"licenses":[{"type":"MIT","url":"http://www.opensource.org/licenses/MIT"}],"main":"./src/palindrom.js","dependencies":{"axios":"^0.15.3","events":"^1.1.1","fast-json-patch":"^2.0.7","json-patch-ot":"^1.0.1","json-patch-ot-agent":"2.0.0-rc.0","jsonpatcherproxy":"^0.0.10","url":"^0.11.0","websocket":"^1.0.26"},"devDependencies":{"babel-minify-webpack-plugin":"^0.2.0","bluebird":"^3.5.0","bluebird-retry":"^0.10.1","chai":"^4.0.0","colors":"^1.3.2","jasmine":"^2.99.0","json-loader":"^0.5.4","mocha":"^5.2.0","mock-socket":"6.0.4","moxios":"^0.3.0","polyserve":"^0.27.12","saucelabs":"^1.5.0","selenium-webdriver":"^3.3.0","sinon":"^2.1.0","webpack":"^3.12.0"},"scripts":{"version":"node ./bump-version.js && webpack && git add -A","test-sauce":"webpack && node test/Sauce/Runner.js","test":"mocha test/runner.js","test-full":"mocha test/runner.js && webpack && node test/Sauce/Runner.js","build":"webpack"}}
 
 /***/ }),
 /* 167 */
