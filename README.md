@@ -27,7 +27,7 @@ palindrom.obj.someProperty = "new value";
 // Your change gets propagated automatically to the remote, no glue code needed.
 ```
 
-### [Documentation](https://palindrom.github.io/#/docs)
+### [Documentation](https://palindrom.github.io/docs)
 
 ---
 
