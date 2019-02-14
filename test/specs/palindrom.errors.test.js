@@ -17,7 +17,7 @@ describe('Palindrom', () => {
       moxios.uninstall();
     });
     context('Network', function() {
-      it('should call onConnectionError on HTTP 400 response', function(done) {
+      it('should call onConnectionError on HTTP 400 response (non-patch responses)', function(done) {
         const spy = sinon.spy();
 
         moxios.stubRequest('http://localhost/testURL', {
@@ -85,7 +85,7 @@ describe('Palindrom', () => {
         }, 5);
       });
 
-      it('should call onConnectionError on HTTP 400 response (patch)', function(
+      it('should NOT call onConnectionError on HTTP 400 response (patch)', function(
         done
       ) {
         const spy = sinon.spy();
@@ -113,11 +113,11 @@ describe('Palindrom', () => {
               //respond with an error
               request.respondWith({
                 status: 400,
-                responseText: 'error'
+                responseText: `{"op": "replace", "path": "/", value: "Custom message"}`
               });
               setTimeout(() => {
-                /* onConnectionError should be called once now */
-                assert(spy.calledOnce);
+                /* onConnectionError should NOT be called now */
+                assert(spy.notCalled);
                 done();
               }, 5);
             }, 5);
