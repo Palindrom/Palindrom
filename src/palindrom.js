@@ -475,7 +475,7 @@ const Palindrom = (() => {
             this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
         }
 
-        handleResponseHeader(res) {
+        handleSuccessResponse(res, callback) {
             /* Axios always returns lowercase headers */
             const location =
                 res.headers &&
@@ -483,6 +483,7 @@ const Palindrom = (() => {
             if (location) {
                 this.setRemoteUrl(location);
             }
+            callback && callback.call(this, res, res.config.method.toUpperCase());
         }
 
         /**
@@ -518,8 +519,7 @@ const Palindrom = (() => {
             }
             requestPromise
                 .then(res => {
-                    this.handleResponseHeader(res);
-                    callback && callback.call(this.palindrom, res, method);
+                    this.handleSuccessResponse(res, callback);
                 })
                 .catch(error => {
                     const res = error.response;
@@ -536,9 +536,7 @@ const Palindrom = (() => {
                             res.headers['content-type'] ===
                                 'application/json-patch+json'
                         ) {
-                            this.handleResponseHeader(res);
-                            callback &&
-                                callback.call(this.palindrom, res, method);
+                            this.handleSuccessResponse(res, callback);
                             return;
                         }
                     } else {
