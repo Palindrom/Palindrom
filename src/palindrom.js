@@ -504,6 +504,13 @@ const Palindrom = (() => {
             var statusCode = res.status;
             var statusText = res.statusText || res.data;
             var reason = res.data;
+
+            //this is not a fatal error
+            if (statusCode >= 400 && statusCode < 500 && res.headers["content-type"] === "application/json-patch+json") { 
+              this.handleResponseHeader(res);
+              callback && callback.call(this.palindrom, res, method);
+              return;
+            }
           } else {
             // no sufficient error information, we need to create on our own
             var statusCode = -1;
