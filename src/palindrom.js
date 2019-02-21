@@ -435,15 +435,18 @@ const Palindrom = (() => {
         }
 
         getPatchUsingHTTP(href) {
-            return this.xhr(
-                href,
-                'application/json-patch+json',
-                null,
-                (res, method) => {
-                    this.onReceive(res.data, href, method);
-                },
-                true
-            );
+            return new Promise(resolve => {
+                this.xhr(
+                    href,
+                    'application/json-patch+json',
+                    null,
+                    (res, method) => {
+                        this.onReceive(res.data, href, method);
+                        resolve();
+                    },
+                    true
+                );
+            });
         }
 
         changeState(href) {
@@ -483,7 +486,8 @@ const Palindrom = (() => {
             if (location) {
                 this.setRemoteUrl(location);
             }
-            callback && callback.call(this, res, res.config.method.toUpperCase());
+            callback &&
+                callback.call(this, res, res.config.method.toUpperCase());
         }
 
         /**
@@ -528,12 +532,11 @@ const Palindrom = (() => {
                         var statusCode = res.status;
                         var statusText = res.statusText || res.data;
                         var reason = res.data;
-
                         //this is not a fatal error
                         if (
                             statusCode >= 400 &&
                             statusCode < 500 &&
-                            res.headers['content-type'] ===
+                            res.headers && res.headers.contentType ===
                                 'application/json-patch+json'
                         ) {
                             this.handleSuccessResponse(res, callback);

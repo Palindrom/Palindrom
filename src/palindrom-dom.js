@@ -121,9 +121,9 @@ const PalindromDOM = (() => {
          * so that the URL handlers can be executed on the remote
          * @param url
          */
-        morphUrl(url) {
+        async morphUrl(url) {
+            await this.network.getPatchUsingHTTP(url);
             history.pushState(null, null, url);
-            this.network.getPatchUsingHTTP(url);
             window && window.scrollTo(0, 0);
         }
 
@@ -204,7 +204,6 @@ const PalindromDOM = (() => {
                 if (parser.host == '') {
                     parser.href = parser.href;
                 }
-
                 elem = parser;
             }
             return (
