@@ -3,7 +3,6 @@
  * (c) 2017 Joachim Wester
  * MIT license
  */
-
 const Palindrom = require('./palindrom');
 
 const PalindromDOM = (() => {
@@ -79,6 +78,30 @@ const PalindromDOM = (() => {
                 this.morphUrlEventHandler
             );
         }
+        
+        /**
+         * @param {String} href
+         * @throws {Error} network error if occured
+         */
+        async getPatchUsingHTTP(href) {
+            const event = new CustomEvent('palindrom-before-redirect', {
+                detail: {
+                    href
+                },
+                cancelable: true,
+                bubbles: true
+            });
+            
+            this.element.dispatchEvent(event);
+
+            // check if event was canceled
+            if(event.returnValue) {
+                this.network.getPatchUsingHTTP(href);
+                return true;
+            } else {
+                return false;
+            }
+        }
 
         //TODO move fallback to window.location.href from PalindromNetworkChannel to here (PalindromDOM)
 
@@ -122,9 +145,10 @@ const PalindromDOM = (() => {
          * @param url
          */
         async morphUrl(url) {
-            await this.network.getPatchUsingHTTP(url);
-            history.pushState(null, null, url);
-            window && window.scrollTo(0, 0);
+            if(await this.getPatchUsingHTTP(url)) {
+                scrollTo(0, 0);
+                history.pushState(null, null, url);
+            }
         }
 
         /**
@@ -182,8 +206,8 @@ const PalindromDOM = (() => {
             }
         }
 
-        historyHandler() /*event*/ {
-            this.network.getPatchUsingHTTP(location.href);
+        async historyHandler() {
+            return await this.getPatchUsingHTTP(location.href);
         }
 
         /**
