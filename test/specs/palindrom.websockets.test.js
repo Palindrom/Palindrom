@@ -83,8 +83,8 @@ describe('Sockets', () => {
         });
 
         setTimeout(() => {
-          assert(
-            palindrom.network._ws.url ===
+          assert.equal(
+            palindrom.network._ws.url, 
               'ws://localhost/default/this_is_a_nice_url'
           );
           /* stop server async then call done */
