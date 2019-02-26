@@ -310,23 +310,16 @@ const Palindrom = (() => {
                 this.onSend(msg, this._ws.url, 'WS');
             } else {
                 const url = this.remoteUrl.href;
-                try {
-                    const res = await this.xhr(
-                        url,
-                        'application/json-patch+json',
-                        msg
-                    );
-
-                    this.handleLocationHeader(res);
-
-                    this.onReceive(
-                        res.data,
-                        url,
-                        res.config.method.toUpperCase()
-                    );
-                } catch (error) {
-                    this.handleFailureResponse(error);
-                }
+                const res = await this.xhr(
+                    url,
+                    'application/json-patch+json',
+                    msg
+                );
+                this.onReceive(
+                    res.data,
+                    url,
+                    res.config.method.toUpperCase()
+                );
             }
             return this;
         }
@@ -447,13 +440,13 @@ const Palindrom = (() => {
          * @throws {Error} network error if occured
          */
         async getPatchUsingHTTP(href) {
+            // we don't need to try catch here because we want the error to be thrown at whoever calls getPatchUsingHTTP
             const res = await this.xhr(
                 href,
                 'application/json-patch+json',
                 null,
                 true
             );
-            this.handleLocationHeader(res);
             this.onReceive(res.data, href, res.config.method.toUpperCase());
         }
 
@@ -530,7 +523,6 @@ const Palindrom = (() => {
          * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
          * @param accept (Optional) HTTP accept header
          * @param data (Optional) Data payload
-         * @param [successCallback(response)] callback to be called in context of palindrom with response as argument
          * @returns {XMLHttpRequest} performed XHR
          */
         async xhr(url, accept, data, setReferer) {
@@ -559,41 +551,27 @@ const Palindrom = (() => {
 
             this.onSend(data, url, method);
 
-            return new Promise(async (resolve, reject) => {
-                try {
-                    const res = await responsePromise;
-                    resolve(res);
-                } catch (error) {
-                    // axois throws on 4xx, but it might still be a successful response
-                    const res = error.response;
-                    const statusCode = res.status;
-                    //this is not a fatal error
-                    if (
-                        statusCode >= 400 &&
-                        statusCode < 500 &&
-                        res.headers &&
-                        res.headers.contentType ===
-                            'application/json-patch+json'
-                    ) {
-                        resolve(res);
+            return responsePromise
+                .then(res => {
+                    this.handleLocationHeader(res);
+                    return res;
+                })
+                .catch(error => {
+                    if (isValid4xxResponse(error)) {
+                        return error.response;
                     } else {
-                        reject(error);
+                        this.handleFailureResponse(error);
+                        return Promise.reject(error);
                     }
-                }
-            });
+                });
         }
     }
     // TODO: auto-configure here #38 (tomalec)
     async function establish(network, url, body, bootstrap) {
-        try {
-            const res = await network.xhr(url, 'application/json', body);
-            network.handleLocationHeader(res);
-            bootstrap(res.data);
-            if (network.useWebSocket) {
-                network.webSocketUpgrade(network.onSocketOpened);
-            }
-        } catch (error) {
-            network.handleFailureResponse(error);
+        const res = await network.xhr(url, 'application/json', body);
+        bootstrap(res.data);
+        if (network.useWebSocket) {
+            network.webSocketUpgrade(network.onSocketOpened);
         }
     }
 
@@ -1045,6 +1023,18 @@ const Palindrom = (() => {
                 )
             );
         }
+    }
+
+    function isValid4xxResponse(error) {
+        const res = error.response;
+        const statusCode = res.status;
+        //this is not a fatal error
+        return (
+            statusCode >= 400 &&
+            statusCode < 500 &&
+            res.headers &&
+            res.headers.contentType === 'application/json-patch+json'
+        );
     }
 
     function sendPatches(palindrom, patches) {
