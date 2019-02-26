@@ -178,13 +178,19 @@ if (typeof window !== 'undefined') {
             });
             if(mode === 'default') {
               it('relative path (nested, Shadow DOM content)', function(done) {
-                setTimeout(() => {
-                  createAndClickOnLinkNestedShadowDOMContent();
+                const url = getTestURL('subpage.html');
+                
+                moxios.stubRequest(url, {
+                  status: 200,
+                  responseText: '{"hello": "world"}'
+                });
 
-                  setTimeout(function() {
-                    setTimeout(() => { expect(historySpy.callCount).to.equal(1); done() });
-                  }, 5);
-                }, 5);
+                createAndClickOnLinkNestedShadowDOMContent();
+
+                setTimeout(function() {
+                  debugger
+                  setTimeout(() => { expect(historySpy.callCount).to.equal(1); done() });
+                }, 50);
               });
             }
 
@@ -424,12 +430,15 @@ if (typeof window !== 'undefined') {
           setTimeout(() => {
             const request = moxios.requests.mostRecent();
             expect(request.url).to.equal('/newUrl');
-            expect(window.location.pathname).to.equal('/newUrl');
+
             request.respondWith({
               status: 200,
               responseText: '{"hello": "world"}'
             });
-            done();
+            setTimeout(() => {
+              expect(window.location.pathname).to.equal('/newUrl');
+              done();
+            });
           });
 
           window.removeEventListener('palindrom-before-redirect', handler)
