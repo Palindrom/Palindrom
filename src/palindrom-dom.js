@@ -95,7 +95,7 @@ const PalindromDOM = (() => {
             this.element.dispatchEvent(event);
 
             // check if event was canceled
-            if(event.returnValue) {
+            if(!event.defaultPrevented) {
                 await this.network.getPatchUsingHTTP(href);
                 return true;
             } else {
