@@ -82,8 +82,17 @@ const PalindromDOM = (() => {
         /**
          * @param {String} href
          * @throws {Error} network error if occured
+         * @fires Palindrom#palindrom-before-redirect 
+         * 
          */
         async getPatchUsingHTTP(href) {
+            /**
+             * palindrom-before-redirect event.
+             *
+             * @event Palindrom#palindrom-before-redirect 
+             * @type {CustomEvent} 
+             * @property {Object} detail containing `href` property that contains the URL
+             */
             const event = new CustomEvent('palindrom-before-redirect', {
                 detail: {
                     href

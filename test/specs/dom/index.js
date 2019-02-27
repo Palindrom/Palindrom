@@ -188,7 +188,6 @@ if (typeof window !== 'undefined') {
                 createAndClickOnLinkNestedShadowDOMContent();
 
                 setTimeout(function() {
-                  debugger
                   setTimeout(() => { expect(historySpy.callCount).to.equal(1); done() });
                 }, 50);
               });
