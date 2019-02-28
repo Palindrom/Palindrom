@@ -462,6 +462,52 @@ if (typeof window !== 'undefined') {
         palindrom.morphUrl('/newUrl2');
       });
     });
+    describe('palindrom-after-redirect event', function() {
+      beforeEach(function(done) {
+        // wait for Palindrom to call .listen (after finishing the ajax request)
+        setTimeout(done, 300)
+      })
+      it('Morphing to a URL should dispatch the event after a successful request', function(done) {
+        moxios.stubRequest('/newUrl', {
+          status: 200,
+          responseText: '{"hello": "world"}'
+        });
+
+        const handler = event => {
+          assert.equal(event.detail.href, '/newUrl');
+          assert.equal(event.detail.successful, true);
+
+          setTimeout(() => {
+            setTimeout(() => {
+              expect(window.location.pathname).to.equal('/newUrl');
+              done();
+            });
+          });
+
+          window.removeEventListener('palindrom-after-redirect', handler)
+        }     
+        window.addEventListener('palindrom-after-redirect', handler)
+        palindrom.morphUrl('/newUrl');
+      });
+
+      it('Morphing to a URL should dispatch the event after a failed request', function(done) {
+        moxios.stubRequest('/newUrl2', {
+          status: 509,
+          responseText: '{"hello": "world"}'
+        });
+
+        const handler = event => {
+          assert.equal(event.detail.href, '/newUrl2');
+          assert.equal(event.detail.successful, false);
+          assert.equal(event.detail.error.message, 'Request failed with status code 509');
+          
+          window.removeEventListener('palindrom-after-redirect', handler)
+          done();
+        }     
+        window.addEventListener('palindrom-after-redirect', handler)
+        palindrom.morphUrl('/newUrl2');
+      });
+    });
 
     describe('Scroll When navigation occurs', function() {
       let currLoc, currScrollY;
