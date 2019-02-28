@@ -126,7 +126,7 @@ const PalindromDOM = (() => {
                     bubbles: true
                 });
                 this.element.dispatchEvent(event);
-                return true && detail.successful;
+                return detail.successful;
             } else {
                 return false;
             }
