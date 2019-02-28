@@ -137,7 +137,7 @@ if (typeof window !== 'undefined') {
           it(`its .element should point to ${mode} node`, function() {
             const node = mode === 'specific' ? palindromNode : document;
             assert(palindrom.element === node);
-          });
+          });          
           describe('should intercept links to use History API', function() {
             it('relative path', function(done) {
               const relative = getTestURL('test_a', true);
@@ -178,14 +178,18 @@ if (typeof window !== 'undefined') {
             });
             if(mode === 'default') {
               it('relative path (nested, Shadow DOM content)', function(done) {
-                setTimeout(() => {
-                  createAndClickOnLinkNestedShadowDOMContent();
+                const url = getTestURL('subpage.html');
+                
+                moxios.stubRequest(url, {
+                  status: 200,
+                  responseText: '{"hello": "world"}'
+                });
 
-                  setTimeout(function() {
-                    setTimeout(() => { expect(historySpy.callCount).to.equal(1); done() });
-                    done();
-                  }, 5);
-                }, 5);
+                createAndClickOnLinkNestedShadowDOMContent();
+
+                setTimeout(function() {
+                  setTimeout(() => { expect(historySpy.callCount).to.equal(1); done() });
+                }, 50);
               });
             }
 
@@ -365,7 +369,6 @@ if (typeof window !== 'undefined') {
       moxios.uninstall();
     });
 
-    /// init
     describe('should send JSON Patch HTTP request once history state get changed', function() {
       it('by `palindrom.morphURL(url)` method', function(done) {
         moxios.stubRequest('/newUrl', {
@@ -393,7 +396,6 @@ if (typeof window !== 'undefined') {
         setTimeout(done, 300)
       })
       it('Dispatching it should call PalindromDOM.morphUrl and issue a request', function(done) {
-
         const morphUrlStub = sinon.spy(palindrom, "morphUrl");
         
         moxios.stubRequest('/new-palindrom-url', {
@@ -413,6 +415,51 @@ if (typeof window !== 'undefined') {
           );
           done();
         }, 5);
+      });
+    });
+    describe('palindrom-before-redirect event', function() {
+      beforeEach(function(done) {
+        // wait for Palindrom to call .listen (after finishing the ajax request)
+        setTimeout(done, 300)
+      })
+      it('Morphing to a URL should dispatch the event and issue a request', function(done) {  
+        const handler = event => {
+          assert.equal(event.detail.href, '/newUrl');
+
+          setTimeout(() => {
+            const request = moxios.requests.mostRecent();
+            expect(request.url).to.equal('/newUrl');
+
+            request.respondWith({
+              status: 200,
+              responseText: '{"hello": "world"}'
+            });
+            setTimeout(() => {
+              expect(window.location.pathname).to.equal('/newUrl');
+              done();
+            });
+          });
+
+          window.removeEventListener('palindrom-before-redirect', handler)
+        }     
+        window.addEventListener('palindrom-before-redirect', handler)
+        palindrom.morphUrl('/newUrl');
+      });
+      it('Morphing to a URL should NOT issue a request after a canceled event', function(done) {
+        let originalRequestCount = moxios.requests.count;
+
+        const handler = event => {
+          assert.equal(event.detail.href, '/newUrl2');
+          event.preventDefault();
+          
+          setTimeout(() => {
+            expect(originalRequestCount).to.equal(moxios.requests.count);
+            done();
+          })
+          window.removeEventListener('palindrom-before-redirect', handler)
+        };
+        window.addEventListener('palindrom-before-redirect', handler)
+        palindrom.morphUrl('/newUrl2');
       });
     });
 
