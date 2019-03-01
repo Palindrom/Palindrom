@@ -83,7 +83,7 @@ const PalindromDOM = (() => {
          * @param {String} href
          * @throws {Error} network error if occured
          * @fires Palindrom#palindrom-before-redirect 
-         * @fires Palindrom#palindrom-before-redirect 
+         * @fires Palindrom#palindrom-after-redirect 
          * 
          */
         async getPatchUsingHTTP(href) {
@@ -115,7 +115,7 @@ const PalindromDOM = (() => {
                     detail.error = error;
                 }
                 /**
-                 * palindrom-before-redirect event.
+                 * palindrom-after-redirect event.
                  *
                  * @event Palindrom#palindrom-after-redirect
                  * @type {CustomEvent} 
