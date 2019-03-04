@@ -6,6 +6,19 @@
 const Palindrom = require('./palindrom');
 
 const PalindromDOM = (() => {
+    /** scroll to coordiates and return if the scroll was successful */
+    function attemptScroll(x, y) {
+        scrollTo(x, y);
+        return window.scrollX === x && window.scrollY === y;
+    }
+
+    async function sleep(duration) {
+        return new Promise(resolve => {
+            setTimeout(resolve, duration);
+        });
+    }
+
+
     /**
      * PalindromDOM
      * @extends {Palindrom}
@@ -46,6 +59,10 @@ const PalindromDOM = (() => {
                 'palindrom-redirect-pushstate',
                 this.historyHandler
             );
+
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+            }
         }
 
         listen() {
@@ -172,11 +189,23 @@ const PalindromDOM = (() => {
          * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
          * so that the URL handlers can be executed on the remote
          * @param url
+         * @returns {boolean} true if morphing was successful
          */
         async morphUrl(url) {
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
             if(await this.getPatchUsingHTTP(url)) {
+                // mark current state's scroll position
+                history.replaceState([scrollX, scrollY], null, window.location.href);
+
+                // push a new state with the new position
+                history.pushState([0, 0], null, url);
+
+                // scroll it!
                 scrollTo(0, 0);
-                history.pushState(null, null, url);
+                return true;
+            } else {
+                return false;
             }
         }
 
@@ -235,8 +264,20 @@ const PalindromDOM = (() => {
             }
         }
 
-        async historyHandler() {
-            return await this.getPatchUsingHTTP(location.href);
+        async historyHandler(event) {
+            await this.getPatchUsingHTTP(location.href);
+            const [scrollX, scrollY] = event.state || [0, 0];
+            let hadScrolled = false;
+            const scrollHandler = () => hadScrolled = true;
+            window.addEventListener('scroll', scrollHandler);
+            for(let i = 0; i < 30 && !hadScrolled; i++) {
+                if(attemptScroll(scrollX, scrollY)) {
+                    break;
+                } else {
+                    await sleep(30);
+                }
+            }
+            window.removeEventListener('scroll', scrollHandler);
         }
 
         /**

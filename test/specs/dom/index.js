@@ -522,7 +522,6 @@ if (typeof window !== 'undefined') {
         moxios.install();
         moxios.stubRequest(getTestURL('testURL'), {
           status: 200,
-          headers: { location: getTestURL('testURL') },
           responseText: '{"hello": "world"}'
         });
 
@@ -534,28 +533,95 @@ if (typeof window !== 'undefined') {
       });
       it('should scroll to top', function(done) {
         window.scrollTo(0, document.body.scrollHeight); // scroll to bottom
-        const currScrollY = document.body.scrollTop;
+        const currScrollY = window.scrollY;
 
-        moxios.stubRequest(/.+/, {
+        moxios.stubRequest('/newUrl-palindrom-scroll-2', {
           status: 200,
-          headers: { location: getTestURL('testURL') },
           responseText: '[]'
         });
 
-        palindrom.morphUrl('/newUrl-palindrom-scroll');
+        palindrom.morphUrl('/newUrl-palindrom-scroll-2');
 
         setTimeout(function() {
           const request = moxios.requests.mostRecent();
-          expect(request.url).to.equal('/newUrl-palindrom-scroll');
+          expect(request.url).to.equal('/newUrl-palindrom-scroll-2');
           expect(window.location.pathname + location.hash).to.equal(
-            '/newUrl-palindrom-scroll'
+            '/newUrl-palindrom-scroll-2'
           );
-          const newCurrScrollY = document.body.scrollTop;
+          const newCurrScrollY = window.scrollY;
           expect(newCurrScrollY).to.not.equal(currScrollY);
           expect(currScrollY).to.not.equal(0);
 
           done();
         }, 5);
+      });
+      it('should scroll back when back button is hit', function(done) {
+        window.scrollTo(0, 0); // scroll to top
+
+        // prepare for "back" request
+        moxios.stubRequest(location.href, {
+          status: 200,
+          responseText: '{}'
+        });
+
+        moxios.stubRequest('/newUrl-palindrom-scroll-2', {
+          status: 200,
+          responseText: '{}'
+        });
+
+        palindrom.morphUrl('/newUrl-palindrom-scroll-2').then(() => {
+          // scroll to bottom
+          window.scrollTo(0, document.body.scrollHeight);
+
+          // wait for rendering
+          setTimeout(function() {
+            expect(window.scrollY).to.not.equal(0);
+
+            // go back
+            history.go(-1);
+
+            setTimeout(function() {
+              expect(window.scrollY).to.equal(0);  
+              done();
+            }, 50);
+          }, 5);
+        });        
+      });
+      it('should NOT scroll back when back button is hit and the user scrolled', function(done) {
+        window.scrollTo(0, 0); // scroll to top
+
+        // prepare for "back" request
+        moxios.stubRequest(getTestURL('testURL'), {
+          status: 200,
+          responseText: '[]'
+        });
+
+
+        moxios.stubRequest('/newUrl-palindrom-scroll-2', {
+          status: 200,
+          responseText: '[]'
+        });
+
+        palindrom.morphUrl('/newUrl-palindrom-scroll-2').then(() => {
+          // scroll to bottom
+          window.scrollTo(0, document.body.scrollHeight);
+
+          // wait for rendering
+          setTimeout(function() {
+            expect(window.scrollY).to.not.equal(0);
+
+            // go back
+            history.go(-1);
+            
+            // scroll half way
+            window.scrollTo(0, Math.floor(document.body.scrollHeight / 2));
+
+            setTimeout(function() {
+              expect(window.scrollY).to.equal(Math.floor(document.body.scrollHeight / 2));  
+              done();
+            }, 50);
+          }, 5);
+        });        
       });
     });
 
