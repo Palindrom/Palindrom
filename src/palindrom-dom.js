@@ -83,6 +83,7 @@ const PalindromDOM = (() => {
          * @param {String} href
          * @throws {Error} network error if occured
          * @fires Palindrom#palindrom-before-redirect 
+         * @fires Palindrom#palindrom-after-redirect 
          * 
          */
         async getPatchUsingHTTP(href) {
@@ -105,8 +106,27 @@ const PalindromDOM = (() => {
 
             // check if event was canceled
             if(!event.defaultPrevented) {
-                await this.network.getPatchUsingHTTP(href);
-                return true;
+                let detail = {href}
+                try {
+                    await this.network.getPatchUsingHTTP(href);
+                    detail.successful = true; 
+                } catch(error) {
+                    detail.successful = false; 
+                    detail.error = error;
+                }
+                /**
+                 * palindrom-after-redirect event.
+                 *
+                 * @event Palindrom#palindrom-after-redirect
+                 * @type {CustomEvent} 
+                 * @property {Object} detail containing `{href: String, successful: boolean}` 
+                 */
+                const event = new CustomEvent('palindrom-after-redirect', {
+                    detail,
+                    bubbles: true
+                });
+                this.element.dispatchEvent(event);
+                return detail.successful;
             } else {
                 return false;
             }

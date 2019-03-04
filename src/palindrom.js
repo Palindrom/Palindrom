@@ -448,6 +448,7 @@ const Palindrom = (() => {
                 true
             );
             this.onReceive(res.data, href, res.config.method.toUpperCase());
+            return res;
         }
 
         changeState(href) {
