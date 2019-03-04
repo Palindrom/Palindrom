@@ -47,8 +47,6 @@ describe('Palindrom', () => {
           responseText: 'Custom message'
         });
 
-        const that = this;
-
         const palindrom = new Palindrom({
           remoteUrl: 'http://localhost/testURL',
           onConnectionError: spy
