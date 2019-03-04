@@ -1,12 +1,9 @@
-global.WebSocket = require('mock-socket').WebSocket;
-
-const Palindrom = require('../../src/palindrom');
-const assert = require('assert');
-const moxios = require('moxios');
-const sinon = require('sinon');
-const expect = require('chai').expect;
-const MockSocketServer = require('mock-socket').Server;
-const {PalindromError} = require('../../src/palindrom-errors');
+import Palindrom from '../../src/palindrom';
+import assert from 'assert';
+import moxios from 'moxios';
+import sinon from 'sinon';
+import { Server as MockSocketServer } from 'mock-socket';
+import {PalindromError} from '../../src/palindrom-errors';
 
 describe('Palindrom', () => {
   describe('#error responses', () => {
@@ -46,6 +43,8 @@ describe('Palindrom', () => {
           headers: { contentType: 'application/json' },
           responseText: 'Custom message'
         });
+
+        const that = this;
 
         const palindrom = new Palindrom({
           remoteUrl: 'http://localhost/testURL',

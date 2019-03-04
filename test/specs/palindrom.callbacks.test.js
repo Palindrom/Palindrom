@@ -1,9 +1,7 @@
-global.WebSocket = require("mock-socket").WebSocket;
-
-const Palindrom = require("../../src/palindrom");
-const assert = require("assert");
-const moxios = require("moxios");
-const sinon = require("sinon");
+import Palindrom from '../../src/palindrom';
+import assert from 'assert';
+import moxios from 'moxios';
+import sinon from 'sinon';
 
 describe("Callbacks", () => {
   beforeEach(() => {

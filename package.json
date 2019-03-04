@@ -61,7 +61,7 @@
     "version": "node ./bump-version.js && webpack && git add -A",
     "test-sauce": "webpack && node test/Sauce/Runner.js",
     "test": "webpack && mocha test/runner-node.js",
-    "test-full": "webpack && mocha test/runner.js && node test/Sauce/Runner.js",
+    "test-full": "webpack && mocha test/runner-node.js && node test/Sauce/Runner.js",
     "build": "webpack"
   }
 }

@@ -1,9 +1,6 @@
-global.WebSocket = require('mock-socket').WebSocket;
-
-const Palindrom = require('../../src/palindrom');
-const moxios = require('moxios');
-const sinon = require('sinon');
-const assert = require('assert');
+import Palindrom from '../../src/palindrom';
+import moxios from 'moxios';
+import assert from 'assert';
 
 describe('Palindrom', () => {
   describe('#ignore by defineProperty', () => {

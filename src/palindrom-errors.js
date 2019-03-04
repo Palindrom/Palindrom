@@ -1,11 +1,11 @@
-class PalindromError extends Error {
+export class PalindromError extends Error {
     constructor(message) {
         super(message);
         this.message = message;
     }
 }
 
-class PalindromConnectionError extends PalindromError {
+export class PalindromConnectionError extends PalindromError {
     /**
      *
      * @param {String} message the message that describes the error
@@ -26,8 +26,3 @@ class PalindromConnectionError extends PalindromError {
         this.connectionType = connectionType;
     }
 }
-
-module.exports = {
-    PalindromError,
-    PalindromConnectionError
-};

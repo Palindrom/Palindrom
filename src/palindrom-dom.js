@@ -3,7 +3,7 @@
  * (c) 2017 Joachim Wester
  * MIT license
  */
-const Palindrom = require('./palindrom');
+import Palindrom from './palindrom'
 
 const PalindromDOM = (() => {
     /** scroll to coordiates and return if the scroll was successful */
@@ -310,6 +310,4 @@ const PalindromDOM = (() => {
     return PalindromDOM;
 })();
 
-module.exports = PalindromDOM;
-module.exports.default = PalindromDOM;
-module.exports.__esModule = true;
+export default PalindromDOM;

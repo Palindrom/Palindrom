@@ -1,10 +1,8 @@
-global.WebSocket = require('mock-socket').WebSocket;
-
-const MockSocketServer = require('mock-socket').Server;
-const Palindrom = require('../../src/palindrom');
-const assert = require('assert');
-const moxios = require('moxios');
-const sinon = require('sinon');
+import { Server as MockSocketServer } from 'mock-socket';
+import Palindrom from '../../src/palindrom';
+import assert from 'assert';
+import moxios from 'moxios';
+import sinon from 'sinon';
 
 describe('Callbacks, onPatchSent and onPatchReceived', () => {
   beforeEach(() => {
