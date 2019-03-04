@@ -18,6 +18,12 @@ if (typeof window !== 'undefined') {
     parent.removeChild(a);
   }
 
+  function getTestURL(pathname, isRelative) {
+    if(isRelative) {
+      return `/${pathname}`;
+    }
+    return window.location.protocol + '//' + window.location.host + `/${pathname}`;
+  }
   function createAndClickOnLink(href, parent, target) {
     parent = parent || document.body;
     const a = document.createElement('A');
@@ -89,366 +95,255 @@ if (typeof window !== 'undefined') {
     });
 
     describe('PalindromDOM - Links - ', function() {
-      describe('when attached to default node - `document`', function() {
-        let palindrom;
-        let historySpy;
+      ['default', 'specific'].forEach(mode => {
+        describe(`when attached to ${mode} node`, function() {
+          let palindrom;
+          let historySpy;
 
-        beforeEach('PalindromDOM - Links', function(done) {
-          historySpy = sinon.spy(window.history, 'pushState');
+          beforeEach('PalindromDOM - Links', function(done) {
+            historySpy = sinon.spy(window.history, 'pushState');
 
-          moxios.install();
-          moxios.stubRequest('http://localhost/testURL', {
-            status: 200,
-            headers: { location: 'http://localhost/testURLNew' },
-            responseText: '{"hello": "world"}'
+            moxios.install();
+            moxios.stubRequest(getTestURL('testURL'), {
+              status: 200,
+              headers: { location: getTestURL('testURL') },
+              responseText: '{"hello": "world"}'
+            });
+
+            if(mode === 'default') {
+              palindrom = new PalindromDOM({
+                remoteUrl: getTestURL('testURL')
+              }); 
+            } else if(mode === 'specific') {
+              palindromNode = document.createElement('DIV');
+              document.body.appendChild(palindromNode);
+              nodeB = document.createElement('DIV');
+              document.body.appendChild(nodeB);
+              palindrom = new PalindromDOM({
+                remoteUrl: getTestURL('testURL'),
+                listenTo: palindromNode
+              });
+            }
+            setTimeout(done, 1);
+          });
+          afterEach(function() {
+            window.history.pushState.restore();
+            historySpy = null;
+            palindrom.unobserve();
+            palindrom.unlisten();
+            moxios.uninstall();
           });
 
-          palindrom = new PalindromDOM({
-            remoteUrl: 'http://localhost/testURL'
+          it(`its .element should point to ${mode} node`, function() {
+            const node = mode === 'specific' ? palindromNode : document;
+            assert(palindrom.element === node);
+          });          
+          describe('should intercept links to use History API', function() {
+            it('relative path', function(done) {
+              const relative = getTestURL('test_a', true);
+              const abs = getTestURL('test_a');
+
+              moxios.stubRequest(abs, {
+                status: 200,
+                responseText: '{"hello": "world"}'
+              });
+
+              createAndClickOnLink(relative, mode === 'specific' ? palindromNode : undefined);
+              setTimeout(() => { expect(historySpy.callCount).to.equal(1); done() }, 50);
+            });
+
+            it('relative path (nested)', function(done) {
+              const relative = getTestURL('test_b', true);
+              const abs = getTestURL('test_b');
+
+              moxios.stubRequest(abs, {
+                status: 200,
+                responseText: '{"hello": "world"}'
+              });
+
+              createAndClickOnLinkNested(relative, mode === 'specific' ? palindromNode : undefined);
+              setTimeout(() => { expect(historySpy.callCount).to.equal(1); done() });
+            });
+            it('relative path (nested, Shadow DOM)', function(done) {
+              const relative = getTestURL('test_c', true);
+              const abs = getTestURL('test_c');
+
+              moxios.stubRequest(abs, {
+                status: 200,
+                responseText: '{"hello": "world"}'
+              });
+
+              createAndClickOnLinkNestedShadowDOM(relative, mode === 'specific' ? palindromNode : undefined);
+              setTimeout(() => { expect(historySpy.callCount).to.equal(1); done() });
+            });
+            if(mode === 'default') {
+              it('relative path (nested, Shadow DOM content)', function(done) {
+                const url = getTestURL('subpage.html');
+                
+                moxios.stubRequest(url, {
+                  status: 200,
+                  responseText: '{"hello": "world"}'
+                });
+
+                createAndClickOnLinkNestedShadowDOMContent();
+
+                setTimeout(function() {
+                  setTimeout(() => { expect(historySpy.callCount).to.equal(1); done() });
+                }, 50);
+              });
+            }
+
+            it('absolute path', function(done) {
+              const href = getTestURL('testURL');
+              createAndClickOnLink(href, mode === 'specific' ? palindromNode : null);
+              setTimeout(() => { expect(historySpy.callCount).to.equal(1); done() });
+            });
           });
 
-          setTimeout(done, 1);
-        });
-        afterEach(function() {
-          window.history.pushState.restore();
-          historySpy = null;
-          palindrom.unobserve();
-          palindrom.unlisten();
-          moxios.uninstall();
-        });
+          describe('Links with download attribute', function() {
+            it('should not intercept links with download attribute', function(done) {
+              const href = getTestURL('components/Palindrom/test/tests-logo.png');
 
-        it('its `.element` should point to `document`', function() {
-          assert(palindrom.element === document);
-        });
-        describe('should intercept links to use History API', function() {
-          it('relative path', function() {
-            const href = 'test_a';
+              createAndClickOnLinkWithoutPrevention(href, mode === 'specific' ? palindromNode : null, false, 'tests-logo.png');
 
-            createAndClickOnLink(href);
-            expect(historySpy.callCount).to.equal(1);
+              setTimeout(() => { expect(historySpy.callCount).to.equal(0); done() });
+            });
           });
+          describe('Links with targets', function() {
+            it('should not intercept links with a set target', function(done) {
+              const href = getTestURL('components/Palindrom/test/PopupPage.html');
 
-          it('relative path (nested)', function() {
-            const href = 'test_b';
+              // needed for Sauce labs, they allow pop ups, and this means we lose focus here
+              const popup = window.open('', '_popup')
+              createAndClickOnLinkWithoutPrevention(href, mode === 'specific' ? palindromNode : null, '_popup');
+              // focus again
+              popup && popup.close();
 
-            createAndClickOnLinkNested(href);
-            expect(historySpy.callCount).to.equal(1);
+              setTimeout(() => { expect(historySpy.callCount).to.equal(0); done() });
+            });
+            it('should intercept links with target _self', function(done) {
+              const href = getTestURL('components/Palindrom/test/PopupPage.html');
+
+              moxios.stubRequest(href, {
+                status: 200,
+                responseText: '{"hello": "world"}'
+              });
+
+              createAndClickOnLinkWithoutPrevention(href, mode === 'specific' ? palindromNode : null, '_self');
+
+              setTimeout(() => { expect(historySpy.callCount).to.equal(1); done() });
+            });
+            it('should intercept links with an empty target', function(done) {
+              const href = getTestURL('components/Palindrom/test/PopupPage.html');
+
+              moxios.stubRequest(href, {
+                status: 200,
+                responseText: '{"hello": "world"}'
+              });
+
+              createAndClickOnLinkWithoutPrevention(href, mode === 'specific' ? palindromNode : null, '');
+
+              setTimeout(() => { expect(historySpy.callCount).to.equal(1); done() });
+            });
+            it('should intercept links without a target', function(done) {
+              const href = getTestURL('components/Palindrom/test/PopupPage.html');
+
+              moxios.stubRequest(href, {
+                status: 200,
+                responseText: '{"hello": "world"}'
+              });
+              
+              createAndClickOnLinkWithoutPrevention(href, mode === 'specific' ? palindromNode : null);
+
+              setTimeout(() => { expect(historySpy.callCount).to.equal(1); done() });
+            });
           });
-          it('relative path (nested, Shadow DOM)', function() {
-            const href = 'test_c';
+          describe('should not intercept external links', function() {
+            it('full URL in the same host, different port', function(done) {
+              const port =
+                window.location.port === '80' || window.location.port === ''
+                  ? '8080'
+                  : '80';
+              const href =
+                window.location.protocol +
+                '//' +
+                window.location.hostname +
+                ':' +
+                port +
+                '/test'; //http://localhost:88881/test
+              createAndClickOnLink(href);
 
-            createAndClickOnLinkNestedShadowDOM(href);
-            expect(historySpy.callCount).to.equal(1);
-          });
-          it('relative path (nested, Shadow DOM content)', function(done) {
-            setTimeout(() => {
-              createAndClickOnLinkNestedShadowDOMContent();
+              setTimeout(() => { expect(historySpy.callCount).to.equal(0); done() });
+            });
 
-              setTimeout(function() {
-                expect(historySpy.callCount).to.equal(1);
-                done();
-              }, 5);
-            }, 5);
-          });
-
-          it('absolute path', function() {
-            const href = '/test';
-            createAndClickOnLink(href);
-            expect(historySpy.callCount).to.equal(1);
-          });
-
-          it('full URL in the same host, same port', function() {
-            const href =
-              window.location.protocol + '//' + window.location.host + '/test'; //http://localhost:8888/test
-            createAndClickOnLink(href);
-            expect(historySpy.callCount).to.equal(1);
-          });
-
-        });
-        describe('Links with download attribute', function() {
-          it('should not intercept links with download attribute', function() {
-            const href = '/components/Palindrom/test/tests-logo.png';
-
-            createAndClickOnLinkWithoutPrevention(href, null, false, 'tests-logo.png');
-
-            expect(historySpy.callCount).to.equal(0);
-          });
-        });
-        describe('Links with targets', function() {
-          it('should not intercept links with a set target', function() {
-            const href = '/components/Palindrom/test/PopupPage.html';
-
-            // needed for Sauce labs, they allow pop ups, and this means we lose focus here
-            const popup = window.open('', '_popup')
-            createAndClickOnLinkWithoutPrevention(href, null, '_popup');
-            // focus again
-            popup && popup.close();
-
-            expect(historySpy.callCount).to.equal(0);
-          });
-          it('should intercept links with target _self', function() {
-            const href = '/components/Palindrom/test/PopupPage.html';
-            createAndClickOnLinkWithoutPrevention(href, null, '_self');
-
-            expect(historySpy.callCount).to.equal(1);
-          });
-          it('should intercept links with an empty target', function() {
-            const href = '/components/Palindrom/test/PopupPage.html';
-            createAndClickOnLinkWithoutPrevention(href, null, '');
-
-            expect(historySpy.callCount).to.equal(1);
-          });
-          it('should intercept links without a target', function() {
-            const href = '/components/Palindrom/test/PopupPage.html';
-            createAndClickOnLinkWithoutPrevention(href, null);
-
-            expect(historySpy.callCount).to.equal(1);
-          });
-        });
-        describe('should not intercept external links', function() {
-          it('full URL in the same host, different port', function() {
-            const port =
-              window.location.port === '80' || window.location.port === ''
-                ? '8080'
-                : '80';
-            const href =
-              window.location.protocol +
-              '//' +
-              window.location.hostname +
-              ':' +
-              port +
-              '/test'; //http://localhost:88881/test
-            createAndClickOnLink(href);
-
-            expect(historySpy.callCount).to.equal(0);
-          });
-
-          it('full URL in the same host, different schema', function(done) {
-            const protocol =
-              window.location.protocol === 'http:' ? 'https:' : 'http:';
-            const href = protocol + '//' + window.location.host + '/test'; //https://localhost:8888/test
-            createAndClickOnLink(href);
-            expect(historySpy.callCount).to.equal(0);
-            setTimeout(done, 2);
-          });
-        });
-
-        describe('should be accessible via API', function() {
-          it('should change history state programmatically', function(done) {
-            setTimeout(function() {
-              palindrom.morphUrl('/page2');
-
-              setTimeout(function() {
-                expect(historySpy.callCount).to.equal(1);
-                setTimeout(done, 2);
-              }, 5);
-            }, 5);
-          });
-        });
-
-        it('should stop listening to DOM changes after `.unlisten()` was called', function(
-          done
-        ) {
-          palindrom.unlisten();
-          createAndClickOnLink('#will_not_get_caught_by_palindrom');
-          expect(historySpy.callCount).to.equal(0);
-          setTimeout(done, 5);
-        });
-
-        it('should start listening to DOM changes after `.listen()` was called', function(
-          done
-        ) {
-          palindrom.unlisten();
-          palindrom.listen();
-          createAndClickOnLink('#will_get_caught_by_palindrom');
-          expect(historySpy.callCount).to.equal(1);
-          setTimeout(done, 5);
-        });
-      });
-    });
-
-    describe('when attached to specific node', function() {
-      let palindrom, palindromB, palindromNode, nodeB, historySpy, currLoc;
-      currScrollY;
-
-      before(function() {
-        currLoc = window.location.href;
-        currScrollY = document.documentElement.scrollTop;
-      });
-      after(function() {
-        history.pushState(null, null, currLoc);
-        window.scrollTo(0, currScrollY);
-      });
-
-      beforeEach('when attached to specific node', function(done) {
-        historySpy = sinon.spy(window.history, 'pushState');
-
-        moxios.install();
-        moxios.stubRequest('http://localhost/testURL', {
-          status: 200,
-          headers: { Location: 'http://localhost/testURL' },
-          responseText: '{"hello": "world"}'
-        });
-
-        palindromNode = document.createElement('DIV');
-        document.body.appendChild(palindromNode);
-        nodeB = document.createElement('DIV');
-        document.body.appendChild(nodeB);
-        palindrom = new PalindromDOM({
-          remoteUrl: 'http://localhost/testURL',
-          listenTo: palindromNode
-        });
-
-        setTimeout(done, 5);
-      });
-
-      afterEach(function() {
-        window.history.pushState.reset();
-        window.history.pushState.restore();
-        palindrom.unobserve();
-        palindrom.unlisten();
-        historySpy = null;
-      });
-      describe('should intercept child links to use History API', function() {
-        it('relative path', function() {
-          const href = 'test_a';
-
-          createAndClickOnLink(href, palindromNode);
-          expect(historySpy.callCount).to.equal(1);
-        });
-
-        it('relative path (nested)', function() {
-          const href = 'test_b';
-          createAndClickOnLinkNested(href, palindromNode);
-          expect(historySpy.callCount).to.equal(1);
-        });
-        it('relative path (nested, Shadow DOM)', function() {
-          const href = 'test_c';
-
-          createAndClickOnLinkNestedShadowDOM(href, palindromNode);
-          expect(historySpy.callCount).to.equal(1);
-        });
-        it('absolute path', function() {
-          const href = '/test';
-          createAndClickOnLink(href, palindromNode);
-          expect(historySpy.callCount).to.equal(1);
-        });
-
-        it('full URL in the same host, same port', function() {
-          const href =
-            window.location.protocol + '//' + window.location.host + '/test'; //http://localhost:8888/test
-
-          createAndClickOnLink(href, palindromNode);
-          expect(historySpy.callCount).to.equal(1);
-        });
-      });
-
-      describe('should not intercept links from outside of `.element` tree to use History API', function() {
-        it('relative path', function() {
-          const href = 'test_a';
-          createAndClickOnLink(href, nodeB);
-          expect(historySpy.callCount).to.equal(0);
-        });
-
-        it('relative path (nested)', function() {
-          const href = 'test_b';
-          createAndClickOnLinkNested(href, nodeB);
-          expect(historySpy.callCount).to.equal(0);
-        });
-        it('relative path (nested, Shadow DOM)', function() {
-          const href = 'test_c';
-          createAndClickOnLinkNestedShadowDOM(href, nodeB);
-          expect(historySpy.callCount).to.equal(0);
-        });
-        it('absolute path', function() {
-          const href = '/test';
-          createAndClickOnLink(href, nodeB);
-          expect(historySpy.callCount).to.equal(0);
-        });
-
-        it('full URL in the same host, same port', function() {
-          const href =
-            window.location.protocol + '//' + window.location.host + '/test';
-
-          createAndClickOnLink(href, nodeB);
-          expect(historySpy.callCount).to.equal(0);
-        });
-      });
-
-      describe('should not intercept external links', function() {
-        it('full URL in the same host, different port', function() {
-          const port =
-            window.location.port === '80' || window.location.port === ''
-              ? '8080'
-              : '80';
-          const href =
-            window.location.protocol +
-            '//' +
-            window.location.hostname +
-            ':' +
-            port +
-            '/test'; //http://localhost:88881/test
-
-          createAndClickOnLink(href, palindromNode);
-          assert(historySpy.callCount === 0);
-        });
-
-        it('full URL in the same host, different schema', function() {
-          const protocol =
-            window.location.protocol === 'http:' ? 'https:' : 'http:';
-          const href = protocol + '//' + window.location.host + '/test'; //https://localhost:8888/test
-          createAndClickOnLink(href, palindromNode);
-          assert(historySpy.callCount === 0);
-        });
-      });
-
-      describe('should be accessible via API', function() {
-        it('should change history state programmatically', function(done) {
-          setTimeout(function() {
-            palindrom.morphUrl('/page2');
-
-            setTimeout(function() {
-              assert(historySpy.callCount === 1);
-
-              done();
-            }, 5);
-          }, 5);
-        });
-      });
-
-      it('should stop listening to DOM changes after `.unlisten()` was called', function(
-        done
-      ) {
-        setTimeout(function() {
-          palindrom.unlisten();
-          setTimeout(function() {
-            createAndClickOnLink(
-              '#will_not_get_caught_by_palindrom',
-              palindromNode
-            );
-            setTimeout(function() {
+            it('full URL in the same host, different schema', function(done) {
+              const protocol =
+                window.location.protocol;
+              const href = protocol + '//' + window.location.host + '/test'; //https://localhost:8888/test
+              createAndClickOnLink(href);
               expect(historySpy.callCount).to.equal(0);
+              setTimeout(done, 2);
+            });
+          });
+
+          describe('should be accessible via API', function() {
+            it('should change history state programmatically', function(done) {
+              setTimeout(function() {
+
+                moxios.stubRequest('/page2', {
+                  status: 200,
+                  responseText: '{"hello": "world"}'
+                });
+
+                palindrom.morphUrl('/page2');
+
+                setTimeout(function() {
+                  expect(historySpy.callCount).to.equal(1);
+                  done();
+                }, 5);
+              }, 5);
+            });
+          });
+
+          it('should stop listening to DOM changes after `.unlisten()` was called', function(
+            done
+          ) {
+            palindrom.unlisten();
+            createAndClickOnLink('#will_not_get_caught_by_palindrom', mode === 'specific' ? palindromNode : null);
+            expect(historySpy.callCount).to.equal(0);
+            setTimeout(done, 5);
+          });
+
+          it('should start listening to DOM changes after `.listen()` was called', function(
+            done
+          ) {
+            palindrom.unlisten();
+            palindrom.listen();
+
+            const protocol =
+                window.location.protocol;
+
+              const href = protocol + '//' + window.location.host + '/test2'; //https://localhost:8888/test
+
+            moxios.stubRequest(href, {
+              status: 200,
+              headers: { Location: href },
+              responseText: '{"hello": "world"}'
+            });
+
+            createAndClickOnLink(href, mode === 'specific' ? palindromNode : null);
+            setTimeout(() => {
+              expect(historySpy.callCount).to.equal(1);
               done();
-            }, 5);
-          }, 5);
-        }, 5);
-      });
-
-      it('should start listening to DOM changes after `.listen()` was called', function() {
-        palindrom.unlisten();
-        palindrom.listen();
-
-        createAndClickOnLink(
-          '#will_not_get_caught_by_palindrom',
-          palindromNode
-        );
-        expect(historySpy.callCount).to.equal(1);
+            }, 50)
+          });
+        });
       });
     });
   });
 
   describe('History', function() {
-    let wsSpy, palindrom, currLoc, currScrollY;
+    let palindrom, currLoc, currScrollY;
 
     before(function() {
       currLoc = window.location.href;
@@ -461,27 +356,35 @@ if (typeof window !== 'undefined') {
 
     beforeEach(function() {
       moxios.install();
-      moxios.stubRequest('http://localhost/testURL', {
+      moxios.stubRequest(getTestURL('testURL'), {
         status: 200,
-        headers: { location: 'http://localhost/testURL' },
         responseText: '{"hello": "world"}'
       });
 
-      palindrom = new PalindromDOM({ remoteUrl: 'http://localhost/testURL' });
+      palindrom = new PalindromDOM({ remoteUrl: getTestURL('testURL') });
     });
+
     afterEach(function() {
       palindrom.unobserve();
       moxios.uninstall();
     });
 
-    /// init
     describe('should send JSON Patch HTTP request once history state get changed', function() {
       it('by `palindrom.morphURL(url)` method', function(done) {
+        moxios.stubRequest('/newUrl', {
+          status: 200,
+          responseText: '{"hello": "world"}'
+        });
+
         palindrom.morphUrl('/newUrl');
         setTimeout(function() {
           const request = moxios.requests.mostRecent();
           expect(request.url).to.equal('/newUrl');
           expect(window.location.pathname).to.equal('/newUrl');
+          request.respondWith({
+            status: 200,
+            responseText: '{"hello": "world"}'
+          })
           done();
         }, 5);
       });
@@ -493,8 +396,12 @@ if (typeof window !== 'undefined') {
         setTimeout(done, 300)
       })
       it('Dispatching it should call PalindromDOM.morphUrl and issue a request', function(done) {
-
         const morphUrlStub = sinon.spy(palindrom, "morphUrl");
+        
+        moxios.stubRequest('/new-palindrom-url', {
+          status: 200,
+          responseText: '{"hello": "world"}'
+        });
 
         document.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url: '/new-palindrom-url'}}));
 
@@ -508,6 +415,51 @@ if (typeof window !== 'undefined') {
           );
           done();
         }, 5);
+      });
+    });
+    describe('palindrom-before-redirect event', function() {
+      beforeEach(function(done) {
+        // wait for Palindrom to call .listen (after finishing the ajax request)
+        setTimeout(done, 300)
+      })
+      it('Morphing to a URL should dispatch the event and issue a request', function(done) {  
+        const handler = event => {
+          assert.equal(event.detail.href, '/newUrl');
+
+          setTimeout(() => {
+            const request = moxios.requests.mostRecent();
+            expect(request.url).to.equal('/newUrl');
+
+            request.respondWith({
+              status: 200,
+              responseText: '{"hello": "world"}'
+            });
+            setTimeout(() => {
+              expect(window.location.pathname).to.equal('/newUrl');
+              done();
+            });
+          });
+
+          window.removeEventListener('palindrom-before-redirect', handler)
+        }     
+        window.addEventListener('palindrom-before-redirect', handler)
+        palindrom.morphUrl('/newUrl');
+      });
+      it('Morphing to a URL should NOT issue a request after a canceled event', function(done) {
+        let originalRequestCount = moxios.requests.count;
+
+        const handler = event => {
+          assert.equal(event.detail.href, '/newUrl2');
+          event.preventDefault();
+          
+          setTimeout(() => {
+            expect(originalRequestCount).to.equal(moxios.requests.count);
+            done();
+          })
+          window.removeEventListener('palindrom-before-redirect', handler)
+        };
+        window.addEventListener('palindrom-before-redirect', handler)
+        palindrom.morphUrl('/newUrl2');
       });
     });
 
@@ -524,13 +476,13 @@ if (typeof window !== 'undefined') {
 
       beforeEach(function() {
         moxios.install();
-        moxios.stubRequest('http://localhost/testURL', {
+        moxios.stubRequest(getTestURL('testURL'), {
           status: 200,
-          headers: { location: 'http://localhost/testURL' },
+          headers: { location: getTestURL('testURL') },
           responseText: '{"hello": "world"}'
         });
 
-        palindrom = new PalindromDOM({ remoteUrl: 'http://localhost/testURL' });
+        palindrom = new PalindromDOM({ remoteUrl: getTestURL('testURL') });
       });
       afterEach(function() {
         palindrom.unobserve();
@@ -542,7 +494,7 @@ if (typeof window !== 'undefined') {
 
         moxios.stubRequest(/.+/, {
           status: 200,
-          headers: { location: 'http://localhost/testURL' },
+          headers: { location: getTestURL('testURL') },
           responseText: '[]'
         });
 
@@ -566,13 +518,13 @@ if (typeof window !== 'undefined') {
     describe('should send JSON Patch HTTP request once history state get changed', function() {
       beforeEach(function() {
         moxios.install();
-        moxios.stubRequest('http://localhost/testURL', {
+        moxios.stubRequest(getTestURL('testURL'), {
           status: 200,
-          headers: { location: 'http://localhost/testURL' },
+          headers: { location: getTestURL('testURL') },
           responseText: '{"hello": "world"}'
         });
 
-        palindrom = new PalindromDOM({ remoteUrl: 'http://localhost/testURL' });
+        palindrom = new PalindromDOM({ remoteUrl: getTestURL('testURL') });
       });
       afterEach(function() {
         palindrom.unobserve();
@@ -584,7 +536,7 @@ if (typeof window !== 'undefined') {
 
         moxios.stubRequest(/.+/, {
           status: 200,
-          headers: { location: 'http://localhost/testURL' },
+          headers: { location: getTestURL('testURL') },
           responseText: '[]'
         });
 

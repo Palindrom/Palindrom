@@ -26,7 +26,7 @@ describe('Palindrom', () => {
           responseText: 'Custom message'
         });
 
-        const palindrom = new Palindrom({
+        new Palindrom({
           remoteUrl: 'http://localhost/testURL',
           onConnectionError: spy
         });
@@ -35,7 +35,7 @@ describe('Palindrom', () => {
         setTimeout(() => {
           assert.equal(spy.callCount, 1);
           done();
-        }, 5);
+        }, 50);
       });
 
       it('should call onConnectionError on HTTP 599 response', function(done) {
@@ -113,6 +113,7 @@ describe('Palindrom', () => {
               //respond with an error
               request.respondWith({
                 status: 500,
+                headers: { contentType: 'application/json-patch+json' },
                 responseText: `{"op": "replace", "path": "/", value: "Custom message"}`
               });
               setTimeout(() => {
@@ -153,8 +154,10 @@ describe('Palindrom', () => {
               //respond with an error
               request.respondWith({
                 status: 400,
+                headers: { contentType: 'application/json-patch+json' },
                 responseText: `{"op": "replace", "path": "/", value: "Custom message"}`
               });
+              
               setTimeout(() => {
                 /* onConnectionError should NOT be called now */
                 assert(spy.notCalled);

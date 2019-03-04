@@ -26,7 +26,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
       const onPatchSent = sinon.spy();
       let tempObj;
 
-      const palindrom = new Palindrom({
+      new Palindrom({
         remoteUrl: 'http://house.of.cards/testURL',
         onStateReset: function(obj) {
           tempObj = obj;
