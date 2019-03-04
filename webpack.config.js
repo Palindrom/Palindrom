@@ -1,15 +1,15 @@
 const webpack = require("webpack");
-const MinifyPlugin = require('babel-minify-webpack-plugin');
 const version = require('./package.json').version;
 
 module.exports = [
   {
     entry: "./src/palindrom.js",
     output: {
-      filename: "dist/palindrom.js",
+      filename: "palindrom.js",
       library: "Palindrom",
       libraryTarget: "var"
     },
+    mode: 'development',
     resolve: {
       extensions: [".js"]
     },
@@ -20,23 +20,11 @@ module.exports = [
   {
     entry: "./src/palindrom.js",
     output: {
-      filename: "dist/palindrom.min.js",
+      filename: "palindrom.min.js",
       library: "Palindrom",
       libraryTarget: "var"
     },
-    resolve: {
-      extensions: [".js"]
-    },
-    externals: { websocket: "WebSocket", './URL': 'URL' },
-    plugins: [new MinifyPlugin(), new webpack.BannerPlugin('Palindrom, version: ' + version)]
-  },
-  {
-    entry: "./src/palindrom-dom.js",
-    output: {
-      filename: "dist/palindrom-dom.js",
-      library: "PalindromDOM",
-      libraryTarget: "var"
-    },
+    mode: 'production',
     resolve: {
       extensions: [".js"]
     },
@@ -46,28 +34,56 @@ module.exports = [
   {
     entry: "./src/palindrom-dom.js",
     output: {
-      filename: "dist/palindrom-dom.min.js",
+      filename: "palindrom-dom.js",
       library: "PalindromDOM",
       libraryTarget: "var"
     },
     resolve: {
       extensions: [".js"]
     },
+    mode: 'development',
     externals: { websocket: "WebSocket", './URL': 'URL' },
-    plugins: [new MinifyPlugin(), new webpack.BannerPlugin('Palindrom, version: ' + version)]
+    plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
+  },
+  {
+    entry: "./src/palindrom-dom.js",
+    output: {
+      filename: "palindrom-dom.min.js",
+      library: "PalindromDOM",
+      libraryTarget: "var"
+    },
+    mode: 'production',
+    resolve: {
+      extensions: [".js"]
+    },
+    externals: { websocket: "WebSocket", './URL': 'URL' },
+    plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
   },
   /* bundle tests for browser */
   {
     entry: "./test/runner.js",
     output: {
-      filename: "test/runner-browser.js",
+      filename: "../test/runner-browser.js",
       library: "Tests",
       libraryTarget: "var"
     },
+    mode: 'development',
     externals: { websocket: "WebSocket", './URL': 'URL' },
     resolve: {
       extensions: [".js"]
+    }
+  },
+  /* bundle tests for node */
+  {
+    entry: "./test/runner.js",
+    output: {
+      filename: "../test/runner-node.js",
+      library: "Tests",
+      libraryTarget: "commonjs"
     },
-    plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
+    mode: 'development',
+    resolve: {
+      extensions: [".js"]
+    }
   }
 ];
