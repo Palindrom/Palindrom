@@ -478,10 +478,8 @@ if (typeof window !== 'undefined') {
           assert.equal(event.detail.successful, true);
 
           setTimeout(() => {
-            setTimeout(() => {
-              expect(window.location.pathname).to.equal('/newUrl');
-              done();
-            });
+            expect(window.location.pathname).to.equal('/newUrl');
+            done();
           });
 
           window.removeEventListener('palindrom-after-redirect', handler)
