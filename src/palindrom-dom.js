@@ -267,14 +267,17 @@ const PalindromDOM = (() => {
         async historyHandler(event) {
             await this.getPatchUsingHTTP(location.href);
             const [scrollX, scrollY] = event.state || [0, 0];
-
-            for(let i = 0; i < 30; i++) {
+            let hadScrolled = false;
+            const scrollHandler = () => hadScrolled = true;
+            window.addEventListener('scroll', scrollHandler);
+            for(let i = 0; i < 30 && !hadScrolled; i++) {
                 if(attemptScroll(scrollX, scrollY)) {
                     break;
                 } else {
                     await sleep(30);
                 }
             }
+            window.removeEventListener('scroll', scrollHandler);
         }
 
         /**
