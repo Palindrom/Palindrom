@@ -1,6 +1,6 @@
 # Palindrom
 
-> Palindrom is a library for two-way data binding between local and remote JSON models. It uses JSON-Patch for data updates and Operational Transformation for versioning and data consistency. It operates via HTTP or WebSocket or both.
+> Palindrom is a library for two-way data binding between local and remote JSON models. It uses JSPatch for data updates and Operational Transformation for versioning and data consistency. It operates via HTTP or WebSocket or both.
 
 
 ### Usage
@@ -36,28 +36,36 @@ var palindrom = new Palindrom({attribute: value});
 Attribute              | Type          | Default                | Description
 ---                    | ---           | ---                    | ---
 `remoteUrl`            | **`String`**      |  **Required**          | PATCH server URL
-`onStateReset`         | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established), **it can be called again if the state was reset by a root-replacing patch**.
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
 `debug`                | *Boolean*     | `true`                 | Toggle debugging mode
 `filterLocalChange`            | *Function*      |       | A function that is called with every local change and allows you to filter (ignore) some changes. See [Filtering Patches](https://palindrom.github.io/#/docs/master/04-Filtering Patches) section.
-`onLocalChange`        | *Function*    |                        | Helper callback triggered each time a change is observed locally
-`onRemoteChange`       | *Function*    |                        | Helper callback triggered each time a change is received from the server and applied.
-`onPatchReceived`      | *Function*    |                        | Helper callback triggered each time a JSON-patch is received, accepts three parameters: (**`String`** `data`, **`String`** `url`, **`String`** `method`)
-`onPatchSent`          | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (**`String`** `data`, **`String`** `url`, **`String`** `method`)
-`onSocketStateChanged` | *Function*    |                        | Helper callback triggered when socket state changes, accepts next parameters: (**`int`** `state`, **`String`** `url`, **`String`** `data`, **`int`** `code`, **`String`** `reason`)
-`onError`    | *Function*    |                        | Helper callback triggered when a generic error occurs. Accepts one parameter: (*PalindromError* `error`) `PalindromError` has the following properties: (**`String`** `message`) it extends ES6 Error, it has the stack trace with all the information `Error` class offers.
-`onConnectionError`    | *Function*    |                        | Helper callback triggered when socket connection closed, socket connection failed to establish, http requiest failed. Accepts one parameter: (**`PalindromConnectionError`** `error`). `PalindromConnectionError` has the following properties: (**`String`** `message`, **`String`** `side <Server\|Client>`, **`String`** `url`, **`String`** `connectionType`). It extends ES6 Error class, it has the stack trace with all the information `Error` class offers.
-`onIncomingPatchValidationError`    | *Function*    |                        | Helper callback triggered when a wrong patch is received. It accepts one `Error` parameter.
-`onOutgoingPatchValidationError`    | *Function*    |                        | Helper callback triggered when a wrong patch is locally issued. It accepts one `Error` parameter.
 `localVersionPath`     | *JSONPointer* | `disabled`             | local version path, set it to enable Versioned JSON Patch communication
 `remoteVersionPath`    | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
 `ot`                   | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
 `purity`               | *Boolean*     | `false`                | `true` to enable purist mode of OT
 `pingIntervalS`        | *Number*      | `0`                    | Palindrom will generate heartbeats every `pingIntervalS` seconds if no activity is detected. `0` - disable heartbeat
 `retransmissionThreshold`| *Number*    | `3`                    | After server reports this number of messages missing, we start retransmission
-`onReconnectionCountdown`| *Function*  |                        | Triggered when palindrom detected connection problem and reconnection is scheduled. Accepts number of milliseconds to scheduled reconnection. Called every second until countdown reaches 0 (inclusive)
-`onReconnectionEnd`    | *Function*    |                        | Triggered when palindrom successfully reconnected
-`jsonpatch`            | *Object*      | `window.jsonpatch`       | The provider object for jsonpatch `apply` and  `validate`. By default it uses Starcounter-Jack/JSON-Patch library.
+
+### Events (`Palindrom` as an `EventTarget` so it dispatches events and you can subscribe by using native `addEventListener` to Palindrom instance)
+All the parameters are optional.
+```javascript
+const palindrom = new Palindrom();
+palindrom.addEventListener(event, handler);
+```
+Event              | Value             |                 | Description
+`state-reset`         | `{detail: Object}` | Dispatched after initial state object is received from the server (NOT necessarily after WS connection was established), **it can be called again if the state was reset by a root-replacing patch**.
+`local-change`        | JSON Patch Operation   | Dispatched each time a change is observed locally
+`remote-change`       | `[JSON Patch Operation]`    | Dispatched each time a change is received from the server and applied.
+`patch-received`      | `{detail: {data: String, url: String, method: String}}` | Dispatched each time a JSON patch is received
+`patch-sent`          | `{detail: {data: String, url: String, method: String}}` | Dispatched each time a JSON patch is sent
+`socket-state-changed` | (**`int`** `state`, **`String`** `url`, **`String`** `data`, **`int`** `code`, **`String`** `reason`) | Dispatched when socket state changes, accepts next parameters: 
+`error`  | `{detail: PalindromError}` | Dispatchedwhen a generic error occurs
+`connectien-error`    | (**`PalindromConnectionError`** `error`)  | Dispatched when socket connection closed, socket connection failed to establish, http requiest failed. Accepts one parameter: (**`PalindromConnectionError`** `error`). `PalindromConnectionError` has the following properties: (**`String`** `message`, **`String`** `side <Server\|Client>`, **`String`** `url`, **`String`** `connectionType`). It extends ES6 Error class, it has the stack trace with all the information `Error` class offers.
+`incoming-patch-validatierror`    | `{detail: PalindromError}`   | Dispatched when a wrong patch is received. 
+`outgoing-patch-validatierror`    | `{detail: PalindromError}`    | Dispatched when a wrong patch is locally issued. 
+`reconnection-countdown`| `{detail: number of milliseconds}` | Dispatched when palindrom detects connection problem and reconnection is scheduled. `number of milliseconds` is the time left to scheduled reconnection. Called every second until countdown reaches 0 (inclusive)
+`reconnection-end`    | `{}` | Dispatched when palindrom successfully reconnects
+
 
 #### Methods
 
@@ -74,18 +82,11 @@ palindrom.property
 ```
 Attribute             | Type       | Default                | Description
 ---                   | ---        | ---                    | ---
-`remoteUrl`           | **`String`**   | **Required**           | See above
+`remoteUrl`           | **`String`**   | **Required**       | See above
 `obj [readonly]`      | *Object*   | `{}`                   | Your initial state object, _**please read notes below**_.
 `useWebSocket`        | *Boolean*  | `false`                | See above
 `debug`               | *Boolean*  | `true`                 | See above
-`onRemoteChange`      | *Function* |                        | See above
-`onPatchReceived`     | *Function* |                        | See above
-`onSocketStateChanged`| *Function* |                        | See above
-`onPatchSent`         | *Function* |                        | See above
-`onConnectionError`   | *Function* |                        | See above
-`onIncomingPatchValidationError`   | *Function* |           | See above
-`onOutgoingPatchValidationError`   | *Function* |           | See above
-`version`             | *String `semver`*   |                        | Contains current Palindrom version, available statically too (i.e: `Palindrom.version`)
+`version`             | *String `semver`*   |               | Contains current Palindrom version, available statically too (i.e: `Palindrom.version`)
 
 * **_ Note 1: `palindrom.obj` becomes only available after `options.onStateReset` is called._**
 * **_ Note 2: `palindrom.obj` is a constant (as in `const`) property, you can modify its properties but you can't assign it again or `delete` it. `palindrom.obj = {}` would throw an error._**
