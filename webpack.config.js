@@ -15,7 +15,7 @@ module.exports = [
             extensions: ['.js']
         },
         /* (see: https://webpack.js.org/configuration/externals/) */
-        externals: { websocket: 'WebSocket', './URL': 'URL' },
+        externals: { websocket: 'WebSocket', './URL': 'URL', './event-target': 'EventTarget' },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
     {
@@ -30,7 +30,7 @@ module.exports = [
         resolve: {
             extensions: ['.js']
         },
-        externals: { websocket: 'WebSocket', './URL': 'URL' },
+        externals: { websocket: 'WebSocket', './URL': 'URL', './event-target': 'EventTarget' },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
     {
@@ -45,7 +45,7 @@ module.exports = [
             extensions: ['.js']
         },
         mode: 'development',
-        externals: { websocket: 'WebSocket', './URL': 'URL' },
+        externals: { websocket: 'WebSocket', './URL': 'URL', './event-target': 'EventTarget' },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
     {
@@ -60,7 +60,7 @@ module.exports = [
         resolve: {
             extensions: ['.js']
         },
-        externals: { websocket: 'WebSocket', './URL': 'URL' },
+        externals: { websocket: 'WebSocket', './URL': 'URL', './event-target': 'EventTarget' },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
     /* bundle tests for browser */
@@ -72,7 +72,7 @@ module.exports = [
             libraryTarget: 'var'
         },
         mode: 'development',
-        externals: { websocket: 'WebSocket', './URL': 'URL' },
+        externals: { websocket: 'WebSocket', './URL': 'URL', './event-target': 'EventTarget' },
         resolve: {
             extensions: ['.js']
         }

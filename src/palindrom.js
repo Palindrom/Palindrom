@@ -11,6 +11,7 @@ import { JSONPatchQueueSynchronous, JSONPatchQueue } from 'json-patch-queue';
 import JSONPatchOT from 'json-patch-ot';
 import JSONPatchOTAgent from 'json-patch-ot-agent';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors';
+import {EventTarget, CustomEvent} from './event-target'
 
 /* this variable is bumped automatically when you call `npm version` */
 const palindromVersion = '5.2.0';

@@ -6,7 +6,6 @@ import './specs/palindrom.websockets.test';
 import './specs/onPatchSentAndReceived.test';
 import './specs/palindrom.errors.test';
 import './specs/palindrom.ignore.defineProperty.test.js';
-import './specs/palindrom.ignoreAdd.test';
 import './specs/palindrom.filter.test';
 
 import './specs/dom/index';
