@@ -12,7 +12,7 @@ import JSONPatchOT from 'json-patch-ot';
 import JSONPatchOTAgent from 'json-patch-ot-agent';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors';
 
-/* this variable is bumped automatically when you call npm version */
+/* this variable is bumped automatically when you call `npm version` */
 const palindromVersion = '5.2.0';
 const CLIENT = 'Client';
 
@@ -226,12 +226,6 @@ const Palindrom = (() => {
                 throw new TypeError('remoteUrl is required');
             }
 
-            if (options.ignoreAdd) {
-                throw new TypeError(
-                    '`ignoreAdd` is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136'
-                );
-            }
-
             this.debug = options.debug != undefined ? options.debug : true;
 
             const noop = function noOpFunction() {};
@@ -240,15 +234,9 @@ const Palindrom = (() => {
             this.onLocalChange = options.onLocalChange || noop;
             this.onRemoteChange = options.onRemoteChange || noop;
             this.onStateReset =
-                options.onStateReset || options.callback || noop;
+                options.onStateReset || noop;
             this.filterLocalChange =
                 options.filterLocalChange || (operation => operation);
-
-            if (options.callback) {
-                console.warn(
-                    'options.callback is deprecated. Please use `onStateReset` instead'
-                );
-            }
 
             this.onPatchReceived = options.onPatchReceived || noop;
             this.onPatchSent = options.onPatchSent || noop;
@@ -356,11 +344,6 @@ const Palindrom = (() => {
 
             this.queue.reset(json);
             this.heartbeat.start();
-        }
-        set ignoreAdd(newValue) {
-            throw new TypeError(
-                "Can't set `ignoreAdd`, it is removed in favour of local state objects. see https://github.com/Palindrom/Palindrom/issues/136"
-            );
         }
         get useWebSocket() {
             return this.network.useWebSocket;
@@ -520,15 +503,6 @@ const Palindrom = (() => {
 
         reconnectNow() {
             this.reconnector.reconnectNow();
-        }
-
-        showWarning(heading, description) {
-            if (this.debug && global.console && console.warn) {
-                if (description) {
-                    heading += ` (${description})`;
-                }
-                console.warn(`Palindrom warning: ${heading}`);
-            }
         }
 
         handleRemoteChange(data, url, method) {

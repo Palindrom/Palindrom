@@ -280,13 +280,6 @@ export default class PalindromNetworkChannel {
         return res;
     }
 
-    changeState(href) {
-        console.warn(
-            "changeState was renamed to `getPatchUsingHTTP`, and they're both not recommended to use, please use `PalindromDOM.morphUrl` instead"
-        );
-        return this.getPatchUsingHTTP(href);
-    }
-
     _setRemoteUrl(remoteUrl) {
         if (
             this.remoteUrlSet &&
