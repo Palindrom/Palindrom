@@ -8,7 +8,7 @@ import { PalindromError, PalindromConnectionError } from './palindrom-errors';
   and this will lead Palindrom to use Browser's WebSocket when it is used 
   from the bundle. And use `websocket` lib in Node environment */
 import { w3cwebsocket as NodeWebSocket } from 'websocket';
-debugger
+
 /* this allows us to stub WebSockets */
 if (!global.MockWebSocket && NodeWebSocket) {
     /* we are in Node production env */
@@ -49,23 +49,6 @@ function toWebSocketURL(remoteUrl) {
     /* replace 'http' strictly in the beginning of the string,
     this covers http and https */
     return remoteUrl.replace(/^http/i, 'ws');
-}
-
-// TODO: auto-configure here #38 (tomalec)
-async function establish(network, url, body, bootstrap) {
-    const res = await network.xhr(url, 'application/json', body);
-    bootstrap(res.data);
-    if (network.useWebSocket) {
-        network.webSocketUpgrade(network.onSocketOpened);
-    }
-}
-
-function closeWsIfNeeded(network) {
-    if (network._ws) {
-        network._ws.onclose = () => {};
-        network._ws.close();
-        network._ws = null;
-    }
 }
 
 export default class PalindromNetworkChannel {
@@ -141,17 +124,16 @@ export default class PalindromNetworkChannel {
         return this.useWebSocket;
     }
 
-    establish(bootstrap) {
-        establish(this, this.remoteUrl.href, null, bootstrap);
-    }
-
-    reestablish(pending, bootstrap) {
-        establish(
-            this,
-            `${this.remoteUrl.href}/reconnect`,
-            JSON.stringify(pending),
-            bootstrap
+    async _establish(reconnectionPendingData = null) {
+        const res = await this._xhr(
+            this.remoteUrl.href + (reconnectionPendingData ? '/reconnect' : ''),
+            'application/json',
+            reconnectionPendingData
         );
+        if (this.useWebSocket) {
+            this.webSocketUpgrade(this.onSocketOpened);
+        }
+        return res.data;
     }
 
     /**
@@ -167,7 +149,11 @@ export default class PalindromNetworkChannel {
             this.onSend(msg, this._ws.url, 'WS');
         } else {
             const url = this.remoteUrl.href;
-            const res = await this.xhr(url, 'application/json-patch+json', msg);
+            const res = await this._xhr(
+                url,
+                'application/json-patch+json',
+                msg
+            );
             this.onReceive(res.data, url, res.config.method.toUpperCase());
         }
         return this;
@@ -196,8 +182,7 @@ export default class PalindromNetworkChannel {
         this.wsUrl = toWebSocketURL(this.remoteUrl.href);
         const upgradeURL = this.wsUrl;
 
-        closeWsIfNeeded(this);
-        debugger;
+        this.closeConnection(this);
         this._ws = new WebSocket(upgradeURL);
         this._ws.onopen = event => {
             this.onStateChange(this._ws.readyState, upgradeURL);
@@ -244,14 +229,14 @@ export default class PalindromNetworkChannel {
                 event.reason
             );
 
-            if (event.reason) {
-                const message = [
-                    'WebSocket connection closed unexpectedly.',
-                    'reason: ' + event.reason,
-                    'readyState: ' + this._ws.readyState,
-                    'stateCode: ' + event.code
-                ].join('\n');
+            const message = [
+                'WebSocket connection closed unexpectedly.',
+                'reason: ' + event.reason,
+                'readyState: ' + this._ws.readyState,
+                'stateCode: ' + event.code
+            ].join('\n');
 
+            if (event.reason) {
                 this.onFatalError(
                     new PalindromConnectionError(
                         message,
@@ -261,13 +246,6 @@ export default class PalindromNetworkChannel {
                     )
                 );
             } else if (!event.wasClean) {
-                const message = [
-                    'WebSocket connection closed unexpectedly.',
-                    'reason: ' + event.reason,
-                    'readyState: ' + this._ws.readyState,
-                    'stateCode: ' + event.code
-                ].join('\n');
-
                 this.onConnectionError(
                     new PalindromConnectionError(
                         message,
@@ -279,13 +257,20 @@ export default class PalindromNetworkChannel {
             }
         };
     }
+    closeConnection() {
+        if (this._ws) {
+            this._ws.onclose = () => {};
+            this._ws.close();
+            this._ws = null;
+        }
+    }
     /**
      * @param {String} href
      * @throws {Error} network error if occured
      */
     async getPatchUsingHTTP(href) {
         // we don't need to try catch here because we want the error to be thrown at whoever calls getPatchUsingHTTP
-        const res = await this.xhr(
+        const res = await this._xhr(
             href,
             'application/json-patch+json',
             null,
@@ -302,8 +287,7 @@ export default class PalindromNetworkChannel {
         return this.getPatchUsingHTTP(href);
     }
 
-    // TODO:(tomalec)[cleanup] hide from public API.
-    setRemoteUrl(remoteUrl) {
+    _setRemoteUrl(remoteUrl) {
         if (
             this.remoteUrlSet &&
             this.remoteUrl &&
@@ -324,20 +308,20 @@ export default class PalindromNetworkChannel {
         this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
     }
 
-    handleLocationHeader(res) {
+    _handleLocationHeader(res) {
         /* Axios always returns lowercase headers */
         const location =
             res.headers &&
             (res.headers['x-location'] || res.headers['location']);
         if (location) {
-            this.setRemoteUrl(location);
+            this._setRemoteUrl(location);
         }
     }
     /**
      * Handles unsecessful HTTP requests
      * @param error
      */
-    handleFailureResponse(error) {
+    _handleFailureResponse(error) {
         const res = error.response;
         const url = res.config.url;
         const method = res.config.method;
@@ -370,7 +354,7 @@ export default class PalindromNetworkChannel {
      * @param data (Optional) Data payload
      * @returns {XMLHttpRequest} performed XHR
      */
-    async xhr(url, accept, data, setReferer) {
+    async _xhr(url, accept, data, setReferer) {
         const method = data ? 'PATCH' : 'GET';
         const headers = {};
         let responsePromise;
@@ -398,14 +382,14 @@ export default class PalindromNetworkChannel {
 
         return responsePromise
             .then(res => {
-                this.handleLocationHeader(res);
+                this._handleLocationHeader(res);
                 return res;
             })
             .catch(error => {
                 if (isValid4xxResponse(error)) {
                     return error.response;
                 } else {
-                    this.handleFailureResponse(error);
+                    this._handleFailureResponse(error);
                     return Promise.reject(error);
                 }
             });

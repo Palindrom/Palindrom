@@ -59,7 +59,11 @@ Attribute              | Type          | Default                | Description
 `onReconnectionEnd`    | *Function*    |                        | Triggered when palindrom successfully reconnected
 `jsonpatch`            | *Object*      | `window.jsonpatch`       | The provider object for jsonpatch `apply` and  `validate`. By default it uses Starcounter-Jack/JSON-Patch library.
 
+#### Methods
 
+Name                  | Description
+---                   |---   
+`closeConnection`     | Cleanly closes WebSocket connection 
 
 most of the properties are accessible also in runtime:
 

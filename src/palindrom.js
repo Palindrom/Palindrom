@@ -7,7 +7,7 @@
 import PalindromNetworkChannel from './palindrom-network-channel';
 import { applyPatch, validate } from 'fast-json-patch';
 import JSONPatcherProxy from 'jsonpatcherproxy';
-import {JSONPatchQueueSynchronous, JSONPatchQueue} from 'json-patch-queue';
+import { JSONPatchQueueSynchronous, JSONPatchQueue } from 'json-patch-queue';
 import JSONPatchOT from 'json-patch-ot';
 import JSONPatchOTAgent from 'json-patch-ot-agent';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors';
@@ -199,36 +199,6 @@ const Palindrom = (() => {
         }
     }
 
-    function connectToRemote(palindrom, reconnectionFn) {
-        // if we lose connection at this point, the connection we're trying to establish should trigger onError
-        palindrom.heartbeat.stop();
-
-        reconnectionFn(function bootstrap(json) {
-            palindrom.reconnector.stopReconnecting();
-
-            if (palindrom.debug) {
-                palindrom.remoteObj = JSON.parse(JSON.stringify(json));
-            }
-
-            palindrom.queue.reset(json);
-
-            palindrom.heartbeat.start();
-        });
-    }
-
-    function makeInitialConnection(palindrom) {
-        connectToRemote(
-            palindrom,
-            palindrom.network.establish.bind(palindrom.network)
-        );
-    }
-
-    function makeReconnection(palindrom) {
-        connectToRemote(palindrom, bootstrap => {
-            palindrom.network.reestablish(palindrom.queue.pending, bootstrap);
-        });
-    }
-
     /**
      * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
      * @param {Object} [options] map of arguments. See README.md for description
@@ -296,7 +266,7 @@ const Palindrom = (() => {
             this.onError = options.onError || noop;
 
             this.reconnector = new Reconnector(
-                () => makeReconnection(this),
+                () => this._connectToRemote(JSON.stringify(this.queue.pending)),
                 this.onReconnectionCountdown,
                 this.onReconnectionEnd
             );
@@ -342,26 +312,28 @@ const Palindrom = (() => {
                 } else {
                     this.OTPatchIndexOffset = 2;
                     // double versioning or OT
-                    this.queue = options.ot
-                        ? new JSONPatchOTAgent(
-                              this.obj,
-                              JSONPatchOT.transform,
-                              [
-                                  options.localVersionPath,
-                                  options.remoteVersionPath
-                              ],
-                              this.validateAndApplySequence.bind(this),
-                              options.purity
-                          )
-                        : new JSONPatchQueue(
-                              this.obj,
-                              [
-                                  options.localVersionPath,
-                                  options.remoteVersionPath
-                              ],
-                              this.validateAndApplySequence.bind(this),
-                              options.purity
-                          ); // full or noop OT
+                    if (options.ot) {
+                        this.queue = new JSONPatchOTAgent(
+                            this.obj,
+                            JSONPatchOT.transform,
+                            [
+                                options.localVersionPath,
+                                options.remoteVersionPath
+                            ],
+                            this.validateAndApplySequence.bind(this),
+                            options.purity
+                        );
+                    } else {
+                        new JSONPatchQueue(
+                            this.obj,
+                            [
+                                options.localVersionPath,
+                                options.remoteVersionPath
+                            ],
+                            this.validateAndApplySequence.bind(this),
+                            options.purity
+                        ); // full or noop OT
+                    }
                 }
             } else {
                 // no queue - just api
@@ -370,7 +342,20 @@ const Palindrom = (() => {
                     this.validateAndApplySequence.bind(this)
                 );
             }
-            makeInitialConnection(this);
+
+            this._connectToRemote();
+        }
+        async _connectToRemote(reconnectionPendingData = null) {
+            this.heartbeat.stop();
+            const json = await this.network._establish(reconnectionPendingData);
+            this.reconnector.stopReconnecting();
+
+            if (this.debug) {
+                this.remoteObj = JSON.parse(JSON.stringify(json));
+            }
+
+            this.queue.reset(json);
+            this.heartbeat.start();
         }
         set ignoreAdd(newValue) {
             throw new TypeError(
@@ -383,8 +368,21 @@ const Palindrom = (() => {
         set useWebSocket(newValue) {
             this.network.useWebSocket = newValue;
         }
+
         ping() {
-            sendPatches(this, []); // sends empty message to server
+            this._sendPatches(this, []); // sends empty message to server
+        }
+
+        _sendPatches(patches) {
+            const txt = JSON.stringify(patches);
+            this.unobserve();
+            this.heartbeat.notifySend();
+            this.network.send(txt);
+            this.observe();
+        }
+
+        closeConnection() {
+            this.network.closeConnection();
         }
 
         prepareProxifiedObject(obj) {
@@ -441,7 +439,7 @@ const Palindrom = (() => {
             if (this.debug) {
                 this.validateSequence(this.remoteObj, patches);
             }
-            sendPatches(this, this.queue.send(patches));
+            this._sendPatches(this.queue.send(patches));
             this.onLocalChange(patches);
         }
 
@@ -564,7 +562,7 @@ const Palindrom = (() => {
             ) {
                 // remote counterpart probably failed to receive one of earlier messages, because it has been receiving
                 // (but not acknowledging messages for some time
-                this.queue.pending.forEach(sendPatches.bind(null, this));
+                this.queue.pending.forEach(this._sendPatches, this);
             }
 
             if (this.debug) {
@@ -613,27 +611,6 @@ const Palindrom = (() => {
             );
         }
     }
-
-    function isValid4xxResponse(error) {
-        const res = error.response;
-        const statusCode = res.status;
-        //this is not a fatal error
-        return (
-            statusCode >= 400 &&
-            statusCode < 500 &&
-            res.headers &&
-            res.headers.contentType === 'application/json-patch+json'
-        );
-    }
-
-    function sendPatches(palindrom, patches) {
-        const txt = JSON.stringify(patches);
-        palindrom.unobserve();
-        palindrom.heartbeat.notifySend();
-        palindrom.network.send(txt);
-        palindrom.observe();
-    }
-
     return Palindrom;
 })();
 
