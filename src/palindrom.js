@@ -314,7 +314,7 @@ const CLIENT = 'Client';
                             options.purity
                         );
                     } else {
-                        new JSONPatchQueue(
+                        this.queue = new JSONPatchQueue(
                             this.obj,
                             [
                                 options.localVersionPath,
