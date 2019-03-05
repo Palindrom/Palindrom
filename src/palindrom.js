@@ -11,7 +11,7 @@ import { JSONPatchQueueSynchronous, JSONPatchQueue } from 'json-patch-queue';
 import JSONPatchOT from 'json-patch-ot';
 import JSONPatchOTAgent from 'json-patch-ot-agent';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors';
-import {EventTarget, CustomEvent} from './event-target'
+import {PalindromEventTarget, PalindromCustomEvent} from './palindrom-event-target'
 
 /* this variable is bumped automatically when you call `npm version` */
 const palindromVersion = '5.2.0';
@@ -203,7 +203,7 @@ const CLIENT = 'Client';
      * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
      * @param {Object} [options] map of arguments. See README.md for description
      */
-    export default class Palindrom extends EventTarget {
+    export default class Palindrom extends PalindromEventTarget {
         /**
          * Palindrom version
          */
@@ -212,7 +212,7 @@ const CLIENT = 'Client';
         }
 
         fire(name, detail){
-            this.dispatchEvent(new CustomEvent(name, { detail }));
+            this.dispatchEvent(new PalindromCustomEvent(name, { detail }));
         }
 
         constructor(options) {
