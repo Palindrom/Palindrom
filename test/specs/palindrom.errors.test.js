@@ -14,7 +14,7 @@ describe('Palindrom', () => {
       moxios.uninstall();
     });
     context('Network', function() {
-      it('should call onConnectionError on HTTP 400 response (non-patch responses)', function(done) {
+      it('should dispatch connection-error event on HTTP 400 response (non-patch responses)', function(done) {
         const spy = sinon.spy();
 
         moxios.stubRequest('http://localhost/testURL', {
@@ -38,7 +38,7 @@ describe('Palindrom', () => {
         }, 50);
       });
 
-      it('should call onConnectionError on HTTP 599 response', function(done) {
+      it('should dispatch connection-error event on HTTP 599 response', function(done) {
         const spy = sinon.spy();
 
         moxios.stubRequest('http://localhost/testURL', {
@@ -62,7 +62,7 @@ describe('Palindrom', () => {
         }, 5);
       });
 
-      it('should call onConnectionError on HTTP 500 response (patch)', function(
+      it('should dispatch connection-error event on HTTP 500 response (patch)', function(
         done
       ) {
         const spy = sinon.spy();
@@ -150,7 +150,7 @@ describe('Palindrom', () => {
           }, 5);
         }, 5);
       });
-      it('should call onConnectionError on HTTP 599 response (patch)', function(
+      it('should dispatch connection-error event on HTTP 599 response (patch)', function(
         done
       ) {
         const spy = sinon.spy();
@@ -193,7 +193,7 @@ describe('Palindrom', () => {
       });
     });
     context('Numbers Validation', function() {
-      it('Initial HTTP response: out of range numbers should call onIncomingPatchValidationError with a RangeError', done => {
+      it('Initial HTTP response: out of range numbers should dispatch incoming-patch-validation-error event with a RangeError', done => {
         moxios.stubRequest('http://localhost/testURL', {
           status: 200,
           headers: { Location: 'http://localhost/testURL' },
@@ -221,7 +221,7 @@ describe('Palindrom', () => {
           done();
         }, 10);
       });
-      it('Outgoing HTTP patches: out of range numbers should call onOutgoingPatchValidationError with a RangeError', done => {
+      it('Outgoing HTTP patches: out of range numbers should dispatch outgoing-patch-validation-error event with a RangeError', done => {
         moxios.stubRequest('http://localhost/testURL', {
           status: 200,
           headers: { Location: 'http://localhost/testURL' },
@@ -254,7 +254,7 @@ describe('Palindrom', () => {
           done();
         }, 15);
       });
-      it('Outgoing socket patches: out of range numbers should call onOutgoingPatchValidationError with a RangeError', function(
+      it('Outgoing socket patches: out of range numbers should dispatch outgoing-patch-validation-error event with a RangeError', function(
         done
       ) {
         const server = new MockSocketServer('ws://localhost/testURL');
@@ -291,7 +291,7 @@ describe('Palindrom', () => {
           server.stop(done);
         }, 15);
       });
-      it('Incoming socket patches: out of range numbers should call onIncomingPatchValidationError with a RangeError', function(
+      it('Incoming socket patches: out of range numbers should dispatch incoming-patch-validation-error event with a RangeError', function(
         done
       ) {
         const server = new MockSocketServer('ws://localhost/testURL');

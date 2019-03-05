@@ -13,7 +13,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
   });
 
   describe('XHR', function() {
-    it('should call onPatchSent and onPatchReceived callbacks when a patch is sent and received', done => {
+    it('should dispatch patch-sent and patch-received events when a patch is sent and received', done => {
       moxios.stubRequest('http://house.of.cards/testURL', {
         status: 200,
         headers: { location: 'http://house.of.cards/testURL2' },
@@ -73,7 +73,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
         }, 10);
       }, 30);
     });
-    it('should call onPatchReceived even if the patch was bad', done => {
+    it('should dispatch patch-received event even if the patch was bad', done => {
       moxios.stubRequest('http://house.of.cards/testURL', {
         status: 200,
         headers: { location: 'http://house.of.cards/testURL2' },
@@ -122,7 +122,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
   });
 
   describe('WebSockets', function() {
-    it('should call onPatchSent and onPatchReceived callbacks when a patch is sent and received', done => {
+    it('should dispatch patch-sent and dispatch patch-received events when a patch is sent and received', done => {
       const server = new MockSocketServer(
         'ws://house.of.cards/default/this_is_a_nice_url'
       );
@@ -194,7 +194,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
     });
   });
 
-  it('should call onPatchReceived even if the patch was bad', done => {
+  it('should dispatch patch-received event even if the patch was bad', done => {
     const server = new MockSocketServer(
       'ws://house.of.cards/default/this_is_a_nice_url'
     );
