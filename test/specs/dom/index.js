@@ -157,11 +157,12 @@ if (typeof window !== 'undefined') {
                                 status: 200,
                                 responseText: '{"hello": "world"}'
                             });
-
+                            
                             createAndClickOnLink(
                                 relative,
                                 mode === 'specific' ? palindromNode : undefined
                             );
+
                             setTimeout(() => {
                                 expect(historySpy.callCount).to.equal(1);
                                 done();

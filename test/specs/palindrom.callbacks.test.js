@@ -11,7 +11,7 @@ describe("Callbacks", () => {
     moxios.uninstall();
   });
 
-  it("should call onLocalChange callback for outgoing patches", done => {
+  it("should dispatch local-change event for outgoing patches", done => {
     moxios.stubRequest("http://house.of.cards/testURL", {
       status: 200,
       headers: { Location: "http://house.of.cards/testURL" },
@@ -22,12 +22,10 @@ describe("Callbacks", () => {
     let tempObj;
 
     const palindrom = new Palindrom({
-      remoteUrl: "http://house.of.cards/testURL",
-      onLocalChange: sentSpy,
-      onStateReset: function(obj) {
-        tempObj = obj;
-      }
+        remoteUrl: "http://house.of.cards/testURL",
     });
+    palindrom.addEventListener('state-reset', ev => tempObj = ev.detail);
+    palindrom.addEventListener('local-change', ev => sentSpy(ev.detail));
 
     setTimeout(
       () => {
@@ -47,30 +45,19 @@ describe("Callbacks", () => {
     );
   });
 
-  it("should call onStateReset callback for applied patches on root (initial state)", done => {
+  it("should dispatch state-reset event for applied patches on root (initial state)", done => {
     moxios.stubRequest("http://house.of.cards/testURL", {
       status: 200,
       headers: { Location: "http://house.of.cards/testURL" },
       responseText: '{"hello": "world"}'
     });
 
-    const receivedSpy = sinon.spy();
-    let tempObj;
-
     const palindrom = new Palindrom({
       remoteUrl: "http://house.of.cards/testURL",
-      onStateReset: function(obj) {
-        tempObj = obj;
-      },
-      onStateReset: receivedSpy
     });
 
-    setTimeout(
-      () => {
-        assert(receivedSpy.calledOnce);
-        done();
-      },
-      10
-    );
+    palindrom.addEventListener('state-reset', ev => {
+      done()
+    });
   });
 });

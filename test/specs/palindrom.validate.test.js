@@ -28,9 +28,15 @@ describe('Palindrom', () => {
             const spy = sinon.spy();
 
             const palindrom = new Palindrom({
-                remoteUrl: '/testURL',
-                onIncomingPatchValidationError: spy
+                remoteUrl: '/testURL'
             });
+
+            palindrom.addEventListener(
+                'incoming-patch-validation-error',
+                ev => {
+                    spy();
+                }
+            );
 
             palindrom.validateAndApplySequence(tree, sequence);
 
@@ -56,14 +62,20 @@ describe('Palindrom', () => {
             const spy = sinon.spy();
 
             const palindrom = new Palindrom({
-                remoteUrl: '/testURL',
-                onIncomingPatchValidationError: spy
+                remoteUrl: '/testURL'
             });
+
+            palindrom.addEventListener(
+                'incoming-patch-validation-error',
+                ev => {
+                    spy(ev.detail);
+                }
+            );
 
             palindrom.validateAndApplySequence(tree, sequence);
 
             setTimeout(() => {
-                assert(spy.calledOnce);
+                assert(spy.calledOnce, spy.callCount);
                 assert.equal(
                     'OPERATION_PATH_UNRESOLVABLE',
                     spy.lastCall.args[0].name
@@ -90,9 +102,15 @@ describe('Palindrom', () => {
             const spy = sinon.spy();
 
             const palindrom = new Palindrom({
-                remoteUrl: '/testURL',
-                onIncomingPatchValidationError: spy
+                remoteUrl: '/testURL'
             });
+
+            palindrom.addEventListener(
+                'incoming-patch-validation-error',
+                ev => {
+                    spy(ev.detail);
+                }
+            );
 
             palindrom.validateAndApplySequence(tree, sequence);
 
@@ -122,9 +140,14 @@ describe('Palindrom', () => {
             const spy = sinon.spy();
 
             const palindrom = new Palindrom({
-                remoteUrl: '/testURL',
-                onIncomingPatchValidationError: spy
+                remoteUrl: '/testURL'
             });
+            palindrom.addEventListener(
+                'incoming-patch-validation-error',
+                ev => {
+                    spy(ev.detail);
+                }
+            );
 
             palindrom.validateAndApplySequence(tree, sequence);
 
@@ -160,9 +183,14 @@ describe('Palindrom', () => {
             const spy = sinon.spy();
 
             const palindrom = new Palindrom({
-                remoteUrl: '/testURL',
-                onIncomingPatchValidationError: spy
+                remoteUrl: '/testURL'
             });
+            palindrom.addEventListener(
+                'incoming-patch-validation-error',
+                ev => {
+                    spy(ev.detail);
+                }
+            );
 
             palindrom.validateAndApplySequence(tree, sequence);
 

@@ -16,7 +16,6 @@ import { PalindromError, PalindromConnectionError } from './palindrom-errors';
 const palindromVersion = '5.2.0';
 const CLIENT = 'Client';
 
-const Palindrom = (() => {
     if (typeof global === 'undefined') {
         if (typeof window !== 'undefined') {
             /* incase neither window nor global existed, e.g React Native */
@@ -203,7 +202,7 @@ const Palindrom = (() => {
      * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
      * @param {Object} [options] map of arguments. See README.md for description
      */
-    class Palindrom {
+    export default class Palindrom extends EventTarget {
         /**
          * Palindrom version
          */
@@ -211,7 +210,12 @@ const Palindrom = (() => {
             return palindromVersion;
         }
 
+        fire(name, detail){
+            this.dispatchEvent(new CustomEvent(name, { detail }));
+        }
+
         constructor(options) {
+            super();
             /**
              * Palindrom instance version
              */
@@ -231,27 +235,25 @@ const Palindrom = (() => {
             const noop = function noOpFunction() {};
 
             this.isObserving = false;
-            this.onLocalChange = options.onLocalChange || noop;
-            this.onRemoteChange = options.onRemoteChange || noop;
-            this.onStateReset =
-                options.onStateReset || noop;
+            this.onLocalChange = detail => this.fire('local-change', detail);
+            this.onRemoteChange = detail => this.fire('remote-change', detail);
+            this.onStateReset = detail => this.fire('state-reset', detail);
             this.filterLocalChange =
                 options.filterLocalChange || (operation => operation);
 
-            this.onPatchReceived = options.onPatchReceived || noop;
-            this.onPatchSent = options.onPatchSent || noop;
-            this.onSocketStateChanged = options.onSocketStateChanged || noop;
-            this.onConnectionError = options.onConnectionError || noop;
+            this.onPatchReceived = detail => this.fire('patch-received', detail);
+            this.onPatchSent = detail => this.fire('patch-sent', detail);
+            this.onSocketStateChanged = detail => this.fire('socket-state-changed', detail);
+            this.onConnectionError = detail => this.fire('connection-error', detail);
+            this.onReconnectionCountdown = detail => this.fire('reconnection-countdown', detail);
+            this.onReconnectionEnd = detail => this.fire('reconnection-end', detail);
+            this.onSocketOpened = detail => this.fire('socket-opened', detail);
+            this.onIncomingPatchValidationError = detail => this.fire('incoming-patch-validation-error', detail);
+            this.onError = detail => this.fire('error', detail);
+            this.onOutgoingPatchValidationError = detail => this.fire('outgoing-patch-validation-error', detail);
+
             this.retransmissionThreshold = options.retransmissionThreshold || 3;
-            this.onReconnectionCountdown =
-                options.onReconnectionCountdown || noop;
-            this.onReconnectionEnd = options.onReconnectionEnd || noop;
-            this.onSocketOpened = options.onSocketOpened || noop;
-            this.onIncomingPatchValidationError =
-                options.onIncomingPatchValidationError || noop;
-            this.onOutgoingPatchValidationError =
-                options.onOutgoingPatchValidationError || noop;
-            this.onError = options.onError || noop;
+
 
             this.reconnector = new Reconnector(
                 () => this._connectToRemote(JSON.stringify(this.queue.pending)),
@@ -585,7 +587,4 @@ const Palindrom = (() => {
             );
         }
     }
-    return Palindrom;
-})();
 
-export default Palindrom;

@@ -24,21 +24,28 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
       const onPatchSent = sinon.spy();
       let tempObj;
 
-      new Palindrom({
+      const palindrom = new Palindrom({
         remoteUrl: 'http://house.of.cards/testURL',
-        onStateReset: function(obj) {
-          tempObj = obj;
-        },
-        onPatchReceived,
-        onPatchSent
+      });
+
+      palindrom.addEventListener('state-reset', ev => {
+        tempObj = ev.detail;
+      });
+
+      palindrom.addEventListener('patch-received', ev => {
+        onPatchReceived(ev.detail)
+      });
+
+      palindrom.addEventListener('patch-sent', ev => {
+        onPatchSent(ev.detail)
       });
 
       setTimeout(() => {
         /* onPatchReceived, shouldn't be called now */
-        assert(onPatchReceived.notCalled);
+        assert(onPatchReceived.notCalled, 'onPatchReceived should not be called');
 
-        /* onPatchSent, shouldn be called once now, the initial request */
-        assert(onPatchSent.calledOnce);
+        /* onPatchSent, shouldnt be called now, the initial request doesnt count since you can't addEventLister before it occurs */
+        assert(onPatchSent.notCalled, 'onPatchSent should not be called');
 
         /* prepare response */
         moxios.stubRequest('http://house.of.cards/testURL2', {
@@ -50,7 +57,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
 
         /* issue a change */
         tempObj.hello = 'onPatchSent callback';
-        assert(onPatchSent.calledTwice);
+        assert(onPatchSent.calledOnce);
 
         /* wait for XHR */
         setTimeout(() => {
@@ -78,10 +85,14 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
 
       const palindrom = new Palindrom({
         remoteUrl: 'http://house.of.cards/testURL',
-        onStateReset: function(obj) {
-          tempObj = obj;
-        },
-        onPatchReceived
+      });
+
+      palindrom.addEventListener('state-reset', ev => {
+        tempObj = ev.detail;
+      });
+
+      palindrom.addEventListener('patch-received', ev => {
+        onPatchReceived(ev.detail)
       });
 
       setTimeout(() => {
@@ -141,24 +152,31 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
 
       const palindrom = new Palindrom({
         remoteUrl: 'http://house.of.cards/testURL',
-        onStateReset: function(obj) {
-          tempObj = obj;
-        },
-        useWebSocket: true,
-        onPatchReceived,
-        onPatchSent
+        useWebSocket: true
+      });
+      
+      palindrom.addEventListener('state-reset', ev => {
+        tempObj = ev.detail;
+      });
+
+      palindrom.addEventListener('patch-received', ev => {
+        onPatchReceived(ev.detail)
+      });
+
+      palindrom.addEventListener('patch-sent', ev => {
+        onPatchSent(ev.detail)
       });
 
       setTimeout(() => {
         /* onPatchReceived, shouldn't be called now */
         assert(onPatchReceived.notCalled);
 
-        /* onPatchSent, should be called once now, the initial request */
-        assert(onPatchSent.calledOnce);
+        /* onPatchSent, shouldnt be called now, the initial request doesnt count since you can't addEventLister before it occurs */
+        assert(onPatchSent.notCalled);
 
         /* issue a change */
         tempObj.hello = 'onPatchSent callback';
-        assert(onPatchSent.calledTwice);
+        assert(onPatchSent.calledOnce);
 
         /* wait for XHR */
         setTimeout(() => {
@@ -207,11 +225,15 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
 
     const palindrom = new Palindrom({
       remoteUrl: 'http://house.of.cards/testURL',
-      onStateReset: function(obj) {
-        tempObj = obj;
-      },
-      useWebSocket: true,
-      onPatchReceived
+      useWebSocket: true
+    });
+
+    palindrom.addEventListener('state-reset', ev => {
+      tempObj = ev.detail;
+    });
+
+    palindrom.addEventListener('patch-received', ev => {
+      onPatchReceived(ev.detail)
     });
 
     setTimeout(() => {

@@ -315,9 +315,13 @@ describe('Sockets', () => {
                     var spy = sinon.spy();
                     var palindrom = new Palindrom({
                         remoteUrl: 'http://localhost/testURL',
-                        useWebSocket: true,
-                        onSocketOpened: spy
+                        useWebSocket: true
                     });
+
+                    palindrom.addEventListener('socket-opened', ev => {
+                        spy(ev.detail);
+                    });
+
                     /* socket should be undefined before XHR delay */
                     assert(spy.notCalled);
 
@@ -342,9 +346,13 @@ describe('Sockets', () => {
                     var spy = sinon.spy();
                     var palindrom = new Palindrom({
                         remoteUrl: 'http://localhost/testURL',
-                        useWebSocket: true,
-                        onConnectionError: spy
+                        useWebSocket: true
                     });
+
+                    palindrom.addEventListener('connection-error', ev => {
+                        spy(ev.detail);
+                    });
+
                     /* no issues so far */
                     assert(spy.notCalled);
 
@@ -447,52 +455,53 @@ describe('Sockets', () => {
 
                     var palindrom = new Palindrom({
                         remoteUrl,
-                        useWebSocket: true,
-                        onStateReset: function(obj) {
-                            moxios.stubRequest(
-                                'http://localhost/test/this_is_a_fast_url',
-                                {
-                                    status: 200,
-                                    responseText: '[]'
-                                }
+                        useWebSocket: true
+                    });
+                    palindrom.addEventListener('state-reset', ev => {
+                        const obj = ev.detail;
+                        moxios.stubRequest(
+                            'http://localhost/test/this_is_a_fast_url',
+                            {
+                                status: 200,
+                                responseText: '[]'
+                            }
+                        );
+
+                        /* here, socket connection isn't established yet, let's issue a change */
+                        obj.name = 'Mark';
+
+                        setTimeout(() => {
+                            assert(
+                                '[{"op":"add","path":"/name","value":"Mark"}]' ===
+                                    moxios.requests.mostRecent().config.data
                             );
 
-                            /* here, socket connection isn't established yet, let's issue a change */
-                            obj.name = 'Mark';
+                            /* make sure there is no socket messages */
+                            assert(messages.length === 0);
+                        }, 20);
 
-                            setTimeout(() => {
-                                assert(
-                                    '[{"op":"add","path":"/name","value":"Mark"}]' ===
-                                        moxios.requests.mostRecent().config.data
-                                );
+                        /* now socket is connected, let's issue a change */
+                        setTimeout(() => {
+                            palindrom.obj.firstName = 'Omar';
 
-                                /* make sure there is no socket messages */
-                                assert(messages.length === 0);
-                            }, 20);
+                            assert(messages.length === 1);
+                            assert(
+                                JSON.stringify(messages[0]) ===
+                                    '{"op":"add","path":"/firstName","value":"Omar"}'
+                            );
+                        }, 30);
 
-                            /* now socket is connected, let's issue a change */
-                            setTimeout(() => {
-                                palindrom.obj.firstName = 'Omar';
+                        /* now socket is connected, let's issue another change */
+                        setTimeout(() => {
+                            palindrom.obj.firstName = 'Hanan';
 
-                                assert(messages.length === 1);
-                                assert(
-                                    JSON.stringify(messages[0]) ===
-                                        '{"op":"add","path":"/firstName","value":"Omar"}'
-                                );
-                            }, 30);
-
-                            /* now socket is connected, let's issue another change */
-                            setTimeout(() => {
-                                palindrom.obj.firstName = 'Hanan';
-
-                                assert(messages.length === 2);
-                                assert(
-                                    JSON.stringify(messages[1]) ===
-                                        '{"op":"replace","path":"/firstName","value":"Hanan"}'
-                                );
-                                server.stop(done);
-                            }, 40);
-                        }
+                            assert(messages.length === 2);
+                            assert(
+                                JSON.stringify(messages[1]) ===
+                                    '{"op":"replace","path":"/firstName","value":"Hanan"}'
+                            );
+                            server.stop(done);
+                        }, 40);
                     });
                 });
             });

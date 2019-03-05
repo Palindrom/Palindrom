@@ -34,20 +34,11 @@ const PalindromDOM = (() => {
             if (!options.remoteUrl) {
                 throw new Error('remoteUrl is required');
             }
-            const onStateReset = options.onStateReset || options.callback;
-            if (options.callback) {
-                console.warn(
-                    'Palindrom: options.callback is deprecated. Please use `onStateReset` instead'
-                );
-            }
-
-            options.onStateReset = function addDOMListeners(obj) {
-                this.listen();
-                onStateReset && onStateReset.call(this, obj);
-            };
 
             // construct Palindrom
             super(options);
+            super.addEventListener('state-reset', () => this.listen())
+
 
             this.element = options.listenTo || document;
             this.clickHandler = this.clickHandler.bind(this);

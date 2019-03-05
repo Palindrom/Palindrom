@@ -23,9 +23,12 @@ describe('Palindrom', () => {
           responseText: 'Custom message'
         });
 
-        new Palindrom({
-          remoteUrl: 'http://localhost/testURL',
-          onConnectionError: spy
+        const palindrom = new Palindrom({
+          remoteUrl: 'http://localhost/testURL'
+        });
+
+        palindrom.addEventListener('connection-error', ev => {
+          spy(ev.detail);
         });
 
         /* onConnectionError should be called once now */
@@ -44,40 +47,17 @@ describe('Palindrom', () => {
           responseText: 'Custom message'
         });
 
-        const that = this;
-
         const palindrom = new Palindrom({
           remoteUrl: 'http://localhost/testURL',
-          onConnectionError: spy
+        });
+
+        palindrom.addEventListener('connection-error', ev => {
+          spy(ev.detail);
         });
 
         /* onConnectionError should be called once now */
         setTimeout(() => {
           assert(spy.calledOnce);
-          done();
-        }, 5);
-      });
-      it('should call onConnectionError with a clear message about errors inside onStateReset', function(done) {
-        const spy = sinon.spy();
-
-        moxios.stubRequest('http://localhost/testURL', {
-          status: 200,
-          headers: { Location: 'http://localhost/testURL' },
-          responseText: `{"value": ${Number.MAX_SAFE_INTEGER + 1}}`
-        });
-
-        const palindrom = new Palindrom({
-          remoteUrl: 'http://localhost/testURL',
-          onStateReset: () => { throw new Error(); },
-          onError: spy
-        });
-
-        /* onConnectionError should be called once now */
-        setTimeout(() => {
-          assert(spy.calledOnce);
-          const errorPassed = spy.getCall(0).args[0];
-          assert(errorPassed instanceof PalindromError);
-          assert(errorPassed.message.includes(`Error inside onStateReset callback:`))
           done();
         }, 5);
       });
@@ -89,7 +69,10 @@ describe('Palindrom', () => {
 
         const palindrom = new Palindrom({
           remoteUrl: 'http://localhost/testURL',
-          onConnectionError: spy
+        });
+
+        palindrom.addEventListener('connection-error', ev => {
+          spy(ev.detail);
         });
 
         // let Palindrom issue a request
@@ -129,8 +112,11 @@ describe('Palindrom', () => {
         const spy = sinon.spy();
 
         const palindrom = new Palindrom({
-          remoteUrl: 'http://localhost/testURL',
-          onConnectionError: spy
+          remoteUrl: 'http://localhost/testURL'
+        });
+
+        palindrom.addEventListener('connection-error', ev => {
+          spy(ev.detail);
         });
 
         // let Palindrom issue a request
@@ -171,7 +157,9 @@ describe('Palindrom', () => {
 
         const palindrom = new Palindrom({
           remoteUrl: 'http://localhost/testURL',
-          onConnectionError: spy
+        });
+        palindrom.addEventListener('connection-error', ev => {
+          spy(ev.detail);
         });
 
         // let Palindrom issue a request
@@ -216,6 +204,11 @@ describe('Palindrom', () => {
           remoteUrl: 'http://localhost/testURL',
           onIncomingPatchValidationError: spy
         });
+
+        palindrom.addEventListener('incoming-patch-validation-error', ev => {
+          spy(ev.detail);
+        });
+
         setTimeout(() => {
           assert(spy.calledOnce);
           const errorPassed = spy.getCall(0).args[0];
@@ -239,10 +232,14 @@ describe('Palindrom', () => {
 
         const palindrom = new Palindrom({
           remoteUrl: 'http://localhost/testURL',
-          onOutgoingPatchValidationError: spy,
-          onStateReset(obj) {
-            obj.val = Number.MAX_SAFE_INTEGER + 1;
-          }
+        });
+
+        palindrom.addEventListener('state-reset', ev => {
+            ev.detail.val = Number.MAX_SAFE_INTEGER + 1;
+        });
+
+        palindrom.addEventListener('outgoing-patch-validation-error', ev => {
+          spy(ev.detail);
         });
 
         setTimeout(() => {
@@ -272,8 +269,11 @@ describe('Palindrom', () => {
 
         var palindrom = new Palindrom({
           remoteUrl: 'http://localhost/testURL',
-          useWebSocket: true,
-          onOutgoingPatchValidationError: spy
+          useWebSocket: true
+        });
+
+        palindrom.addEventListener('outgoing-patch-validation-error', ev => {
+          spy(ev.detail);
         });
 
         setTimeout(() => {
@@ -307,7 +307,10 @@ describe('Palindrom', () => {
         var palindrom = new Palindrom({
           remoteUrl: 'http://localhost/testURL',
           useWebSocket: true,
-          onIncomingPatchValidationError: spy
+        });
+
+        palindrom.addEventListener('incoming-patch-validation-error', ev => {
+          spy(ev.detail);
         });
 
         setTimeout(() => {

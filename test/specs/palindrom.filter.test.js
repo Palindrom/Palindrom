@@ -24,10 +24,12 @@ describe('Palindrom', () => {
       const palindrom = new Palindrom({
         remoteUrl: 'http://localhost/testURL',
         filterLocalChange: op => {
-          spy();
-          return op;
-        },
-        onStateReset: function(obj) {
+            spy();
+            return op;
+          }
+        })
+        palindrom.addEventListener('state-reset', ev => {
+          const obj = ev.detail;
           obj.newProp = 'name';
 
           // wait for ajax
@@ -35,8 +37,7 @@ describe('Palindrom', () => {
             assert(spy.calledOnce);
             done();
           }, 1);
-        }
-      });
+        });
     });
     it('Should use options.filter function when local changes occur', function(
       done
@@ -49,8 +50,10 @@ describe('Palindrom', () => {
       });
       const palindrom = new Palindrom({
         remoteUrl: 'http://localhost/testURL',
-        filterLocalChange: operation => !operation.path.startsWith('/$$') && operation,
-        onStateReset: function(obj) {
+        filterLocalChange: operation => !operation.path.startsWith('/$$') && operation
+      });
+      palindrom.addEventListener('state-reset', ev => {
+        const obj = ev.detail;
           assert(moxios.requests.count() === 1);
           // a change that passes the filter
           obj.newProp = 'name';
@@ -68,8 +71,7 @@ describe('Palindrom', () => {
               done();
             }, 1);
           }, 1);
-        }
-      });
+        })
     });
   });
 });

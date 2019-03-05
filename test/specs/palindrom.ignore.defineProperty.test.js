@@ -20,8 +20,11 @@ describe('Palindrom', () => {
         responseText: '{"hello": "world"}'
       });
       const palindrom = new Palindrom({
-        remoteUrl: 'http://localhost/testURL',
-        onStateReset: function(obj) {
+        remoteUrl: 'http://localhost/testURL'
+      });
+
+      palindrom.addEventListener('state-reset', ev => {
+        const obj = ev.detail;
           assert(moxios.requests.count() === 1);
           // a change that emits a patch
           obj.newProp = 'name';
@@ -48,8 +51,7 @@ describe('Palindrom', () => {
               done();
             }, 1);
           }, 1);
-        }
-      });
+        })
     });
   });
 });
