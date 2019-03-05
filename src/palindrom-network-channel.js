@@ -370,7 +370,6 @@ export default class PalindromNetworkChannel {
                 headers
             });
         }
-
         this.onSend(data, url, method);
 
         return responsePromise

@@ -210,11 +210,6 @@ const CLIENT = 'Client';
         static get version() {
             return palindromVersion;
         }
-
-        fire(name, detail){
-            this.dispatchEvent(new PalindromCustomEvent(name, { detail }));
-        }
-
         constructor(options) {
             super();
             /**
@@ -233,16 +228,11 @@ const CLIENT = 'Client';
 
             this.debug = options.debug != undefined ? options.debug : true;
 
-            const noop = function noOpFunction() {};
-
             this.isObserving = false;
-            this.onLocalChange = detail => this.fire('local-change', detail);
-            this.onRemoteChange = detail => this.fire('remote-change', detail);
             this.onStateReset = detail => this.fire('state-reset', detail);
             this.filterLocalChange =
                 options.filterLocalChange || (operation => operation);
 
-            this.onPatchReceived = detail => this.fire('patch-received', detail);
             this.onPatchSent = detail => this.fire('patch-sent', detail);
             this.onSocketStateChanged = detail => this.fire('socket-state-changed', detail);
             this.onConnectionError = detail => this.fire('connection-error', detail);
@@ -254,7 +244,6 @@ const CLIENT = 'Client';
             this.onOutgoingPatchValidationError = detail => this.fire('outgoing-patch-validation-error', detail);
 
             this.retransmissionThreshold = options.retransmissionThreshold || 3;
-
 
             this.reconnector = new Reconnector(
                 () => this._connectToRemote(JSON.stringify(this.queue.pending)),
@@ -426,7 +415,7 @@ const CLIENT = 'Client';
                 this.validateSequence(this.remoteObj, patches);
             }
             this._sendPatches(this.queue.send(patches));
-            this.onLocalChange(patches);
+            this.fire('local-change', patches)
         }
 
         validateAndApplySequence(tree, sequence) {
@@ -450,22 +439,9 @@ const CLIENT = 'Client';
                         this.onIncomingPatchValidationError
                     );
 
-                    //notify people about it
-                    try {
-                        this.onStateReset(this.obj);
-                    } catch (error) {
-                        // to prevent the promise's catch from swallowing errors inside onStateReset
-                        this.onError(
-                            new PalindromError(
-                                `Error inside onStateReset callback: ${
-                                    error.message
-                                }`
-                            )
-                        );
-                        console.error(error);
-                    }
+                    this.fire('state-reset', this.obj)
                 }
-                this.onRemoteChange(sequence, results);
+                this.fire('remote-change', {sequence, results})
             } catch (error) {
                 if (this.debug) {
                     this.onIncomingPatchValidationError(error);
@@ -509,9 +485,7 @@ const CLIENT = 'Client';
         }
 
         handleRemoteChange(data, url, method) {
-            if (this.onPatchReceived) {
-                this.onPatchReceived(data, url, method);
-            }
+            this.fire('patch-received', {data, url, method});
 
             this.heartbeat.notifyReceive();
             const patches = data || []; // fault tolerance - empty response string should be treated as empty patch array

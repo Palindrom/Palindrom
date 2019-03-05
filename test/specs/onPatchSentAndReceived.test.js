@@ -33,11 +33,11 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
       });
 
       palindrom.addEventListener('patch-received', ev => {
-        onPatchReceived(ev.detail)
+        onPatchReceived(ev.detail.data)
       });
 
       palindrom.addEventListener('patch-sent', ev => {
-        onPatchSent(ev.detail)
+        onPatchSent(ev.detail.data)
       });
 
       setTimeout(() => {
@@ -160,11 +160,11 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
       });
 
       palindrom.addEventListener('patch-received', ev => {
-        onPatchReceived(ev.detail)
+        onPatchReceived(ev.detail.data)
       });
 
       palindrom.addEventListener('patch-sent', ev => {
-        onPatchSent(ev.detail)
+        onPatchSent(ev.detail.data)
       });
 
       setTimeout(() => {

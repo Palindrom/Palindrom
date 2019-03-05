@@ -6,6 +6,7 @@
 
 // privatize the prop
 const listeners = Symbol('listeners');
+
 export class PalindromEventTarget {
     constructor() {
         this[listeners] = {};
@@ -22,13 +23,11 @@ export class PalindromEventTarget {
         }
         this[listeners][name].remove(callback);
     }
-    dispatchEvent(event) {
-        if (this[listeners][event.name]) {
-            this[listeners][event.name].forEach(listener => listener(event));
+    fire(eventName, detail) {
+        if (this[listeners][eventName]) {
+            this[listeners][eventName].forEach(listener =>
+                listener({ detail })
+            );
         }
     }
-}
-export function PalindromCustomEvent(name, value) {
-    this.name = name;
-    Object.assign(this, value);
 }

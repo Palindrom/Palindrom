@@ -55,7 +55,7 @@ palindrom.addEventListener(event, handler);
 Event              | Value             |                 | Description
 `state-reset`         | `{detail: Object}` | Dispatched after initial state object is received from the server (NOT necessarily after WS connection was established), **it can be called again if the state was reset by a root-replacing patch**.
 `local-change`        | JSON Patch Operation   | Dispatched each time a change is observed locally
-`remote-change`       | `[JSON Patch Operation]`    | Dispatched each time a change is received from the server and applied.
+`remote-change`       | `{detail: sequence, results}`    | Dispatched each time a change is received from the server and applied.
 `patch-received`      | `{detail: {data: String, url: String, method: String}}` | Dispatched each time a JSON patch is received
 `patch-sent`          | `{detail: {data: String, url: String, method: String}}` | Dispatched each time a JSON patch is sent
 `socket-state-changed` | (**`int`** `state`, **`String`** `url`, **`String`** `data`, **`int`** `code`, **`String`** `reason`) | Dispatched when socket state changes, accepts next parameters: 
