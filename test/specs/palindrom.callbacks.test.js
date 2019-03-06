@@ -1,22 +1,24 @@
 import Palindrom from '../../src/palindrom';
 import assert from 'assert';
-import moxios from 'moxios';
+import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { sleep } from '../utils';
 
 describe('Callbacks', () => {
     beforeEach(() => {
-        moxios.install();
+        
     });
-    afterEach(() => {
-        moxios.uninstall();
+    afterEach(function() {
+        fetchMock.restore();
     });
 
     it('should dispatch local-change event for outgoing patches', async () => {
-        moxios.stubRequest('http://house.of.cards/testURL', {
+        debugger
+
+        fetchMock.mock('http://house.of.cards/testURL', {
             status: 200,
             headers: { Location: 'http://house.of.cards/testURL' },
-            responseText: '{"hello": "world"}'
+            body: '{"hello": "world"}'
         });
 
         const sentSpy = sinon.spy();
@@ -42,10 +44,10 @@ describe('Callbacks', () => {
     });
 
     it('should dispatch state-reset event for applied patches on root (initial state)', async () => {
-        moxios.stubRequest('http://house.of.cards/testURL', {
+        fetchMock.mock('http://house.of.cards/testURL', {
             status: 200,
             headers: { Location: 'http://house.of.cards/testURL' },
-            responseText: '{"hello": "world"}'
+            body: '{"hello": "world"}'
         });
 
         const palindrom = new Palindrom({

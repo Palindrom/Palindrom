@@ -1,6 +1,6 @@
 import Palindrom from '../../src/palindrom';
 import assert from 'assert';
-import moxios from 'moxios';
+import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { sleep } from '../utils';
 const currentVersion = require('../../package.json').version;
@@ -19,16 +19,16 @@ describe('Palindrom', () => {
     });
     describe('#constructor', () => {
         beforeEach(() => {
-            moxios.install();
+            
         });
         afterEach(() => {
-            moxios.uninstall();
+            
         });
         it('should initiate an ajax request when initiated, and call the callback function', async () => {
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 headers: { Location: 'http://localhost/testURL' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
             const spy = sinon.spy();
             const palindrom = new Palindrom({
@@ -42,10 +42,10 @@ describe('Palindrom', () => {
             assert.deepEqual(spy.getCall(0).args[0], { hello: 'world' });
         });
         it('should accept a JSON that has an empty string as a key', async () => {
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 headers: { Location: 'http://localhost/testURL' },
-                responseText: '{"hello": "world","": {"hola": "mundo"}}'
+                body: '{"hello": "world","": {"hola": "mundo"}}'
             });
             const spy = sinon.spy();
             let palindrom = new Palindrom({
@@ -66,16 +66,16 @@ describe('Palindrom', () => {
 describe('Palindrom', () => {
     describe('obj', () => {
         beforeEach(() => {
-            moxios.install();
+            
         });
         afterEach(() => {
-            moxios.uninstall();
+            
         });
         it('palindrom.obj should be readonly', async () => {
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 headers: { contentType: 'application/json' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
 
             const palindrom = new Palindrom({
@@ -95,16 +95,16 @@ describe('Palindrom', () => {
 describe('Palindrom', () => {
     describe('#patching', () => {
         beforeEach(() => {
-            moxios.install();
+            
         });
         afterEach(() => {
-            moxios.uninstall();
+            
         });
         it('should patch changes', async () => {
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 headers: { contentType: 'application/json' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
 
             const palindrom = new Palindrom({
@@ -130,10 +130,10 @@ describe('Palindrom', () => {
             );
         });
         it('should not patch changes after unobserve() was called', async () => {
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 headers: { contentType: 'application/json' },
-                responseText: '{"unwatched": "object"}'
+                body: '{"unwatched": "object"}'
             });
             let tempObject;
             const palindrom = new Palindrom({
@@ -164,10 +164,10 @@ describe('Palindrom', () => {
             assert.equal(2, moxios.requests.count());
         });
         it('should patch changes after observe() was called', async () => {
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 headers: { contentType: 'application/json' },
-                responseText: '{"unwatched": "object"}'
+                body: '{"unwatched": "object"}'
             });
             let tempObject;
             const palindrom = new Palindrom({

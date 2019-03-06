@@ -1,24 +1,27 @@
 import { Server as MockSocketServer } from 'mock-socket';
 import Palindrom from '../../src/palindrom';
 import assert from 'assert';
-import moxios from 'moxios';
+import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { sleep } from '../utils';
 
 describe('Callbacks, onPatchSent and onPatchReceived', () => {
     beforeEach(() => {
-        moxios.install();
+        
     });
     afterEach(() => {
-        moxios.uninstall();
+        
     });
 
     describe('XHR', function() {
+        afterEach(function() {
+            fetchMock.restore();
+        });
         it('should dispatch patch-sent and patch-received events when a patch is sent and received', async () => {
-            moxios.stubRequest('http://house.of.cards/testURL', {
+            fetchMock.mock('http://house.of.cards/testURL', {
                 status: 200,
                 headers: { location: 'http://house.of.cards/testURL2' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
 
             const onPatchReceived = sinon.spy();
@@ -53,10 +56,10 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             assert(onPatchSent.notCalled, 'onPatchSent should not be called');
 
             /* prepare response */
-            moxios.stubRequest('http://house.of.cards/testURL2', {
+            fetchMock.mock('http://house.of.cards/testURL2', {
                 status: 200,
                 headers: { Location: 'http://house.of.cards/testURL' },
-                responseText:
+                body:
                     '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]'
             });
 
@@ -76,10 +79,10 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             ]);
         });
         it('should dispatch patch-received event even if the patch was bad', async () => {
-            moxios.stubRequest('http://house.of.cards/testURL', {
+            fetchMock.mock('http://house.of.cards/testURL', {
                 status: 200,
                 headers: { location: 'http://house.of.cards/testURL2' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
 
             const onPatchReceived = sinon.spy();
@@ -102,10 +105,10 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             assert(onPatchReceived.notCalled);
 
             /* prepare response */
-            moxios.stubRequest('http://house.of.cards/testURL2', {
+            fetchMock.mock('http://house.of.cards/testURL2', {
                 status: 200,
                 headers: { Location: 'http://house.of.cards/testURL' },
-                responseText:
+                body:
                     '[{"op":"replace", "path":"/hello", "value":' +
                     (Number.MAX_SAFE_INTEGER + 1) +
                     '}]'
@@ -126,10 +129,10 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                 'ws://house.of.cards/default/this_is_a_nice_url'
             );
 
-            moxios.stubRequest('http://house.of.cards/testURL', {
+            fetchMock.mock('http://house.of.cards/testURL', {
                 status: 200,
                 headers: { location: '/default/this_is_a_nice_url' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
 
             /* prepare response */
@@ -216,10 +219,10 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             'ws://house.of.cards/default/this_is_a_nice_url'
         );
 
-        moxios.stubRequest('http://house.of.cards/testURL', {
+        fetchMock.mock('http://house.of.cards/testURL', {
             status: 200,
             headers: { location: '/default/this_is_a_nice_url' },
-            responseText: '{"hello": "world"}'
+            body: '{"hello": "world"}'
         });
 
         /* prepare response */

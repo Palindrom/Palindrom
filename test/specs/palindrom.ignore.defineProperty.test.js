@@ -1,22 +1,22 @@
 import Palindrom from '../../src/palindrom';
-import moxios from 'moxios';
+import fetchMock from 'fetch-mock';
 import assert from 'assert';
 import { sleep } from '../utils';
 
 describe('Palindrom', () => {
     describe('#ignore by defineProperty', () => {
         beforeEach(() => {
-            moxios.install();
+            
         });
         afterEach(() => {
-            moxios.uninstall();
+            
         });
         it('Should not send patches for non-enumerable properties', async () => {
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 location: 'http://localhost/testURL/patch-server',
                 headers: { contentType: 'application/json' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
             const palindrom = new Palindrom({
                 remoteUrl: 'http://localhost/testURL'

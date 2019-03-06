@@ -1,17 +1,17 @@
 import { Server as MockSocketServer } from 'mock-socket';
 import Palindrom from '../../src/palindrom';
 import assert from 'assert';
-import moxios from 'moxios';
+import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { PalindromConnectionError } from '../../src/palindrom-errors';
 import { sleep } from '../utils';
 
 describe('Sockets', () => {
     beforeEach(() => {
-        moxios.install();
+        
     });
     afterEach(() => {
-        moxios.uninstall();
+        
     });
 
     describe('Palindrom constructor', () => {
@@ -19,10 +19,10 @@ describe('Sockets', () => {
             it('should try to open WebSocket connection ', async () => {
                 const server = new MockSocketServer('ws://localhost/testURL');
 
-                moxios.stubRequest('http://localhost/testURL', {
+                fetchMock.mock('http://localhost/testURL', {
                     status: 200,
                     headers: { location: 'http://localhost/testURL' },
-                    responseText: '{"hello": "world"}'
+                    body: '{"hello": "world"}'
                 });
 
                 var palindrom = new Palindrom({
@@ -41,10 +41,10 @@ describe('Sockets', () => {
             it('should calculate WebSocket URL correctly', async () => {
                 const server = new MockSocketServer('ws://localhost/testURL');
 
-                moxios.stubRequest('http://localhost/testURL', {
+                fetchMock.mock('http://localhost/testURL', {
                     status: 200,
                     headers: { location: 'http://localhost/testURL' },
-                    responseText: '{"hello": "world"}'
+                    body: '{"hello": "world"}'
                 });
 
                 var palindrom = new Palindrom({
@@ -63,10 +63,10 @@ describe('Sockets', () => {
                     'ws://localhost/default/this_is_a_nice_url'
                 );
 
-                moxios.stubRequest('http://localhost/testURL', {
+                fetchMock.mock('http://localhost/testURL', {
                     status: 200,
                     headers: { location: '/default/this_is_a_nice_url' },
-                    responseText: '{"hello": "world"}'
+                    body: '{"hello": "world"}'
                 });
 
                 var palindrom = new Palindrom({
@@ -87,10 +87,10 @@ describe('Sockets', () => {
                     'ws://localhost/default/this_is_a_nice_url'
                 );
 
-                moxios.stubRequest('http://localhost/testURL', {
+                fetchMock.mock('http://localhost/testURL', {
                     status: 200,
                     headers: { location: 'default/this_is_a_nice_url' },
-                    responseText: '{"hello": "world"}'
+                    body: '{"hello": "world"}'
                 });
 
                 var palindrom = new Palindrom({
@@ -112,10 +112,10 @@ describe('Sockets', () => {
                     'ws://localhost/default/this_is_a_nice_url'
                 );
 
-                moxios.stubRequest('http://localhost/testURL/koko', {
+                fetchMock.mock('http://localhost/testURL/koko', {
                     status: 200,
                     headers: { location: '/default/this_is_a_nice_url' },
-                    responseText: '{"hello": "world"}'
+                    body: '{"hello": "world"}'
                 });
 
                 var palindrom = new Palindrom({
@@ -137,10 +137,10 @@ describe('Sockets', () => {
                     'ws://localhost/testURL/default/this_is_a_nice_url'
                 );
 
-                moxios.stubRequest('http://localhost/testURL/koko', {
+                fetchMock.mock('http://localhost/testURL/koko', {
                     status: 200,
                     headers: { location: 'default/this_is_a_nice_url' },
-                    responseText: '{"hello": "world"}'
+                    body: '{"hello": "world"}'
                 });
 
                 var palindrom = new Palindrom({
@@ -161,10 +161,10 @@ describe('Sockets', () => {
                     'wss://localhost/testURL/default/this_is_a_nice_url'
                 );
 
-                moxios.stubRequest('https://localhost/testURL/koko', {
+                fetchMock.mock('https://localhost/testURL/koko', {
                     status: 200,
                     headers: { location: 'default/this_is_a_nice_url' },
-                    responseText: '{"hello": "world"}'
+                    body: '{"hello": "world"}'
                 });
 
                 var palindrom = new Palindrom({
@@ -188,10 +188,10 @@ describe('Sockets', () => {
 
                 const remoteUrl = 'http://localhost/testURL/koko';
 
-                moxios.stubRequest(remoteUrl, {
+                fetchMock.mock(remoteUrl, {
                     status: 200,
                     headers: { location: '/test/this_is_a_nice_url' },
-                    responseText: '{"hello": "world"}'
+                    body: '{"hello": "world"}'
                 });
 
                 var palindrom = new Palindrom({
@@ -216,10 +216,10 @@ describe('Sockets', () => {
                     const remoteUrl = 'http://localhost/testURL/koko';
                     let everConnected = false;
 
-                    moxios.stubRequest(remoteUrl, {
+                    fetchMock.mock(remoteUrl, {
                         status: 200,
                         headers: { location: '/test/this_is_a_nice_url' },
-                        responseText: '{"hello": "world"}'
+                        body: '{"hello": "world"}'
                     });
 
                     server.on('connection', server => {
@@ -251,10 +251,10 @@ describe('Sockets', () => {
 
                     const remoteUrl = 'http://localhost/testURL/koko';
 
-                    moxios.stubRequest(remoteUrl, {
+                    fetchMock.mock(remoteUrl, {
                         status: 200,
                         headers: { location: '/test/this_is_a_cool_url' },
-                        responseText: '{"hello": "world"}'
+                        body: '{"hello": "world"}'
                     });
 
                     const messages = [];
@@ -284,10 +284,10 @@ describe('Sockets', () => {
                         'ws://localhost/testURL'
                     );
 
-                    moxios.stubRequest('http://localhost/testURL', {
+                    fetchMock.mock('http://localhost/testURL', {
                         status: 200,
                         headers: { location: 'http://localhost/testURL' },
-                        responseText: '{"hello": "world"}'
+                        body: '{"hello": "world"}'
                     });
 
                     var spy = sinon.spy();
@@ -321,10 +321,10 @@ describe('Sockets', () => {
                         'ws://localhost/testURL'
                     );
 
-                    moxios.stubRequest('http://localhost/testURL', {
+                    fetchMock.mock('http://localhost/testURL', {
                         status: 200,
                         headers: { location: 'http://localhost/testURL' },
-                        responseText: '{"hello": "world"}'
+                        body: '{"hello": "world"}'
                     });
 
                     var spy = sinon.spy();
@@ -374,10 +374,10 @@ describe('Sockets', () => {
 
                     const remoteUrl = 'http://localhost/testURL/koko';
 
-                    moxios.stubRequest(remoteUrl, {
+                    fetchMock.mock(remoteUrl, {
                         status: 200,
                         headers: { location: '/test/this_is_a_nicer_url' },
-                        responseText: '{"hello": "world"}'
+                        body: '{"hello": "world"}'
                     });
 
                     const messages = [];
@@ -411,10 +411,10 @@ describe('Sockets', () => {
 
                     const remoteUrl = 'http://localhost/testURL/koko';
 
-                    moxios.stubRequest(remoteUrl, {
+                    fetchMock.mock(remoteUrl, {
                         status: 200,
                         headers: { location: '/test/this_is_a_fast_url' },
-                        responseText: '{"hello": "world"}'
+                        body: '{"hello": "world"}'
                     });
 
                     const messages = [];
@@ -433,11 +433,11 @@ describe('Sockets', () => {
                         obj = ev.detail;
                     });
                     
-                    moxios.stubRequest(
+                    fetchMock.mock(
                         'http://localhost/test/this_is_a_fast_url',
                         {
                             status: 200,
-                            responseText: '[]'
+                            body: '[]'
                         }
                     );
                     await sleep();

@@ -1,6 +1,6 @@
 import Palindrom from '../../src/palindrom';
 import assert from 'assert';
-import moxios from 'moxios';
+import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { validate, JsonPatchError } from 'fast-json-patch';
 import { sleep } from '../utils';
@@ -8,16 +8,16 @@ import { sleep } from '../utils';
 describe('Palindrom', () => {
     describe('#ValidatePatches', () => {
         beforeEach(() => {
-            moxios.install();
+            
         });
         afterEach(() => {
-            moxios.uninstall();
+            
         });
         it('should pass empty sequence', async () => {
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 headers: { Location: 'http://localhost/testURL' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
             const tree = {
                 name: {
@@ -46,10 +46,10 @@ describe('Palindrom', () => {
         });
 
         it('replacing a nonexisting property should cause OPERATION_PATH_UNRESOLVABLE (test built into Fast-JSON-Patch)', async () => {
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 headers: { Location: 'http://localhost/testURL' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
             const tree = {
                 name: {
@@ -82,10 +82,10 @@ describe('Palindrom', () => {
         });
 
         it('undefined value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', async () => {
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 headers: { Location: 'http://localhost/testURL' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
             const tree = {
                 name: {
@@ -117,10 +117,10 @@ describe('Palindrom', () => {
         });
 
         it('no value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', async () => {
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 headers: { Location: 'http://localhost/testURL' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
             const tree = {
                 name: {
@@ -149,10 +149,10 @@ describe('Palindrom', () => {
         });
 
         it('object with undefined value should cause OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED (test built into Fast-JSON-Patch)', async () => {
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 headers: { Location: 'http://localhost/testURL' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
             const tree = {
                 name: {

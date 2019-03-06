@@ -1,4 +1,4 @@
-import URL from './URL';
+import URL from './URLShim';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors';
 
 /* We are going to hand `websocket` lib as an external to webpack

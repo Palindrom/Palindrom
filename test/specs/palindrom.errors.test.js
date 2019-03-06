@@ -1,6 +1,6 @@
 import Palindrom from '../../src/palindrom';
 import assert from 'assert';
-import moxios from 'moxios';
+import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { Server as MockSocketServer } from 'mock-socket';
 import { sleep } from '../utils';
@@ -8,19 +8,19 @@ import { sleep } from '../utils';
 describe('Palindrom', () => {
     describe('#error responses', () => {
         beforeEach(() => {
-            moxios.install();
+            
         });
         afterEach(() => {
-            moxios.uninstall();
+            
         });
         context('Network', function() {
             it('should dispatch connection-error event on HTTP 400 response (non-patch responses)', async () => {
                 const spy = sinon.spy();
 
-                moxios.stubRequest('http://localhost/testURL', {
+                fetchMock.mock('http://localhost/testURL', {
                     status: 400,
                     headers: { contentType: 'application/json' },
-                    responseText: 'Custom message'
+                    body: 'Custom message'
                 });
 
                 const palindrom = new Palindrom({
@@ -39,10 +39,10 @@ describe('Palindrom', () => {
             it('should dispatch connection-error event on HTTP 599 response', async () => {
                 const spy = sinon.spy();
 
-                moxios.stubRequest('http://localhost/testURL', {
+                fetchMock.mock('http://localhost/testURL', {
                     status: 599,
                     headers: { contentType: 'application/json' },
-                    responseText: 'Custom message'
+                    body: 'Custom message'
                 });
 
                 const palindrom = new Palindrom({
@@ -76,7 +76,7 @@ describe('Palindrom', () => {
                 request.respondWith({
                     status: 200,
                     headers: { contentType: 'application/json' },
-                    responseText: '{"hello": "world"}'
+                    body: '{"hello": "world"}'
                 });
                 await sleep();
                 //issue a patch
@@ -88,7 +88,7 @@ describe('Palindrom', () => {
                 request.respondWith({
                     status: 500,
                     headers: { contentType: 'application/json-patch+json' },
-                    responseText: `{"op": "replace", "path": "/", value: "Custom message"}`
+                    body: `{"op": "replace", "path": "/", value: "Custom message"}`
                 });
                 await sleep();
                 /* onConnectionError should be called once now */
@@ -113,7 +113,7 @@ describe('Palindrom', () => {
                 request.respondWith({
                     status: 200,
                     headers: { contentType: 'application/json' },
-                    responseText: '{"hello": "world"}'
+                    body: '{"hello": "world"}'
                 });
                 await sleep();
                 //issue a patch
@@ -125,7 +125,7 @@ describe('Palindrom', () => {
                 request.respondWith({
                     status: 400,
                     headers: { contentType: 'application/json-patch+json' },
-                    responseText: `{"op": "replace", "path": "/", value: "Custom message"}`
+                    body: `{"op": "replace", "path": "/", value: "Custom message"}`
                 });
 
                 await sleep();
@@ -149,7 +149,7 @@ describe('Palindrom', () => {
                 request.respondWith({
                     status: 200,
                     headers: { contentType: 'application/json' },
-                    responseText: '{"hello": "world"}'
+                    body: '{"hello": "world"}'
                 });
                 await sleep();
                 //issue a patch
@@ -160,7 +160,7 @@ describe('Palindrom', () => {
                 //respond with an error
                 request.respondWith({
                     status: 599,
-                    responseText: 'error'
+                    body: 'error'
                 });
                 await sleep();
                 /* onConnectionError should be called once now */
@@ -169,10 +169,10 @@ describe('Palindrom', () => {
         });
         context('Numbers Validation', function() {
             it('Initial HTTP response: out of range numbers should dispatch incoming-patch-validation-error event with a RangeError', async () => {
-                moxios.stubRequest('http://localhost/testURL', {
+                fetchMock.mock('http://localhost/testURL', {
                     status: 200,
                     headers: { Location: 'http://localhost/testURL' },
-                    responseText: `{"value": ${Number.MAX_SAFE_INTEGER + 1}}`
+                    body: `{"value": ${Number.MAX_SAFE_INTEGER + 1}}`
                 });
                 const spy = sinon.spy();
                 const palindrom = new Palindrom({
@@ -198,10 +198,10 @@ describe('Palindrom', () => {
                 );
             });
             it('Outgoing HTTP patches: out of range numbers should dispatch outgoing-patch-validation-error event with a RangeError', async () => {
-                moxios.stubRequest('http://localhost/testURL', {
+                fetchMock.mock('http://localhost/testURL', {
                     status: 200,
                     headers: { Location: 'http://localhost/testURL' },
-                    responseText: `{"val": 1}`
+                    body: `{"val": 1}`
                 });
 
                 const spy = sinon.spy();
@@ -234,10 +234,10 @@ describe('Palindrom', () => {
             it('Outgoing socket patches: out of range numbers should dispatch outgoing-patch-validation-error event with a RangeError', async () => {
                 const server = new MockSocketServer('ws://localhost/testURL');
 
-                moxios.stubRequest('http://localhost/testURL', {
+                fetchMock.mock('http://localhost/testURL', {
                     status: 200,
                     headers: { location: 'http://localhost/testURL' },
-                    responseText: '{"val": 100}'
+                    body: '{"val": 100}'
                 });
 
                 var spy = sinon.spy();
@@ -271,10 +271,10 @@ describe('Palindrom', () => {
             it('Incoming socket patches: out of range numbers should dispatch incoming-patch-validation-error event with a RangeError', async () => {
                 const server = new MockSocketServer('ws://localhost/testURL');
 
-                moxios.stubRequest('http://localhost/testURL', {
+                fetchMock.mock('http://localhost/testURL', {
                     status: 200,
                     headers: { location: 'http://localhost/testURL' },
-                    responseText: '{"val": 100}'
+                    body: '{"val": 100}'
                 });
 
                 var spy = sinon.spy();

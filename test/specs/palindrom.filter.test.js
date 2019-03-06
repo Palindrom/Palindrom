@@ -1,5 +1,5 @@
 import Palindrom from '../../src/palindrom';
-import moxios from 'moxios';
+import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import assert from 'assert';
 import { sleep } from '../utils';
@@ -7,18 +7,18 @@ import { sleep } from '../utils';
 describe('Palindrom', () => {
     describe('#filterLocalChange', () => {
         beforeEach(() => {
-            moxios.install();
+            
         });
         afterEach(() => {
-            moxios.uninstall();
+            
         });
         it('Should use options.filterLocalChange function when local changes occur', async () => {
             const spy = sinon.spy();
 
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 headers: { contentType: 'application/json' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
             const palindrom = new Palindrom({
                 remoteUrl: 'http://localhost/testURL',
@@ -37,11 +37,11 @@ describe('Palindrom', () => {
             assert(spy.calledOnce);
         });
         it('Should use options.filter function when local changes occur', async () => {
-            moxios.stubRequest('http://localhost/testURL', {
+            fetchMock.mock('http://localhost/testURL', {
                 status: 200,
                 location: 'http://localhost/testURL/patch-server',
                 headers: { contentType: 'application/json' },
-                responseText: '{"hello": "world"}'
+                body: '{"hello": "world"}'
             });
             const palindrom = new Palindrom({
                 remoteUrl: 'http://localhost/testURL',

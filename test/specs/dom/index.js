@@ -1,6 +1,6 @@
 import PalindromDOM from '../../../src/palindrom-dom';
 import assert from 'assert';
-import moxios from 'moxios';
+import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { expect } from 'chai';
 import { sleep } from '../../utils';
@@ -113,11 +113,11 @@ if (typeof window !== 'undefined') {
                     beforeEach('PalindromDOM - Links', async () => {
                         historySpy = sinon.spy(window.history, 'pushState');
 
-                        moxios.install();
-                        moxios.stubRequest(getTestURL('testURL'), {
+                        
+                        fetchMock.mock(getTestURL('testURL'), {
                             status: 200,
                             headers: { location: getTestURL('testURL') },
-                            responseText: '{"hello": "world"}'
+                            body: '{"hello": "world"}'
                         });
 
                         if (mode === 'default') {
@@ -141,7 +141,7 @@ if (typeof window !== 'undefined') {
                         historySpy = null;
                         palindrom.unobserve();
                         palindrom.unlisten();
-                        moxios.uninstall();
+                        
                     });
 
                     it(`its .element should point to ${mode} node`, function() {
@@ -154,9 +154,9 @@ if (typeof window !== 'undefined') {
                             const relative = getTestURL('test_a', true);
                             const abs = getTestURL('test_a');
 
-                            moxios.stubRequest(abs, {
+                            fetchMock.mock(abs, {
                                 status: 200,
-                                responseText: '{"hello": "world"}'
+                                body: '{"hello": "world"}'
                             });
 
                             createAndClickOnLink(
@@ -172,9 +172,9 @@ if (typeof window !== 'undefined') {
                             const relative = getTestURL('test_b', true);
                             const abs = getTestURL('test_b');
 
-                            moxios.stubRequest(abs, {
+                            fetchMock.mock(abs, {
                                 status: 200,
-                                responseText: '{"hello": "world"}'
+                                body: '{"hello": "world"}'
                             });
 
                             createAndClickOnLinkNested(
@@ -188,9 +188,9 @@ if (typeof window !== 'undefined') {
                             const relative = getTestURL('test_c', true);
                             const abs = getTestURL('test_c');
 
-                            moxios.stubRequest(abs, {
+                            fetchMock.mock(abs, {
                                 status: 200,
-                                responseText: '{"hello": "world"}'
+                                body: '{"hello": "world"}'
                             });
 
                             createAndClickOnLinkNestedShadowDOM(
@@ -204,9 +204,9 @@ if (typeof window !== 'undefined') {
                             it('relative path (nested, Shadow DOM content)', async () => {
                                 const url = getTestURL('subpage.html');
 
-                                moxios.stubRequest(url, {
+                                fetchMock.mock(url, {
                                     status: 200,
-                                    responseText: '{"hello": "world"}'
+                                    body: '{"hello": "world"}'
                                 });
 
                                 createAndClickOnLinkNestedShadowDOMContent();
@@ -269,9 +269,9 @@ if (typeof window !== 'undefined') {
                                 'components/Palindrom/test/PopupPage.html'
                             );
 
-                            moxios.stubRequest(href, {
+                            fetchMock.mock(href, {
                                 status: 200,
-                                responseText: '{"hello": "world"}'
+                                body: '{"hello": "world"}'
                             });
 
                             createAndClickOnLinkWithoutPrevention(
@@ -288,9 +288,9 @@ if (typeof window !== 'undefined') {
                                 'components/Palindrom/test/PopupPage.html'
                             );
 
-                            moxios.stubRequest(href, {
+                            fetchMock.mock(href, {
                                 status: 200,
-                                responseText: '{"hello": "world"}'
+                                body: '{"hello": "world"}'
                             });
 
                             createAndClickOnLinkWithoutPrevention(
@@ -307,9 +307,9 @@ if (typeof window !== 'undefined') {
                                 'components/Palindrom/test/PopupPage.html'
                             );
 
-                            moxios.stubRequest(href, {
+                            fetchMock.mock(href, {
                                 status: 200,
-                                responseText: '{"hello": "world"}'
+                                body: '{"hello": "world"}'
                             });
 
                             createAndClickOnLinkWithoutPrevention(
@@ -357,9 +357,9 @@ if (typeof window !== 'undefined') {
                     describe('should be accessible via API', function() {
                         it('should change history state programmatically', async () => {
                             await sleep(5);
-                            moxios.stubRequest('/page2', {
+                            fetchMock.mock('/page2', {
                                 status: 200,
-                                responseText: '{"hello": "world"}'
+                                body: '{"hello": "world"}'
                             });
 
                             palindrom.morphUrl('/page2');
@@ -388,10 +388,10 @@ if (typeof window !== 'undefined') {
                         const href =
                             protocol + '//' + window.location.host + '/test2'; //https://localhost:8888/test
 
-                        moxios.stubRequest(href, {
+                        fetchMock.mock(href, {
                             status: 200,
                             headers: { Location: href },
-                            responseText: '{"hello": "world"}'
+                            body: '{"hello": "world"}'
                         });
 
                         createAndClickOnLink(
@@ -417,10 +417,10 @@ if (typeof window !== 'undefined') {
                 });
 
                 beforeEach(function() {
-                    moxios.install();
-                    moxios.stubRequest(getTestURL('testURL'), {
+                    
+                    fetchMock.mock(getTestURL('testURL'), {
                         status: 200,
-                        responseText: '{"hello": "world"}'
+                        body: '{"hello": "world"}'
                     });
 
                     palindrom = new PalindromDOM({
@@ -430,14 +430,14 @@ if (typeof window !== 'undefined') {
 
                 afterEach(function() {
                     palindrom.unobserve();
-                    moxios.uninstall();
+                    
                 });
 
                 describe('should send JSON Patch HTTP request once history state get changed', function() {
                     it('by `palindrom.morphURL(url)` method', async () => {
-                        moxios.stubRequest('/newUrl', {
+                        fetchMock.mock('/newUrl', {
                             status: 200,
-                            responseText: '{"hello": "world"}'
+                            body: '{"hello": "world"}'
                         });
 
                         palindrom.morphUrl('/newUrl');
@@ -447,7 +447,7 @@ if (typeof window !== 'undefined') {
                         expect(window.location.pathname).to.equal('/newUrl');
                         request.respondWith({
                             status: 200,
-                            responseText: '{"hello": "world"}'
+                            body: '{"hello": "world"}'
                         });
                     });
                 });
@@ -460,9 +460,9 @@ if (typeof window !== 'undefined') {
                     it('Dispatching it should call PalindromDOM.morphUrl and issue a request', async () => {
                         const morphUrlStub = sinon.spy(palindrom, 'morphUrl');
 
-                        moxios.stubRequest('/new-palindrom-url', {
+                        fetchMock.mock('/new-palindrom-url', {
                             status: 200,
-                            responseText: '{"hello": "world"}'
+                            body: '{"hello": "world"}'
                         });
 
                         document.dispatchEvent(
@@ -501,7 +501,7 @@ if (typeof window !== 'undefined') {
 
                             request.respondWith({
                                 status: 200,
-                                responseText: '{"hello": "world"}'
+                                body: '{"hello": "world"}'
                             });
                             await sleep();
                             expect(window.location.pathname).to.equal(
@@ -549,9 +549,9 @@ if (typeof window !== 'undefined') {
                         await sleep(300);
                     });
                     it('Morphing to a URL should dispatch the event after a successful request', async () => {
-                        moxios.stubRequest('/newUrl', {
+                        fetchMock.mock('/newUrl', {
                             status: 200,
-                            responseText: '{"hello": "world"}'
+                            body: '{"hello": "world"}'
                         });
 
                         const handler = event => {
@@ -575,9 +575,9 @@ if (typeof window !== 'undefined') {
                     });
 
                     it('Morphing to a URL should dispatch the event after a failed request', async () => {
-                        moxios.stubRequest('/newUrl2', {
+                        fetchMock.mock('/newUrl2', {
                             status: 509,
-                            responseText: '{"hello": "world"}'
+                            body: '{"hello": "world"}'
                         });
 
                         const handler = event => {
@@ -613,10 +613,10 @@ if (typeof window !== 'undefined') {
                     });
 
                     beforeEach(function() {
-                        moxios.install();
-                        moxios.stubRequest(getTestURL('testURL'), {
+                        
+                        fetchMock.mock(getTestURL('testURL'), {
                             status: 200,
-                            responseText: '{"hello": "world"}'
+                            body: '{"hello": "world"}'
                         });
 
                         palindrom = new PalindromDOM({
@@ -625,15 +625,15 @@ if (typeof window !== 'undefined') {
                     });
                     afterEach(function() {
                         palindrom.unobserve();
-                        moxios.uninstall();
+                        
                     });
                     it('should scroll to top', async () => {
                         window.scrollTo(0, document.body.scrollHeight); // scroll to bottom
                         const currScrollY = window.scrollY;
 
-                        moxios.stubRequest('/newUrl-palindrom-scroll-2', {
+                        fetchMock.mock('/newUrl-palindrom-scroll-2', {
                             status: 200,
-                            responseText: '[]'
+                            body: '[]'
                         });
 
                         palindrom.morphUrl('/newUrl-palindrom-scroll-2');
@@ -654,14 +654,14 @@ if (typeof window !== 'undefined') {
                         window.scrollTo(0, 0); // scroll to top
 
                         // prepare for "back" request
-                        moxios.stubRequest(location.href, {
+                        fetchMock.mock(location.href, {
                             status: 200,
-                            responseText: '{}'
+                            body: '{}'
                         });
 
-                        moxios.stubRequest('/newUrl-palindrom-scroll-2', {
+                        fetchMock.mock('/newUrl-palindrom-scroll-2', {
                             status: 200,
-                            responseText: '{}'
+                            body: '{}'
                         });
 
                         await palindrom.morphUrl('/newUrl-palindrom-scroll-2');
@@ -682,14 +682,14 @@ if (typeof window !== 'undefined') {
                         window.scrollTo(0, 0); // scroll to top
 
                         // prepare for "back" request
-                        moxios.stubRequest(getTestURL('testURL'), {
+                        fetchMock.mock(getTestURL('testURL'), {
                             status: 200,
-                            responseText: '[]'
+                            body: '[]'
                         });
 
-                        moxios.stubRequest('/newUrl-palindrom-scroll-2', {
+                        fetchMock.mock('/newUrl-palindrom-scroll-2', {
                             status: 200,
-                            responseText: '[]'
+                            body: '[]'
                         });
 
                         await palindrom.morphUrl('/newUrl-palindrom-scroll-2');
@@ -717,11 +717,11 @@ if (typeof window !== 'undefined') {
 
                     describe('should send JSON Patch HTTP request once history state get changed', function() {
                         beforeEach(function() {
-                            moxios.install();
-                            moxios.stubRequest(getTestURL('testURL'), {
+                            
+                            fetchMock.mock(getTestURL('testURL'), {
                                 status: 200,
                                 headers: { location: getTestURL('testURL') },
-                                responseText: '{"hello": "world"}'
+                                body: '{"hello": "world"}'
                             });
 
                             palindrom = new PalindromDOM({
@@ -730,16 +730,16 @@ if (typeof window !== 'undefined') {
                         });
                         afterEach(function() {
                             palindrom.unobserve();
-                            moxios.uninstall();
+                            
                         });
 
                         it('by dispatching `palindrom-redirect-pushstate` event', async () => {
                             history.pushState(null, null, '/newUrl-palindrom');
 
-                            moxios.stubRequest(/.+/, {
+                            fetchMock.mock(/.+/, {
                                 status: 200,
                                 headers: { location: getTestURL('testURL') },
-                                responseText: '[]'
+                                body: '[]'
                             });
 
                             document.dispatchEvent(

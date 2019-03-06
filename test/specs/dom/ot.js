@@ -1,6 +1,6 @@
 import PalindromDOM from '../../../src/palindrom-dom';
 import assert from 'assert';
-import moxios from 'moxios';
+import fetchMock from 'fetch-mock';
 import { Server as MockSocketServer, MockWebSocket } from 'mock-socket';
 import { sleep } from '../../utils';
 
@@ -54,24 +54,24 @@ if (typeof window !== 'undefined') {
 
         beforeEach(function() {
             currLoc = window.location.href;
-            moxios.install();
+            
         });
 
         afterEach(function() {
             history.pushState(null, null, currLoc);
-            moxios.uninstall();
+            
         });
 
         it('should patch a mix of XHR and WS incoming patches in the correct order', async () => {
             const baseUrl = window.location;
             const url = new URL('/testURL', baseUrl).toString();
             const server = new MockSocketServer(url.replace('http', 'ws'));
-            moxios.stubRequest(url, {
+            fetchMock.mock(url, {
                 status: 200,
                 headers: {
                     contentType: 'application/json'
                 },
-                responseText: JSON.stringify(initialResponse)
+                body: JSON.stringify(initialResponse)
             });
             const palindrom = new PalindromDOM({
                 remoteUrl: url,
@@ -94,12 +94,12 @@ if (typeof window !== 'undefined') {
             assert.equal(palindrom.obj.newChildren, null);
 
             const url2 = new URL('/testURL2', baseUrl).toString();
-            moxios.stubRequest(url2, {
+            fetchMock.mock(url2, {
                 status: 200,
                 headers: {
                     contentType: 'application/json-patch+json'
                 },
-                responseText: JSON.stringify(patch1)
+                body: JSON.stringify(patch1)
             });
             palindrom.morphUrl(url2);
 
