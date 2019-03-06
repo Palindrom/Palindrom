@@ -10,12 +10,14 @@ import JSONPatcherProxy from 'jsonpatcherproxy';
 import { JSONPatchQueueSynchronous, JSONPatchQueue } from 'json-patch-queue';
 import JSONPatchOT from 'json-patch-ot';
 import JSONPatchOTAgent from 'json-patch-ot-agent';
-import { PalindromError, PalindromConnectionError } from './palindrom-errors';
-import {PalindromEventTarget, PalindromCustomEvent} from './palindrom-event-target'
+import { PalindromConnectionError } from './palindrom-errors';
+import Reconnector from './reconnector';
+import {PalindromEventTarget} from './palindrom-event-target'
+import {Heartbeat, NoHeartbeat} from './heartbeat';
+import NoQueue from './noqueue';
 
 /* this variable is bumped automatically when you call `npm version` */
 const palindromVersion = '5.2.0';
-const CLIENT = 'Client';
 
     if (typeof global === 'undefined') {
         if (typeof window !== 'undefined') {
@@ -25,179 +27,8 @@ const CLIENT = 'Client';
             var global = {};
         }
     }
-    /**
-     * @callback reconnectionCallback called when reconnection attempt is scheduled.
-     * It's called every second until reconnection attempt is made (`milliseconds` reaches 0)
-     * @param {number} milliseconds - number of milliseconds to next reconnection attempt. >= 0
-     */
-    /**
-     * @param {Function} reconnect used to perform reconnection. No arguments
-     * @param {reconnectionCallback} onReconnectionCountdown called to notify that reconnection attempt is scheduled
-     * @param {Function} onReconnectionEnd called to notify that reconnection attempt is not longer scheduled
-     * @constructor
-     */
-    function Reconnector(
-        reconnect,
-        onReconnectionCountdown,
-        onReconnectionEnd
-    ) {
-        let intervalMs;
-        let timeToCurrentReconnectionMs;
-        let reconnectionPending;
-        let reconnection;
-        const defaultIntervalMs = 1000;
+    
 
-        function reset() {
-            intervalMs = defaultIntervalMs;
-            timeToCurrentReconnectionMs = 0;
-            reconnectionPending = false;
-            clearTimeout(reconnection);
-            reconnection = null;
-        }
-
-        const step = () => {
-            if (timeToCurrentReconnectionMs == 0) {
-                onReconnectionCountdown(0);
-                reconnectionPending = false;
-                intervalMs *= 2;
-                reconnect();
-            } else {
-                onReconnectionCountdown(timeToCurrentReconnectionMs);
-                timeToCurrentReconnectionMs -= 1000;
-                setTimeout(step, 1000);
-            }
-        };
-
-        /**
-         * Notify Reconnector that connection error occurred and automatic reconnection should be scheduled.
-         */
-        this.triggerReconnection = () => {
-            if (reconnectionPending) {
-                return;
-            }
-            timeToCurrentReconnectionMs = intervalMs;
-            reconnectionPending = true;
-            step();
-        };
-
-        /**
-         * Reconnect immediately and reset all reconnection timers.
-         */
-        this.reconnectNow = () => {
-            timeToCurrentReconnectionMs = 0;
-            intervalMs = defaultIntervalMs;
-        };
-
-        /**
-         * Notify Reconnector that there's no need to do further actions (either connection has been established or a fatal error occured).
-         * Resets state of Reconnector
-         */
-        this.stopReconnecting = () => {
-            reset();
-            onReconnectionEnd();
-        };
-
-        // remember, we're still in constructor
-        reset();
-    }
-
-    /**
-     * Guarantees some communication to server and monitors responses for timeouts.
-     * @param sendHeartbeatAction will be called to send a heartbeat
-     * @param onError will be called if no response will arrive after `timeoutMs` since a message has been sent
-     * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
-     * @param timeoutMs should a response fail to arrive in this time, `onError` will be called
-     * @constructor
-     */
-    function Heartbeat(sendHeartbeatAction, onError, intervalMs, timeoutMs) {
-        let scheduledSend;
-        let scheduledError;
-
-        /**
-         * Call this function at the beginning of operation and after successful reconnection.
-         */
-        this.start = function() {
-            if (scheduledSend) {
-                return;
-            }
-            scheduledSend = setTimeout(() => {
-                this.notifySend();
-                sendHeartbeatAction();
-            }, intervalMs);
-        };
-
-        /**
-         * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
-         */
-        this.notifySend = function() {
-            clearTimeout(scheduledSend); // sending heartbeat will not be necessary until our response arrives
-            scheduledSend = null;
-            if (scheduledError) {
-                return;
-            }
-            scheduledError = setTimeout(() => {
-                scheduledError = null;
-                onError(
-                    new PalindromConnectionError(
-                        "Timeout has passed and response hasn't arrived",
-                        CLIENT,
-                        this.remoteUrl,
-                        'Unknown'
-                    )
-                ); // timeout has passed and response hasn't arrived
-            }, timeoutMs);
-        };
-
-        /**
-         * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
-         */
-        this.notifyReceive = function() {
-            clearTimeout(scheduledError);
-            scheduledError = null;
-            this.start();
-        };
-
-        /**
-         * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
-         */
-        this.stop = () => {
-            clearTimeout(scheduledSend);
-            scheduledSend = null;
-            clearTimeout(scheduledError);
-            scheduledError = null;
-        };
-    }
-
-    function NoHeartbeat() {
-        this.start = this.stop = this.notifySend = this.notifyReceive = () => {};
-    }
-
-    /**
-     * Non-queuing object that conforms JSON-Patch-Queue API
-     * @param {Object} obj target object where patches are applied
-     * @param {Function} apply function to apply received patch, must return the object in its final state
-     */
-    class NoQueue {
-        constructor(obj, apply) {
-            this.obj = obj;
-            this.apply = apply;
-        }
-
-        /** just forward message */
-        send(msg) {
-            return msg;
-        }
-
-        /** Apply given JSON Patch sequence immediately */
-        receive(sequence) {
-            return (this.obj = this.apply(this.obj, sequence));
-        }
-
-        reset(newState) {
-            const patch = [{ op: 'replace', path: '', value: newState }];
-            return (this.obj = this.apply(this.obj, patch));
-        }
-    }
 
     /**
      * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
