@@ -5,7 +5,6 @@
  */
 import Palindrom from './palindrom'
 
-const PalindromDOM = (() => {
     /** scroll to coordiates and return if the scroll was successful */
     function attemptScroll(x, y) {
         scrollTo(x, y);
@@ -18,13 +17,12 @@ const PalindromDOM = (() => {
         });
     }
 
-
     /**
      * PalindromDOM
      * @extends {Palindrom}
      * @param {Object} [options] map of arguments. See README.md for description
      */
-    class PalindromDOM extends Palindrom {
+   export default class PalindromDOM extends Palindrom {
         constructor(options) {
             if (typeof options !== 'object') {
                 throw new Error(
@@ -297,8 +295,3 @@ const PalindromDOM = (() => {
             );
         }
     }
-
-    return PalindromDOM;
-})();
-
-export default PalindromDOM;
