@@ -1,6 +1,7 @@
 import Palindrom from '../../src/palindrom';
 import moxios from 'moxios';
 import assert from 'assert';
+import { sleep } from '../utils';
 
 describe('Palindrom', () => {
   describe('#ignore by defineProperty', () => {
@@ -10,9 +11,9 @@ describe('Palindrom', () => {
     afterEach(() => {
       moxios.uninstall();
     });
-    it('Should not send patches for non-enumerable properties', function(
-      done
-    ) {
+    it('Should not send patches for non-enumerable properties', async () => 
+      
+    {
       moxios.stubRequest('http://localhost/testURL', {
         status: 200,
         location: 'http://localhost/testURL/patch-server',
@@ -22,15 +23,17 @@ describe('Palindrom', () => {
       const palindrom = new Palindrom({
         remoteUrl: 'http://localhost/testURL'
       });
-
+      let obj;
       palindrom.addEventListener('state-reset', ev => {
-        const obj = ev.detail;
+        obj = ev.detail;
+      });
+      await sleep();
           assert(moxios.requests.count() === 1);
           // a change that emits a patch
           obj.newProp = 'name';
 
           // wait for ajax
-          setTimeout(() => {
+          await sleep();
             assert(moxios.requests.count() === 2);
 
             // a change that does not emit
@@ -45,13 +48,13 @@ describe('Palindrom', () => {
             obj.ignored.child = 2;
 
             // wait for ajax
-            setTimeout(() => {
+            await sleep();
               // no further requests
               assert(moxios.requests.count() === 2);
-              done();
-            }, 1);
-          }, 1);
-        })
+              
+            
+         
+        
     });
   });
 });

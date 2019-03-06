@@ -2,6 +2,7 @@ import Palindrom from '../../src/palindrom';
 import assert from 'assert';
 import moxios from 'moxios';
 import sinon from 'sinon';
+import { sleep } from '../utils';
 
 describe("Callbacks", () => {
   beforeEach(() => {
@@ -11,7 +12,7 @@ describe("Callbacks", () => {
     moxios.uninstall();
   });
 
-  it("should dispatch local-change event for outgoing patches", done => {
+  it("should dispatch local-change event for outgoing patches", async () => {
     moxios.stubRequest("http://house.of.cards/testURL", {
       status: 200,
       headers: { Location: "http://house.of.cards/testURL" },
@@ -27,8 +28,7 @@ describe("Callbacks", () => {
     palindrom.addEventListener('state-reset', ev => tempObj = ev.detail);
     palindrom.addEventListener('local-change', ev => sentSpy(ev.detail));
 
-    setTimeout(
-      () => {
+    await sleep();
         /* onLocalChange shouldn't be called now */
         assert(sentSpy.notCalled);
 
@@ -39,13 +39,9 @@ describe("Callbacks", () => {
         assert.deepEqual(sentSpy.lastCall.args[0], [
           { op: "replace", path: "/hello", value: "onLocalChange callback" }
         ]);
-        done();
-      },
-      30
-    );
   });
 
-  it("should dispatch state-reset event for applied patches on root (initial state)", done => {
+  it("should dispatch state-reset event for applied patches on root (initial state)", async () => {
     moxios.stubRequest("http://house.of.cards/testURL", {
       status: 200,
       headers: { Location: "http://house.of.cards/testURL" },
@@ -55,9 +51,11 @@ describe("Callbacks", () => {
     const palindrom = new Palindrom({
       remoteUrl: "http://house.of.cards/testURL",
     });
-
+    let stateWasReset = false;
     palindrom.addEventListener('state-reset', ev => {
-      done()
+      stateWasReset = true;
     });
+    await sleep(30);
+    assert.equal(stateWasReset, true, 'stateWasReset should be called')
   });
 });

@@ -3,6 +3,7 @@ import Palindrom from '../../src/palindrom';
 import assert from 'assert';
 import moxios from 'moxios';
 import sinon from 'sinon';
+import { sleep } from '../utils';
 
 describe('Callbacks, onPatchSent and onPatchReceived', () => {
   beforeEach(() => {
@@ -13,7 +14,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
   });
 
   describe('XHR', function() {
-    it('should dispatch patch-sent and patch-received events when a patch is sent and received', done => {
+    it('should dispatch patch-sent and patch-received events when a patch is sent and received', async () => {
       moxios.stubRequest('http://house.of.cards/testURL', {
         status: 200,
         headers: { location: 'http://house.of.cards/testURL2' },
@@ -40,7 +41,10 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
         onPatchSent(ev.detail.data)
       });
 
-      setTimeout(() => {
+      await sleep();
+
+
+      
         /* onPatchReceived, shouldn't be called now */
         assert(onPatchReceived.notCalled, 'onPatchReceived should not be called');
 
@@ -60,7 +64,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
         assert(onPatchSent.calledOnce);
 
         /* wait for XHR */
-        setTimeout(() => {
+        await sleep();
           assert(onPatchReceived.calledOnce);
           assert.deepEqual(onPatchReceived.lastCall.args[0], [
             {
@@ -69,11 +73,8 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
               value: 'onPatchReceived callback'
             }
           ]);
-          done();
-        }, 10);
-      }, 30);
     });
-    it('should dispatch patch-received event even if the patch was bad', done => {
+    it('should dispatch patch-received event even if the patch was bad', async () => {
       moxios.stubRequest('http://house.of.cards/testURL', {
         status: 200,
         headers: { location: 'http://house.of.cards/testURL2' },
@@ -95,7 +96,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
         onPatchReceived(ev.detail)
       });
 
-      setTimeout(() => {
+      await sleep();
         /* onPatchReceived, shouldn't be called now */
         assert(onPatchReceived.notCalled);
 
@@ -113,16 +114,13 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
         tempObj.hello = 'onPatchSent callback';
 
         /* wait for XHR */
-        setTimeout(() => {
+        await sleep();
           assert(onPatchReceived.calledOnce);
-          done();
-        });
-      });
     });
   });
 
   describe('WebSockets', function() {
-    it('should dispatch patch-sent and dispatch patch-received events when a patch is sent and received', done => {
+    it('should dispatch patch-sent and dispatch patch-received events when a patch is sent and received', async () => {
       const server = new MockSocketServer(
         'ws://house.of.cards/default/this_is_a_nice_url'
       );
@@ -160,27 +158,29 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
       });
 
       palindrom.addEventListener('patch-received', ev => {
-        onPatchReceived(ev.detail.data)
+        onPatchReceived(ev.detail.data);
       });
 
       palindrom.addEventListener('patch-sent', ev => {
-        onPatchSent(ev.detail.data)
+        onPatchSent(ev.detail.data);
       });
 
-      setTimeout(() => {
-        /* onPatchReceived, shouldn't be called now */
-        assert(onPatchReceived.notCalled);
+      /* wait for XHR */
+      await sleep(30);
+        
+        assert.equal(onPatchReceived.callCount, 0, `onPatchReceived shouldn't be called now`);
 
         /* onPatchSent, shouldnt be called now, the initial request doesnt count since you can't addEventLister before it occurs */
-        assert(onPatchSent.notCalled);
+        assert.equal(onPatchSent.callCount, 0, `onPatchSent shouldn't be called now`);
 
-        /* issue a change */
+        
         tempObj.hello = 'onPatchSent callback';
-        assert(onPatchSent.calledOnce);
+        assert.equal(onPatchSent.callCount, 1, 'onPatchSent should be called once');
 
-        /* wait for XHR */
-        setTimeout(() => {
-          assert(onPatchReceived.calledOnce);
+
+        await sleep(10);
+        
+          assert.equal(onPatchReceived.callCount, 1, 'onPatchReceived should be called once');
           assert.deepEqual(onPatchReceived.lastCall.args[0], [
             {
               op: 'replace',
@@ -188,13 +188,13 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
               value: 'onPatchReceived callback'
             }
           ]);
-          server.stop(done);
-        }, 10);
-      }, 10);
+          server.stop();
+        
+      
     });
   });
 
-  it('should dispatch patch-received event even if the patch was bad', done => {
+  it('should dispatch patch-received event even if the patch was bad', async () => {
     const server = new MockSocketServer(
       'ws://house.of.cards/default/this_is_a_nice_url'
     );
@@ -236,7 +236,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
       onPatchReceived(ev.detail)
     });
 
-    setTimeout(() => {
+    await sleep(30);
       /* onPatchReceived, shouldn't be called now */
       assert(onPatchReceived.notCalled);
 
@@ -244,10 +244,10 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
       tempObj.hello = 'onPatchSent callback';
 
       /* wait for XHR */
-      setTimeout(() => {
+      await sleep(30);
         assert(onPatchReceived.calledOnce);
-        server.stop(done);
-      }, 10);
-    }, 10);
+        server.stop();
+      
+    
   });
 });

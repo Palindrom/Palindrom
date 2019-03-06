@@ -3,7 +3,7 @@ import assert from 'assert';
 import moxios from 'moxios';
 import sinon from 'sinon';
 import { Server as MockSocketServer } from 'mock-socket';
-import {PalindromError} from '../../src/palindrom-errors';
+import { sleep } from '../utils';
 
 describe('Palindrom', () => {
   describe('#error responses', () => {
@@ -14,7 +14,7 @@ describe('Palindrom', () => {
       moxios.uninstall();
     });
     context('Network', function() {
-      it('should dispatch connection-error event on HTTP 400 response (non-patch responses)', function(done) {
+      it('should dispatch connection-error event on HTTP 400 response (non-patch responses)', async () => {
         const spy = sinon.spy();
 
         moxios.stubRequest('http://localhost/testURL', {
@@ -32,13 +32,11 @@ describe('Palindrom', () => {
         });
 
         /* onConnectionError should be called once now */
-        setTimeout(() => {
+        await sleep(50);
           assert.equal(spy.callCount, 1);
-          done();
-        }, 50);
       });
 
-      it('should dispatch connection-error event on HTTP 599 response', function(done) {
+      it('should dispatch connection-error event on HTTP 599 response', async () => {
         const spy = sinon.spy();
 
         moxios.stubRequest('http://localhost/testURL', {
@@ -56,15 +54,13 @@ describe('Palindrom', () => {
         });
 
         /* onConnectionError should be called once now */
-        setTimeout(() => {
+        await sleep(50);
           assert(spy.calledOnce);
-          done();
-        }, 5);
       });
 
-      it('should dispatch connection-error event on HTTP 500 response (patch)', function(
-        done
-      ) {
+      it('should dispatch connection-error event on HTTP 500 response (patch)', async () =>
+        
+      {
         const spy = sinon.spy();
 
         const palindrom = new Palindrom({
@@ -76,7 +72,7 @@ describe('Palindrom', () => {
         });
 
         // let Palindrom issue a request
-        setTimeout(() => {
+        await sleep();
           // respond to it
           let request = moxios.requests.mostRecent();
           request.respondWith({
@@ -84,31 +80,26 @@ describe('Palindrom', () => {
             headers: { contentType: 'application/json' },
             responseText: '{"hello": "world"}'
           });
-          setTimeout(() => {
+          await sleep();
             //issue a patch
             palindrom.obj.hello = 'galaxy';
 
-            setTimeout(() => {
-              let request = moxios.requests.mostRecent();
+            await sleep();
+              request = moxios.requests.mostRecent();
               //respond with an error
               request.respondWith({
                 status: 500,
                 headers: { contentType: 'application/json-patch+json' },
                 responseText: `{"op": "replace", "path": "/", value: "Custom message"}`
               });
-              setTimeout(() => {
+              await sleep();
                 /* onConnectionError should be called once now */
                 assert(spy.calledOnce);
-                done();
-              }, 5);
-            }, 5);
-          }, 5);
-        }, 5);
       });
 
-      it('should NOT call onConnectionError on HTTP 400 response (patch)', function(
-        done
-      ) {
+      it('should NOT call onConnectionError on HTTP 400 response (patch)', async () => 
+        
+      {
         const spy = sinon.spy();
 
         const palindrom = new Palindrom({
@@ -120,7 +111,7 @@ describe('Palindrom', () => {
         });
 
         // let Palindrom issue a request
-        setTimeout(() => {
+        await sleep();
           // respond to it
           let request = moxios.requests.mostRecent();
           request.respondWith({
@@ -128,12 +119,12 @@ describe('Palindrom', () => {
             headers: { contentType: 'application/json' },
             responseText: '{"hello": "world"}'
           });
-          setTimeout(() => {
+          await sleep();
             //issue a patch
             palindrom.obj.hello = 'galaxy';
 
-            setTimeout(() => {
-              let request = moxios.requests.mostRecent();
+            await sleep();
+              request = moxios.requests.mostRecent();
               //respond with an error
               request.respondWith({
                 status: 400,
@@ -141,18 +132,18 @@ describe('Palindrom', () => {
                 responseText: `{"op": "replace", "path": "/", value: "Custom message"}`
               });
               
-              setTimeout(() => {
+              await sleep();
                 /* onConnectionError should NOT be called now */
                 assert(spy.notCalled);
-                done();
-              }, 5);
-            }, 5);
-          }, 5);
-        }, 5);
+                
+              
+            
+          
+        
       });
-      it('should dispatch connection-error event on HTTP 599 response (patch)', function(
-        done
-      ) {
+      it('should dispatch connection-error event on HTTP 599 response (patch)', async () => 
+        
+      {
         const spy = sinon.spy();
 
         const palindrom = new Palindrom({
@@ -163,7 +154,7 @@ describe('Palindrom', () => {
         });
 
         // let Palindrom issue a request
-        setTimeout(() => {
+        await sleep();
           // respond to it
           let request = moxios.requests.mostRecent();
           request.respondWith({
@@ -171,29 +162,29 @@ describe('Palindrom', () => {
             headers: { contentType: 'application/json' },
             responseText: '{"hello": "world"}'
           });
-          setTimeout(() => {
+          await sleep();
             //issue a patch
             palindrom.obj.hello = 'galaxy';
 
-            setTimeout(() => {
-              let request = moxios.requests.mostRecent();
+            await sleep();
+              request = moxios.requests.mostRecent();
               //respond with an error
               request.respondWith({
                 status: 599,
                 responseText: 'error'
               });
-              setTimeout(() => {
+              await sleep();
                 /* onConnectionError should be called once now */
                 assert(spy.calledOnce);
-                done();
-              }, 5);
-            }, 5);
-          }, 5);
-        }, 5);
+                
+              
+            
+          
+        
       });
     });
     context('Numbers Validation', function() {
-      it('Initial HTTP response: out of range numbers should dispatch incoming-patch-validation-error event with a RangeError', done => {
+      it('Initial HTTP response: out of range numbers should dispatch incoming-patch-validation-error event with a RangeError', async () => {
         moxios.stubRequest('http://localhost/testURL', {
           status: 200,
           headers: { Location: 'http://localhost/testURL' },
@@ -209,7 +200,7 @@ describe('Palindrom', () => {
           spy(ev.detail);
         });
 
-        setTimeout(() => {
+        await sleep();
           assert(spy.calledOnce);
           const errorPassed = spy.getCall(0).args[0];
           assert(errorPassed instanceof RangeError);
@@ -218,10 +209,10 @@ describe('Palindrom', () => {
             `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
               1}, variable path is: /value`
           );
-          done();
-        }, 10);
+          
+        
       });
-      it('Outgoing HTTP patches: out of range numbers should dispatch outgoing-patch-validation-error event with a RangeError', done => {
+      it('Outgoing HTTP patches: out of range numbers should dispatch outgoing-patch-validation-error event with a RangeError', async() => {
         moxios.stubRequest('http://localhost/testURL', {
           status: 200,
           headers: { Location: 'http://localhost/testURL' },
@@ -242,7 +233,7 @@ describe('Palindrom', () => {
           spy(ev.detail);
         });
 
-        setTimeout(() => {
+        await sleep();
           assert(spy.calledOnce);
           const errorPassed = spy.getCall(0).args[0];
           assert(errorPassed instanceof RangeError);
@@ -251,12 +242,12 @@ describe('Palindrom', () => {
             `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
               1}, variable path is: /val`
           );
-          done();
-        }, 15);
+          
+        
       });
-      it('Outgoing socket patches: out of range numbers should dispatch outgoing-patch-validation-error event with a RangeError', function(
-        done
-      ) {
+      it('Outgoing socket patches: out of range numbers should dispatch outgoing-patch-validation-error event with a RangeError', async () =>
+        
+      {
         const server = new MockSocketServer('ws://localhost/testURL');
 
         moxios.stubRequest('http://localhost/testURL', {
@@ -276,7 +267,7 @@ describe('Palindrom', () => {
           spy(ev.detail);
         });
 
-        setTimeout(() => {
+        await sleep(30);
           palindrom.obj.value = Number.MAX_SAFE_INTEGER + 1;
           // make sure WS is up
           assert.equal(palindrom.network._ws.readyState, 1);
@@ -288,12 +279,12 @@ describe('Palindrom', () => {
             `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
               1}, variable path is: /value`
           );
-          server.stop(done);
-        }, 15);
+          server.stop();
+        
       });
-      it('Incoming socket patches: out of range numbers should dispatch incoming-patch-validation-error event with a RangeError', function(
-        done
-      ) {
+      it('Incoming socket patches: out of range numbers should dispatch incoming-patch-validation-error event with a RangeError', async () =>
+      
+      {
         const server = new MockSocketServer('ws://localhost/testURL');
 
         moxios.stubRequest('http://localhost/testURL', {
@@ -313,7 +304,7 @@ describe('Palindrom', () => {
           spy(ev.detail);
         });
 
-        setTimeout(() => {
+        await sleep(30);
           server.send(
             `[{"op": "replace", "path": "/val", "value": ${Number.MAX_SAFE_INTEGER +
               1}}]`
@@ -326,8 +317,8 @@ describe('Palindrom', () => {
             `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
               1}, variable path is: /val`
           );
-          server.stop(done);
-        }, 15);
+          server.stop();
+       
       });
     });
   });

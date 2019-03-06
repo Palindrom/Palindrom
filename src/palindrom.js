@@ -63,6 +63,7 @@ const palindromVersion = '5.2.0';
             this.filterLocalChange =
                 options.filterLocalChange || (operation => operation);
 
+            /* these methods are all used more than once, hence are kept */
             this.onPatchSent = detail => this.fire('patch-sent', detail);
             this.onSocketStateChanged = detail => this.fire('socket-state-changed', detail);
             this.onConnectionError = detail => this.fire('connection-error', detail);
