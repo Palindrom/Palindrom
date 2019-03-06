@@ -229,7 +229,6 @@ const CLIENT = 'Client';
             this.debug = options.debug != undefined ? options.debug : true;
 
             this.isObserving = false;
-            this.onStateReset = detail => this.fire('state-reset', detail);
             this.filterLocalChange =
                 options.filterLocalChange || (operation => operation);
 
@@ -441,7 +440,7 @@ const CLIENT = 'Client';
 
                     this.fire('state-reset', this.obj)
                 }
-                this.fire('remote-change', {sequence, results})
+                this.fire('remote-change', {patches: sequence, results})
             } catch (error) {
                 if (this.debug) {
                     this.onIncomingPatchValidationError(error);

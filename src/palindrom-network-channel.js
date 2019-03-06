@@ -146,7 +146,7 @@ export default class PalindromNetworkChannel {
         // send message only if there is a working ws connection
         if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
             this._ws.send(msg);
-            this.onSend(msg, this._ws.url, 'WS');
+            this.onSend({ data: msg, url: this._ws.url, method: 'WS' });
         } else {
             const url = this.remoteUrl.href;
             const res = await this._xhr(
@@ -370,7 +370,7 @@ export default class PalindromNetworkChannel {
                 headers
             });
         }
-        this.onSend(data, url, method);
+        this.onSend({ data, url, method });
 
         return responsePromise
             .then(res => {
