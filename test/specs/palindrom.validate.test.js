@@ -13,7 +13,7 @@ describe('Palindrom', () => {
         afterEach(() => {
             moxios.uninstall();
         });
-        it('should pass empty sequence', async() => {
+        it('should pass empty sequence', async () => {
             moxios.stubRequest('http://localhost/testURL', {
                 status: 200,
                 headers: { Location: 'http://localhost/testURL' },
@@ -42,12 +42,10 @@ describe('Palindrom', () => {
             palindrom.validateAndApplySequence(tree, sequence);
 
             await sleep();
-                assert(spy.notCalled);
-                
-            
+            assert(spy.notCalled);
         });
 
-        it('replacing a nonexisting property should cause OPERATION_PATH_UNRESOLVABLE (test built into Fast-JSON-Patch)', async() => {
+        it('replacing a nonexisting property should cause OPERATION_PATH_UNRESOLVABLE (test built into Fast-JSON-Patch)', async () => {
             moxios.stubRequest('http://localhost/testURL', {
                 status: 200,
                 headers: { Location: 'http://localhost/testURL' },
@@ -76,13 +74,11 @@ describe('Palindrom', () => {
             palindrom.validateAndApplySequence(tree, sequence);
 
             await sleep();
-                assert(spy.calledOnce, spy.callCount);
-                assert.equal(
-                    'OPERATION_PATH_UNRESOLVABLE',
-                    spy.lastCall.args[0].name
-                );
-                
-            
+            assert(spy.calledOnce, spy.callCount);
+            assert.equal(
+                'OPERATION_PATH_UNRESOLVABLE',
+                spy.lastCall.args[0].name
+            );
         });
 
         it('undefined value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', async () => {
@@ -116,16 +112,11 @@ describe('Palindrom', () => {
             palindrom.validateAndApplySequence(tree, sequence);
 
             await sleep();
-                assert(spy.calledOnce);
-                assert.equal(
-                    'OPERATION_VALUE_REQUIRED',
-                    spy.lastCall.args[0].name
-                );
-                
-            
+            assert(spy.calledOnce);
+            assert.equal('OPERATION_VALUE_REQUIRED', spy.lastCall.args[0].name);
         });
 
-        it('no value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', async() => {
+        it('no value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', async () => {
             moxios.stubRequest('http://localhost/testURL', {
                 status: 200,
                 headers: { Location: 'http://localhost/testURL' },
@@ -153,16 +144,11 @@ describe('Palindrom', () => {
             palindrom.validateAndApplySequence(tree, sequence);
 
             await sleep();
-                assert(spy.calledOnce);
-                assert.equal(
-                    'OPERATION_VALUE_REQUIRED',
-                    spy.lastCall.args[0].name
-                );
-                
-            
+            assert(spy.calledOnce);
+            assert.equal('OPERATION_VALUE_REQUIRED', spy.lastCall.args[0].name);
         });
 
-        it('object with undefined value should cause OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED (test built into Fast-JSON-Patch)', async() => {
+        it('object with undefined value should cause OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED (test built into Fast-JSON-Patch)', async () => {
             moxios.stubRequest('http://localhost/testURL', {
                 status: 200,
                 headers: { Location: 'http://localhost/testURL' },
@@ -196,13 +182,11 @@ describe('Palindrom', () => {
             palindrom.validateAndApplySequence(tree, sequence);
 
             await sleep();
-                assert(spy.calledOnce);
-                assert.equal(
-                    'OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED',
-                    spy.lastCall.args[0].name
-                );
-                
-            
+            assert(spy.calledOnce);
+            assert.equal(
+                'OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED',
+                spy.lastCall.args[0].name
+            );
         });
     });
     describe('Overriding validation logic', function() {
@@ -258,12 +242,12 @@ describe('Palindrom', () => {
             let validatorWasCalled = false;
             palindromMock.onOutgoingPatchValidationError = function(error) {
                 assert(error.name === 'Palindrom_CANNOT_REPLACE_READONLY');
-                validatorWasCalled = true
+                validatorWasCalled = true;
             };
 
             palindromMock.validateSequence(tree, sequence);
             await sleep();
-            assert(validatorWasCalled, 'validator should be called')
+            assert(validatorWasCalled, 'validator should be called');
         });
     });
 });

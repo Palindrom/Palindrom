@@ -158,16 +158,14 @@ if (typeof window !== 'undefined') {
                                 status: 200,
                                 responseText: '{"hello": "world"}'
                             });
-                            
+
                             createAndClickOnLink(
                                 relative,
                                 mode === 'specific' ? palindromNode : undefined
                             );
 
-                            await sleep(50);                            
-                                expect(historySpy.callCount).to.equal(1);
-                                
-                            
+                            await sleep(50);
+                            expect(historySpy.callCount).to.equal(1);
                         });
 
                         it('relative path (nested)', async () => {
@@ -184,9 +182,7 @@ if (typeof window !== 'undefined') {
                                 mode === 'specific' ? palindromNode : undefined
                             );
                             await sleep();
-                                expect(historySpy.callCount).to.equal(1);
-                                
-                            
+                            expect(historySpy.callCount).to.equal(1);
                         });
                         it('relative path (nested, Shadow DOM)', async () => {
                             const relative = getTestURL('test_c', true);
@@ -202,9 +198,7 @@ if (typeof window !== 'undefined') {
                                 mode === 'specific' ? palindromNode : undefined
                             );
                             await sleep();
-                                expect(historySpy.callCount).to.equal(1);
-                                
-                            
+                            expect(historySpy.callCount).to.equal(1);
                         });
                         if (mode === 'default') {
                             it('relative path (nested, Shadow DOM content)', async () => {
@@ -218,13 +212,8 @@ if (typeof window !== 'undefined') {
                                 createAndClickOnLinkNestedShadowDOMContent();
 
                                 await sleep();
-                                    
-                                        expect(historySpy.callCount).to.equal(
-                                            1
-                                        );
-                                    
-                                    
-                                
+
+                                expect(historySpy.callCount).to.equal(1);
                             });
                         }
 
@@ -235,9 +224,7 @@ if (typeof window !== 'undefined') {
                                 mode === 'specific' ? palindromNode : null
                             );
                             await sleep();
-                                expect(historySpy.callCount).to.equal(1);
-                                
-                            
+                            expect(historySpy.callCount).to.equal(1);
                         });
                     });
 
@@ -255,9 +242,7 @@ if (typeof window !== 'undefined') {
                             );
 
                             await sleep();
-                                expect(historySpy.callCount).to.equal(0);
-                                
-                            
+                            expect(historySpy.callCount).to.equal(0);
                         });
                     });
                     describe('Links with targets', function() {
@@ -277,9 +262,7 @@ if (typeof window !== 'undefined') {
                             popup && popup.close();
 
                             await sleep();
-                                expect(historySpy.callCount).to.equal(0);
-                                
-                            
+                            expect(historySpy.callCount).to.equal(0);
                         });
                         it('should intercept links with target _self', async () => {
                             const href = getTestURL(
@@ -298,8 +281,7 @@ if (typeof window !== 'undefined') {
                             );
 
                             await sleep();
-                                expect(historySpy.callCount).to.equal(1);
-                                
+                            expect(historySpy.callCount).to.equal(1);
                         });
                         it('should intercept links with an empty target', async () => {
                             const href = getTestURL(
@@ -318,9 +300,7 @@ if (typeof window !== 'undefined') {
                             );
 
                             await sleep();
-                                expect(historySpy.callCount).to.equal(1);
-                                
-                            
+                            expect(historySpy.callCount).to.equal(1);
                         });
                         it('should intercept links without a target', async () => {
                             const href = getTestURL(
@@ -338,29 +318,26 @@ if (typeof window !== 'undefined') {
                             );
 
                             await sleep();
-                                expect(historySpy.callCount).to.equal(1);
-                                
-                            
-                    });
-                    describe('should not intercept external links', function() {
-                        it('full URL in the same host, different port', async () => {
-                            const port =
-                                window.location.port === '80' ||
-                                window.location.port === ''
-                                    ? '8080'
-                                    : '80';
-                            const href =
-                                window.location.protocol +
-                                '//' +
-                                window.location.hostname +
-                                ':' +
-                                port +
-                                '/test'; //http://localhost:88881/test
-                            createAndClickOnLink(href);
+                            expect(historySpy.callCount).to.equal(1);
+                        });
+                        describe('should not intercept external links', function() {
+                            it('full URL in the same host, different port', async () => {
+                                const port =
+                                    window.location.port === '80' ||
+                                    window.location.port === ''
+                                        ? '8080'
+                                        : '80';
+                                const href =
+                                    window.location.protocol +
+                                    '//' +
+                                    window.location.hostname +
+                                    ':' +
+                                    port +
+                                    '/test'; //http://localhost:88881/test
+                                createAndClickOnLink(href);
 
-                            await sleep();
+                                await sleep();
                                 expect(historySpy.callCount).to.equal(0);
-                                
                             });
                         });
 
@@ -380,18 +357,15 @@ if (typeof window !== 'undefined') {
                     describe('should be accessible via API', function() {
                         it('should change history state programmatically', async () => {
                             await sleep(5);
-                                moxios.stubRequest('/page2', {
-                                    status: 200,
-                                    responseText: '{"hello": "world"}'
-                                });
+                            moxios.stubRequest('/page2', {
+                                status: 200,
+                                responseText: '{"hello": "world"}'
+                            });
 
-                                palindrom.morphUrl('/page2');
+                            palindrom.morphUrl('/page2');
 
-                                await sleep(5);
-                                    expect(historySpy.callCount).to.equal(1);
-                                    
-                                
-                            
+                            await sleep(5);
+                            expect(historySpy.callCount).to.equal(1);
                         });
                     });
 
@@ -425,310 +399,305 @@ if (typeof window !== 'undefined') {
                             mode === 'specific' ? palindromNode : null
                         );
                         await sleep();
-                            expect(historySpy.callCount).to.equal(1);
-                            
-                        
-                    
-                
-            });
-        });
-    });
-
-    describe('History', function() {
-        let palindrom, currLoc, currScrollY;
-
-        before(function() {
-            currLoc = window.location.href;
-            currScrollY = document.documentElement.scrollTop;
-        });
-        after(function() {
-            history.pushState(null, null, currLoc);
-            window.scrollTo(0, currScrollY);
-        });
-
-        beforeEach(function() {
-            moxios.install();
-            moxios.stubRequest(getTestURL('testURL'), {
-                status: 200,
-                responseText: '{"hello": "world"}'
+                        expect(historySpy.callCount).to.equal(1);
+                    });
+                });
             });
 
-            palindrom = new PalindromDOM({ remoteUrl: getTestURL('testURL') });
-        });
+            describe('History', function() {
+                let palindrom, currLoc, currScrollY;
 
-        afterEach(function() {
-            palindrom.unobserve();
-            moxios.uninstall();
-        });
-
-        describe('should send JSON Patch HTTP request once history state get changed', function() {
-            it('by `palindrom.morphURL(url)` method', async () => {
-                moxios.stubRequest('/newUrl', {
-                    status: 200,
-                    responseText: '{"hello": "world"}'
+                before(function() {
+                    currLoc = window.location.href;
+                    currScrollY = document.documentElement.scrollTop;
+                });
+                after(function() {
+                    history.pushState(null, null, currLoc);
+                    window.scrollTo(0, currScrollY);
                 });
 
-                palindrom.morphUrl('/newUrl');
-                await sleep();
-                    const request = moxios.requests.mostRecent();
-                    expect(request.url).to.equal('/newUrl');
-                    expect(window.location.pathname).to.equal('/newUrl');
-                    request.respondWith({
+                beforeEach(function() {
+                    moxios.install();
+                    moxios.stubRequest(getTestURL('testURL'), {
                         status: 200,
                         responseText: '{"hello": "world"}'
                     });
-                    
-                
-            });
-        });
 
-        describe('palindrom-morph-url event', function() {
-            beforeEach(async () => {
-                // wait for Palindrom to call .listen (after finishing the ajax request)
-                await sleep(30);
-            });
-            it('Dispatching it should call PalindromDOM.morphUrl and issue a request', async () => {
-                const morphUrlStub = sinon.spy(palindrom, 'morphUrl');
-
-                moxios.stubRequest('/new-palindrom-url', {
-                    status: 200,
-                    responseText: '{"hello": "world"}'
+                    palindrom = new PalindromDOM({
+                        remoteUrl: getTestURL('testURL')
+                    });
                 });
 
-                document.dispatchEvent(
-                    new CustomEvent('palindrom-morph-url', {
-                        detail: { url: '/new-palindrom-url' }
-                    })
-                );
+                afterEach(function() {
+                    palindrom.unobserve();
+                    moxios.uninstall();
+                });
 
-                assert(
-                    morphUrlStub.calledOnce,
-                    `morphUrlStub should be called once, it was called ${
-                        morphUrlStub.callCount
-                    } times`
-                );
+                describe('should send JSON Patch HTTP request once history state get changed', function() {
+                    it('by `palindrom.morphURL(url)` method', async () => {
+                        moxios.stubRequest('/newUrl', {
+                            status: 200,
+                            responseText: '{"hello": "world"}'
+                        });
 
-                await sleep();
-                    const request = moxios.requests.mostRecent();
-                    expect(request.url).to.equal('/new-palindrom-url');
-                    expect(window.location.pathname + location.hash).to.equal(
-                        '/new-palindrom-url'
-                    );
-                    
-                
-            });
-        });
-        describe('palindrom-before-redirect event', function() {
-            beforeEach(async () => {
-                // wait for Palindrom to call .listen (after finishing the ajax request)
-                await sleep(300);
-            });
-            it('Morphing to a URL should dispatch the event and issue a request', async () => {
-                const handler = async event => {
-                    assert.equal(event.detail.href, '/newUrl');
-
-                    await sleep();
+                        palindrom.morphUrl('/newUrl');
+                        await sleep();
                         const request = moxios.requests.mostRecent();
                         expect(request.url).to.equal('/newUrl');
-
+                        expect(window.location.pathname).to.equal('/newUrl');
                         request.respondWith({
                             status: 200,
                             responseText: '{"hello": "world"}'
                         });
+                    });
+                });
+
+                describe('palindrom-morph-url event', function() {
+                    beforeEach(async () => {
+                        // wait for Palindrom to call .listen (after finishing the ajax request)
+                        await sleep(30);
+                    });
+                    it('Dispatching it should call PalindromDOM.morphUrl and issue a request', async () => {
+                        const morphUrlStub = sinon.spy(palindrom, 'morphUrl');
+
+                        moxios.stubRequest('/new-palindrom-url', {
+                            status: 200,
+                            responseText: '{"hello": "world"}'
+                        });
+
+                        document.dispatchEvent(
+                            new CustomEvent('palindrom-morph-url', {
+                                detail: { url: '/new-palindrom-url' }
+                            })
+                        );
+
+                        assert(
+                            morphUrlStub.calledOnce,
+                            `morphUrlStub should be called once, it was called ${
+                                morphUrlStub.callCount
+                            } times`
+                        );
+
                         await sleep();
+                        const request = moxios.requests.mostRecent();
+                        expect(request.url).to.equal('/new-palindrom-url');
+                        expect(
+                            window.location.pathname + location.hash
+                        ).to.equal('/new-palindrom-url');
+                    });
+                });
+                describe('palindrom-before-redirect event', function() {
+                    beforeEach(async () => {
+                        // wait for Palindrom to call .listen (after finishing the ajax request)
+                        await sleep(300);
+                    });
+                    it('Morphing to a URL should dispatch the event and issue a request', async () => {
+                        const handler = async event => {
+                            assert.equal(event.detail.href, '/newUrl');
+
+                            await sleep();
+                            const request = moxios.requests.mostRecent();
+                            expect(request.url).to.equal('/newUrl');
+
+                            request.respondWith({
+                                status: 200,
+                                responseText: '{"hello": "world"}'
+                            });
+                            await sleep();
                             expect(window.location.pathname).to.equal(
                                 '/newUrl'
                             );
-                            
-                        
-                    
 
-                    window.removeEventListener(
-                        'palindrom-before-redirect',
-                        handler
-                    );
-                };
-                window.addEventListener('palindrom-before-redirect', handler);
-                palindrom.morphUrl('/newUrl');
-            });
-            it('Morphing to a URL should NOT issue a request after a canceled event', async () => {
-                let originalRequestCount = moxios.requests.count;
-
-                const handler = async event => {
-                    assert.equal(event.detail.href, '/newUrl2');
-                    event.preventDefault();
-
-                    await sleep();
-                        expect(originalRequestCount).to.equal(
-                            moxios.requests.count
+                            window.removeEventListener(
+                                'palindrom-before-redirect',
+                                handler
+                            );
+                        };
+                        window.addEventListener(
+                            'palindrom-before-redirect',
+                            handler
                         );
-                        
-                    
-                    window.removeEventListener(
-                        'palindrom-before-redirect',
-                        handler
-                    );
-                };
-                window.addEventListener('palindrom-before-redirect', handler);
-                palindrom.morphUrl('/newUrl2');
-            });
-        });
-        describe('palindrom-after-redirect event', function() {
-            beforeEach(async () => {
-                // wait for Palindrom to call .listen (after finishing the ajax request)
-                await sleep(300);
-            });
-            it('Morphing to a URL should dispatch the event after a successful request', async () => {
-                moxios.stubRequest('/newUrl', {
-                    status: 200,
-                    responseText: '{"hello": "world"}'
+                        palindrom.morphUrl('/newUrl');
+                    });
+                    it('Morphing to a URL should NOT issue a request after a canceled event', async () => {
+                        let originalRequestCount = moxios.requests.count;
+
+                        const handler = async event => {
+                            assert.equal(event.detail.href, '/newUrl2');
+                            event.preventDefault();
+
+                            await sleep();
+                            expect(originalRequestCount).to.equal(
+                                moxios.requests.count
+                            );
+
+                            window.removeEventListener(
+                                'palindrom-before-redirect',
+                                handler
+                            );
+                        };
+                        window.addEventListener(
+                            'palindrom-before-redirect',
+                            handler
+                        );
+                        palindrom.morphUrl('/newUrl2');
+                    });
+                });
+                describe('palindrom-after-redirect event', function() {
+                    beforeEach(async () => {
+                        // wait for Palindrom to call .listen (after finishing the ajax request)
+                        await sleep(300);
+                    });
+                    it('Morphing to a URL should dispatch the event after a successful request', async () => {
+                        moxios.stubRequest('/newUrl', {
+                            status: 200,
+                            responseText: '{"hello": "world"}'
+                        });
+
+                        const handler = event => {
+                            assert.equal(event.detail.href, '/newUrl');
+                            assert.equal(event.detail.successful, true);
+
+                            expect(window.location.pathname).to.equal(
+                                '/newUrl'
+                            );
+
+                            window.removeEventListener(
+                                'palindrom-after-redirect',
+                                handler
+                            );
+                        };
+                        window.addEventListener(
+                            'palindrom-after-redirect',
+                            handler
+                        );
+                        palindrom.morphUrl('/newUrl');
+                    });
+
+                    it('Morphing to a URL should dispatch the event after a failed request', async () => {
+                        moxios.stubRequest('/newUrl2', {
+                            status: 509,
+                            responseText: '{"hello": "world"}'
+                        });
+
+                        const handler = event => {
+                            assert.equal(event.detail.href, '/newUrl2');
+                            assert.equal(event.detail.successful, false);
+                            assert.equal(
+                                event.detail.error.message,
+                                'Request failed with status code 509'
+                            );
+
+                            window.removeEventListener(
+                                'palindrom-after-redirect',
+                                handler
+                            );
+                        };
+                        window.addEventListener(
+                            'palindrom-after-redirect',
+                            handler
+                        );
+                        palindrom.morphUrl('/newUrl2');
+                    });
                 });
 
-                const handler = event => {
-                    assert.equal(event.detail.href, '/newUrl');
-                    assert.equal(event.detail.successful, true);
+                describe('Scroll When navigation occurs', function() {
+                    let currLoc, currScrollY;
+                    before(function() {
+                        currLoc = window.location.href;
+                        currScrollY = document.documentElement.scrollTop;
+                    });
+                    after(function() {
+                        history.pushState(null, null, currLoc);
+                        window.scrollTo(0, currScrollY);
+                    });
 
-                    
-                        expect(window.location.pathname).to.equal('/newUrl');
-                        
-                    
+                    beforeEach(function() {
+                        moxios.install();
+                        moxios.stubRequest(getTestURL('testURL'), {
+                            status: 200,
+                            responseText: '{"hello": "world"}'
+                        });
 
-                    window.removeEventListener(
-                        'palindrom-after-redirect',
-                        handler
-                    );
-                };
-                window.addEventListener('palindrom-after-redirect', handler);
-                palindrom.morphUrl('/newUrl');
-            });
+                        palindrom = new PalindromDOM({
+                            remoteUrl: getTestURL('testURL')
+                        });
+                    });
+                    afterEach(function() {
+                        palindrom.unobserve();
+                        moxios.uninstall();
+                    });
+                    it('should scroll to top', async () => {
+                        window.scrollTo(0, document.body.scrollHeight); // scroll to bottom
+                        const currScrollY = window.scrollY;
 
-            it('Morphing to a URL should dispatch the event after a failed request', async () => {
-                moxios.stubRequest('/newUrl2', {
-                    status: 509,
-                    responseText: '{"hello": "world"}'
-                });
+                        moxios.stubRequest('/newUrl-palindrom-scroll-2', {
+                            status: 200,
+                            responseText: '[]'
+                        });
 
-                const handler = event => {
-                    assert.equal(event.detail.href, '/newUrl2');
-                    assert.equal(event.detail.successful, false);
-                    assert.equal(
-                        event.detail.error.message,
-                        'Request failed with status code 509'
-                    );
+                        palindrom.morphUrl('/newUrl-palindrom-scroll-2');
 
-                    window.removeEventListener(
-                        'palindrom-after-redirect',
-                        handler
-                    );
-                    
-                };
-                window.addEventListener('palindrom-after-redirect', handler);
-                palindrom.morphUrl('/newUrl2');
-            });
-        });
+                        await sleep();
+                        const request = moxios.requests.mostRecent();
+                        expect(request.url).to.equal(
+                            '/newUrl-palindrom-scroll-2'
+                        );
+                        expect(
+                            window.location.pathname + location.hash
+                        ).to.equal('/newUrl-palindrom-scroll-2');
+                        const newCurrScrollY = window.scrollY;
+                        expect(newCurrScrollY).to.not.equal(currScrollY);
+                        expect(currScrollY).to.not.equal(0);
+                    });
+                    it('should scroll back when back button is hit', async () => {
+                        window.scrollTo(0, 0); // scroll to top
 
-        describe('Scroll When navigation occurs', function() {
-            let currLoc, currScrollY;
-            before(function() {
-                currLoc = window.location.href;
-                currScrollY = document.documentElement.scrollTop;
-            });
-            after(function() {
-                history.pushState(null, null, currLoc);
-                window.scrollTo(0, currScrollY);
-            });
+                        // prepare for "back" request
+                        moxios.stubRequest(location.href, {
+                            status: 200,
+                            responseText: '{}'
+                        });
 
-            beforeEach(function() {
-                moxios.install();
-                moxios.stubRequest(getTestURL('testURL'), {
-                    status: 200,
-                    responseText: '{"hello": "world"}'
-                });
+                        moxios.stubRequest('/newUrl-palindrom-scroll-2', {
+                            status: 200,
+                            responseText: '{}'
+                        });
 
-                palindrom = new PalindromDOM({
-                    remoteUrl: getTestURL('testURL')
-                });
-            });
-            afterEach(function() {
-                palindrom.unobserve();
-                moxios.uninstall();
-            });
-            it('should scroll to top', async () => {
-                window.scrollTo(0, document.body.scrollHeight); // scroll to bottom
-                const currScrollY = window.scrollY;
+                        await palindrom.morphUrl('/newUrl-palindrom-scroll-2');
+                        // scroll to bottom
+                        window.scrollTo(0, document.body.scrollHeight);
 
-                moxios.stubRequest('/newUrl-palindrom-scroll-2', {
-                    status: 200,
-                    responseText: '[]'
-                });
-
-                palindrom.morphUrl('/newUrl-palindrom-scroll-2');
-
-                await sleep();
-                    const request = moxios.requests.mostRecent();
-                    expect(request.url).to.equal('/newUrl-palindrom-scroll-2');
-                    expect(window.location.pathname + location.hash).to.equal(
-                        '/newUrl-palindrom-scroll-2'
-                    );
-                    const newCurrScrollY = window.scrollY;
-                    expect(newCurrScrollY).to.not.equal(currScrollY);
-                    expect(currScrollY).to.not.equal(0);
-
-                    
-                
-            });
-            it('should scroll back when back button is hit', async () => {
-                window.scrollTo(0, 0); // scroll to top
-
-                // prepare for "back" request
-                moxios.stubRequest(location.href, {
-                    status: 200,
-                    responseText: '{}'
-                });
-
-                moxios.stubRequest('/newUrl-palindrom-scroll-2', {
-                    status: 200,
-                    responseText: '{}'
-                });
-
-                await palindrom.morphUrl('/newUrl-palindrom-scroll-2');
-                    // scroll to bottom
-                    window.scrollTo(0, document.body.scrollHeight);
-
-                    // wait for rendering
-                    await sleep();
+                        // wait for rendering
+                        await sleep();
                         expect(window.scrollY).to.not.equal(0);
 
                         // go back
                         history.go(-1);
 
                         await sleep(30);
-                            expect(window.scrollY).to.equal(0);
-                            
-                        
-                    
-                
-            });
-            it('should NOT scroll back when back button is hit and the user scrolled', async () => {
-                window.scrollTo(0, 0); // scroll to top
+                        expect(window.scrollY).to.equal(0);
+                    });
+                    it('should NOT scroll back when back button is hit and the user scrolled', async () => {
+                        window.scrollTo(0, 0); // scroll to top
 
-                // prepare for "back" request
-                moxios.stubRequest(getTestURL('testURL'), {
-                    status: 200,
-                    responseText: '[]'
-                });
+                        // prepare for "back" request
+                        moxios.stubRequest(getTestURL('testURL'), {
+                            status: 200,
+                            responseText: '[]'
+                        });
 
-                moxios.stubRequest('/newUrl-palindrom-scroll-2', {
-                    status: 200,
-                    responseText: '[]'
-                });
+                        moxios.stubRequest('/newUrl-palindrom-scroll-2', {
+                            status: 200,
+                            responseText: '[]'
+                        });
 
-                await palindrom.morphUrl('/newUrl-palindrom-scroll-2');
-                    // scroll to bottom
-                    window.scrollTo(0, document.body.scrollHeight);
+                        await palindrom.morphUrl('/newUrl-palindrom-scroll-2');
+                        // scroll to bottom
+                        window.scrollTo(0, document.body.scrollHeight);
 
-                    // wait for rendering
-                    await sleep();
+                        // wait for rendering
+                        await sleep();
                         expect(window.scrollY).to.not.equal(0);
 
                         // go back
@@ -741,66 +710,61 @@ if (typeof window !== 'undefined') {
                         );
 
                         await sleep();
-                            expect(window.scrollY).to.equal(
-                                Math.floor(document.body.scrollHeight / 2)
+                        expect(window.scrollY).to.equal(
+                            Math.floor(document.body.scrollHeight / 2)
+                        );
+                    });
+
+                    describe('should send JSON Patch HTTP request once history state get changed', function() {
+                        beforeEach(function() {
+                            moxios.install();
+                            moxios.stubRequest(getTestURL('testURL'), {
+                                status: 200,
+                                headers: { location: getTestURL('testURL') },
+                                responseText: '{"hello": "world"}'
+                            });
+
+                            palindrom = new PalindromDOM({
+                                remoteUrl: getTestURL('testURL')
+                            });
+                        });
+                        afterEach(function() {
+                            palindrom.unobserve();
+                            moxios.uninstall();
+                        });
+
+                        it('by dispatching `palindrom-redirect-pushstate` event', async () => {
+                            history.pushState(null, null, '/newUrl-palindrom');
+
+                            moxios.stubRequest(/.+/, {
+                                status: 200,
+                                headers: { location: getTestURL('testURL') },
+                                responseText: '[]'
+                            });
+
+                            document.dispatchEvent(
+                                new CustomEvent(
+                                    'palindrom-redirect-pushstate',
+                                    {
+                                        detail: { url: '/newUrl-palindrom' },
+                                        bubbles: true
+                                    }
+                                )
                             );
-                            
-                        
-                    
-                
-            
+
+                            await sleep();
+                            const request = moxios.requests.mostRecent();
+
+                            expect(new URL(request.url).pathname).to.equal(
+                                '/newUrl-palindrom'
+                            );
+                            expect(window.location.pathname).to.equal(
+                                '/newUrl-palindrom'
+                            );
+                        });
+                    });
+                });
+            });
         });
-
-        describe('should send JSON Patch HTTP request once history state get changed', function() {
-            beforeEach(function() {
-                moxios.install();
-                moxios.stubRequest(getTestURL('testURL'), {
-                    status: 200,
-                    headers: { location: getTestURL('testURL') },
-                    responseText: '{"hello": "world"}'
-                });
-
-                palindrom = new PalindromDOM({
-                    remoteUrl: getTestURL('testURL')
-                });
-            });
-            afterEach(function() {
-                palindrom.unobserve();
-                moxios.uninstall();
-            });
-
-            it('by dispatching `palindrom-redirect-pushstate` event', async () => {
-                history.pushState(null, null, '/newUrl-palindrom');
-
-                moxios.stubRequest(/.+/, {
-                    status: 200,
-                    headers: { location: getTestURL('testURL') },
-                    responseText: '[]'
-                });
-
-                document.dispatchEvent(
-                    new CustomEvent('palindrom-redirect-pushstate', {
-                        detail: { url: '/newUrl-palindrom' },
-                        bubbles: true
-                    })
-                );
-
-                await sleep();
-                    const request = moxios.requests.mostRecent();
-
-                    expect(new URL(request.url).pathname).to.equal(
-                        '/newUrl-palindrom'
-                    );
-                    expect(window.location.pathname).to.equal(
-                        '/newUrl-palindrom'
-                    );
-                    
-                
-                });
-                });
-                });
-                });
-                });
-            
     });
 }

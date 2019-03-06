@@ -4,7 +4,6 @@ import moxios from 'moxios';
 import { Server as MockSocketServer, MockWebSocket } from 'mock-socket';
 import { sleep } from '../../utils';
 
-
 /** only run DOM tests in browsers */
 if (typeof window !== 'undefined') {
     if (!global.MockWebSocket) {
@@ -82,53 +81,48 @@ if (typeof window !== 'undefined') {
                 useWebSocket: true
             });
             await sleep(30);
-                // make sure initial request is applied to `palindrom.obj`.
-                assert.equal(palindrom.obj.children.length, 3);
+            // make sure initial request is applied to `palindrom.obj`.
+            assert.equal(palindrom.obj.children.length, 3);
 
-                // respond with patch2, BEFORE patch1
-                await sleep(15);
-                    server.send(JSON.stringify(patch2));
-                
+            // respond with patch2, BEFORE patch1
+            await sleep(15);
+            server.send(JSON.stringify(patch2));
 
-                await sleep(15);
-                    // make sure patch2 has NOT been applied (because patch1 didn't arrive yet)
-                    assert.equal(palindrom.obj.children.length, 3);
-                    assert.equal(palindrom.obj.newChildren, null);
+            await sleep(15);
+            // make sure patch2 has NOT been applied (because patch1 didn't arrive yet)
+            assert.equal(palindrom.obj.children.length, 3);
+            assert.equal(palindrom.obj.newChildren, null);
 
-                    const url2 = new URL('/testURL2', baseUrl).toString();
-                    moxios.stubRequest(url2, {
-                        status: 200,
-                        headers: {
-                            contentType: 'application/json-patch+json'
-                        },
-                        responseText: JSON.stringify(patch1)
-                    });
-                    palindrom.morphUrl(url2);
-                
+            const url2 = new URL('/testURL2', baseUrl).toString();
+            moxios.stubRequest(url2, {
+                status: 200,
+                headers: {
+                    contentType: 'application/json-patch+json'
+                },
+                responseText: JSON.stringify(patch1)
+            });
+            palindrom.morphUrl(url2);
 
-                await sleep(15);
-                    // by now, patch1 should have been applied, and pending patch2 should be applied, too.
+            await sleep(15);
+            // by now, patch1 should have been applied, and pending patch2 should be applied, too.
 
-                    // verify patch1
-                    assert.equal(palindrom.obj.children.length, 4);
-                    assert.deepEqual(palindrom.obj.children, [1, 2, 3, 4]);
-                    // verify patch2
-                    assert.equal(palindrom.obj.newChildren.Name$, 'XXX');
+            // verify patch1
+            assert.equal(palindrom.obj.children.length, 4);
+            assert.deepEqual(palindrom.obj.children, [1, 2, 3, 4]);
+            // verify patch2
+            assert.equal(palindrom.obj.newChildren.Name$, 'XXX');
 
-                    // OK send patch3
-                    server.send(JSON.stringify(patch3));
-                
+            // OK send patch3
+            server.send(JSON.stringify(patch3));
 
-                await sleep(15);
-                    // newChildren should be `null` again
-                    assert.equal(palindrom.obj.newChildren.Name$, null);
-                    assert.deepEqual(palindrom.obj.newChildren, {});
+            await sleep(15);
+            // newChildren should be `null` again
+            assert.equal(palindrom.obj.newChildren.Name$, null);
+            assert.deepEqual(palindrom.obj.newChildren, {});
 
-                    palindrom.unobserve();
-                    palindrom.unlisten();
-                    server.stop();
-                
-            
+            palindrom.unobserve();
+            palindrom.unlisten();
+            server.stop();
         });
     });
 }

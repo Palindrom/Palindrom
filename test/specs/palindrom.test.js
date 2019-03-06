@@ -38,12 +38,10 @@ describe('Palindrom', () => {
                 spy(ev.detail);
             });
             await sleep();
-                assert(spy.called);
-                assert.deepEqual(spy.getCall(0).args[0], { hello: 'world' });
-                
-            
+            assert(spy.called);
+            assert.deepEqual(spy.getCall(0).args[0], { hello: 'world' });
         });
-        it('should accept a JSON that has an empty string as a key', async() => {
+        it('should accept a JSON that has an empty string as a key', async () => {
             moxios.stubRequest('http://localhost/testURL', {
                 status: 200,
                 headers: { Location: 'http://localhost/testURL' },
@@ -57,13 +55,11 @@ describe('Palindrom', () => {
                 spy(ev.detail);
             });
             await sleep();
-                assert.deepEqual(spy.getCall(0).args[0], {
-                    hello: 'world',
-                    '': { hola: 'mundo' }
-                });
-                assert.equal('mundo', palindrom.obj[''].hola);
-                
-            
+            assert.deepEqual(spy.getCall(0).args[0], {
+                hello: 'world',
+                '': { hola: 'mundo' }
+            });
+            assert.equal('mundo', palindrom.obj[''].hola);
         });
     });
 });
@@ -87,14 +83,12 @@ describe('Palindrom', () => {
             });
 
             await sleep();
-                /* setting the object should throw an error */
-                assert.throws(
-                    () => (palindrom.obj = {}),
-                    Error,
-                    'palindrom.obj is readonly'
-                );
-                
-            
+            /* setting the object should throw an error */
+            assert.throws(
+                () => (palindrom.obj = {}),
+                Error,
+                'palindrom.obj is readonly'
+            );
         });
     });
 });
@@ -106,7 +100,7 @@ describe('Palindrom', () => {
         afterEach(() => {
             moxios.uninstall();
         });
-        it('should patch changes', async() => {
+        it('should patch changes', async () => {
             moxios.stubRequest('http://localhost/testURL', {
                 status: 200,
                 headers: { contentType: 'application/json' },
@@ -121,62 +115,21 @@ describe('Palindrom', () => {
                 tempObject = ev.detail;
             });
             await sleep();
-                assert.equal(tempObject.hello, 'world');
-                tempObject.hello = 'galaxy';
+            assert.equal(tempObject.hello, 'world');
+            tempObject.hello = 'galaxy';
 
-                /* now two ajax requests should had happened,
+            /* now two ajax requests should had happened,
                     the initial one, and the patch one (hello = world => hello = galaxy)*/
-                await sleep();
-                    assert.equal(2, moxios.requests.count());
-                    let request = moxios.requests.mostRecent();
-
-                    assert.equal(
-                        '[{"op":"replace","path":"/hello","value":"galaxy"}]',
-                        request.config.data
-                    );
-                    
-                
-            
-        });
-        it('should not patch changes after unobserve() was called', async() => {
-            moxios.stubRequest('http://localhost/testURL', {
-                status: 200,
-                headers: { contentType: 'application/json' },
-                responseText: '{"unwatched": "object"}'
-            });
-            let tempObject;
-            const palindrom = new Palindrom({
-                remoteUrl: 'http://localhost/testURL'
-            });
-            palindrom.addEventListener('state-reset', ev => {
-              tempObject = ev.detail;
-            });
-                await sleep();
-                assert.equal(1, moxios.requests.count());
-                assert.equal(tempObject.unwatched, 'object');
-                tempObject.unwatched = 'objecto';
-            
-
-            /* now two ajax requests should have happened, 
-            the initial one, and the patch one */
             await sleep();
-                assert.equal(2, moxios.requests.count());
-                let request = moxios.requests.mostRecent();
-                assert.equal(
-                    '[{"op":"replace","path":"/unwatched","value":"objecto"}]',
-                    request.config.data
-                );
-                palindrom.unobserve();
-                tempObject.hello = "a change that shouldn't be considered";
-            
+            assert.equal(2, moxios.requests.count());
+            let request = moxios.requests.mostRecent();
 
-            /* now palindrom is unobserved, requests should stay 2 */
-            await sleep();
-                assert.equal(2, moxios.requests.count());
-               
-            
+            assert.equal(
+                '[{"op":"replace","path":"/hello","value":"galaxy"}]',
+                request.config.data
+            );
         });
-        it('should patch changes after observe() was called', async() => {
+        it('should not patch changes after unobserve() was called', async () => {
             moxios.stubRequest('http://localhost/testURL', {
                 status: 200,
                 headers: { contentType: 'application/json' },
@@ -190,43 +143,72 @@ describe('Palindrom', () => {
                 tempObject = ev.detail;
             });
             await sleep();
-                assert.equal(tempObject.unwatched, 'object');
-                assert.equal(1, moxios.requests.count());
-                tempObject.unwatched = 'objecto';
-            
+            assert.equal(1, moxios.requests.count());
+            assert.equal(tempObject.unwatched, 'object');
+            tempObject.unwatched = 'objecto';
+
+            /* now two ajax requests should have happened, 
+            the initial one, and the patch one */
+            await sleep();
+            assert.equal(2, moxios.requests.count());
+            let request = moxios.requests.mostRecent();
+            assert.equal(
+                '[{"op":"replace","path":"/unwatched","value":"objecto"}]',
+                request.config.data
+            );
+            palindrom.unobserve();
+            tempObject.hello = "a change that shouldn't be considered";
+
+            /* now palindrom is unobserved, requests should stay 2 */
+            await sleep();
+            assert.equal(2, moxios.requests.count());
+        });
+        it('should patch changes after observe() was called', async () => {
+            moxios.stubRequest('http://localhost/testURL', {
+                status: 200,
+                headers: { contentType: 'application/json' },
+                responseText: '{"unwatched": "object"}'
+            });
+            let tempObject;
+            const palindrom = new Palindrom({
+                remoteUrl: 'http://localhost/testURL'
+            });
+            palindrom.addEventListener('state-reset', ev => {
+                tempObject = ev.detail;
+            });
+            await sleep();
+            assert.equal(tempObject.unwatched, 'object');
+            assert.equal(1, moxios.requests.count());
+            tempObject.unwatched = 'objecto';
 
             /* now two ajax requests should had happened, 
             the initial one, and the patch one */
             await sleep();
-                assert.equal(2, moxios.requests.count());
-                let request = moxios.requests.mostRecent();
-                assert.equal(
-                    '[{"op":"replace","path":"/unwatched","value":"objecto"}]',
-                    request.config.data
-                );
-                palindrom.unobserve();
-                tempObject.unwatched = 'a change that should NOT be considered';
-           
+            assert.equal(2, moxios.requests.count());
+            let request = moxios.requests.mostRecent();
+            assert.equal(
+                '[{"op":"replace","path":"/unwatched","value":"objecto"}]',
+                request.config.data
+            );
+            palindrom.unobserve();
+            tempObject.unwatched = 'a change that should NOT be considered';
 
             /* now palindrom is unobserved, requests should stay 2 */
             await sleep();
-                assert.equal(2, moxios.requests.count());
+            assert.equal(2, moxios.requests.count());
 
-                /* let's observe again */
-                palindrom.observe();
-                tempObject.unwatched = 'a change that SHOULD be considered';
-            
+            /* let's observe again */
+            palindrom.observe();
+            tempObject.unwatched = 'a change that SHOULD be considered';
 
             /* now palindrom is observed, requests should become 3  */
             await sleep();
-                request = moxios.requests.mostRecent();
-                assert.equal(3, moxios.requests.count());
-                assert.equal(
-                    '[{"op":"replace","path":"/unwatched","value":"a change that SHOULD be considered"}]',
-                    request.config.data
-                );
-                
-            
+            request = moxios.requests.mostRecent();
+            assert.equal(3, moxios.requests.count());
+            assert.equal(
+                '[{"op":"replace","path":"/unwatched","value":"a change that SHOULD be considered"}]',
+                request.config.data
+            );
         });
     });
 });

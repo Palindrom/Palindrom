@@ -33,10 +33,9 @@ describe('Sockets', () => {
                 assert(typeof palindrom.network._ws === 'undefined');
 
                 await sleep();
-                    /* socket should NOT be undefined after XHR delay */
-                    assert(typeof palindrom.network._ws !== 'undefined');
-                    server.stop();
-                
+                /* socket should NOT be undefined after XHR delay */
+                assert(typeof palindrom.network._ws !== 'undefined');
+                server.stop();
             });
 
             it('should calculate WebSocket URL correctly', async () => {
@@ -54,13 +53,9 @@ describe('Sockets', () => {
                 });
 
                 await sleep();
-                    assert(
-                        palindrom.network._ws.url === 'ws://localhost/testURL'
-                    );
+                assert(palindrom.network._ws.url === 'ws://localhost/testURL');
 
-                    
-                    server.stop();
-                
+                server.stop();
             });
 
             it('should resolve to correct WebSocket URL from location header, with root slash /', async () => {
@@ -80,12 +75,11 @@ describe('Sockets', () => {
                 });
 
                 await sleep();
-                    assert.equal(
-                        palindrom.network._ws.url,
-                        'ws://localhost/default/this_is_a_nice_url'
-                    );
-                    server.stop();
-                
+                assert.equal(
+                    palindrom.network._ws.url,
+                    'ws://localhost/default/this_is_a_nice_url'
+                );
+                server.stop();
             });
 
             it('should resolve to correct WebSocket URL from location header, relatively', async () => {
@@ -99,20 +93,18 @@ describe('Sockets', () => {
                     responseText: '{"hello": "world"}'
                 });
 
-                
                 var palindrom = new Palindrom({
                     remoteUrl: 'http://localhost/testURL',
                     useWebSocket: true
                 });
 
                 await sleep();
-                    assert(
-                        palindrom.network._ws.url ===
-                            'ws://localhost/default/this_is_a_nice_url'
-                    );
-                    
-                    server.stop();
-                
+                assert(
+                    palindrom.network._ws.url ===
+                        'ws://localhost/default/this_is_a_nice_url'
+                );
+
+                server.stop();
             });
 
             it('should resolve to correct WebSocket URL from location header, with root slash and extra pathname', async () => {
@@ -126,20 +118,18 @@ describe('Sockets', () => {
                     responseText: '{"hello": "world"}'
                 });
 
-                
                 var palindrom = new Palindrom({
                     remoteUrl: 'http://localhost/testURL/koko',
                     useWebSocket: true
                 });
 
                 await sleep();
-                    assert(
-                        palindrom.network._ws.url ===
-                            'ws://localhost/default/this_is_a_nice_url'
-                    );
-                    
-                    server.stop();
-                
+                assert(
+                    palindrom.network._ws.url ===
+                        'ws://localhost/default/this_is_a_nice_url'
+                );
+
+                server.stop();
             });
 
             it('should resolve to correct WebSocket URL from location header, without root slash and extra pathname', async () => {
@@ -153,20 +143,18 @@ describe('Sockets', () => {
                     responseText: '{"hello": "world"}'
                 });
 
-                
                 var palindrom = new Palindrom({
                     remoteUrl: 'http://localhost/testURL/koko',
                     useWebSocket: true
                 });
 
                 await sleep();
-                    assert(
-                        palindrom.network._ws.url ===
-                            'ws://localhost/testURL/default/this_is_a_nice_url'
-                    );
-                    /* stop server  */
-                    server.stop();
-                
+                assert(
+                    palindrom.network._ws.url ===
+                        'ws://localhost/testURL/default/this_is_a_nice_url'
+                );
+                /* stop server  */
+                server.stop();
             });
             it('should use wss for https remote URL', async () => {
                 const server = new MockSocketServer(
@@ -179,20 +167,18 @@ describe('Sockets', () => {
                     responseText: '{"hello": "world"}'
                 });
 
-                
                 var palindrom = new Palindrom({
                     remoteUrl: 'https://localhost/testURL/koko',
                     useWebSocket: true
                 });
 
                 await sleep();
-                    assert(
-                        palindrom.network._ws.url ===
-                            'wss://localhost/testURL/default/this_is_a_nice_url'
-                    );
-                    
-                    server.stop();
-                
+                assert(
+                    palindrom.network._ws.url ===
+                        'wss://localhost/testURL/default/this_is_a_nice_url'
+                );
+
+                server.stop();
             });
 
             it('should use same host, port, username, and password as provided in remoteUrl', async () => {
@@ -214,13 +200,12 @@ describe('Sockets', () => {
                 });
 
                 await sleep();
-                    assert(
-                        palindrom.network._ws.url ===
-                            'ws://localhost/test/this_is_a_nice_url'
-                    );
-                    
-                    server.stop();
-                
+                assert(
+                    palindrom.network._ws.url ===
+                        'ws://localhost/test/this_is_a_nice_url'
+                );
+
+                server.stop();
             });
             describe('Before XHR connection is established', () => {
                 it("shouldn't start a socket connection", async () => {
@@ -247,16 +232,16 @@ describe('Sockets', () => {
                     });
 
                     palindrom.addEventListener('state-reset', ev => {
-                        
-                        assert(everConnected === false, `shouldn't connect before XHR`);
+                        assert(
+                            everConnected === false,
+                            `shouldn't connect before XHR`
+                        );
                     });
 
-                    
                     await sleep(20);
-                        assert(everConnected === true, 'should connect after XHR ');
-                        
-                        server.stop();
-                    
+                    assert(everConnected === true, 'should connect after XHR ');
+
+                    server.stop();
                 });
 
                 it("shouldn't send any change patches", async () => {
@@ -272,12 +257,7 @@ describe('Sockets', () => {
                         responseText: '{"hello": "world"}'
                     });
 
-                    
                     const messages = [];
-
-                    
-                    
-                    
 
                     server.on('message', patches => {
                         let patchesParsed = JSON.parse(patches);
@@ -291,13 +271,11 @@ describe('Sockets', () => {
 
                     // Wait for XHR to finish
                     await sleep();
-                        palindrom.obj.firstName = 'Omar';
-                    
+                    palindrom.obj.firstName = 'Omar';
 
-                        await sleep();
-                        assert(messages.length === 0);
-                        server.stop();
-                    
+                    await sleep();
+                    assert(messages.length === 0);
+                    server.stop();
                 });
             });
             describe('Sockets events', () => {
@@ -322,13 +300,20 @@ describe('Sockets', () => {
                         spy(ev.detail);
                     });
 
-                    assert.equal(spy.callCount, 0, 'socket should not be opened before XHR delay');
+                    assert.equal(
+                        spy.callCount,
+                        0,
+                        'socket should not be opened before XHR delay'
+                    );
 
                     await sleep(20);
-                        
-                        assert.equal(spy.callCount, 1, 'socket should be opened before XHR delay');
-                        server.stop();
-                    
+
+                    assert.equal(
+                        spy.callCount,
+                        1,
+                        'socket should be opened before XHR delay'
+                    );
+                    server.stop();
                 });
 
                 it('Should call onConnectionError when a non-JSON message is sent', async () => {
@@ -356,30 +341,29 @@ describe('Sockets', () => {
                     assert(spy.notCalled);
 
                     await sleep();
-                        server.send(
-                            `[{"op": "replace", "path": "/hello", "value": "bye"}]`
-                        );
+                    server.send(
+                        `[{"op": "replace", "path": "/hello", "value": "bye"}]`
+                    );
 
-                        assert.equal(palindrom.obj.hello, 'bye');
+                    assert.equal(palindrom.obj.hello, 'bye');
 
-                        /* no issues so far */
-                        assert(spy.notCalled);
+                    /* no issues so far */
+                    assert(spy.notCalled);
 
-                        server.send(`Some error message from the server`);
+                    server.send(`Some error message from the server`);
 
-                        /* Now! */
-                        assert(spy.calledOnce);
+                    /* Now! */
+                    assert(spy.calledOnce);
 
-                        const error = spy.lastCall.args[0];
+                    const error = spy.lastCall.args[0];
 
-                        assert(error instanceof PalindromConnectionError);
-                        assert.equal(
-                            error.message,
-                            'Server error\n\tSome error message from the server'
-                        );
+                    assert(error instanceof PalindromConnectionError);
+                    assert.equal(
+                        error.message,
+                        'Server error\n\tSome error message from the server'
+                    );
 
-                        server.stop();
-                    
+                    server.stop();
                 });
             });
             describe('After connection is established', () => {
@@ -396,12 +380,7 @@ describe('Sockets', () => {
                         responseText: '{"hello": "world"}'
                     });
 
-                    
                     const messages = [];
-
-                    
-                    
-                    
 
                     server.on('message', patches => {
                         let patchesParsed = JSON.parse(patches);
@@ -414,17 +393,15 @@ describe('Sockets', () => {
                     });
 
                     await sleep(20);
-                        palindrom.obj.firstName = 'Omar';
-                        await sleep();
-                            assert(messages.length === 1);
-                            assert.deepEqual(messages[0], {
-                                op: 'add',
-                                path: '/firstName',
-                                value: 'Omar'
-                            });
-                            server.stop();
-                        
-                    
+                    palindrom.obj.firstName = 'Omar';
+                    await sleep();
+                    assert(messages.length === 1);
+                    assert.deepEqual(messages[0], {
+                        op: 'add',
+                        path: '/firstName',
+                        value: 'Omar'
+                    });
+                    server.stop();
                 });
 
                 it('should send patches over HTTP before ws.readyState is OPENED, and over WebSocket after ws.readyState is OPENED', async () => {
@@ -440,12 +417,7 @@ describe('Sockets', () => {
                         responseText: '{"hello": "world"}'
                     });
 
-                    
                     const messages = [];
-
-                    
-                    
-                    
 
                     server.on('message', patches => {
                         let patchesParsed = JSON.parse(patches);
@@ -461,50 +433,46 @@ describe('Sockets', () => {
                         obj = ev.detail;
                     });
                     await sleep();
-                        moxios.stubRequest(
-                            'http://localhost/test/this_is_a_fast_url',
-                            {
-                                status: 200,
-                                responseText: '[]'
-                            }
-                        );
+                    moxios.stubRequest(
+                        'http://localhost/test/this_is_a_fast_url',
+                        {
+                            status: 200,
+                            responseText: '[]'
+                        }
+                    );
 
-                        /* here, socket connection isn't established yet, let's issue a change */
-                        obj.name = 'Mark';
+                    /* here, socket connection isn't established yet, let's issue a change */
+                    obj.name = 'Mark';
 
-                        await sleep();
-                            assert.equal(
-                                '[{"op":"add","path":"/name","value":"Mark"}]',
-                                    moxios.requests.mostRecent().config.data
-                            );
+                    await sleep();
+                    assert.equal(
+                        '[{"op":"add","path":"/name","value":"Mark"}]',
+                        moxios.requests.mostRecent().config.data
+                    );
 
-                            /* make sure there is no socket messages */
-                            assert(messages.length === 0);
-                        
+                    /* make sure there is no socket messages */
+                    assert(messages.length === 0);
 
-                        /* now socket is connected, let's issue a change */
-                        await sleep();
-                            palindrom.obj.firstName = 'Omar';
+                    /* now socket is connected, let's issue a change */
+                    await sleep();
+                    palindrom.obj.firstName = 'Omar';
 
-                            assert(messages.length === 1);
-                            assert(
-                                JSON.stringify(messages[0]) ===
-                                    '{"op":"add","path":"/firstName","value":"Omar"}'
-                            );
-                        
+                    assert(messages.length === 1);
+                    assert(
+                        JSON.stringify(messages[0]) ===
+                            '{"op":"add","path":"/firstName","value":"Omar"}'
+                    );
 
-                        /* now socket is connected, let's issue another change */
-                        await sleep();
-                            palindrom.obj.firstName = 'Hanan';
+                    /* now socket is connected, let's issue another change */
+                    await sleep();
+                    palindrom.obj.firstName = 'Hanan';
 
-                            assert(messages.length === 2);
-                            assert(
-                                JSON.stringify(messages[1]) ===
-                                    '{"op":"replace","path":"/firstName","value":"Hanan"}'
-                            );
-                            server.stop();
-                        
-                    
+                    assert(messages.length === 2);
+                    assert(
+                        JSON.stringify(messages[1]) ===
+                            '{"op":"replace","path":"/firstName","value":"Hanan"}'
+                    );
+                    server.stop();
                 });
             });
         });
