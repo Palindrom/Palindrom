@@ -30,7 +30,6 @@
   ],
   "main": "./src/palindrom.js",
   "dependencies": {
-    "axios": "^0.15.3",
     "events": "^1.1.1",
     "fast-json-patch": "^2.0.7",
     "json-patch-ot": "^1.0.1",
@@ -50,7 +49,6 @@
     "json-loader": "^0.5.4",
     "mocha": "^5.2.0",
     "mock-socket": "6.0.4",
-    "moxios": "^0.3.0",
     "polyserve": "^0.27.12",
     "saucelabs": "^1.5.0",
     "selenium-webdriver": "^3.3.0",

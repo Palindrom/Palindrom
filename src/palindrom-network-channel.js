@@ -1,5 +1,4 @@
 import URL from './URL';
-import axios from 'axios';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors';
 
 /* We are going to hand `websocket` lib as an external to webpack
@@ -12,10 +11,10 @@ import { w3cwebsocket as NodeWebSocket } from 'websocket';
 /* this allows us to stub WebSockets */
 if (!global.MockWebSocket && NodeWebSocket) {
     /* we are in Node production env */
-    var WebSocket = NodeWebSocket;
+    global.WebSocket = NodeWebSocket;
 } else if (global.MockWebSocket) {
     /* we are in testing env */
-    var WebSocket = global.MockWebSocket;
+    global.WebSocket = global.MockWebSocket;
 }
 /* else {
     we are using Browser's WebSocket
@@ -23,22 +22,6 @@ if (!global.MockWebSocket && NodeWebSocket) {
 
 const CLIENT = 'Client';
 const SERVER = 'Server';
-
-/**
- *
- * @param {Error} error checks of Axious returned an error, but that is a valid response
- */
-function isValid4xxResponse(error) {
-    const res = error.response;
-    const statusCode = res.status;
-    //this is not a fatal error
-    return (
-        statusCode >= 400 &&
-        statusCode < 500 &&
-        res.headers &&
-        res.headers.contentType === 'application/json-patch+json'
-    );
-}
 
 /**
  * Replaces http and https to ws and wss in a URL and returns it as a string.
@@ -125,7 +108,7 @@ export default class PalindromNetworkChannel {
     }
 
     async _establish(reconnectionPendingData = null) {
-        const res = await this._xhr(
+        const data = await this._xhr(
             this.remoteUrl.href + (reconnectionPendingData ? '/reconnect' : ''),
             'application/json',
             reconnectionPendingData
@@ -133,7 +116,7 @@ export default class PalindromNetworkChannel {
         if (this.useWebSocket) {
             this.webSocketUpgrade(this.onSocketOpened);
         }
-        return res.data;
+        return data;
     }
 
     /**
@@ -154,7 +137,7 @@ export default class PalindromNetworkChannel {
                 'application/json-patch+json',
                 msg
             );
-            this.onReceive(res.data, url, res.config.method.toUpperCase());
+            this.onReceive(res.data, url, 'GET');
         }
         return this;
     }
@@ -183,6 +166,7 @@ export default class PalindromNetworkChannel {
         const upgradeURL = this.wsUrl;
 
         this.closeConnection(this);
+        debugger;
         this._ws = new WebSocket(upgradeURL);
         this._ws.onopen = event => {
             this.onStateChange(this._ws.readyState, upgradeURL);
@@ -270,14 +254,14 @@ export default class PalindromNetworkChannel {
      */
     async getPatchUsingHTTP(href) {
         // we don't need to try catch here because we want the error to be thrown at whoever calls getPatchUsingHTTP
-        const res = await this._xhr(
+        const data = await this._xhr(
             href,
             'application/json-patch+json',
             null,
             true
         );
-        this.onReceive(res.data, href, res.config.method.toUpperCase());
-        return res;
+        this.onReceive(data, href, 'GET');
+        return data;
     }
 
     _setRemoteUrl(remoteUrl) {
@@ -302,10 +286,9 @@ export default class PalindromNetworkChannel {
     }
 
     _handleLocationHeader(res) {
-        /* Axios always returns lowercase headers */
         const location =
             res.headers &&
-            (res.headers['x-location'] || res.headers['location']);
+            (res.headers.get('x-location') || res.headers.get('location'));
         if (location) {
             this._setRemoteUrl(location);
         }
@@ -349,11 +332,12 @@ export default class PalindromNetworkChannel {
      */
     async _xhr(url, accept, data, setReferer) {
         const method = data ? 'PATCH' : 'GET';
-        const headers = {};
-        let responsePromise;
+        const config = { headers: {}, method, credentials: 'include' };
+        const headers = config.headers;
 
         if (data) {
             headers['Content-Type'] = 'application/json-patch+json';
+            config.body = JSON.stringify(data);
         }
         if (accept) {
             headers['Accept'] = accept;
@@ -361,29 +345,23 @@ export default class PalindromNetworkChannel {
         if (this.remoteUrl && setReferer) {
             headers['X-Referer'] = this.remoteUrl.pathname;
         }
-        if (method === 'GET') {
-            responsePromise = axios.get(url, {
-                headers
-            });
-        } else {
-            responsePromise = axios.patch(url, data, {
-                headers
-            });
-        }
+
+        const response = await fetch(url, config);
+        const dataPromise = response.json();
+
         this.onSend({ data, url, method });
 
-        return responsePromise
-            .then(res => {
-                this._handleLocationHeader(res);
-                return res;
-            })
-            .catch(error => {
+        return dataPromise.then(data => {
+            this._handleLocationHeader(response);
+            return data;
+        });
+        /*.catch(error => {
                 if (isValid4xxResponse(error)) {
                     return error.response;
                 } else {
                     this._handleFailureResponse(error);
                     return Promise.reject(error);
                 }
-            });
+            });*/
     }
 }
