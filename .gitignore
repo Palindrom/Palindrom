@@ -3,4 +3,5 @@ node_modules
 /bower_components
 *.log
 test/runner-browser.js
+test/runner-browser.js.map
 test/runner-node.js

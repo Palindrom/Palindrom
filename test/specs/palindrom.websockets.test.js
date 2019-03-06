@@ -432,7 +432,7 @@ describe('Sockets', () => {
                     palindrom.addEventListener('state-reset', ev => {
                         obj = ev.detail;
                     });
-                    await sleep();
+                    
                     moxios.stubRequest(
                         'http://localhost/test/this_is_a_fast_url',
                         {
@@ -440,7 +440,7 @@ describe('Sockets', () => {
                             responseText: '[]'
                         }
                     );
-
+                    await sleep();
                     /* here, socket connection isn't established yet, let's issue a change */
                     obj.name = 'Mark';
 
@@ -454,7 +454,7 @@ describe('Sockets', () => {
                     assert(messages.length === 0);
 
                     /* now socket is connected, let's issue a change */
-                    await sleep();
+                    await sleep(30);
                     palindrom.obj.firstName = 'Omar';
 
                     assert(messages.length === 1);
