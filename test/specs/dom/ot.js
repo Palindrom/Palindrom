@@ -59,7 +59,7 @@ if (typeof window !== 'undefined') {
 
         afterEach(function() {
             history.pushState(null, null, currLoc);
-            
+            fetchMock.restore();
         });
 
         it('should patch a mix of XHR and WS incoming patches in the correct order', async () => {
@@ -80,15 +80,15 @@ if (typeof window !== 'undefined') {
                 ot: true,
                 useWebSocket: true
             });
-            await sleep(30);
+            await sleep(15);
             // make sure initial request is applied to `palindrom.obj`.
             assert.equal(palindrom.obj.children.length, 3);
 
             // respond with patch2, BEFORE patch1
-            await sleep(15);
+            await sleep();
             server.send(JSON.stringify(patch2));
 
-            await sleep(15);
+            await sleep();
             // make sure patch2 has NOT been applied (because patch1 didn't arrive yet)
             assert.equal(palindrom.obj.children.length, 3);
             assert.equal(palindrom.obj.newChildren, null);
@@ -103,7 +103,7 @@ if (typeof window !== 'undefined') {
             });
             palindrom.morphUrl(url2);
 
-            await sleep(15);
+            await sleep();
             // by now, patch1 should have been applied, and pending patch2 should be applied, too.
 
             // verify patch1
@@ -115,7 +115,8 @@ if (typeof window !== 'undefined') {
             // OK send patch3
             server.send(JSON.stringify(patch3));
 
-            await sleep(15);
+            await sleep();
+
             // newChildren should be `null` again
             assert.equal(palindrom.obj.newChildren.Name$, null);
             assert.deepEqual(palindrom.obj.newChildren, {});
@@ -123,6 +124,7 @@ if (typeof window !== 'undefined') {
             palindrom.unobserve();
             palindrom.unlisten();
             server.stop();
+            fetchMock.restore();
         });
     });
 }

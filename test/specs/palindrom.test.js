@@ -2,7 +2,7 @@ import Palindrom from '../../src/palindrom';
 import assert from 'assert';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import { sleep } from '../utils';
+import { sleep, getTestURL } from '../utils';
 const currentVersion = require('../../package.json').version;
 
 describe('Palindrom', () => {
@@ -12,7 +12,7 @@ describe('Palindrom', () => {
         });
         it('Palindrom instance should contain the version', function() {
             const palindrom = new Palindrom({
-                remoteUrl: 'http://localhost/testURL'
+                remoteUrl: getTestURL('testURL')
             });
             assert.equal(currentVersion, palindrom.version);
         });
@@ -22,17 +22,17 @@ describe('Palindrom', () => {
             
         });
         afterEach(() => {
-            
+            fetchMock.restore();
         });
         it('should initiate an ajax request when initiated, and call the callback function', async () => {
-            fetchMock.mock('http://localhost/testURL', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
-                headers: { Location: 'http://localhost/testURL' },
+                headers: { Location: getTestURL('testURL') },
                 body: '{"hello": "world"}'
             });
             const spy = sinon.spy();
             const palindrom = new Palindrom({
-                remoteUrl: 'http://localhost/testURL'
+                remoteUrl: getTestURL('testURL')
             });
             palindrom.addEventListener('state-reset', ev => {
                 spy(ev.detail);
@@ -42,14 +42,14 @@ describe('Palindrom', () => {
             assert.deepEqual(spy.getCall(0).args[0], { hello: 'world' });
         });
         it('should accept a JSON that has an empty string as a key', async () => {
-            fetchMock.mock('http://localhost/testURL', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
-                headers: { Location: 'http://localhost/testURL' },
+                headers: { Location: getTestURL('testURL') },
                 body: '{"hello": "world","": {"hola": "mundo"}}'
             });
             const spy = sinon.spy();
             let palindrom = new Palindrom({
-                remoteUrl: 'http://localhost/testURL'
+                remoteUrl: getTestURL('testURL')
             });
             palindrom.addEventListener('state-reset', ev => {
                 spy(ev.detail);
@@ -65,21 +65,15 @@ describe('Palindrom', () => {
 });
 describe('Palindrom', () => {
     describe('obj', () => {
-        beforeEach(() => {
-            
-        });
-        afterEach(() => {
-            
-        });
         it('palindrom.obj should be readonly', async () => {
-            fetchMock.mock('http://localhost/testURL', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
                 headers: { contentType: 'application/json' },
                 body: '{"hello": "world"}'
             });
 
             const palindrom = new Palindrom({
-                remoteUrl: 'http://localhost/testURL'
+                remoteUrl: getTestURL('testURL')
             });
 
             await sleep();
@@ -89,6 +83,7 @@ describe('Palindrom', () => {
                 Error,
                 'palindrom.obj is readonly'
             );
+            fetchMock.restore();
         });
     });
 });
@@ -98,17 +93,17 @@ describe('Palindrom', () => {
             
         });
         afterEach(() => {
-            
+            fetchMock.restore();
         });
         it('should patch changes', async () => {
-            fetchMock.mock('http://localhost/testURL', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
                 headers: { contentType: 'application/json' },
                 body: '{"hello": "world"}'
             });
 
             const palindrom = new Palindrom({
-                remoteUrl: 'http://localhost/testURL'
+                remoteUrl: getTestURL('testURL')
             });
             let tempObject;
             palindrom.addEventListener('state-reset', ev => {
@@ -121,81 +116,82 @@ describe('Palindrom', () => {
             /* now two ajax requests should had happened,
                     the initial one, and the patch one (hello = world => hello = galaxy)*/
             await sleep();
-            assert.equal(2, moxios.requests.count());
-            let request = moxios.requests.mostRecent();
+            assert.equal(2, fetchMock.calls().length);
+            let request = fetchMock.lastOptions();
 
             assert.equal(
                 '[{"op":"replace","path":"/hello","value":"galaxy"}]',
-                request.config.data
+                JSON.parse(request.body)
             );
         });
         it('should not patch changes after unobserve() was called', async () => {
-            fetchMock.mock('http://localhost/testURL', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
                 headers: { contentType: 'application/json' },
                 body: '{"unwatched": "object"}'
             });
+            assert.equal(0, fetchMock.calls().length, 'asdsad');
             let tempObject;
             const palindrom = new Palindrom({
-                remoteUrl: 'http://localhost/testURL'
+                remoteUrl: getTestURL('testURL')
             });
             palindrom.addEventListener('state-reset', ev => {
                 tempObject = ev.detail;
             });
             await sleep();
-            assert.equal(1, moxios.requests.count());
+            assert.equal(1, fetchMock.calls().length);
             assert.equal(tempObject.unwatched, 'object');
             tempObject.unwatched = 'objecto';
 
             /* now two ajax requests should have happened, 
             the initial one, and the patch one */
             await sleep();
-            assert.equal(2, moxios.requests.count());
-            let request = moxios.requests.mostRecent();
+            assert.equal(2, fetchMock.calls().length);
+            let request = fetchMock.lastOptions();
             assert.equal(
                 '[{"op":"replace","path":"/unwatched","value":"objecto"}]',
-                request.config.data
+                JSON.parse(request.body)
             );
             palindrom.unobserve();
             tempObject.hello = "a change that shouldn't be considered";
 
             /* now palindrom is unobserved, requests should stay 2 */
             await sleep();
-            assert.equal(2, moxios.requests.count());
+            assert.equal(2, fetchMock.calls().length);
         });
         it('should patch changes after observe() was called', async () => {
-            fetchMock.mock('http://localhost/testURL', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
                 headers: { contentType: 'application/json' },
                 body: '{"unwatched": "object"}'
             });
             let tempObject;
             const palindrom = new Palindrom({
-                remoteUrl: 'http://localhost/testURL'
+                remoteUrl: getTestURL('testURL')
             });
             palindrom.addEventListener('state-reset', ev => {
                 tempObject = ev.detail;
             });
             await sleep();
             assert.equal(tempObject.unwatched, 'object');
-            assert.equal(1, moxios.requests.count());
+            assert.equal(1, fetchMock.calls().length);
             tempObject.unwatched = 'objecto';
 
             /* now two ajax requests should had happened, 
             the initial one, and the patch one */
             await sleep();
-            assert.equal(2, moxios.requests.count());
-            let request = moxios.requests.mostRecent();
+            assert.equal(2, fetchMock.calls().length);
+            let request = fetchMock.lastOptions();
             assert.equal(
                 '[{"op":"replace","path":"/unwatched","value":"objecto"}]',
-                request.config.data
+                JSON.parse(request.body)
             );
             palindrom.unobserve();
             tempObject.unwatched = 'a change that should NOT be considered';
 
             /* now palindrom is unobserved, requests should stay 2 */
             await sleep();
-            assert.equal(2, moxios.requests.count());
+            assert.equal(2, fetchMock.calls().length);
 
             /* let's observe again */
             palindrom.observe();
@@ -203,11 +199,11 @@ describe('Palindrom', () => {
 
             /* now palindrom is observed, requests should become 3  */
             await sleep();
-            request = moxios.requests.mostRecent();
-            assert.equal(3, moxios.requests.count());
+            request = fetchMock.lastOptions();
+            assert.equal(3, fetchMock.calls().length);
             assert.equal(
                 '[{"op":"replace","path":"/unwatched","value":"a change that SHOULD be considered"}]',
-                request.config.data
+                JSON.parse(request.body)
             );
         });
     });

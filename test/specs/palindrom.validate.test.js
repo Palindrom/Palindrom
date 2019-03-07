@@ -3,7 +3,7 @@ import assert from 'assert';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { validate, JsonPatchError } from 'fast-json-patch';
-import { sleep } from '../utils';
+import { sleep, getTestURL } from '../utils';
 
 describe('Palindrom', () => {
     describe('#ValidatePatches', () => {
@@ -11,12 +11,12 @@ describe('Palindrom', () => {
             
         });
         afterEach(() => {
-            
+            fetchMock.restore();
         });
         it('should pass empty sequence', async () => {
-            fetchMock.mock('http://localhost/testURL', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
-                headers: { Location: 'http://localhost/testURL' },
+                headers: { Location: getTestURL('testURL') },
                 body: '{"hello": "world"}'
             });
             const tree = {
@@ -46,9 +46,9 @@ describe('Palindrom', () => {
         });
 
         it('replacing a nonexisting property should cause OPERATION_PATH_UNRESOLVABLE (test built into Fast-JSON-Patch)', async () => {
-            fetchMock.mock('http://localhost/testURL', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
-                headers: { Location: 'http://localhost/testURL' },
+                headers: { Location: getTestURL('testURL') },
                 body: '{"hello": "world"}'
             });
             const tree = {
@@ -82,9 +82,9 @@ describe('Palindrom', () => {
         });
 
         it('undefined value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', async () => {
-            fetchMock.mock('http://localhost/testURL', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
-                headers: { Location: 'http://localhost/testURL' },
+                headers: { Location: getTestURL('testURL') },
                 body: '{"hello": "world"}'
             });
             const tree = {
@@ -117,9 +117,9 @@ describe('Palindrom', () => {
         });
 
         it('no value should cause OPERATION_VALUE_REQUIRED (test built into Fast-JSON-Patch)', async () => {
-            fetchMock.mock('http://localhost/testURL', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
-                headers: { Location: 'http://localhost/testURL' },
+                headers: { Location: getTestURL('testURL') },
                 body: '{"hello": "world"}'
             });
             const tree = {
@@ -149,9 +149,9 @@ describe('Palindrom', () => {
         });
 
         it('object with undefined value should cause OPERATION_VALUE_CANNOT_CONTAIN_UNDEFINED (test built into Fast-JSON-Patch)', async () => {
-            fetchMock.mock('http://localhost/testURL', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
-                headers: { Location: 'http://localhost/testURL' },
+                headers: { Location: getTestURL('testURL') },
                 body: '{"hello": "world"}'
             });
             const tree = {

@@ -23,6 +23,17 @@ if (!global.MockWebSocket && NodeWebSocket) {
 const CLIENT = 'Client';
 const SERVER = 'Server';
 
+function isValidResponse(response) {
+    const statusCode = res.status;
+    debugger;
+    //this is not a fatal error
+    return (
+        response.statusCode < 500 &&
+        res.headers &&
+        res.headers.contentType === 'application/json-patch+json'
+    );
+}
+
 /**
  * Replaces http and https to ws and wss in a URL and returns it as a string.
  * @param  {String} remoteUrl HTTP remote address
@@ -132,12 +143,12 @@ export default class PalindromNetworkChannel {
             this.onSend({ data: msg, url: this._ws.url, method: 'WS' });
         } else {
             const url = this.remoteUrl.href;
-            const res = await this._xhr(
+            const data = await this._xhr(
                 url,
                 'application/json-patch+json',
                 msg
             );
-            this.onReceive(res.data, url, 'GET');
+            this.onReceive(data, url, 'GET');
         }
         return this;
     }
@@ -166,7 +177,6 @@ export default class PalindromNetworkChannel {
         const upgradeURL = this.wsUrl;
 
         this.closeConnection(this);
-        debugger;
         this._ws = new WebSocket(upgradeURL);
         this._ws.onopen = event => {
             this.onStateChange(this._ws.readyState, upgradeURL);
@@ -297,10 +307,7 @@ export default class PalindromNetworkChannel {
      * Handles unsecessful HTTP requests
      * @param error
      */
-    _handleFailureResponse(error) {
-        const res = error.response;
-        const url = res.config.url;
-        const method = res.config.method;
+    async _handleFailureResponse(url, method, error) {
         // no sufficient error information, we need to create on our own
         var statusCode = -1;
         var statusText = `An unknown network error has occurred. Raw message: ${
@@ -346,15 +353,27 @@ export default class PalindromNetworkChannel {
             headers['X-Referer'] = this.remoteUrl.pathname;
         }
 
+        this.onSend({ data, url, method });
+
         const response = await fetch(url, config);
         const dataPromise = response.json();
 
-        this.onSend({ data, url, method });
+        return dataPromise
+            .then(data => {
+                // if we're here, it's a valid JSON response
+                if (response.status < 500) {
+                    this._handleLocationHeader(response);
+                    return data;
+                } else {
+                    const error = new Error(`HTTP ${response.status} response: response body is ${JSON.stringify(data)}`);
+                    throw error;
+                }
+            })
+            .catch(error => {
+                this._handleFailureResponse(url, method, error);
+                throw error;
+            });
 
-        return dataPromise.then(data => {
-            this._handleLocationHeader(response);
-            return data;
-        });
         /*.catch(error => {
                 if (isValid4xxResponse(error)) {
                     return error.response;

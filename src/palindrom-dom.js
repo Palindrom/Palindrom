@@ -42,11 +42,12 @@ import Palindrom from './palindrom'
             this.clickHandler = this.clickHandler.bind(this);
             this.historyHandler = this.historyHandler.bind(this);
             this.morphUrlEventHandler = this.morphUrlEventHandler.bind(this);
-
+            this.redirectEventHandler = this.redirectEventHandler.bind(this);
+            
             /* in some cases, people emit redirect requests before `listen` is called */
             this.element.addEventListener(
                 'palindrom-redirect-pushstate',
-                this.historyHandler
+                this.redirectEventHandler
             );
 
             if ('scrollRestoration' in history) {
@@ -66,7 +67,7 @@ import Palindrom from './palindrom'
 
             this.element.addEventListener(
                 'palindrom-redirect-pushstate',
-                this.historyHandler
+                this.redirectEventHandler
             );
         }
         unlisten() {
@@ -76,7 +77,7 @@ import Palindrom from './palindrom'
             window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
             this.element.removeEventListener(
                 'palindrom-redirect-pushstate',
-                this.historyHandler
+                this.redirectEventHandler
             );
 
             this.element.removeEventListener(
@@ -252,7 +253,10 @@ import Palindrom from './palindrom'
                 }
             }
         }
-
+        async redirectEventHandler(event) {
+            const href = event.detail.url;
+            return await this.morphUrl(href);
+        }
         async historyHandler(event) {
             await this.getPatchUsingHTTP(location.href);
             const [scrollX, scrollY] = event.state || [0, 0];

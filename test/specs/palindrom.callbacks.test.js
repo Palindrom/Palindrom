@@ -2,30 +2,26 @@ import Palindrom from '../../src/palindrom';
 import assert from 'assert';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import { sleep } from '../utils';
+import { sleep, getTestURL } from '../utils';
 
 describe('Callbacks', () => {
     beforeEach(() => {
-        
+        fetchMock.mock(getTestURL('testURL'), {
+            status: 200,
+            headers: { Location: getTestURL('testURL') },
+            body: '{"hello": "world"}'
+        });
     });
     afterEach(function() {
         fetchMock.restore();
     });
 
     it('should dispatch local-change event for outgoing patches', async () => {
-        debugger
-
-        fetchMock.mock('http://house.of.cards/testURL', {
-            status: 200,
-            headers: { Location: 'http://house.of.cards/testURL' },
-            body: '{"hello": "world"}'
-        });
-
         const sentSpy = sinon.spy();
         let tempObj;
 
         const palindrom = new Palindrom({
-            remoteUrl: 'http://house.of.cards/testURL'
+            remoteUrl: getTestURL('testURL')
         });
         palindrom.addEventListener('state-reset', ev => (tempObj = ev.detail));
         palindrom.addEventListener('local-change', ev => sentSpy(ev.detail));
@@ -44,14 +40,8 @@ describe('Callbacks', () => {
     });
 
     it('should dispatch state-reset event for applied patches on root (initial state)', async () => {
-        fetchMock.mock('http://house.of.cards/testURL', {
-            status: 200,
-            headers: { Location: 'http://house.of.cards/testURL' },
-            body: '{"hello": "world"}'
-        });
-
         const palindrom = new Palindrom({
-            remoteUrl: 'http://house.of.cards/testURL'
+            remoteUrl: getTestURL('testURL')
         });
         let stateWasReset = false;
         palindrom.addEventListener('state-reset', ev => {

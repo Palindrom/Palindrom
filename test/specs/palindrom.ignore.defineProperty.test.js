@@ -1,38 +1,32 @@
 import Palindrom from '../../src/palindrom';
 import fetchMock from 'fetch-mock';
 import assert from 'assert';
-import { sleep } from '../utils';
+import { sleep, getTestURL } from '../utils';
 
 describe('Palindrom', () => {
     describe('#ignore by defineProperty', () => {
-        beforeEach(() => {
-            
-        });
-        afterEach(() => {
-            
-        });
         it('Should not send patches for non-enumerable properties', async () => {
-            fetchMock.mock('http://localhost/testURL', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
                 location: 'http://localhost/testURL/patch-server',
                 headers: { contentType: 'application/json' },
                 body: '{"hello": "world"}'
             });
             const palindrom = new Palindrom({
-                remoteUrl: 'http://localhost/testURL'
+                remoteUrl: getTestURL('testURL')
             });
             let obj;
             palindrom.addEventListener('state-reset', ev => {
                 obj = ev.detail;
             });
             await sleep();
-            assert(moxios.requests.count() === 1);
+            assert(fetchMock.calls().length === 1);
             // a change that emits a patch
             obj.newProp = 'name';
 
             // wait for ajax
             await sleep();
-            assert(moxios.requests.count() === 2);
+            assert(fetchMock.calls().length === 2);
 
             // a change that does not emit
             Object.defineProperty(obj, 'ignored', {
@@ -48,7 +42,9 @@ describe('Palindrom', () => {
             // wait for ajax
             await sleep();
             // no further requests
-            assert(moxios.requests.count() === 2);
+            assert(fetchMock.calls().length === 2);
+            
+            fetchMock.restore();
         });
     });
 });

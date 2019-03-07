@@ -3,34 +3,24 @@ import Palindrom from '../../src/palindrom';
 import assert from 'assert';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import { sleep } from '../utils';
+import { sleep, getTestURL } from '../utils';
 
 describe('Callbacks, onPatchSent and onPatchReceived', () => {
-    beforeEach(() => {
-        
-    });
-    afterEach(() => {
-        
-    });
-
     describe('XHR', function() {
-        afterEach(function() {
-            fetchMock.restore();
-        });
         it('should dispatch patch-sent and patch-received events when a patch is sent and received', async () => {
-            fetchMock.mock('http://house.of.cards/testURL', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
-                headers: { location: 'http://house.of.cards/testURL2' },
                 body: '{"hello": "world"}'
             });
 
             const onPatchReceived = sinon.spy();
             const onPatchSent = sinon.spy();
             let tempObj;
-
+            
             const palindrom = new Palindrom({
-                remoteUrl: 'http://house.of.cards/testURL'
+                remoteUrl: getTestURL('testURL')
             });
+            
 
             palindrom.addEventListener('state-reset', ev => {
                 tempObj = ev.detail;
@@ -44,7 +34,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                 onPatchSent(ev.detail.data);
             });
 
-            await sleep();
+            await sleep(10);
 
             /* onPatchReceived, shouldn't be called now */
             assert(
@@ -55,21 +45,24 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             /* onPatchSent, shouldnt be called now, the initial request doesnt count since you can't addEventLister before it occurs */
             assert(onPatchSent.notCalled, 'onPatchSent should not be called');
 
+            fetchMock.restore();
+            
             /* prepare response */
-            fetchMock.mock('http://house.of.cards/testURL2', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
-                headers: { Location: 'http://house.of.cards/testURL' },
                 body:
                     '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]'
             });
 
             /* issue a change */
             tempObj.hello = 'onPatchSent callback';
+
             assert(onPatchSent.calledOnce);
 
             /* wait for XHR */
             await sleep();
             assert(onPatchReceived.calledOnce);
+            
             assert.deepEqual(onPatchReceived.lastCall.args[0], [
                 {
                     op: 'replace',
@@ -77,19 +70,20 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                     value: 'onPatchReceived callback'
                 }
             ]);
-        });
-        it('should dispatch patch-received event even if the patch was bad', async () => {
-            fetchMock.mock('http://house.of.cards/testURL', {
-                status: 200,
-                headers: { location: 'http://house.of.cards/testURL2' },
-                body: '{"hello": "world"}'
-            });
 
+            fetchMock.restore();
+        });
+        it('HTTP - should dispatch patch-received event even if the patch was bad', async () => {
             const onPatchReceived = sinon.spy();
             let tempObj;
 
+            fetchMock.mock(getTestURL('testURL'), {
+                status: 200,
+                body: '{"hello": "world"}'
+            });
+
             const palindrom = new Palindrom({
-                remoteUrl: 'http://house.of.cards/testURL'
+                remoteUrl: getTestURL('testURL')
             });
 
             palindrom.addEventListener('state-reset', ev => {
@@ -101,13 +95,14 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             });
 
             await sleep();
-            /* onPatchReceived, shouldn't be called now */
-            assert(onPatchReceived.notCalled);
+
+            assert.equal(onPatchReceived.callCount, 0, `onPatchReceived shouldn't be called now`);
+
+            fetchMock.restore();
 
             /* prepare response */
-            fetchMock.mock('http://house.of.cards/testURL2', {
+            fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
-                headers: { Location: 'http://house.of.cards/testURL' },
                 body:
                     '[{"op":"replace", "path":"/hello", "value":' +
                     (Number.MAX_SAFE_INTEGER + 1) +
@@ -118,22 +113,18 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             tempObj.hello = 'onPatchSent callback';
 
             /* wait for XHR */
-            await sleep();
-            assert(onPatchReceived.calledOnce);
+            await sleep(10);
+
+            assert.equal(onPatchReceived.callCount, 1, `onPatchReceived should be called once now`);
+            fetchMock.restore();
         });
     });
 
     describe('WebSockets', function() {
         it('should dispatch patch-sent and dispatch patch-received events when a patch is sent and received', async () => {
             const server = new MockSocketServer(
-                'ws://house.of.cards/default/this_is_a_nice_url'
+                getTestURL('testURL', false, true)
             );
-
-            fetchMock.mock('http://house.of.cards/testURL', {
-                status: 200,
-                headers: { location: '/default/this_is_a_nice_url' },
-                body: '{"hello": "world"}'
-            });
 
             /* prepare response */
             server.on('message', patches => {
@@ -145,7 +136,6 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                         value: 'onPatchSent callback'
                     }
                 ]);
-
                 /* respond */
                 server.send(
                     '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]'
@@ -156,8 +146,13 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             const onPatchSent = sinon.spy();
             let tempObj;
 
+            fetchMock.mock(getTestURL('testURL'), {
+                status: 200,
+                body: '{"hello": "world"}'
+            });
+
             const palindrom = new Palindrom({
-                remoteUrl: 'http://house.of.cards/testURL',
+                remoteUrl: getTestURL('testURL'),
                 useWebSocket: true
             });
 
@@ -190,6 +185,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             );
 
             tempObj.hello = 'onPatchSent callback';
+
             assert.equal(
                 onPatchSent.callCount,
                 1,
@@ -203,6 +199,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                 1,
                 'onPatchReceived should be called once'
             );
+
             assert.deepEqual(onPatchReceived.lastCall.args[0], [
                 {
                     op: 'replace',
@@ -211,20 +208,14 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                 }
             ]);
             server.stop();
+            fetchMock.restore();
         });
     });
 
-    it('should dispatch patch-received event even if the patch was bad', async () => {
+    it('WebSocket - should dispatch patch-received event even if the patch was bad', async () => {
         const server = new MockSocketServer(
-            'ws://house.of.cards/default/this_is_a_nice_url'
+            getTestURL('this_is_a_nice_url', false, true)
         );
-
-        fetchMock.mock('http://house.of.cards/testURL', {
-            status: 200,
-            headers: { location: '/default/this_is_a_nice_url' },
-            body: '{"hello": "world"}'
-        });
-
         /* prepare response */
         server.on('message', patches => {
             /* make sure a correct patch is sent to server */
@@ -240,11 +231,17 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             );
         });
 
+        fetchMock.mock(getTestURL('testURL'), {
+            status: 200,
+            headers: { location: getTestURL('this_is_a_nice_url') },
+            body: '{"hello": "Obj"}'
+        });
+
         const onPatchReceived = sinon.spy();
         let tempObj;
 
         const palindrom = new Palindrom({
-            remoteUrl: 'http://house.of.cards/testURL',
+            remoteUrl: getTestURL('testURL'),
             useWebSocket: true
         });
 
@@ -255,17 +252,19 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
         palindrom.addEventListener('patch-received', ev => {
             onPatchReceived(ev.detail);
         });
-
-        await sleep(30);
-        /* onPatchReceived, shouldn't be called now */
-        assert(onPatchReceived.notCalled);
+        
+        /* wait for XHR */
+        await sleep(10);
+        
+        assert.equal(onPatchReceived.callCount, 0, `onPatchReceived shouldn't be called now`);
 
         /* issue a change */
         tempObj.hello = 'onPatchSent callback';
 
-        /* wait for XHR */
-        await sleep(30);
-        assert(onPatchReceived.calledOnce);
+        await sleep();
+
+        assert.equal(onPatchReceived.callCount, 1, `onPatchReceived should be called once now`);
         server.stop();
+        fetchMock.restore();
     });
 });
