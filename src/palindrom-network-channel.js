@@ -23,17 +23,6 @@ if (!global.MockWebSocket && NodeWebSocket) {
 const CLIENT = 'Client';
 const SERVER = 'Server';
 
-function isValidResponse(response) {
-    const statusCode = res.status;
-    debugger;
-    //this is not a fatal error
-    return (
-        response.statusCode < 500 &&
-        res.headers &&
-        res.headers.contentType === 'application/json-patch+json'
-    );
-}
-
 /**
  * Replaces http and https to ws and wss in a URL and returns it as a string.
  * @param  {String} remoteUrl HTTP remote address
