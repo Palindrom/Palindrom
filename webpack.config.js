@@ -34,6 +34,24 @@ module.exports = [
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
     {
+        entry: './src/palindrom.js',
+        output: {
+            filename: 'palindrom.node.js',
+            library: 'Palindrom',
+            libraryTarget: 'commonjs'
+        },
+        mode: 'production',
+        optimization: {
+            // We no not want to minimize our code for node
+            minimize: false
+        },
+        resolve: {
+            extensions: ['.js']
+        },
+        externals: { './URLShim': 'URL' },
+        plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
+    },
+    {
         entry: './src/palindrom-dom.js',
         output: {
             filename: 'palindrom-dom.js',
@@ -72,7 +90,7 @@ module.exports = [
             libraryTarget: 'var'
         },
         mode: 'development',
-        externals: { websocket: 'WebSocket', './URLShim': 'URL' },
+        externals: { websocket: 'window.MockWebSocket', './URLShim': 'URL' },
         resolve: {
             extensions: ['.js']
         }

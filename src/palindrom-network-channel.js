@@ -1,24 +1,8 @@
 import URL from './URLShim';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors';
-
-/* We are going to hand `websocket` lib as an external to webpack
-  (see: https://webpack.js.org/configuration/externals/), 
-  this will make `w3cwebsocket` property `undefined`, 
-  and this will lead Palindrom to use Browser's WebSocket when it is used 
-  from the bundle. And use `websocket` lib in Node environment */
-import { w3cwebsocket as NodeWebSocket } from 'websocket';
-
-/* this allows us to stub WebSockets */
-if (!global.MockWebSocket && NodeWebSocket) {
-    /* we are in Node production env */
-    global.WebSocket = NodeWebSocket;
-} else if (global.MockWebSocket) {
-    /* we are in testing env */
-    global.WebSocket = global.MockWebSocket;
-}
-/* else {
-    we are using Browser's WebSocket
-} */
+/* this package will be empty in the browser bundle,
+and will import https://www.npmjs.com/package/websocket in node */
+import WebSocket from 'websocket';
 
 const CLIENT = 'Client';
 const SERVER = 'Server';
@@ -166,7 +150,9 @@ export default class PalindromNetworkChannel {
         const upgradeURL = this.wsUrl;
 
         this.closeConnection(this);
-        this._ws = new WebSocket(upgradeURL);
+        // in node, WebSocket will have `w3cwebsocket` prop. In the browser it won't
+        const UsedSocket = WebSocket.w3cwebsocket || WebSocket;
+        this._ws = new UsedSocket(upgradeURL);
         this._ws.onopen = event => {
             this.onStateChange(this._ws.readyState, upgradeURL);
             onSocketOpenCallback && onSocketOpenCallback(event);
