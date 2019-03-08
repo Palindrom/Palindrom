@@ -24,7 +24,9 @@
   },
   "main": "./dist/palindrom.node.js",
   "browser": "./dist/palindrom.min.js",
-  "files": ["dist/palindrom.node.js"],
+  "files": [
+    "dist/palindrom.node.js"
+  ],
   "licenses": [
     {
       "type": "MIT",
