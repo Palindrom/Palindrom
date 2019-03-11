@@ -16,7 +16,6 @@ describe('Palindrom', () => {
         it('should pass empty sequence', async () => {
             fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
-                headers: { Location: getTestURL('testURL') },
                 body: '{"hello": "world"}'
             });
             const tree = {
@@ -29,7 +28,7 @@ describe('Palindrom', () => {
             const spy = sinon.spy();
 
             const palindrom = new Palindrom({
-                remoteUrl: '/testURL'
+                remoteUrl: getTestURL('testURL')
             });
 
             palindrom.addEventListener(
@@ -61,7 +60,7 @@ describe('Palindrom', () => {
             const spy = sinon.spy();
 
             const palindrom = new Palindrom({
-                remoteUrl: '/testURL'
+                remoteUrl: getTestURL('testURL')
             });
 
             palindrom.addEventListener(
@@ -99,7 +98,7 @@ describe('Palindrom', () => {
             const spy = sinon.spy();
 
             const palindrom = new Palindrom({
-                remoteUrl: '/testURL'
+                remoteUrl: getTestURL('testURL')
             });
 
             palindrom.addEventListener(
@@ -132,7 +131,7 @@ describe('Palindrom', () => {
             const spy = sinon.spy();
 
             const palindrom = new Palindrom({
-                remoteUrl: '/testURL'
+                remoteUrl: getTestURL('testURL')
             });
             palindrom.addEventListener(
                 'incoming-patch-validation-error',
@@ -170,7 +169,7 @@ describe('Palindrom', () => {
             const spy = sinon.spy();
 
             const palindrom = new Palindrom({
-                remoteUrl: '/testURL'
+                remoteUrl: getTestURL('testURL')
             });
             palindrom.addEventListener(
                 'incoming-patch-validation-error',

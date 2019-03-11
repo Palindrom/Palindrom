@@ -11,6 +11,10 @@ describe('Palindrom', () => {
             assert.equal(currentVersion, Palindrom.version);
         });
         it('Palindrom instance should contain the version', function() {
+            fetchMock.mock(getTestURL('testURL'), {
+                status: 200,
+                body: '{"hello": "world"}'
+            })
             const palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL')
             });

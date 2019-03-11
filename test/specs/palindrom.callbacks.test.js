@@ -8,7 +8,6 @@ describe('Callbacks', () => {
     beforeEach(() => {
         fetchMock.mock(getTestURL('testURL'), {
             status: 200,
-            headers: { Location: getTestURL('testURL') },
             body: '{"hello": "world"}'
         });
     });

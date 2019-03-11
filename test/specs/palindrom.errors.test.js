@@ -79,8 +79,6 @@ describe('Palindrom', () => {
 
                 await sleep();
 
-                debugger
-
                 fetchMock.mock(getTestURL('testURL'), {
                     status: 509,
                     headers: { contentType: 'application/json' },
@@ -110,7 +108,6 @@ describe('Palindrom', () => {
                 });
 
                 palindrom.addEventListener('connection-error', ev => {
-                    debugger
                     spy(ev.detail);
                 });
 
@@ -172,7 +169,6 @@ describe('Palindrom', () => {
             it('Initial HTTP response: out of range numbers should dispatch incoming-patch-validation-error event with a RangeError', async () => {
                 fetchMock.mock(getTestURL('testURL'), {
                     status: 200,
-                    headers: { Location: getTestURL('testURL') },
                     body: `{"value": ${Number.MAX_SAFE_INTEGER + 1}}`
                 });
                 const spy = sinon.spy();
@@ -201,7 +197,6 @@ describe('Palindrom', () => {
             it('Outgoing HTTP patches: out of range numbers should dispatch outgoing-patch-validation-error event with a RangeError', async () => {
                 fetchMock.mock(getTestURL('testURL'), {
                     status: 200,
-                    headers: { Location: getTestURL('testURL') },
                     body: `{"val": 1}`
                 });
 
@@ -237,7 +232,6 @@ describe('Palindrom', () => {
 
                 fetchMock.mock(getTestURL('testURL'), {
                     status: 200,
-                    headers: { location: getTestURL('testURL') },
                     body: '{"val": 100}'
                 });
 
@@ -274,7 +268,6 @@ describe('Palindrom', () => {
 
                 fetchMock.mock(getTestURL('testURL'), {
                     status: 200,
-                    headers: { location: getTestURL('testURL') },
                     body: '{"val": 100}'
                 });
 

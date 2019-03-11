@@ -10,12 +10,20 @@ module.exports = [
             library: 'Palindrom',
             libraryTarget: 'var'
         },
-        mode: 'development',
+        mode: 'production',
+        optimization: {
+            // We no not want to minimize our code for node
+            minimize: false
+        },
         resolve: {
             extensions: ['.js']
         },
         /* (see: https://webpack.js.org/configuration/externals/) */
-        externals: { websocket: 'WebSocket', './URLShim': 'URL' },
+        externals: {
+            websocket: 'WebSocket',
+            './URLShim': 'URL',
+            'node-fetch': 'null'
+        },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
     {
@@ -30,7 +38,11 @@ module.exports = [
         resolve: {
             extensions: ['.js']
         },
-        externals: { websocket: 'WebSocket', './URLShim': 'URL' },
+        externals: {
+            websocket: 'WebSocket',
+            './URLShim': 'URL',
+            'node-fetch': 'null'
+        },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
     {
@@ -48,6 +60,7 @@ module.exports = [
         resolve: {
             extensions: ['.js']
         },
+        target: 'node',
         externals: { './URLShim': 'URL' },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
@@ -62,8 +75,16 @@ module.exports = [
         resolve: {
             extensions: ['.js']
         },
-        mode: 'development',
-        externals: { websocket: 'WebSocket', './URLShim': 'URL' },
+        mode: 'production',
+        optimization: {
+            // We no not want to minimize our code for node
+            minimize: false
+        },
+        externals: {
+            websocket: 'WebSocket',
+            './URLShim': 'URL',
+            'node-fetch': 'null'
+        },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
     {
@@ -78,7 +99,11 @@ module.exports = [
         resolve: {
             extensions: ['.js']
         },
-        externals: { websocket: 'WebSocket', './URLShim': 'URL' },
+        externals: {
+            websocket: 'WebSocket',
+            './URLShim': 'URL',
+            'node-fetch': 'null'
+        },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
     /* bundle tests for browser */
@@ -90,7 +115,11 @@ module.exports = [
             libraryTarget: 'var'
         },
         mode: 'development',
-        externals: { websocket: 'window.MockWebSocket', './URLShim': 'URL' },
+        externals: {
+            websocket: 'window.MockWebSocket',
+            './URLShim': 'URL',
+            'node-fetch': 'null'
+        },
         resolve: {
             extensions: ['.js']
         }
@@ -104,8 +133,10 @@ module.exports = [
             libraryTarget: 'commonjs'
         },
         mode: 'development',
+        target: 'node',
         resolve: {
-            extensions: ['.js']
+            extensions: ['.js'],
+            alias: { websocket: '../test/inject-mock-websocket.js' }
         }
     }
 ];

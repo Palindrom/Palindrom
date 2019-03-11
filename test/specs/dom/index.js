@@ -662,7 +662,6 @@ if (typeof window !== 'undefined') {
                             );
 
                             await sleep();
-debugger
                             expect(window.location.pathname).to.equal(
                                 '/newUrl-palindrom'
                             );

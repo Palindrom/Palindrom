@@ -3,6 +3,7 @@ import { PalindromError, PalindromConnectionError } from './palindrom-errors';
 /* this package will be empty in the browser bundle,
 and will import https://www.npmjs.com/package/websocket in node */
 import WebSocket from 'websocket';
+import nodeFetch from 'node-fetch';
 
 const CLIENT = 'Client';
 const SERVER = 'Server';
@@ -151,6 +152,7 @@ export default class PalindromNetworkChannel {
 
         this.closeConnection(this);
         // in node, WebSocket will have `w3cwebsocket` prop. In the browser it won't
+        
         const UsedSocket = WebSocket.w3cwebsocket || WebSocket;
         this._ws = new UsedSocket(upgradeURL);
         this._ws.onopen = event => {
@@ -330,7 +332,9 @@ export default class PalindromNetworkChannel {
 
         this.onSend({ data, url, method });
 
-        const response = await fetch(url, config);
+        let isomorphicFetch = typeof global !== 'undefined' ?  global.fetch : nodeFetch;
+
+        const response = await isomorphicFetch(url, config);
         const dataPromise = response.json();
 
         return dataPromise

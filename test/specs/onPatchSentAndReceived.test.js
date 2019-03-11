@@ -214,7 +214,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
 
     it('WebSocket - should dispatch patch-received event even if the patch was bad', async () => {
         const server = new MockSocketServer(
-            getTestURL('this_is_a_nice_url', false, true)
+            getTestURL('testURL', false, true)
         );
         /* prepare response */
         server.on('message', patches => {
@@ -233,7 +233,6 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
 
         fetchMock.mock(getTestURL('testURL'), {
             status: 200,
-            headers: { location: getTestURL('this_is_a_nice_url') },
             body: '{"hello": "Obj"}'
         });
 

@@ -22,12 +22,17 @@ export function getTestURL(pathname, isRelative, ws = false) {
     if (isRelative) {
         return `/${pathname}`;
     }
-    return (
-        (ws ? 'ws:' : window.location.protocol) +
-        '//' +
-        window.location.host +
-        `/${pathname}`
-    );
+    if (typeof window !== 'undefined') {
+        return (
+            (ws ? 'ws:' : window.location.protocol) +
+            '//' +
+            window.location.host +
+            `/${pathname}`
+        );
+    } else {
+        // node
+        return (ws ? 'ws:' : 'http:') + '//localhost/' + pathname;
+    }
 }
 export function createAndClickOnLink(href, parent, target) {
     parent = parent || document.body;
