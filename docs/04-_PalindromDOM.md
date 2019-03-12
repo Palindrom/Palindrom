@@ -59,7 +59,7 @@ Attribute   | Arguments          | Description
 ---         | ---           | ---
 `unlisten`  | None | Stop listening to DOM events
 `listen`    | *target: HTMLElement* | Start listening to DOM events
-`async morphUrl`    | *url: String*    | Navigates to a URL and morphs the page accordingly
+`async morphUrl`    | *url: String*    | Navigates to a URL by making a request using `async getPatchUsingHTTP` followed by a History API call.
 `async getPatchUsingHTTP`    | *url: String*    | Sends a `PATCH/GET` request to the server demanding a patch that synchronizes server and client sides. It sends a `PATCH` request when there are pending data in the client's queue. And a `GET` request when there is not.
 
 ### Browser history

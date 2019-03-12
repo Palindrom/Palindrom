@@ -445,7 +445,7 @@ if (typeof window !== 'undefined') {
         window.addEventListener('palindrom-before-redirect', handler)
         palindrom.morphUrl('/newUrl');
       });
-      it('Morphing to a URL should NOT issue a request after a canceled event', function(done) {
+      it('Morphing to a URL should NOT issue a request after a canceled event and morphUrl should throw', function(done) {
         let originalRequestCount = moxios.requests.count;
 
         const handler = event => {
@@ -454,12 +454,14 @@ if (typeof window !== 'undefined') {
           
           setTimeout(() => {
             expect(originalRequestCount).to.equal(moxios.requests.count);
-            done();
           })
           window.removeEventListener('palindrom-before-redirect', handler)
         };
         window.addEventListener('palindrom-before-redirect', handler)
-        palindrom.morphUrl('/newUrl2');
+        palindrom.morphUrl('/newUrl2').catch(error => {
+          expect(error.message).to.equal('`getPatchUsingHTTP` was aborted by cancelling `palindrom-before-redirect` event.');
+          done();
+        });
       });
     });
     describe('palindrom-after-redirect event', function() {
@@ -475,7 +477,7 @@ if (typeof window !== 'undefined') {
 
         const handler = event => {
           assert.equal(event.detail.href, '/newUrl');
-          assert.equal(event.detail.successful, true);
+          assert.deepEqual(event.detail.response.data, {"hello": "world"});
 
           setTimeout(() => {
             expect(window.location.pathname).to.equal('/newUrl');
@@ -488,22 +490,15 @@ if (typeof window !== 'undefined') {
         palindrom.morphUrl('/newUrl');
       });
 
-      it('Morphing to a URL should dispatch the event after a failed request', function(done) {
+      it('Morphing to a URL should throw an error after a failed request', function(done) {
         moxios.stubRequest('/newUrl2', {
           status: 509,
           responseText: '{"hello": "world"}'
         });
-
-        const handler = event => {
-          assert.equal(event.detail.href, '/newUrl2');
-          assert.equal(event.detail.successful, false);
-          assert.equal(event.detail.error.message, 'Request failed with status code 509');
-          
-          window.removeEventListener('palindrom-after-redirect', handler)
+        palindrom.morphUrl('/newUrl2').catch(error => {
+          assert.equal(error.message, 'Request failed with status code 509');
           done();
-        }     
-        window.addEventListener('palindrom-after-redirect', handler)
-        palindrom.morphUrl('/newUrl2');
+        })
       });
     });
 

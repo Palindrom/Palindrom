@@ -438,6 +438,7 @@ const Palindrom = (() => {
         /**
          * @param {String} href
          * @throws {Error} network error if occured
+         * @returns {Response} response (https://github.com/axios/axios#response-schema)
          */
         async getPatchUsingHTTP(href) {
             // we don't need to try catch here because we want the error to be thrown at whoever calls getPatchUsingHTTP
