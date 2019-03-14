@@ -56,7 +56,7 @@ const PalindromDOM = (() => {
             /* in some cases, people emit redirect requests before `listen` is called */
             this.element.addEventListener(
                 'palindrom-redirect-pushstate',
-                this.historyHandler
+                this.morphUrlEventHandler
             );
 
             if ('scrollRestoration' in history) {
@@ -273,11 +273,22 @@ const PalindromDOM = (() => {
         async historyHandler(event) {
             await this.getPatchUsingHTTP(location.href);
             const [scrollX, scrollY] = event.state || [0, 0];
-            let hadScrolled = false;
-            const scrollHandler = () => (hadScrolled = true);
+            // flag if the user has scrolled, not our own code
+            let userHadScrolled = false;
+
+            // flag if this code it scrolling, not the user
+            let attemptingScroll = false;
+            
+            // if this handler is called && we're not attemptingScroll, then the user has scrolled!
+            const scrollHandler = () => (userHadScrolled = !attemptingScroll);
             window.addEventListener('scroll', scrollHandler);
-            for (let i = 0; i < 30 && !hadScrolled; i++) {
-                if (attemptScroll(scrollX, scrollY)) {
+
+            for (let i = 0; i < 30 && !userHadScrolled; i++) {
+                // prevent our scroll attempt from setting `hadScrolled`
+                attemptingScroll = true;
+                const scrollSucceeded = attemptScroll(scrollX, scrollY);
+                attemptingScroll = false;
+                if (scrollSucceeded) {
                     break;
                 } else {
                     await sleep(30);
