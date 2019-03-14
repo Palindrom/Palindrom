@@ -655,7 +655,7 @@ if (typeof window !== 'undefined') {
         setTimeout(function() {
           const request = moxios.requests.mostRecent();
 
-          expect(new URL(request.url).pathname).to.equal('/newUrl-palindrom');
+          expect(request.url).to.equal('/newUrl-palindrom');
           expect(window.location.pathname).to.equal('/newUrl-palindrom');
           done();
         }, 5);
