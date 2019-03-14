@@ -445,7 +445,7 @@ if (typeof window !== 'undefined') {
         window.addEventListener('palindrom-before-redirect', handler)
         palindrom.morphUrl('/newUrl');
       });
-      it('Morphing to a URL should NOT issue a request after a canceled event and morphUrl should throw', function(done) {
+      it('Morphing to a URL should NOT issue a request after a canceled event and morphUrl\'s retuned promise should resolve to `false', function(done) {
         let originalRequestCount = moxios.requests.count;
 
         const handler = event => {
@@ -458,8 +458,8 @@ if (typeof window !== 'undefined') {
           window.removeEventListener('palindrom-before-redirect', handler)
         };
         window.addEventListener('palindrom-before-redirect', handler)
-        palindrom.morphUrl('/newUrl2').catch(error => {
-          expect(error.message).to.equal('`getPatchUsingHTTP` was aborted by cancelling `palindrom-before-redirect` event.');
+        palindrom.morphUrl('/newUrl2').then(result => {
+          expect(result).to.equal(false);
           done();
         });
       });
