@@ -393,7 +393,7 @@ if (typeof window !== 'undefined') {
     describe('palindrom-morph-url event', function() {
       beforeEach(function(done) {
         // wait for Palindrom to call .listen (after finishing the ajax request)
-        setTimeout(done, 300)
+        setTimeout(done, 50)
       })
       it('Dispatching it should call PalindromDOM.morphUrl and issue a request', function(done) {
         const morphUrlStub = sinon.spy(palindrom, "morphUrl");
@@ -420,7 +420,7 @@ if (typeof window !== 'undefined') {
     describe('palindrom-before-redirect event', function() {
       beforeEach(function(done) {
         // wait for Palindrom to call .listen (after finishing the ajax request)
-        setTimeout(done, 300)
+        setTimeout(done, 50)
       })
       it('Morphing to a URL should dispatch the event and issue a request', function(done) {  
         const handler = event => {
@@ -467,7 +467,7 @@ if (typeof window !== 'undefined') {
     describe('palindrom-after-redirect event', function() {
       beforeEach(function(done) {
         // wait for Palindrom to call .listen (after finishing the ajax request)
-        setTimeout(done, 300)
+        setTimeout(done, 50)
       })
       it('Morphing to a URL should dispatch the event after a successful request', function(done) {
         moxios.stubRequest('/newUrl', {
@@ -625,23 +625,24 @@ if (typeof window !== 'undefined') {
         moxios.install();
         moxios.stubRequest(getTestURL('testURL'), {
           status: 200,
-          headers: { location: getTestURL('testURL') },
           responseText: '{"hello": "world"}'
         });
 
         palindrom = new PalindromDOM({ remoteUrl: getTestURL('testURL') });
       });
+
       afterEach(function() {
         palindrom.unobserve();
         moxios.uninstall();
       });
 
       it('by dispatching `palindrom-redirect-pushstate` event', function(done) {
+        // for Edge
+        this.timeout(5000);
         history.pushState(null, null, '/newUrl-palindrom');
 
         moxios.stubRequest(/.+/, {
           status: 200,
-          headers: { location: getTestURL('testURL') },
           responseText: '[]'
         });
 
@@ -654,11 +655,10 @@ if (typeof window !== 'undefined') {
 
         setTimeout(function() {
           const request = moxios.requests.mostRecent();
-
           expect(request.url).to.equal('/newUrl-palindrom');
           expect(window.location.pathname).to.equal('/newUrl-palindrom');
           done();
-        }, 5);
+        });
       });
     });
   });
