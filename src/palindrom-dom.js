@@ -5,6 +5,8 @@
  */
 const Palindrom = require('./palindrom');
 
+class AbortionError extends Error {}
+
 const PalindromDOM = (() => {
     /** scroll to coordiates and return if the scroll was successful */
     function attemptScroll(x, y) {
@@ -97,13 +99,12 @@ const PalindromDOM = (() => {
 
         /**
          * @param {String} href
-         * @param {boolean} [throwOnCancellation=true] whether to throw an error when `palindrom-before-redirect`'s default behaviour is prevented using event.preventDefault(), defaults to `true`
          * @throws {Error} network error if occured or the `palindrom-before-redirect` was cancelled by calling event.preventDefault()
          * @fires Palindrom#palindrom-before-redirect
          * @fires Palindrom#palindrom-after-redirect
          * @returns {Response} response (https://github.com/axios/axios#response-schema)
          */
-        async getPatchUsingHTTP(href, throwOnCancellation = true) {
+        async getPatchUsingHTTP(href) {
             /**
              * palindrom-before-redirect event.
              *
@@ -122,14 +123,9 @@ const PalindromDOM = (() => {
             this.element.dispatchEvent(beforeEvent);
 
             if (beforeEvent.defaultPrevented) {
-                // We only throw errors on people who take matters into their own hands and use getPatchUsingHTTP (not morphUrl)
-                if (throwOnCancellation) {
-                    throw new Error(
-                        '`getPatchUsingHTTP` was aborted by cancelling `palindrom-before-redirect` event.'
-                    );
-                } else {
-                    return false;
-                }
+                throw new AbortionError(
+                    '`getPatchUsingHTTP` was aborted by cancelling `palindrom-before-redirect` event.'
+                );
             }
 
             const response = await this.network.getPatchUsingHTTP(href);
@@ -146,6 +142,7 @@ const PalindromDOM = (() => {
                 detail,
                 bubbles: true
             });
+
             this.element.dispatchEvent(afterEvent);
             return response;
         }
@@ -193,25 +190,31 @@ const PalindromDOM = (() => {
          * @returns {boolean} true if morphing was successful
          */
         async morphUrl(url) {
+
             const scrollX = window.scrollX;
             const scrollY = window.scrollY;
-            const res = await this.getPatchUsingHTTP(url, false);
-            if (res && res.status < 500) {
-                // mark current state's scroll position
-                history.replaceState(
-                    [scrollX, scrollY],
-                    null,
-                    window.location.href
-                );
+            try {
+                const res = await this.getPatchUsingHTTP(url);
+                if (res && res.status < 500) {
+                    // mark current state's scroll position
+                    history.replaceState(
+                        [scrollX, scrollY],
+                        null,
+                        window.location.href
+                    );
 
-                // push a new state with the new position
-                history.pushState([0, 0], null, url);
+                    // push a new state with the new position
+                    history.pushState([0, 0], null, url);
 
-                // scroll it!
-                scrollTo(0, 0);
-                return true;
-            } else {
-                return false;
+                    // scroll it!
+                    scrollTo(0, 0);
+                    return true;
+                }
+            } catch (error) {
+                if (error instanceof AbortionError) {
+                    return false;
+                }
+                throw new Error(`HTTP request failed, error message: ${error.message}`);
             }
         }
 
@@ -278,7 +281,7 @@ const PalindromDOM = (() => {
 
             // flag if this code it scrolling, not the user
             let attemptingScroll = false;
-            
+
             // if this handler is called && we're not attemptingScroll, then the user has scrolled!
             const scrollHandler = () => (userHadScrolled = !attemptingScroll);
             window.addEventListener('scroll', scrollHandler);

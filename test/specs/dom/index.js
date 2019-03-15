@@ -496,7 +496,7 @@ if (typeof window !== 'undefined') {
           responseText: '{"hello": "world"}'
         });
         palindrom.morphUrl('/newUrl2').catch(error => {
-          assert.equal(error.message, 'Request failed with status code 509');
+          assert.equal(error.message, 'HTTP request failed, error message: Request failed with status code 509');
           done();
         })
       });
