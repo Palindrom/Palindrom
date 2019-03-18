@@ -639,7 +639,7 @@ if (typeof window !== 'undefined') {
       it('by dispatching `palindrom-redirect-pushstate` event', function(done) {
         // for Edge
         this.timeout(5000);
-        history.pushState(null, null, '/newUrl-palindrom');
+        history.pushState([0, 0], null, '/newUrl-palindrom');
 
         moxios.stubRequest(/.+/, {
           status: 200,
@@ -658,7 +658,7 @@ if (typeof window !== 'undefined') {
           expect(request.url).to.equal('/newUrl-palindrom');
           expect(window.location.pathname).to.equal('/newUrl-palindrom');
           done();
-        });
+        }, 30);
       });
     });
   });

@@ -7,8 +7,6 @@ const Palindrom = require('./palindrom');
 
 class AbortError extends Error {};
 
-let previousState = [];
-
 const PalindromDOM = (() => {
     /** scroll to coordiates and return if the scroll was successful */
     function attemptScroll(x, y) {
@@ -112,7 +110,6 @@ const PalindromDOM = (() => {
                 'palindrom-morph-url',
                 this.morphUrlEventHandler
             );
-
             this._unwatchingScroll();
         }
 
@@ -221,10 +218,8 @@ const PalindromDOM = (() => {
                         window.location.href
                     );
 
-                    previousState = [0, 0];
-
                     // push a new state with the new position
-                    history.pushState(previousState, null, url);
+                    history.pushState([0, 0], null, url);
 
                     // scroll it!
                     scrollTo(0, 0);
@@ -294,9 +289,6 @@ const PalindromDOM = (() => {
         }
         
         async historyHandler(event) {
-            previousState[0] = window.scrollX;
-            previousState[1] = window.scrollY;
-
             await this.getPatchUsingHTTP(location.href);
             const [scrollX, scrollY] = event.state || [0, 0];
             // flag if the user has scrolled, not our own code
