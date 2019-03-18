@@ -641,7 +641,7 @@ if (typeof window !== 'undefined') {
         this.timeout(5000);
         history.pushState([0, 0], null, '/newUrl-palindrom');
 
-        moxios.stubRequest(/.+/, {
+        moxios.stubRequest('/newUrl-palindrom', {
           status: 200,
           responseText: '[]'
         });
