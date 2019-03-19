@@ -1897,20 +1897,22 @@ const Palindrom = (() => {
          * @param  {String} msg message to be sent
          * @return {PalindromNetworkChannel}     self
          */
-        send(msg) {
+        async send(msg) {
             // send message only if there is a working ws connection
             if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
                 this._ws.send(msg);
                 this.onSend(msg, this._ws.url, 'WS');
             } else {
                 const url = this.remoteUrl.href;
-                this.xhr(
+                const res = await this.xhr(
                     url,
                     'application/json-patch+json',
-                    msg,
-                    (res, method) => {
-                        this.onReceive(res.data, url, method);
-                    }
+                    msg
+                );
+                this.onReceive(
+                    res.data,
+                    url,
+                    res.config.method.toUpperCase()
                 );
             }
             return this;
@@ -2027,17 +2029,21 @@ const Palindrom = (() => {
                 }
             };
         }
-
-        getPatchUsingHTTP(href) {
-            return this.xhr(
+        /**
+         * @param {String} href
+         * @throws {Error} network error if occured
+         * @returns {Response} response (https://github.com/axios/axios#response-schema)
+         */
+        async getPatchUsingHTTP(href) {
+            // we don't need to try catch here because we want the error to be thrown at whoever calls getPatchUsingHTTP
+            const res = await this.xhr(
                 href,
                 'application/json-patch+json',
                 null,
-                (res, method) => {
-                    this.onReceive(res.data, href, method);
-                },
                 true
             );
+            this.onReceive(res.data, href, res.config.method.toUpperCase());
+            return res;
         }
 
         changeState(href) {
@@ -2069,7 +2075,7 @@ const Palindrom = (() => {
             this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
         }
 
-        handleSuccessResponse(res, callback) {
+        handleLocationHeader(res) {
             /* Axios always returns lowercase headers */
             const location =
                 res.headers &&
@@ -2077,7 +2083,35 @@ const Palindrom = (() => {
             if (location) {
                 this.setRemoteUrl(location);
             }
-            callback && callback.call(this, res, res.config.method.toUpperCase());
+        }
+        /**
+         * Handles unsecessful HTTP requests
+         * @param error
+         */
+        handleFailureResponse(error) {
+            const res = error.response;
+            const url = res.config.url;
+            const method = res.config.method;
+            // no sufficient error information, we need to create on our own
+            var statusCode = -1;
+            var statusText = `An unknown network error has occurred. Raw message: ${
+                error.message
+            }`;
+            var reason = 'Maybe you lost connection with the server';
+            // log it for verbosity
+            console.error(error);
+
+            const message = [
+                statusText,
+                'statusCode: ' + statusCode,
+                'reason: ' + reason,
+                'url: ' + url,
+                'HTTP method: ' + method
+            ].join('\n');
+
+            this.onFatalError(
+                new PalindromConnectionError(message, CLIENT, url, method)
+            );
         }
 
         /**
@@ -2085,13 +2119,12 @@ const Palindrom = (() => {
          * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
          * @param accept (Optional) HTTP accept header
          * @param data (Optional) Data payload
-         * @param [callback(response)] callback to be called in context of palindrom with response as argument
          * @returns {XMLHttpRequest} performed XHR
          */
-        xhr(url, accept, data, callback, setReferer) {
+        async xhr(url, accept, data, setReferer) {
             const method = data ? 'PATCH' : 'GET';
             const headers = {};
-            let requestPromise;
+            let responsePromise;
 
             if (data) {
                 headers['Content-Type'] = 'application/json-patch+json';
@@ -2103,77 +2136,39 @@ const Palindrom = (() => {
                 headers['X-Referer'] = this.remoteUrl.pathname;
             }
             if (method === 'GET') {
-                requestPromise = axios.get(url, {
+                responsePromise = axios.get(url, {
                     headers
                 });
             } else {
-                requestPromise = axios.patch(url, data, {
+                responsePromise = axios.patch(url, data, {
                     headers
                 });
             }
-            requestPromise
-                .then(res => {
-                    this.handleSuccessResponse(res, callback);
-                })
-                .catch(error => {
-                    const res = error.response;
-
-                    if (res) {
-                        var statusCode = res.status;
-                        var statusText = res.statusText || res.data;
-                        var reason = res.data;
-
-                        //this is not a fatal error
-                        if (
-                            statusCode >= 400 &&
-                            statusCode < 500 &&
-                            res.headers['content-type'] ===
-                                'application/json-patch+json'
-                        ) {
-                            this.handleSuccessResponse(res, callback);
-                            return;
-                        }
-                    } else {
-                        // no sufficient error information, we need to create on our own
-                        var statusCode = -1;
-                        var statusText = `An unknown network error has occurred. Raw message: ${
-                            error.message
-                        }`;
-                        var reason =
-                            'Maybe you lost connection with the server';
-                        // log it for verbosity
-                        console.error(error);
-                    }
-
-                    const message = [
-                        statusText,
-                        'statusCode: ' + statusCode,
-                        'reason: ' + reason,
-                        'url: ' + url,
-                        'HTTP method: ' + method
-                    ].join('\n');
-
-                    this.onFatalError(
-                        new PalindromConnectionError(
-                            message,
-                            CLIENT,
-                            url,
-                            method
-                        )
-                    );
-                });
 
             this.onSend(data, url, method);
+
+            return responsePromise
+                .then(res => {
+                    this.handleLocationHeader(res);
+                    return res;
+                })
+                .catch(error => {
+                    if (isValid4xxResponse(error)) {
+                        return error.response;
+                    } else {
+                        this.handleFailureResponse(error);
+                        return Promise.reject(error);
+                    }
+                });
         }
     }
     // TODO: auto-configure here #38 (tomalec)
-    function establish(network, url, body, bootstrap) {
-        return network.xhr(url, 'application/json', body, res => {
-            bootstrap(res.data);
-            if (network.useWebSocket) {
-                network.webSocketUpgrade(network.onSocketOpened);
-            }
-        });
+    async function establish(network, url, body, bootstrap) {
+        const res = await network.xhr(url, 'application/json', body);
+        bootstrap(res.data);
+        if (network.useWebSocket) {
+            network.webSocketUpgrade(network.onSocketOpened);
+        }
     }
 
     function closeWsIfNeeded(network) {
@@ -2626,6 +2621,18 @@ const Palindrom = (() => {
         }
     }
 
+    function isValid4xxResponse(error) {
+        const res = error.response;
+        const statusCode = res.status;
+        //this is not a fatal error
+        return (
+            statusCode >= 400 &&
+            statusCode < 500 &&
+            res.headers &&
+            res.headers.contentType === 'application/json-patch+json'
+        );
+    }
+
     function sendPatches(palindrom, patches) {
         const txt = JSON.stringify(patches);
         palindrom.unobserve();
@@ -2640,7 +2647,6 @@ const Palindrom = (() => {
 module.exports = Palindrom;
 module.exports.default = Palindrom;
 module.exports.__esModule = true;
-
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
