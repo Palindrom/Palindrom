@@ -91,8 +91,12 @@ const PalindromDOM = (() => {
             window.removeEventListener('scroll', this._scrollWatcher);
         }
         _scrollWatcher() {
-            clearTimeout(this._scrollDebouceTimeout);
-            this._scrollDebouceTimeout = setTimeout(() => {
+            // do not record self created scroll events
+            if(this._attemptingScroll) {
+                return;
+            }
+            clearTimeout(this._scrollDebounceTimeout);
+            this._scrollDebounceTimeout = setTimeout(() => {
                 history.replaceState([window.scrollX, window.scrollY], null);
             }, 20);
         }
@@ -295,7 +299,7 @@ const PalindromDOM = (() => {
             let userHadScrolled = false;
 
             // flag if this code it scrolling, not the user
-            let attemptingScroll = false;
+            this._attemptingScroll = false;
 
             // if this handler is called && we're not attemptingScroll, then the user has scrolled!
             const scrollHandler = () => (userHadScrolled = !attemptingScroll);
@@ -303,9 +307,9 @@ const PalindromDOM = (() => {
 
             for (let i = 0; i < 30 && !userHadScrolled; i++) {
                 // prevent our scroll attempt from setting `hadScrolled`
-                attemptingScroll = true;
+                this._attemptingScroll = true;
                 const scrollSucceeded = attemptScroll(scrollX, scrollY);
-                attemptingScroll = false;
+                this._attemptingScroll = false;
                 if (scrollSucceeded) {
                     break;
                 } else {
