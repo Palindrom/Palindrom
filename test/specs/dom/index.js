@@ -559,12 +559,12 @@ if (typeof window !== 'undefined') {
           responseText: '{}'
         });
 
-        moxios.stubRequest('/newUrl-palindrom-scroll-2', {
+        moxios.stubRequest('/newUrl-palindrom-scroll-hit', {
           status: 200,
           responseText: '{}'
         });
 
-        palindrom.morphUrl('/newUrl-palindrom-scroll-2').then(() => {
+        palindrom.morphUrl('/newUrl-palindrom-scroll-hit').then(() => {
           // scroll to bottom
           window.scrollTo(0, document.body.scrollHeight);
 
@@ -573,13 +573,13 @@ if (typeof window !== 'undefined') {
             expect(window.scrollY).to.not.equal(0);
 
             // go back
-            history.go(-1);
+            history.back();
 
             setTimeout(function() {
               expect(window.scrollY).to.equal(0);  
               done();
             }, 50);
-          }, 5);
+          }, 50);
         });        
       });
       it('should NOT scroll back when back button is hit and the user scrolled', function(done) {
@@ -606,7 +606,7 @@ if (typeof window !== 'undefined') {
             expect(window.scrollY).to.not.equal(0);
 
             // go back
-            history.go(-1);
+            history.back();
             
             // scroll half way
             window.scrollTo(0, Math.floor(document.body.scrollHeight / 2));
