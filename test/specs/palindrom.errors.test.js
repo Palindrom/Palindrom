@@ -209,7 +209,6 @@ describe('Palindrom', () => {
       it('Initial HTTP response: out of range numbers should call onIncomingPatchValidationError with a RangeError', done => {
         moxios.stubRequest('http://localhost/testURL', {
           status: 200,
-          headers: { Location: 'http://localhost/testURL' },
           responseText: `{"value": ${Number.MAX_SAFE_INTEGER + 1}}`
         });
         const spy = sinon.spy();

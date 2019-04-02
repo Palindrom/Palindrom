@@ -8,11 +8,21 @@ const expect = require("chai").expect;
 const currentVersion = require('../../package.json').version;
 
 describe("Palindrom", () => {
+  beforeEach(() => {
+    moxios.install();
+  });
+  afterEach(() => {
+    moxios.uninstall();
+  });
   describe('Expose version', function() {
     it("Palindrom class should contain the version", function() {
       assert.equal(currentVersion, Palindrom.version)
     })
     it("Palindrom instance should contain the version", function() {
+      moxios.stubRequest("http://localhost/testURL", {
+        status: 200,
+        responseText: '{"hello": "world"}'
+      });
       const palindrom = new Palindrom({
         remoteUrl: "http://localhost/testURL",
       });
@@ -20,12 +30,6 @@ describe("Palindrom", () => {
     })
   })
   describe("#constructor", () => {
-    beforeEach(() => {
-      moxios.install();
-    });
-    afterEach(() => {
-      moxios.uninstall();
-    });
     it("should initiate an ajax request when initiated, and call the callback function", function(done) {
       moxios.stubRequest("http://localhost/testURL", {
         status: 200,

@@ -1,4 +1,4 @@
-/*! Palindrom, version: 5.2.0 */
+/*! Palindrom, version: 6.0.0 */
 var PalindromDOM =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -1597,10 +1597,23 @@ module.exports = Cancel;
  * (c) 2017 Joachim Wester
  * MIT license
  */
-
 const Palindrom = __webpack_require__(13);
 
+class AbortError extends Error {};
+
 const PalindromDOM = (() => {
+    /** scroll to coordiates and return if the scroll was successful */
+    function attemptScroll(x, y) {
+        scrollTo(x, y);
+        return window.scrollX === x && window.scrollY === y;
+    }
+
+    async function sleep(duration) {
+        return new Promise(resolve => {
+            setTimeout(resolve, duration);
+        });
+    }
+
     /**
      * PalindromDOM
      * @extends {Palindrom}
@@ -1635,12 +1648,17 @@ const PalindromDOM = (() => {
             this.clickHandler = this.clickHandler.bind(this);
             this.historyHandler = this.historyHandler.bind(this);
             this.morphUrlEventHandler = this.morphUrlEventHandler.bind(this);
+            this._scrollWatcher = this._scrollWatcher.bind(this);
 
             /* in some cases, people emit redirect requests before `listen` is called */
             this.element.addEventListener(
                 'palindrom-redirect-pushstate',
-                this.historyHandler
+                this.morphUrlEventHandler
             );
+
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+            }
         }
 
         listen() {
@@ -1657,6 +1675,24 @@ const PalindromDOM = (() => {
                 'palindrom-redirect-pushstate',
                 this.historyHandler
             );
+
+            this._watchingScroll();
+        }
+        _watchingScroll() {
+            window.addEventListener('scroll', this._scrollWatcher);
+        }
+        _unwatchingScroll() {
+            window.removeEventListener('scroll', this._scrollWatcher);
+        }
+        _scrollWatcher() {
+            // do not record self created scroll events
+            if(this._attemptingScroll) {
+                return;
+            }
+            clearTimeout(this._scrollDebounceTimeout);
+            this._scrollDebounceTimeout = setTimeout(() => {
+                history.replaceState([window.scrollX, window.scrollY], null);
+            }, 20);
         }
         unlisten() {
             this.listening = false;
@@ -1672,6 +1708,57 @@ const PalindromDOM = (() => {
                 'palindrom-morph-url',
                 this.morphUrlEventHandler
             );
+            this._unwatchingScroll();
+        }
+
+        /**
+         * @param {String} href
+         * @throws {Error} network error if occured or the `palindrom-before-redirect` was cancelled by calling event.preventDefault()
+         * @fires Palindrom#palindrom-before-redirect
+         * @fires Palindrom#palindrom-after-redirect
+         * @returns {Response} response (https://github.com/axios/axios#response-schema)
+         */
+        async getPatchUsingHTTP(href) {
+            /**
+             * palindrom-before-redirect event.
+             *
+             * @event Palindrom#palindrom-before-redirect
+             * @type {CustomEvent}
+             * @property {Object} detail containing `href` property that contains the URL
+             */
+            const beforeEvent = new CustomEvent('palindrom-before-redirect', {
+                detail: {
+                    href
+                },
+                cancelable: true,
+                bubbles: true
+            });
+
+            this.element.dispatchEvent(beforeEvent);
+
+            if (beforeEvent.defaultPrevented) {
+                throw new AbortError(
+                    '`getPatchUsingHTTP` was aborted by cancelling `palindrom-before-redirect` event.'
+                );
+            }
+
+            const response = await this.network.getPatchUsingHTTP(href);
+            let detail = { href, response };
+
+            /**
+             * palindrom-after-redirect event
+             *
+             * @event Palindrom#palindrom-after-redirect
+             * @type {CustomEvent}
+             * @property {Object} detail containing `href: String` and `response: Response (https://developer.mozilla.org/en-US/docs/Web/API/Response)`
+             */
+            const afterEvent = new CustomEvent('palindrom-after-redirect', {
+                detail,
+                bubbles: true
+            });
+
+            this.element.dispatchEvent(afterEvent);
+            return response;
         }
 
         //TODO move fallback to window.location.href from PalindromNetworkChannel to here (PalindromDOM)
@@ -1714,11 +1801,34 @@ const PalindromDOM = (() => {
          * Push a new URL to the browser address bar and send a patch request (empty or including queued local patches)
          * so that the URL handlers can be executed on the remote
          * @param url
+         * @returns {boolean} true if morphing was successful
          */
-        morphUrl(url) {
-            history.pushState(null, null, url);
-            this.network.getPatchUsingHTTP(url);
-            window && window.scrollTo(0, 0);
+        async morphUrl(url) {
+            const scrollX = window.scrollX;
+            const scrollY = window.scrollY;
+            try {
+                const res = await this.getPatchUsingHTTP(url);
+                if (res && res.status < 500) {
+                    // mark current state's scroll position
+                    history.replaceState(
+                        [scrollX, scrollY],
+                        null,
+                        window.location.href
+                    );
+
+                    // push a new state with the new position
+                    history.pushState([0, 0], null, url);
+
+                    // scroll it!
+                    scrollTo(0, 0);
+                    return true;
+                }
+            } catch (error) {
+                if (error instanceof AbortError) {
+                    return false;
+                }
+                throw new Error(`HTTP request failed, error message: ${error.message}`);
+            }
         }
 
         /**
@@ -1775,9 +1885,33 @@ const PalindromDOM = (() => {
                 }
             }
         }
+        
+        async historyHandler(event) {
+            await this.getPatchUsingHTTP(location.href);
+            const [scrollX, scrollY] = event.state || [0, 0];
+            
+            // flag if the user has scrolled, not our own code
+            let userHadScrolled = false;
 
-        historyHandler() /*event*/ {
-            this.network.getPatchUsingHTTP(location.href);
+            // flag if this code it scrolling, not the user
+            this._attemptingScroll = false;
+
+            // if this handler is called && we're not attemptingScroll, then the user has scrolled!
+            const scrollHandler = () => (userHadScrolled = !attemptingScroll);
+            window.addEventListener('scroll', scrollHandler);
+
+            for (let i = 0; i < 30 && !userHadScrolled; i++) {
+                // prevent our scroll attempt from setting `hadScrolled`
+                this._attemptingScroll = true;
+                const scrollSucceeded = attemptScroll(scrollX, scrollY);
+                this._attemptingScroll = false;
+                if (scrollSucceeded) {
+                    break;
+                } else {
+                    await sleep(30);
+                }
+            }
+            window.removeEventListener('scroll', scrollHandler);
         }
 
         /**
@@ -1798,7 +1932,6 @@ const PalindromDOM = (() => {
                 if (parser.host == '') {
                     parser.href = parser.href;
                 }
-
                 elem = parser;
             }
             return (
@@ -1815,6 +1948,7 @@ module.exports = PalindromDOM;
 module.exports.default = PalindromDOM;
 module.exports.__esModule = true;
 
+console.log('Palindrom#morphing-pr');
 
 /***/ }),
 /* 13 */
@@ -1827,7 +1961,7 @@ module.exports.__esModule = true;
  */
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '5.2.0';
+const palindromVersion = '6.0.0';
 
 const CLIENT = 'Client';
 const SERVER = 'Server';
@@ -2125,20 +2259,22 @@ const Palindrom = (() => {
          * @param  {String} msg message to be sent
          * @return {PalindromNetworkChannel}     self
          */
-        send(msg) {
+        async send(msg) {
             // send message only if there is a working ws connection
             if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
                 this._ws.send(msg);
                 this.onSend(msg, this._ws.url, 'WS');
             } else {
                 const url = this.remoteUrl.href;
-                this.xhr(
+                const res = await this.xhr(
                     url,
                     'application/json-patch+json',
-                    msg,
-                    (res, method) => {
-                        this.onReceive(res.data, url, method);
-                    }
+                    msg
+                );
+                this.onReceive(
+                    res.data,
+                    url,
+                    res.config.method.toUpperCase()
                 );
             }
             return this;
@@ -2255,17 +2391,21 @@ const Palindrom = (() => {
                 }
             };
         }
-
-        getPatchUsingHTTP(href) {
-            return this.xhr(
+        /**
+         * @param {String} href
+         * @throws {Error} network error if occured
+         * @returns {Response} response (https://github.com/axios/axios#response-schema)
+         */
+        async getPatchUsingHTTP(href) {
+            // we don't need to try catch here because we want the error to be thrown at whoever calls getPatchUsingHTTP
+            const res = await this.xhr(
                 href,
                 'application/json-patch+json',
                 null,
-                (res, method) => {
-                    this.onReceive(res.data, href, method);
-                },
                 true
             );
+            this.onReceive(res.data, href, res.config.method.toUpperCase());
+            return res;
         }
 
         changeState(href) {
@@ -2297,7 +2437,7 @@ const Palindrom = (() => {
             this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
         }
 
-        handleSuccessResponse(res, callback) {
+        handleLocationHeader(res) {
             /* Axios always returns lowercase headers */
             const location =
                 res.headers &&
@@ -2305,7 +2445,35 @@ const Palindrom = (() => {
             if (location) {
                 this.setRemoteUrl(location);
             }
-            callback && callback.call(this, res, res.config.method.toUpperCase());
+        }
+        /**
+         * Handles unsecessful HTTP requests
+         * @param error
+         */
+        handleFailureResponse(error) {
+            const res = error.response;
+            const url = res.config.url;
+            const method = res.config.method;
+            // no sufficient error information, we need to create on our own
+            var statusCode = -1;
+            var statusText = `An unknown network error has occurred. Raw message: ${
+                error.message
+            }`;
+            var reason = 'Maybe you lost connection with the server';
+            // log it for verbosity
+            console.error(error);
+
+            const message = [
+                statusText,
+                'statusCode: ' + statusCode,
+                'reason: ' + reason,
+                'url: ' + url,
+                'HTTP method: ' + method
+            ].join('\n');
+
+            this.onFatalError(
+                new PalindromConnectionError(message, CLIENT, url, method)
+            );
         }
 
         /**
@@ -2313,13 +2481,12 @@ const Palindrom = (() => {
          * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
          * @param accept (Optional) HTTP accept header
          * @param data (Optional) Data payload
-         * @param [callback(response)] callback to be called in context of palindrom with response as argument
          * @returns {XMLHttpRequest} performed XHR
          */
-        xhr(url, accept, data, callback, setReferer) {
+        async xhr(url, accept, data, setReferer) {
             const method = data ? 'PATCH' : 'GET';
             const headers = {};
-            let requestPromise;
+            let responsePromise;
 
             if (data) {
                 headers['Content-Type'] = 'application/json-patch+json';
@@ -2331,77 +2498,39 @@ const Palindrom = (() => {
                 headers['X-Referer'] = this.remoteUrl.pathname;
             }
             if (method === 'GET') {
-                requestPromise = axios.get(url, {
+                responsePromise = axios.get(url, {
                     headers
                 });
             } else {
-                requestPromise = axios.patch(url, data, {
+                responsePromise = axios.patch(url, data, {
                     headers
                 });
             }
-            requestPromise
-                .then(res => {
-                    this.handleSuccessResponse(res, callback);
-                })
-                .catch(error => {
-                    const res = error.response;
-
-                    if (res) {
-                        var statusCode = res.status;
-                        var statusText = res.statusText || res.data;
-                        var reason = res.data;
-
-                        //this is not a fatal error
-                        if (
-                            statusCode >= 400 &&
-                            statusCode < 500 &&
-                            res.headers['content-type'] ===
-                                'application/json-patch+json'
-                        ) {
-                            this.handleSuccessResponse(res, callback);
-                            return;
-                        }
-                    } else {
-                        // no sufficient error information, we need to create on our own
-                        var statusCode = -1;
-                        var statusText = `An unknown network error has occurred. Raw message: ${
-                            error.message
-                        }`;
-                        var reason =
-                            'Maybe you lost connection with the server';
-                        // log it for verbosity
-                        console.error(error);
-                    }
-
-                    const message = [
-                        statusText,
-                        'statusCode: ' + statusCode,
-                        'reason: ' + reason,
-                        'url: ' + url,
-                        'HTTP method: ' + method
-                    ].join('\n');
-
-                    this.onFatalError(
-                        new PalindromConnectionError(
-                            message,
-                            CLIENT,
-                            url,
-                            method
-                        )
-                    );
-                });
 
             this.onSend(data, url, method);
+
+            return responsePromise
+                .then(res => {
+                    this.handleLocationHeader(res);
+                    return res;
+                })
+                .catch(error => {
+                    if (isValid4xxResponse(error)) {
+                        return error.response;
+                    } else {
+                        this.handleFailureResponse(error);
+                        return Promise.reject(error);
+                    }
+                });
         }
     }
     // TODO: auto-configure here #38 (tomalec)
-    function establish(network, url, body, bootstrap) {
-        return network.xhr(url, 'application/json', body, res => {
-            bootstrap(res.data);
-            if (network.useWebSocket) {
-                network.webSocketUpgrade(network.onSocketOpened);
-            }
-        });
+    async function establish(network, url, body, bootstrap) {
+        const res = await network.xhr(url, 'application/json', body);
+        bootstrap(res.data);
+        if (network.useWebSocket) {
+            network.webSocketUpgrade(network.onSocketOpened);
+        }
     }
 
     function closeWsIfNeeded(network) {
@@ -2852,6 +2981,18 @@ const Palindrom = (() => {
                 )
             );
         }
+    }
+
+    function isValid4xxResponse(error) {
+        const res = error.response;
+        const statusCode = res.status;
+        //this is not a fatal error
+        return (
+            statusCode >= 400 &&
+            statusCode < 500 &&
+            res.headers &&
+            res.headers.contentType === 'application/json-patch+json'
+        );
     }
 
     function sendPatches(palindrom, patches) {

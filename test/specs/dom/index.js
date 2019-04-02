@@ -393,7 +393,7 @@ if (typeof window !== 'undefined') {
     describe('palindrom-morph-url event', function() {
       beforeEach(function(done) {
         // wait for Palindrom to call .listen (after finishing the ajax request)
-        setTimeout(done, 300)
+        setTimeout(done, 50)
       })
       it('Dispatching it should call PalindromDOM.morphUrl and issue a request', function(done) {
         const morphUrlStub = sinon.spy(palindrom, "morphUrl");
@@ -420,7 +420,7 @@ if (typeof window !== 'undefined') {
     describe('palindrom-before-redirect event', function() {
       beforeEach(function(done) {
         // wait for Palindrom to call .listen (after finishing the ajax request)
-        setTimeout(done, 300)
+        setTimeout(done, 50)
       })
       it('Morphing to a URL should dispatch the event and issue a request', function(done) {  
         const handler = event => {
@@ -445,7 +445,7 @@ if (typeof window !== 'undefined') {
         window.addEventListener('palindrom-before-redirect', handler)
         palindrom.morphUrl('/newUrl');
       });
-      it('Morphing to a URL should NOT issue a request after a canceled event', function(done) {
+      it('Morphing to a URL should NOT issue a request after a canceled event and morphUrl\'s retuned promise should resolve to `false', function(done) {
         let originalRequestCount = moxios.requests.count;
 
         const handler = event => {
@@ -454,18 +454,20 @@ if (typeof window !== 'undefined') {
           
           setTimeout(() => {
             expect(originalRequestCount).to.equal(moxios.requests.count);
-            done();
           })
           window.removeEventListener('palindrom-before-redirect', handler)
         };
         window.addEventListener('palindrom-before-redirect', handler)
-        palindrom.morphUrl('/newUrl2');
+        palindrom.morphUrl('/newUrl2').then(result => {
+          expect(result).to.equal(false);
+          done();
+        });
       });
     });
     describe('palindrom-after-redirect event', function() {
       beforeEach(function(done) {
         // wait for Palindrom to call .listen (after finishing the ajax request)
-        setTimeout(done, 300)
+        setTimeout(done, 50)
       })
       it('Morphing to a URL should dispatch the event after a successful request', function(done) {
         moxios.stubRequest('/newUrl', {
@@ -475,7 +477,7 @@ if (typeof window !== 'undefined') {
 
         const handler = event => {
           assert.equal(event.detail.href, '/newUrl');
-          assert.equal(event.detail.successful, true);
+          assert.deepEqual(event.detail.response.data, {"hello": "world"});
 
           setTimeout(() => {
             expect(window.location.pathname).to.equal('/newUrl');
@@ -488,22 +490,15 @@ if (typeof window !== 'undefined') {
         palindrom.morphUrl('/newUrl');
       });
 
-      it('Morphing to a URL should dispatch the event after a failed request', function(done) {
+      it('Morphing to a URL should throw an error after a failed request', function(done) {
         moxios.stubRequest('/newUrl2', {
           status: 509,
           responseText: '{"hello": "world"}'
         });
-
-        const handler = event => {
-          assert.equal(event.detail.href, '/newUrl2');
-          assert.equal(event.detail.successful, false);
-          assert.equal(event.detail.error.message, 'Request failed with status code 509');
-          
-          window.removeEventListener('palindrom-after-redirect', handler)
+        palindrom.morphUrl('/newUrl2').catch(error => {
+          assert.equal(error.message, 'HTTP request failed, error message: Request failed with status code 509');
           done();
-        }     
-        window.addEventListener('palindrom-after-redirect', handler)
-        palindrom.morphUrl('/newUrl2');
+        })
       });
     });
 
@@ -564,12 +559,12 @@ if (typeof window !== 'undefined') {
           responseText: '{}'
         });
 
-        moxios.stubRequest('/newUrl-palindrom-scroll-2', {
+        moxios.stubRequest('/newUrl-palindrom-scroll-hit', {
           status: 200,
           responseText: '{}'
         });
 
-        palindrom.morphUrl('/newUrl-palindrom-scroll-2').then(() => {
+        palindrom.morphUrl('/newUrl-palindrom-scroll-hit').then(() => {
           // scroll to bottom
           window.scrollTo(0, document.body.scrollHeight);
 
@@ -578,13 +573,13 @@ if (typeof window !== 'undefined') {
             expect(window.scrollY).to.not.equal(0);
 
             // go back
-            history.go(-1);
+            history.back();
 
             setTimeout(function() {
               expect(window.scrollY).to.equal(0);  
               done();
             }, 50);
-          }, 5);
+          }, 50);
         });        
       });
       it('should NOT scroll back when back button is hit and the user scrolled', function(done) {
@@ -611,7 +606,7 @@ if (typeof window !== 'undefined') {
             expect(window.scrollY).to.not.equal(0);
 
             // go back
-            history.go(-1);
+            history.back();
             
             // scroll half way
             window.scrollTo(0, Math.floor(document.body.scrollHeight / 2));
@@ -630,23 +625,24 @@ if (typeof window !== 'undefined') {
         moxios.install();
         moxios.stubRequest(getTestURL('testURL'), {
           status: 200,
-          headers: { location: getTestURL('testURL') },
           responseText: '{"hello": "world"}'
         });
 
         palindrom = new PalindromDOM({ remoteUrl: getTestURL('testURL') });
       });
+
       afterEach(function() {
         palindrom.unobserve();
         moxios.uninstall();
       });
 
       it('by dispatching `palindrom-redirect-pushstate` event', function(done) {
-        history.pushState(null, null, '/newUrl-palindrom');
+        // for Edge
+        this.timeout(5000);
+        history.pushState([0, 0], null, '/newUrl-palindrom');
 
-        moxios.stubRequest(/.+/, {
+        moxios.stubRequest('/newUrl-palindrom', {
           status: 200,
-          headers: { location: getTestURL('testURL') },
           responseText: '[]'
         });
 
@@ -659,11 +655,10 @@ if (typeof window !== 'undefined') {
 
         setTimeout(function() {
           const request = moxios.requests.mostRecent();
-
-          expect(new URL(request.url).pathname).to.equal('/newUrl-palindrom');
+          expect(request.url).to.equal('/newUrl-palindrom');
           expect(window.location.pathname).to.equal('/newUrl-palindrom');
           done();
-        }, 5);
+        }, 30);
       });
     });
   });
