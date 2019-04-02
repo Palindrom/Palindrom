@@ -1,4 +1,4 @@
-/*! Palindrom, version: 5.2.0 */
+/*! Palindrom, version: 6.0.0 */
 var PalindromDOM =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -1961,7 +1961,7 @@ console.log('Palindrom#morphing-pr');
  */
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '5.2.0';
+const palindromVersion = '6.0.0';
 
 const CLIENT = 'Client';
 const SERVER = 'Server';

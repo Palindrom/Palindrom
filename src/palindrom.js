@@ -5,7 +5,7 @@
  */
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '5.2.0';
+const palindromVersion = '6.0.0';
 
 const CLIENT = 'Client';
 const SERVER = 'Server';
