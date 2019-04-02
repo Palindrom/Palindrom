@@ -1889,6 +1889,7 @@ const PalindromDOM = (() => {
         async historyHandler(event) {
             await this.getPatchUsingHTTP(location.href);
             const [scrollX, scrollY] = event.state || [0, 0];
+            
             // flag if the user has scrolled, not our own code
             let userHadScrolled = false;
 
@@ -3008,6 +3009,7 @@ const Palindrom = (() => {
 module.exports = Palindrom;
 module.exports.default = Palindrom;
 module.exports.__esModule = true;
+
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(14)))
 
 /***/ }),

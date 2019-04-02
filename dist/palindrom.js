@@ -2647,6 +2647,7 @@ const Palindrom = (() => {
 module.exports = Palindrom;
 module.exports.default = Palindrom;
 module.exports.__esModule = true;
+
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(13)))
 
 /***/ }),
