@@ -1,4 +1,4 @@
-/*! Palindrom, version: 6.0.0 */
+/*! Palindrom, version: 6.0.1 */
 var Palindrom =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -1599,7 +1599,7 @@ module.exports = Cancel;
  */
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '6.0.0';
+const palindromVersion = '6.0.1';
 
 const CLIENT = 'Client';
 const SERVER = 'Server';
