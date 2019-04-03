@@ -1948,8 +1948,6 @@ module.exports = PalindromDOM;
 module.exports.default = PalindromDOM;
 module.exports.__esModule = true;
 
-console.log('Palindrom#morphing-pr');
-
 /***/ }),
 /* 13 */
 /***/ (function(module, exports, __webpack_require__) {

@@ -353,5 +353,3 @@ const PalindromDOM = (() => {
 module.exports = PalindromDOM;
 module.exports.default = PalindromDOM;
 module.exports.__esModule = true;
-
-console.log('Palindrom#morphing-pr');
