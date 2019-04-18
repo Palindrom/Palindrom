@@ -291,11 +291,11 @@ const PalindromDOM = (() => {
                 }
             }
         }
-        
+
         async historyHandler(event) {
             await this.getPatchUsingHTTP(location.href);
             const [scrollX, scrollY] = event.state || [0, 0];
-            
+
             // flag if the user has scrolled, not our own code
             let userHadScrolled = false;
 
@@ -303,7 +303,7 @@ const PalindromDOM = (() => {
             this._attemptingScroll = false;
 
             // if this handler is called && we're not attemptingScroll, then the user has scrolled!
-            const scrollHandler = () => (userHadScrolled = !attemptingScroll);
+            const scrollHandler = () => (userHadScrolled = !this._attemptingScroll);
             window.addEventListener('scroll', scrollHandler);
 
             for (let i = 0; i < 30 && !userHadScrolled; i++) {

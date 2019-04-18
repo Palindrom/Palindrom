@@ -535,6 +535,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (!url) {
 	      throw new TypeError('Failed to construct \'WebSocket\': 1 argument required, but only 0 present.');
 	    }
+	
 	    _this.binaryType = 'blob';
 	    _this.url = (0, _normalizeUrl2.default)(url);
 	    _this.readyState = WebSocket.CONNECTING;
@@ -13622,11 +13623,11 @@ const PalindromDOM = (() => {
                 }
             }
         }
-        
+
         async historyHandler(event) {
             await this.getPatchUsingHTTP(location.href);
             const [scrollX, scrollY] = event.state || [0, 0];
-            
+
             // flag if the user has scrolled, not our own code
             let userHadScrolled = false;
 
@@ -13634,7 +13635,7 @@ const PalindromDOM = (() => {
             this._attemptingScroll = false;
 
             // if this handler is called && we're not attemptingScroll, then the user has scrolled!
-            const scrollHandler = () => (userHadScrolled = !attemptingScroll);
+            const scrollHandler = () => (userHadScrolled = !this._attemptingScroll);
             window.addEventListener('scroll', scrollHandler);
 
             for (let i = 0; i < 30 && !userHadScrolled; i++) {
