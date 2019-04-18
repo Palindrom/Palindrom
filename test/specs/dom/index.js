@@ -600,13 +600,13 @@ if (typeof window !== 'undefined') {
                         // scroll to bottom
                         window.scrollTo(0, document.body.scrollHeight);
 
-                        // wait for rendering
-                        await sleep();
+                        // wait for scroll to finish
+                        await sleep(30);
 
                         expect(window.scrollY).to.not.equal(0);
 
                         // go back
-                        history.go(-1);
+                        history.back();
 
                         await sleep(30);
 
@@ -663,13 +663,14 @@ if (typeof window !== 'undefined') {
                                 )
                             );
 
-                            await sleep(15);
+                            await sleep(30);
 
                             expect(new URL(fetchMock.lastUrl()).pathname).to.equal(
                                 '/newUrl-palindrom'
                             );
 
-                            await sleep();
+                            await sleep(20);
+
                             expect(window.location.pathname).to.equal(
                                 '/newUrl-palindrom'
                             );
