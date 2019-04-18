@@ -300,7 +300,6 @@ describe('Sockets events', () => {
 
         fetchMock.mock(getTestURL('testURL'), {
             status: 200,
-            headers: { location: getTestURL('testURL') },
             body: '{"hello": "world"}'
         });
 
@@ -318,6 +317,7 @@ describe('Sockets events', () => {
         assert(spy.notCalled);
 
         await sleep();
+        
         server.send(`[{"op": "replace", "path": "/hello", "value": "bye"}]`);
 
         assert.equal(palindrom.obj.hello, 'bye');

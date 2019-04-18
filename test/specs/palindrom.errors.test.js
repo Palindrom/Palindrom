@@ -14,11 +14,11 @@ describe('Palindrom', () => {
             fetchMock.restore();
         });
         context('Network', function() {
-            it('should dispatch connection-error event on HTTP 400 response (non-patch responses)', async () => {
+            it('should not dispatch connection-error event on HTTP 400 response (non-patch responses)', async () => {
                 const spy = sinon.spy();
+
                 fetchMock.mock(getTestURL('testURL'), {
                     status: 400,
-                    headers: { contentType: 'application/json' },
                     body: '{"hello": "world"}'
                 });
 
@@ -30,10 +30,10 @@ describe('Palindrom', () => {
                     spy(ev.detail);
                 });
 
-                /* onConnectionError should be called once now */
+                /* connection-error should be dispatched once now */
                 await sleep(50);
                 
-                assert.equal(spy.callCount, 1);
+                assert.equal(spy.callCount, 0);
             });
 
             it('should dispatch connection-error event on HTTP 599 response', async () => {

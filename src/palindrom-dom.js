@@ -206,7 +206,7 @@ class AbortError extends Error {};
             const scrollY = window.scrollY;
             try {
                 const res = await this.getPatchUsingHTTP(url);
-                if (res && res.status < 500) {
+                if (res) {
                     // mark current state's scroll position
                     history.replaceState(
                         [scrollX, scrollY],
@@ -228,7 +228,6 @@ class AbortError extends Error {};
                 throw new Error(`HTTP request failed, error message: ${error.message}`);
             }
         }
-
         /**
          * Handles `palindrom-morph-url` event and channels its `detail.url` to `morphUrl`
          * @param {palindrom-morph-url Event} event

@@ -18,7 +18,7 @@ export function createAndClickOnLinkWithoutPrevention(
     parent.removeChild(a);
 }
 
-export function getTestURL(pathname, isRelative, ws = false) {
+export function getTestURL(pathname, isRelative = false, ws = false) {
     if (isRelative) {
         return `/${pathname}`;
     }

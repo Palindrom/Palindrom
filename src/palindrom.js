@@ -65,8 +65,6 @@ export default class Palindrom extends PalindromEventTarget {
         this.onPatchSent = detail => this.fire('patch-sent', detail);
         this.onSocketStateChanged = detail =>
             this.fire('socket-state-changed', detail);
-        this.onConnectionError = detail =>
-            this.fire('connection-error', detail);
         this.onReconnectionCountdown = detail =>
             this.fire('reconnection-countdown', detail);
         this.onReconnectionEnd = detail =>
@@ -104,7 +102,7 @@ export default class Palindrom extends PalindromEventTarget {
             options.useWebSocket || false, // useWebSocket
             this.handleRemoteChange.bind(this), //onReceive
             this.onPatchSent.bind(this), //onSend,
-            this.handleConnectionError.bind(this), //onConnectionError,
+            this.handleConnectionError.bind(this),
             this.onSocketOpened.bind(this),
             this.handleFatalError.bind(this), //onFatalError,
             this.onSocketStateChanged.bind(this) //onStateChange
@@ -183,7 +181,9 @@ export default class Palindrom extends PalindromEventTarget {
         this.network.send(txt);
         this.observe();
     }
-
+    /**
+     * Closes the Palindrom session probably
+     */
     closeConnection() {
         this.network.closeConnection();
     }
@@ -289,6 +289,7 @@ export default class Palindrom extends PalindromEventTarget {
     handleConnectionError() {
         this.heartbeat.stop();
         this.reconnector.triggerReconnection();
+        this.fire('connection-error');
     }
 
     /**
@@ -298,9 +299,7 @@ export default class Palindrom extends PalindromEventTarget {
     handleFatalError(palindromError) {
         this.heartbeat.stop();
         this.reconnector.stopReconnecting();
-        if (this.onConnectionError) {
-            this.onConnectionError(palindromError);
-        }
+        this.fire('connection-error', palindromError)
     }
 
     reconnectNow() {

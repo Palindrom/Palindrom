@@ -1,10 +1,11 @@
 import PalindromDOM from '../../../src/palindrom-dom';
-import assert from 'assert';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import { expect } from 'chai';
+import chai, { expect, assert } from 'chai';
 import { sleep, getTestURL, createAndClickOnLinkNested, createAndClickOnLinkNestedShadowDOM, createAndClickOnLinkNestedShadowDOMContent, createAndClickOnLink, createAndClickOnLinkWithoutPrevention } from '../../utils';
+import chaiAsPromised from "chai-as-promised";
 fetchMock.config.overwriteRoutes = true;
+chai.use(chaiAsPromised);
 
 /** only run DOM tests in browsers */
 if (typeof window !== 'undefined') {
@@ -127,6 +128,7 @@ if (typeof window !== 'undefined') {
                                     status: 200,
                                     body: '{"hello": "world"}'
                                 });
+                                
 
                                 createAndClickOnLinkNestedShadowDOMContent();
 
@@ -261,12 +263,13 @@ if (typeof window !== 'undefined') {
                         });
 
                         it('full URL in the same host, different schema', async () => {
-                            const protocol = window.location.protocol;
-                            const href =
-                                protocol +
-                                '//' +
-                                window.location.host +
-                                '/test'; //https://localhost:8888/test
+                            const href = getTestURL('test').replace('http:', 'https:');
+
+                            fetchMock.mock(href, {
+                                status: 200,
+                                body: '{"hello": "world"}'
+                            });
+
                             createAndClickOnLink(href);
                             expect(historySpy.callCount).to.equal(0);
                             await sleep();
@@ -469,10 +472,13 @@ if (typeof window !== 'undefined') {
                     });
                     afterEach(fetchMock.reset);
                     it('Morphing to a URL should dispatch the event after a successful request', async () => {
-                        fetchMock.mock('/newUrl', {
+                        const rel = getTestURL('newUrl', true);
+
+                        fetchMock.mock(rel, {
                             status: 200,
                             body: '{"hello": "world"}'
                         });
+
                         let firedEvent;
 
                         const handler = event => {
@@ -483,52 +489,46 @@ if (typeof window !== 'undefined') {
                                 handler
                             );
                         };
+
                         window.addEventListener(
                             'palindrom-after-redirect',
                             handler
                         );
-                        await palindrom.morphUrl('/newUrl');
 
+                        await palindrom.morphUrl(rel);
                         await sleep()
                         
-                        assert.equal(firedEvent.detail.href, '/newUrl');
-                        assert.equal(firedEvent.detail.successful, true);
+                        assert.equal(firedEvent.detail.href, rel);
 
                         expect(window.location.pathname).to.equal(
                             '/newUrl'
                         );
                     });
 
-                    it('Morphing to a URL should dispatch the event after a failed request', async () => {
+                    it('Morphing to a URL should not dispatch the event after a failed request but should reject morphUrl call', async () => {
                         fetchMock.mock(getTestURL('testURL-599'), {
                             status: 509,
                             body: '{"hello": "world"}'
                         });
 
-                        let firedEvent;
+                        let hasFiredEvent = false;
 
                         const handler = event => {
-                            firedEvent = event;
+                            hasFiredEvent = true;
 
                             window.removeEventListener(
                                 'palindrom-after-redirect',
                                 handler
                             );
                         };
+
                         window.addEventListener(
                             'palindrom-after-redirect',
                             handler
                         );
-                        await palindrom.morphUrl(getTestURL('testURL-599'));
-
-                        await sleep();
-
-                        assert.equal(firedEvent.detail.href, getTestURL('testURL-599'));
-                        assert.equal(firedEvent.detail.successful, false);
-                        assert.equal(
-                            firedEvent.detail.error.message,
-                            'HTTP 509 response: response body is {"hello":"world"}'
-                        );
+                        
+                        await assert.isRejected(palindrom.morphUrl(getTestURL('testURL-599')));
+                        assert.equal(hasFiredEvent, false);
                     });
                 });
 
@@ -584,6 +584,11 @@ if (typeof window !== 'undefined') {
                     it('should scroll back when back button is hit', async () => {
                         window.scrollTo(0, 0); // scroll to top
 
+                        // prep for back button request
+                        fetchMock.mock(window.location.href, {
+                            status: 200,
+                            body: '{}'
+                        });
 
                         fetchMock.mock('/newUrl-palindrom-scroll-4', {
                             status: 200,
@@ -591,17 +596,20 @@ if (typeof window !== 'undefined') {
                         });
 
                         await palindrom.morphUrl('/newUrl-palindrom-scroll-4');
+
                         // scroll to bottom
                         window.scrollTo(0, document.body.scrollHeight);
 
                         // wait for rendering
                         await sleep();
+
                         expect(window.scrollY).to.not.equal(0);
 
                         // go back
                         history.go(-1);
 
                         await sleep(30);
+
                         expect(window.scrollY).to.equal(0);
                     });
                     it('should NOT scroll back when back button is hit and the user scrolled', async () => {
