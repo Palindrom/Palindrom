@@ -16,8 +16,8 @@ import { PalindromEventTarget } from './palindrom-event-target';
 import { Heartbeat, NoHeartbeat } from './heartbeat';
 import NoQueue from './noqueue';
 
-/* this variable is bumped automatically when you call `npm version` */
-const palindromVersion = '5.2.0';
+/* this variable is bumped automatically when you call npm version */
+const palindromVersion = '6.0.1';
 
 if (typeof global === 'undefined') {
     if (typeof window !== 'undefined') {
@@ -151,7 +151,6 @@ export default class Palindrom extends PalindromEventTarget {
                 this.validateAndApplySequence.bind(this)
             );
         }
-
         this._connectToRemote();
     }
     async _connectToRemote(reconnectionPendingData = null) {

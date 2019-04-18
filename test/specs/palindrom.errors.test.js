@@ -19,7 +19,7 @@ describe('Palindrom', () => {
                 fetchMock.mock(getTestURL('testURL'), {
                     status: 400,
                     headers: { contentType: 'application/json' },
-                    body: 'Custom message'
+                    body: '{"hello": "world"}'
                 });
 
                 const palindrom = new Palindrom({
@@ -42,7 +42,7 @@ describe('Palindrom', () => {
                 fetchMock.mock(getTestURL('testURL'), {
                     status: 599,
                     headers: { contentType: 'application/json' },
-                    body: 'Custom message'
+                    body: '{"hello": "world"}'
                 });
 
                 const palindrom = new Palindrom({

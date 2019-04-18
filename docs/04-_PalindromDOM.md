@@ -12,7 +12,7 @@ After DOM is ready, initialize with the constructor:
 /**
  * Defines a connection to a remote PATCH server, gives an object that is persistent between browser and server
  */
-var palindrom = new PalindromDOM({remoteUrl: window.location.href});
+const palindrom = new PalindromDOM({remoteUrl: window.location.href});
 ```
 
 * *Note 1: Please make sure you pass the correct PATCH server URL.*
@@ -55,22 +55,30 @@ Property    | Type          | Default    | Description
 ```javascript
 palindrom.method()
 ```
-Attribute   | Type          | Description
+Attribute   | Arguments          | Description
 ---         | ---           | ---
-`unlisten`  | *HTMLElement* | Stop listening to DOM events
-`listen`    | *HTMLElement* | Start listening to DOM events
+`unlisten`  | None | Stop listening to DOM events
+`listen`    | *target: HTMLElement* | Start listening to DOM events
+`async morphUrl`    | *url: String*    | Navigates to a URL by making a request using `async getPatchUsingHTTP` followed by a History API call.
+`async getPatchUsingHTTP`    | *url: String*    | Sends a `PATCH/GET` request to the server demanding a patch that synchronizes server and client sides. It sends a `PATCH` request when there are pending data in the client's queue. And a `GET` request when there is not.
 
 ### Browser history
 
 Palindrom uses the HTML5 history API to update the URL in the browser address bar to reflect the new page. It also listens to a `popstate` event so it could ask the server for new JSON-Patch to morph the page back to previous state. Due to lack of native `pushstate` event you need to either:
- * call `palindrom.changeState(url)` after your `history.pushState(url)`,
- * call `palindrom.morphUrl(url)` - that will call `pushState` and update palindrom's state for you,
- * trigger `palindrom-redirect-pushstate` with `{url: "/new/url"}` on `window` after your `history.pushState(url)`,
+ * call `palindrom.getPatchUsingHTTP(url)` after your `history.pushState(url)`. This method returns a [`Promise<Response>`](https://github.com/axios/axios#response-schema). This methods throws an error if the HTTP request has failed or the `palindrom-before-redirect` was canceled by calling `event.preventDefault()`.
+ * call `palindrom.morphUrl(url)` - this will call `pushState` and update PalindromDOM's state for you,
+ * trigger `palindrom-redirect-pushstate` with `{url: "/new/url"}` on `window`. This will call `morphUrl` for you,
  * or use [`<palindrom-redirect>`](https://github.com/Palindrom/palindrom-redirect) Custom Element that does it for you.
+
+#### Browser history events
+
+PalindromDOM dispatches bubbling events before and after it manipulates browser history.
+- Before: it dispatches `palindrom-before-redirect` event with `detail` object containing `href: string` property that contains the URL.
+- After: it dispatches `palindrom-after-redirect` event with `detail` object containing `href: string` property that contains the URL and `successful: boolean` indicating whether the HTTP request was successful.
 
 #### Morph URL with an event
 
-Sometimes, it's tedious to locate the `PalindromDOM` instance in your application using `querySelector`, making it bothersome to call `palindrom.morphUrl`. In this case, you can dispatch an event to `palindrom.listenTo` element if you set one, or to `document` if you haven't, and `PaldinromDOM` with handle it and morph the URL.
+Sometimes, it's tedious to locate the `PalindromDOM` instance in your application using `querySelector`, making it bothersome to call `palindrom.morphUrl`. In this case, you can dispatch an event to `palindrom.listenTo` element if you set one, or to `window` if you haven't, and `PaldinromDOM` with handle it and morph the URL.
 
 Example:
 
@@ -82,7 +90,7 @@ Or you can create a helper function:
 
 ```js
 function morph(url) {
-  document.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url}}))
+  window.dispatchEvent(new CustomEvent('palindrom-morph-url', {detail: {url}}))
 }
 
 // then
