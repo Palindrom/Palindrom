@@ -23,11 +23,4 @@ export class PalindromEventTarget {
         }
         this[listeners][name].remove(callback);
     }
-    fire(eventName, detail) {
-        if (this[listeners][eventName]) {
-            this[listeners][eventName].forEach(listener =>
-                listener({ detail })
-            );
-        }
-    }
 }

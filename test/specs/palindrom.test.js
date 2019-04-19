@@ -35,11 +35,9 @@ describe('Palindrom', () => {
                 body: '{"hello": "world"}'
             });
             const spy = sinon.spy();
-            const palindrom = new Palindrom({
-                remoteUrl: getTestURL('testURL')
-            });
-            palindrom.addEventListener('state-reset', ev => {
-                spy(ev.detail);
+             new Palindrom({
+                remoteUrl: getTestURL('testURL'),
+                onStateReset: spy
             });
             await sleep();
             assert(spy.called);
@@ -53,10 +51,8 @@ describe('Palindrom', () => {
             });
             const spy = sinon.spy();
             let palindrom = new Palindrom({
-                remoteUrl: getTestURL('testURL')
-            });
-            palindrom.addEventListener('state-reset', ev => {
-                spy(ev.detail);
+                remoteUrl: getTestURL('testURL'),
+                onStateReset: spy
             });
             await sleep();
             assert.deepEqual(spy.getCall(0).args[0], {
@@ -106,13 +102,13 @@ describe('Palindrom', () => {
                 body: '{"hello": "world"}'
             });
 
-            const palindrom = new Palindrom({
-                remoteUrl: getTestURL('testURL')
-            });
             let tempObject;
-            palindrom.addEventListener('state-reset', ev => {
-                tempObject = ev.detail;
+
+            new Palindrom({
+                remoteUrl: getTestURL('testURL'),
+                onStateReset: obj => (tempObject = obj)
             });
+
             await sleep();
             assert.equal(tempObject.hello, 'world');
             tempObject.hello = 'galaxy';
@@ -137,11 +133,10 @@ describe('Palindrom', () => {
             assert.equal(0, fetchMock.calls().length, 'asdsad');
             let tempObject;
             const palindrom = new Palindrom({
-                remoteUrl: getTestURL('testURL')
-            });
-            palindrom.addEventListener('state-reset', ev => {
-                tempObject = ev.detail;
-            });
+                remoteUrl: getTestURL('testURL'),
+                onStateReset: obj => (tempObject = obj)
+            })
+            ;
             await sleep();
             assert.equal(1, fetchMock.calls().length);
             assert.equal(tempObject.unwatched, 'object');
@@ -171,10 +166,8 @@ describe('Palindrom', () => {
             });
             let tempObject;
             const palindrom = new Palindrom({
-                remoteUrl: getTestURL('testURL')
-            });
-            palindrom.addEventListener('state-reset', ev => {
-                tempObject = ev.detail;
+                remoteUrl: getTestURL('testURL'),
+                onStateReset: obj => (tempObject = obj)
             });
             await sleep();
             assert.equal(tempObject.unwatched, 'object');

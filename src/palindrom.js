@@ -12,7 +12,6 @@ import JSONPatchOT from 'json-patch-ot';
 import JSONPatchOTAgent from 'json-patch-ot-agent';
 import { PalindromConnectionError } from './palindrom-errors';
 import Reconnector from './reconnector';
-import { PalindromEventTarget } from './palindrom-event-target';
 import { Heartbeat, NoHeartbeat } from './heartbeat';
 import NoQueue from './noqueue';
 
@@ -32,7 +31,7 @@ if (typeof global === 'undefined') {
  * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
  * @param {Object} [options] map of arguments. See README.md for description
  */
-export default class Palindrom extends PalindromEventTarget {
+export default class Palindrom {
     /**
      * Palindrom version
      */
@@ -40,7 +39,6 @@ export default class Palindrom extends PalindromEventTarget {
         return palindromVersion;
     }
     constructor(options) {
-        super();
         /**
          * Palindrom instance version
          */
@@ -58,23 +56,34 @@ export default class Palindrom extends PalindromEventTarget {
         this.debug = options.debug != undefined ? options.debug : true;
 
         this.isObserving = false;
+
+        function noop() {}
+
+        this.onLocalChange = options.onLocalChange || noop;
+        this.onRemoteChange = options.onRemoteChange || noop;
+        this.onStateReset = options.onStateReset || options.callback || noop;
         this.filterLocalChange =
             options.filterLocalChange || (operation => operation);
 
-        /* these methods are all used more than once, hence are kept */
-        this.onPatchSent = detail => this.fire('patch-sent', detail);
-        this.onSocketStateChanged = detail =>
-            this.fire('socket-state-changed', detail);
-        this.onReconnectionCountdown = detail =>
-            this.fire('reconnection-countdown', detail);
-        this.onReconnectionEnd = detail =>
-            this.fire('reconnection-end', detail);
-        this.onSocketOpened = detail => this.fire('socket-opened', detail);
-        this.onIncomingPatchValidationError = detail =>
-            this.fire('incoming-patch-validation-error', detail);
-        this.onError = detail => this.fire('error', detail);
-        this.onOutgoingPatchValidationError = detail =>
-            this.fire('outgoing-patch-validation-error', detail);
+        this.onPatchReceived = options.onPatchReceived || noop;
+        this.onPatchSent = options.onPatchSent || noop;
+        this.onSocketStateChanged = options.onSocketStateChanged || noop;
+        this.onConnectionError = options.onConnectionError || noop;
+        this.retransmissionThreshold = options.retransmissionThreshold || 3;
+        this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
+        this.onReconnectionEnd = options.onReconnectionEnd || noop;
+        this.onSocketOpened = options.onSocketOpened || noop;
+        this.onIncomingPatchValidationError =
+            options.onIncomingPatchValidationError || noop;
+        this.onOutgoingPatchValidationError =
+            options.onOutgoingPatchValidationError || noop;
+        this.onError = options.onError || noop;
+
+        this.reconnector = new Reconnector(
+            () => makeReconnection(this),
+            this.onReconnectionCountdown,
+            this.onReconnectionEnd
+        );
 
         this.retransmissionThreshold = options.retransmissionThreshold || 3;
 
@@ -239,14 +248,14 @@ export default class Palindrom extends PalindromEventTarget {
         if (this.debug) {
             this.validateSequence(this.remoteObj, patches);
         }
-        
+
         this._sendPatches(this.queue.send(patches));
-        this.fire('local-change', patches);
+        this.onLocalChange(patches);
     }
 
     validateAndApplySequence(tree, sequence) {
-        // we don't want this changes to generate patches since they originate from server, not client
         try {
+            // we don't want this changes to generate patches since they originate from server, not client
             this.unobserve();
             const results = applyPatch(tree, sequence, this.debug);
             // notifications have to happen only where observe has been re-enabled
@@ -261,10 +270,9 @@ export default class Palindrom extends PalindromEventTarget {
 
                 // validate json response
                 findRangeErrors(this.obj, this.onIncomingPatchValidationError);
-
-                this.fire('state-reset', this.obj);
+                this.onStateReset(this.obj);
             }
-            this.fire('remote-change', { patches: sequence, results });
+            this.onRemoteChange({ patches: sequence, results })
         } catch (error) {
             if (this.debug) {
                 this.onIncomingPatchValidationError(error);
@@ -289,7 +297,7 @@ export default class Palindrom extends PalindromEventTarget {
     handleConnectionError() {
         this.heartbeat.stop();
         this.reconnector.triggerReconnection();
-        this.fire('connection-error');
+        this.onConnectionError();
     }
 
     /**
@@ -299,7 +307,7 @@ export default class Palindrom extends PalindromEventTarget {
     handleFatalError(palindromError) {
         this.heartbeat.stop();
         this.reconnector.stopReconnecting();
-        this.fire('connection-error', palindromError)
+        this.onConnectionError(palindromError);
     }
 
     reconnectNow() {
@@ -307,7 +315,7 @@ export default class Palindrom extends PalindromEventTarget {
     }
 
     handleRemoteChange(data, url, method) {
-        this.fire('patch-received', { data, url, method });
+        this.onPatchReceived({ data, url, method })
 
         this.heartbeat.notifyReceive();
         const patches = data || []; // fault tolerance - empty response string should be treated as empty patch array

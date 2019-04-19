@@ -169,13 +169,13 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     });
 
     it('should use same host, port, username, and password as provided in remoteUrl', async () => {
-        server = new MockSocketServer(getTestURL('testURL/koko', false, true));
+        server = new MockSocketServer(getTestURL('test/this_is_a_nice_url', false, true));
 
         const remoteUrl = getTestURL('testURL/koko');
-
+        
         fetchMock.mock(remoteUrl, {
             status: 200,
-            headers: { location: '/test/this_is_a_nice_url' },
+            headers: { location: getTestURL('test/this_is_a_nice_url') },
             body: '{"hello": "world"}'
         });
 
@@ -210,15 +210,9 @@ describe('Before XHR connection is established', () => {
         
         var palindrom = new Palindrom({
             remoteUrl,
-            useWebSocket: true
-        });
-        
-        palindrom.addEventListener('state-reset', ev => {
-            assert(everConnected === false, `shouldn't connect before XHR`);
-        });
-
-        palindrom.addEventListener('socket-opened', () => {
-            everConnected = true;
+            useWebSocket: true,
+            onStateReset: () => assert(everConnected === false, `shouldn't connect before XHR`),
+            onSocketOpened: () => (everConnected = true)
         });
         
         await sleep(30);
@@ -242,13 +236,11 @@ describe('Before XHR connection is established', () => {
             messages.push(...patchesParsed);
         });
 
-        var palindrom = new Palindrom({
+        new Palindrom({
             remoteUrl,
-            useWebSocket: true
+            useWebSocket: true,
+            onStateReset: obj => (obj.firstName = 'Omar')
         });
-        palindrom.addEventListener('state-reset', () => {
-            palindrom.obj.firstName = 'Omar';
-        })
 
         // Wait for XHR to finish
         await sleep(15);        
@@ -271,13 +263,10 @@ describe('Sockets events', () => {
         });
 
         var spy = sinon.spy();
-        var palindrom = new Palindrom({
+        new Palindrom({
             remoteUrl: getTestURL('testURL'),
-            useWebSocket: true
-        });
-
-        palindrom.addEventListener('socket-opened', ev => {
-            spy(ev.detail);
+            useWebSocket: true,
+            onSocketOpened: spy
         });
 
         assert.equal(
@@ -295,7 +284,7 @@ describe('Sockets events', () => {
         );
     });
 
-    it('Should dispatch connection-error event when a non-JSON message is sent', async () => {
+    it('Should call onConnectionError even when a non-JSON message is sent', async () => {
         server = new MockSocketServer(getTestURL('testURL', false, true));
 
         fetchMock.mock(getTestURL('testURL'), {
@@ -306,11 +295,8 @@ describe('Sockets events', () => {
         var spy = sinon.spy();
         var palindrom = new Palindrom({
             remoteUrl: getTestURL('testURL'),
-            useWebSocket: true
-        });
-
-        palindrom.addEventListener('connection-error', ev => {
-            spy(ev.detail);
+            useWebSocket: true,
+            onConnectionError: spy
         });
 
         /* no issues so far */
@@ -399,20 +385,16 @@ describe('Sockets events', () => {
                 messages.push(...patchesParsed);
             });
 
-            var palindrom = new Palindrom({
+            let tempObj;
+            new Palindrom({
                 remoteUrl,
-                useWebSocket: true
+                useWebSocket: true,
+                onStateReset: obj => (tempObj = obj)
             });
 
             fetchMock.restore();
 
-            let obj;
-
-            palindrom.addEventListener('state-reset', ev => {
-                obj = ev.detail;
-            });
-
-            await sleep();
+            await sleep(20);
 
             // prepare a response for the patch
             fetchMock.mock(remoteUrl, {
@@ -422,7 +404,7 @@ describe('Sockets events', () => {
             });
 
             /* here, socket connection isn't established yet, let's issue a change */
-            obj.name = 'Mark';
+            tempObj.name = 'Mark';
     
             await sleep();
 
@@ -437,7 +419,7 @@ describe('Sockets events', () => {
             /* now socket is connected, let's issue a change */
             await sleep(30);
             
-            obj.firstName = 'Omar';
+            tempObj.firstName = 'Omar';
           
             await sleep();
 
@@ -449,7 +431,7 @@ describe('Sockets events', () => {
 
             /* now socket is connected, let's issue another change */
             await sleep();
-            palindrom.obj.firstName = 'Hanan';
+            tempObj.firstName = 'Hanan';
 
             assert.equal(messages.length, 2);
             assert.equal(

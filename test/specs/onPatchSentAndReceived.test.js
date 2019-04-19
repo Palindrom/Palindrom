@@ -7,7 +7,7 @@ import { sleep, getTestURL } from '../utils';
 
 describe('Callbacks, onPatchSent and onPatchReceived', () => {
     describe('XHR', function() {
-        it('should dispatch patch-sent and patch-received events when a patch is sent and received', async () => {
+        it('should call onPatchSent and onPatchReceived callbacks when a patch is sent and received', async () => {
             fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
                 body: '{"hello": "world"}'
@@ -16,22 +16,14 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             const onPatchReceived = sinon.spy();
             const onPatchSent = sinon.spy();
             let tempObj;
-            
-            const palindrom = new Palindrom({
-                remoteUrl: getTestURL('testURL')
-            });
-            
-
-            palindrom.addEventListener('state-reset', ev => {
-                tempObj = ev.detail;
-            });
-
-            palindrom.addEventListener('patch-received', ev => {
-                onPatchReceived(ev.detail.data);
-            });
-
-            palindrom.addEventListener('patch-sent', ev => {
-                onPatchSent(ev.detail.data);
+  
+            new Palindrom({
+                remoteUrl: getTestURL('testURL'),
+                onStateReset: function(obj) {
+                    tempObj = obj;
+                },
+                onPatchReceived,
+                onPatchSent
             });
 
             await sleep(10);
@@ -73,7 +65,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
 
             fetchMock.restore();
         });
-        it('HTTP - should dispatch patch-received event even if the patch was bad', async () => {
+        it('should call onPatchReceived even if the patch was bad', async () => {
             const onPatchReceived = sinon.spy();
             let tempObj;
 
@@ -82,16 +74,12 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                 body: '{"hello": "world"}'
             });
 
-            const palindrom = new Palindrom({
-                remoteUrl: getTestURL('testURL')
-            });
-
-            palindrom.addEventListener('state-reset', ev => {
-                tempObj = ev.detail;
-            });
-
-            palindrom.addEventListener('patch-received', ev => {
-                onPatchReceived(ev.detail);
+            new Palindrom({
+                remoteUrl: getTestURL('testURL'),
+                onStateReset: function(obj) {
+                    tempObj = obj;
+                },
+                onPatchReceived
             });
 
             await sleep();
@@ -121,7 +109,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
     });
 
     describe('WebSockets', function() {
-        it('should dispatch patch-sent and dispatch patch-received events when a patch is sent and received', async () => {
+        it('should call onPatchSent and onPatchReceived callbacks when a patch is sent and received', async () => {
             const server = new MockSocketServer(
                 getTestURL('testURL', false, true)
             );
@@ -151,21 +139,13 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                 body: '{"hello": "world"}'
             });
 
-            const palindrom = new Palindrom({
+            new Palindrom({
                 remoteUrl: getTestURL('testURL'),
-                useWebSocket: true
-            });
-
-            palindrom.addEventListener('state-reset', ev => {
-                tempObj = ev.detail;
-            });
-
-            palindrom.addEventListener('patch-received', ev => {
-                onPatchReceived(ev.detail.data);
-            });
-
-            palindrom.addEventListener('patch-sent', ev => {
-                onPatchSent(ev.detail.data);
+                onStateReset: function(obj) {
+                    tempObj = obj;
+                },
+                onPatchReceived,
+                onPatchSent
             });
 
             /* wait for XHR */
@@ -212,7 +192,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
         });
     });
 
-    it('WebSocket - should dispatch patch-received event even if the patch was bad', async () => {
+    it('WebSocket - should call onPatchReceived even if the patch was bad', async () => {
         const server = new MockSocketServer(
             getTestURL('testURL', false, true)
         );
@@ -239,17 +219,13 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
         const onPatchReceived = sinon.spy();
         let tempObj;
 
-        const palindrom = new Palindrom({
+        new Palindrom({
             remoteUrl: getTestURL('testURL'),
-            useWebSocket: true
-        });
-
-        palindrom.addEventListener('state-reset', ev => {
-            tempObj = ev.detail;
-        });
-
-        palindrom.addEventListener('patch-received', ev => {
-            onPatchReceived(ev.detail);
+            onStateReset: function(obj) {
+                tempObj = obj;
+            },
+            useWebSocket: true,
+            onPatchReceived
         });
         
         /* wait for XHR */

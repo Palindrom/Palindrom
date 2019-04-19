@@ -20,17 +20,15 @@ describe('Palindrom', () => {
                 headers: { contentType: 'application/json' },
                 body: '{"hello": "world"}'
             });
-            const palindrom = new Palindrom({
+            new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 filterLocalChange: op => {
                     spy();
                     return op;
-                }
+                },
+                onStateReset: obj => obj.newProp = 'name'
             });
-            palindrom.addEventListener('state-reset', ev => {
-                const obj = ev.detail;
-                obj.newProp = 'name';
-            });
+
             // wait for ajax
             await sleep();
 
@@ -43,27 +41,25 @@ describe('Palindrom', () => {
                 headers: { contentType: 'application/json' },
                 body: '{"hello": "world"}'
             });
+            let tempObj;
             const palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 filterLocalChange: operation =>
-                    !operation.path.startsWith('/$$') && operation
+                    !operation.path.startsWith('/$$') && operation,
+                    onStateReset: obj => (tempObj = obj)
             });
-            let obj;
 
-            palindrom.addEventListener('state-reset', ev => {
-                obj = ev.detail;
-            });
             await sleep();
             assert(fetchMock.calls().length === 1);
             // a change that passes the filter
-            obj.newProp = 'name';
+            tempObj.newProp = 'name';
 
             // wait for ajax
             await sleep();
             assert(fetchMock.calls().length === 2);
 
             // a change that does not pass the filter
-            obj.$$ignored = 'name';
+            tempObj.$$ignored = 'name';
 
             // wait for ajax
             await sleep();

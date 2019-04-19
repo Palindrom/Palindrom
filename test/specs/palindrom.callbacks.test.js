@@ -15,16 +15,18 @@ describe('Callbacks', () => {
         fetchMock.restore();
     });
 
-    it('should dispatch local-change event for outgoing patches', async () => {
+    it('should call onLocalChange callback for outgoing patches', async () => {
         const sentSpy = sinon.spy();
         let tempObj;
 
-        const palindrom = new Palindrom({
-            remoteUrl: getTestURL('testURL')
+        new Palindrom({
+            remoteUrl: getTestURL('testURL'),
+            onLocalChange: sentSpy,
+            onStateReset: function(obj) {
+                tempObj = obj;
+            }
         });
-        palindrom.addEventListener('state-reset', ev => (tempObj = ev.detail));
-        palindrom.addEventListener('local-change', ev => sentSpy(ev.detail));
-
+       
         await sleep();
         /* onLocalChange shouldn't be called now */
         assert(sentSpy.notCalled);
@@ -39,13 +41,12 @@ describe('Callbacks', () => {
     });
 
     it('should dispatch state-reset event for applied patches on root (initial state)', async () => {
-        const palindrom = new Palindrom({
-            remoteUrl: getTestURL('testURL')
-        });
         let stateWasReset = false;
-        palindrom.addEventListener('state-reset', ev => {
-            stateWasReset = true;
+        const palindrom = new Palindrom({
+            remoteUrl: getTestURL('testURL'),
+            onStateReset: () => (stateWasReset = true)
         });
+
         await sleep(30);
         assert.equal(stateWasReset, true, 'stateWasReset should be called');
     });

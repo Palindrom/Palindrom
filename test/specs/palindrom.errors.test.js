@@ -23,11 +23,8 @@ describe('Palindrom', () => {
                 });
 
                 const palindrom = new Palindrom({
-                    remoteUrl: getTestURL('testURL')
-                });
-
-                palindrom.addEventListener('connection-error', ev => {
-                    spy(ev.detail);
+                    remoteUrl: getTestURL('testURL'),
+                    onConnectionError: spy
                 });
 
                 /* connection-error should be dispatched once now */
@@ -45,12 +42,9 @@ describe('Palindrom', () => {
                     body: '{"hello": "world"}'
                 });
 
-                const palindrom = new Palindrom({
-                    remoteUrl: getTestURL('testURL')
-                });
-
-                palindrom.addEventListener('connection-error', ev => {
-                    spy(ev.detail);
+                new Palindrom({
+                    remoteUrl: getTestURL('testURL'),
+                    onConnectionError: spy
                 });
 
                 /* onConnectionError should be called once now */
@@ -68,11 +62,8 @@ describe('Palindrom', () => {
                 });
 
                 const palindrom = new Palindrom({
-                    remoteUrl: getTestURL('testURL')
-                });
-
-                palindrom.addEventListener('connection-error', ev => {
-                    spy(ev.detail);
+                    remoteUrl: getTestURL('testURL'),
+                    onConnectionError: spy
                 });
 
                 fetchMock.restore();
@@ -104,11 +95,8 @@ describe('Palindrom', () => {
                 });
 
                 const palindrom = new Palindrom({
-                    remoteUrl: getTestURL('testURL')
-                });
-
-                palindrom.addEventListener('connection-error', ev => {
-                    spy(ev.detail);
+                    remoteUrl: getTestURL('testURL'),
+                    onConnectionError: spy
                 });
 
                 fetchMock.restore();
@@ -139,11 +127,8 @@ describe('Palindrom', () => {
                 });
 
                 const palindrom = new Palindrom({
-                    remoteUrl: getTestURL('testURL')
-                });
-
-                palindrom.addEventListener('connection-error', ev => {
-                    spy(ev.detail);
+                    remoteUrl: getTestURL('testURL'),
+                    onConnectionError: spy
                 });
 
                 await sleep(10);
@@ -177,13 +162,6 @@ describe('Palindrom', () => {
                     onIncomingPatchValidationError: spy
                 });
 
-                palindrom.addEventListener(
-                    'incoming-patch-validation-error',
-                    ev => {
-                        spy(ev.detail);
-                    }
-                );
-
                 await sleep();
                 assert(spy.calledOnce);
                 const errorPassed = spy.getCall(0).args[0];
@@ -202,20 +180,11 @@ describe('Palindrom', () => {
 
                 const spy = sinon.spy();
 
-                const palindrom = new Palindrom({
-                    remoteUrl: getTestURL('testURL')
+                new Palindrom({
+                    remoteUrl: getTestURL('testURL'),
+                    onStateError: obj => obj.val = Number.MAX_SAFE_INTEGER + 1,
+                    onOutgoingPatchValidationError: spy
                 });
-
-                palindrom.addEventListener('state-reset', ev => {
-                    ev.detail.val = Number.MAX_SAFE_INTEGER + 1;
-                });
-
-                palindrom.addEventListener(
-                    'outgoing-patch-validation-error',
-                    ev => {
-                        spy(ev.detail);
-                    }
-                );
 
                 await sleep();
                 assert(spy.calledOnce);
@@ -239,18 +208,13 @@ describe('Palindrom', () => {
 
                 var palindrom = new Palindrom({
                     remoteUrl: getTestURL('testURL'),
-                    useWebSocket: true
+                    useWebSocket: true,
+                    onOutgoingPatchValidationError: spy,
+                    onStateError: obj => obj.val = Number.MAX_SAFE_INTEGER + 1,
                 });
 
-                palindrom.addEventListener(
-                    'outgoing-patch-validation-error',
-                    ev => {
-                        spy(ev.detail);
-                    }
-                );
-
                 await sleep(30);
-                palindrom.obj.value = Number.MAX_SAFE_INTEGER + 1;
+
                 // make sure WS is up
                 assert.equal(palindrom.network._ws.readyState, 1);
                 assert(spy.calledOnce);
@@ -273,17 +237,11 @@ describe('Palindrom', () => {
 
                 var spy = sinon.spy();
 
-                var palindrom = new Palindrom({
+                new Palindrom({
                     remoteUrl: getTestURL('testURL'),
-                    useWebSocket: true
+                    useWebSocket: true,
+                    onIncomingPatchValidationError: spy
                 });
-
-                palindrom.addEventListener(
-                    'incoming-patch-validation-error',
-                    ev => {
-                        spy(ev.detail);
-                    }
-                );
 
                 await sleep(30);
                 server.send(

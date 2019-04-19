@@ -12,24 +12,23 @@ describe('Palindrom', () => {
                 headers: { contentType: 'application/json' },
                 body: '{"hello": "world"}'
             });
+            let tempObj;
             const palindrom = new Palindrom({
-                remoteUrl: getTestURL('testURL')
+                remoteUrl: getTestURL('testURL'),
+                onStateReset: obj => (tempObj = obj)
             });
-            let obj;
-            palindrom.addEventListener('state-reset', ev => {
-                obj = ev.detail;
-            });
+            
             await sleep();
             assert(fetchMock.calls().length === 1);
             // a change that emits a patch
-            obj.newProp = 'name';
+            tempObj.newProp = 'name';
 
             // wait for ajax
             await sleep();
             assert(fetchMock.calls().length === 2);
 
             // a change that does not emit
-            Object.defineProperty(obj, 'ignored', {
+            Object.defineProperty(tempObj, 'ignored', {
                 enumerable: false,
                 value: {
                     child: 1
@@ -37,7 +36,7 @@ describe('Palindrom', () => {
             });
 
             // a change that does not emit
-            obj.ignored.child = 2;
+            tempObj.ignored.child = 2;
 
             // wait for ajax
             await sleep();
