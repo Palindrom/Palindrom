@@ -173,7 +173,7 @@ describe('Palindrom', () => {
                 );
             });
             it('Outgoing HTTP patches: out of range numbers should dispatch outgoing-patch-validation-error event with a RangeError', async () => {
-                fetchMock.mock(getTestURL('testURL'), {
+                fetchMock.mock(getTestURL('testURL-range'), {
                     status: 200,
                     body: `{"val": 1}`
                 });
@@ -181,15 +181,21 @@ describe('Palindrom', () => {
                 const spy = sinon.spy();
 
                 new Palindrom({
-                    remoteUrl: getTestURL('testURL'),
-                    onStateError: obj => obj.val = Number.MAX_SAFE_INTEGER + 1,
+                    remoteUrl: getTestURL('testURL-range'),
+                    onStateReset: obj => 
+                        obj.val = Number.MAX_SAFE_INTEGER + 1
+                    ,
                     onOutgoingPatchValidationError: spy
                 });
 
-                await sleep();
-                assert(spy.calledOnce);
+                await sleep(20);
+
+                assert(spy.calledOnce, spy.callCount);
+                
                 const errorPassed = spy.getCall(0).args[0];
+                
                 assert(errorPassed instanceof RangeError);
+                
                 assert.equal(
                     errorPassed.message,
                     `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
@@ -210,21 +216,25 @@ describe('Palindrom', () => {
                     remoteUrl: getTestURL('testURL'),
                     useWebSocket: true,
                     onOutgoingPatchValidationError: spy,
-                    onStateError: obj => obj.val = Number.MAX_SAFE_INTEGER + 1,
+                    onStateReset: obj => obj.val = Number.MAX_SAFE_INTEGER + 1,
                 });
 
                 await sleep(30);
 
                 // make sure WS is up
                 assert.equal(palindrom.network._ws.readyState, 1);
+
                 assert(spy.calledOnce);
+
                 const errorPassed = spy.getCall(0).args[0];
+
                 assert(errorPassed instanceof RangeError);
+
                 assert.equal(
                     errorPassed.message,
-                    `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
-                        1}, variable path is: /value`
+                    `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: 9007199254740992, variable path is: /val`
                 );
+
                 server.stop();
             });
             it('Incoming socket patches: out of range numbers should dispatch incoming-patch-validation-error event with a RangeError', async () => {

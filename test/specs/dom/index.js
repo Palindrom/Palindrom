@@ -33,7 +33,6 @@ if (typeof window !== 'undefined') {
 
                         fetchMock.mock(getTestURL('testURL'), {
                             status: 200,
-                            headers: { location: getTestURL('testURL') },
                             body: '{"hello": "world"}'
                         });
 
@@ -128,11 +127,10 @@ if (typeof window !== 'undefined') {
                                     status: 200,
                                     body: '{"hello": "world"}'
                                 });
-                                
 
                                 createAndClickOnLinkNestedShadowDOMContent();
 
-                                await sleep();
+                                await sleep(20);
 
                                 expect(historySpy.callCount).to.equal(1);
                             });
@@ -318,6 +316,7 @@ if (typeof window !== 'undefined') {
                         );
 
                         await sleep();
+                        
                         expect(historySpy.callCount).to.equal(1);
                         fetchMock.restore();
                     });
@@ -354,13 +353,14 @@ if (typeof window !== 'undefined') {
 
                 describe('should send JSON Patch HTTP request once history state get changed', function() {
                     it('by `palindrom.morphURL(url)` method', async () => {
-                        fetchMock.mock('/newUrl', {
+                        const url = getTestURL('newUrl');
+                        fetchMock.mock(url, {
                             status: 200,
                             body: '{"hello": "world"}'
                         });
 
-                        await palindrom.morphUrl('/newUrl');
-                        expect(fetchMock.lastUrl()).to.equal('/newUrl');
+                        await palindrom.morphUrl(url);
+                        expect(fetchMock.lastUrl()).to.equal(url);
                         expect(window.location.pathname).to.equal('/newUrl');
                         fetchMock.restore();
                     });
@@ -561,41 +561,42 @@ if (typeof window !== 'undefined') {
                         window.scrollTo(0, document.body.scrollHeight); // scroll to bottom
                         const currScrollY = window.scrollY;
 
-                        fetchMock.mock('/newUrl-palindrom-scroll-3', {
+                        const url = getTestURL('newUrl-palindrom-scroll-3');
+
+                        fetchMock.mock(url, {
                             status: 200,
                             body: '[]'
                         });
 
-                        palindrom.morphUrl('/newUrl-palindrom-scroll-3');
+                        await palindrom.morphUrl(url);
 
-                        await sleep();
+                        await sleep(100);
+
                         expect(fetchMock.lastUrl()).to.equal(
-                            '/newUrl-palindrom-scroll-3'
+                            url
                         );
-                        expect(
-                            window.location.pathname + location.hash
-                        ).to.equal('/newUrl-palindrom-scroll-3');
+
+                        fetchMock.restore();
+
+                        expect(window.location.pathname).to.equal('/newUrl-palindrom-scroll-3');
                         
                         const newCurrScrollY = window.scrollY;
                         expect(newCurrScrollY).to.not.equal(currScrollY);
-                        expect(currScrollY).to.not.equal(0);
-                        fetchMock.restore();
+                        expect(currScrollY).to.not.equal(0);                        
                     });
                     it('should scroll back when back button is hit', async () => {
                         window.scrollTo(0, 0); // scroll to top
+                        
+                        const url = getTestURL('newUrl-palindrom-scroll-4');
 
-                        // prep for back button request
-                        fetchMock.mock(window.location.href, {
+                        const currentURL = window.location.href;
+
+                        fetchMock.mock(url, {
                             status: 200,
                             body: '{}'
                         });
 
-                        fetchMock.mock('/newUrl-palindrom-scroll-4', {
-                            status: 200,
-                            body: '{}'
-                        });
-
-                        await palindrom.morphUrl('/newUrl-palindrom-scroll-4');
+                        await palindrom.morphUrl(url);
 
                         // scroll to bottom
                         window.scrollTo(0, document.body.scrollHeight);
@@ -604,6 +605,12 @@ if (typeof window !== 'undefined') {
                         await sleep(30);
 
                         expect(window.scrollY).to.not.equal(0);
+                        
+                        // prep for back button request
+                        fetchMock.mock(currentURL, {
+                            status: 200,
+                            body: '{}'
+                        });
 
                         // go back
                         history.back();
@@ -611,6 +618,7 @@ if (typeof window !== 'undefined') {
                         await sleep(30);
 
                         expect(window.scrollY).to.equal(0);
+                        fetchMock.restore();
                     });
                     it('should NOT scroll back when back button is hit and the user scrolled', async () => {
                         window.scrollTo(0, 0); // scroll to top
@@ -642,12 +650,14 @@ if (typeof window !== 'undefined') {
                         expect(window.scrollY).to.equal(
                             Math.floor(document.body.scrollHeight / 2)
                         );
+                        fetchMock.restore();
                     });
 
                     describe('should send JSON Patch HTTP request once history state get changed', function() {
                           it('by dispatching `palindrom-redirect-pushstate` event', async () => {
-   
-                            fetchMock.mock(getTestURL('newUrl-palindrom'), {
+                            const url = getTestURL('newUrl-palindrom');
+
+                            fetchMock.mock(url, {
                                 status: 200,
                                 headers: { contentType: 'application/json-patch+json' },
                                 body: `[{"op": "replace", "path": "/", "value": "Custom message"}]`
@@ -657,23 +667,19 @@ if (typeof window !== 'undefined') {
                                 new CustomEvent(
                                     'palindrom-redirect-pushstate',
                                     {
-                                        detail: { url: getTestURL('newUrl-palindrom') },
+                                        detail: { url },
                                         bubbles: true
                                     }
                                 )
                             );
 
-                            await sleep(30);
-
-                            expect(new URL(fetchMock.lastUrl()).pathname).to.equal(
-                                '/newUrl-palindrom'
-                            );
-
-                            await sleep(20);
-
+                            await sleep(100);
+                            
                             expect(window.location.pathname).to.equal(
                                 '/newUrl-palindrom'
                             );
+
+                            fetchMock.restore();
                         });
                     });
                 });

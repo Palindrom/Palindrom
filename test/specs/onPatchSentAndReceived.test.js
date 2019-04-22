@@ -16,7 +16,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             const onPatchReceived = sinon.spy();
             const onPatchSent = sinon.spy();
             let tempObj;
-  
+
             new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 onStateReset: function(obj) {
@@ -34,11 +34,11 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                 'onPatchReceived should not be called'
             );
 
-            /* onPatchSent, shouldnt be called now, the initial request doesnt count since you can't addEventLister before it occurs */
-            assert(onPatchSent.notCalled, 'onPatchSent should not be called');
+            /* onPatchSent, should be called now, the initial request  */
+            assert(onPatchSent.calledOnce, 'onPatchSent should be calledOnce');
 
             fetchMock.restore();
-            
+
             /* prepare response */
             fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
@@ -49,13 +49,13 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             /* issue a change */
             tempObj.hello = 'onPatchSent callback';
 
-            assert(onPatchSent.calledOnce);
+            assert(onPatchSent.calledTwice);
 
             /* wait for XHR */
             await sleep();
             assert(onPatchReceived.calledOnce);
-            
-            assert.deepEqual(onPatchReceived.lastCall.args[0], [
+
+            assert.deepEqual(onPatchReceived.lastCall.args[0].data, [
                 {
                     op: 'replace',
                     path: '/hello',
@@ -84,7 +84,11 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
 
             await sleep();
 
-            assert.equal(onPatchReceived.callCount, 0, `onPatchReceived shouldn't be called now`);
+            assert.equal(
+                onPatchReceived.callCount,
+                0,
+                `onPatchReceived shouldn't be called now`
+            );
 
             fetchMock.restore();
 
@@ -103,7 +107,11 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             /* wait for XHR */
             await sleep(10);
 
-            assert.equal(onPatchReceived.callCount, 1, `onPatchReceived should be called once now`);
+            assert.equal(
+                onPatchReceived.callCount,
+                1,
+                `onPatchReceived should be called once now`
+            );
             fetchMock.restore();
         });
     });
@@ -140,6 +148,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             });
 
             new Palindrom({
+                useWebSocket: true,
                 remoteUrl: getTestURL('testURL'),
                 onStateReset: function(obj) {
                     tempObj = obj;
@@ -157,19 +166,19 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                 `onPatchReceived shouldn't be called now`
             );
 
-            /* onPatchSent, shouldnt be called now, the initial request doesnt count since you can't addEventLister before it occurs */
+            /* onPatchSent, should be called now, for the initial request */
             assert.equal(
                 onPatchSent.callCount,
-                0,
-                `onPatchSent shouldn't be called now`
+                1,
+                `onPatchSent should be called once`
             );
 
             tempObj.hello = 'onPatchSent callback';
 
             assert.equal(
                 onPatchSent.callCount,
-                1,
-                'onPatchSent should be called once'
+                2,
+                'onPatchSent should be called twice'
             );
 
             await sleep(10);
@@ -180,7 +189,8 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                 'onPatchReceived should be called once'
             );
 
-            assert.deepEqual(onPatchReceived.lastCall.args[0], [
+
+            assert.deepEqual(onPatchReceived.lastCall.args[0].data, [
                 {
                     op: 'replace',
                     path: '/hello',
@@ -193,9 +203,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
     });
 
     it('WebSocket - should call onPatchReceived even if the patch was bad', async () => {
-        const server = new MockSocketServer(
-            getTestURL('testURL', false, true)
-        );
+        const server = new MockSocketServer(getTestURL('testURL', false, true));
         /* prepare response */
         server.on('message', patches => {
             /* make sure a correct patch is sent to server */
@@ -227,18 +235,26 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             useWebSocket: true,
             onPatchReceived
         });
-        
+
         /* wait for XHR */
         await sleep(10);
-        
-        assert.equal(onPatchReceived.callCount, 0, `onPatchReceived shouldn't be called now`);
+
+        assert.equal(
+            onPatchReceived.callCount,
+            0,
+            `onPatchReceived shouldn't be called now`
+        );
 
         /* issue a change */
         tempObj.hello = 'onPatchSent callback';
 
         await sleep();
 
-        assert.equal(onPatchReceived.callCount, 1, `onPatchReceived should be called once now`);
+        assert.equal(
+            onPatchReceived.callCount,
+            1,
+            `onPatchReceived should be called once now`
+        );
         server.stop();
         fetchMock.restore();
     });

@@ -59,7 +59,6 @@ export function createAndClickOnLinkNested(href, parent) {
 }
 
 export function clickElement(element) {
-    return;
     if (window.MouseEvent) {
         const event = new window.MouseEvent('click', {
             view: window,
@@ -85,9 +84,10 @@ export function createAndClickOnLinkNestedShadowDOM(href, parent) {
     parent.removeEventListener('click', clickHandler);
     parent.removeChild(div);
 }
+
 export function createAndClickOnLinkNestedShadowDOMContent() {
     const btn = document.querySelector('my-menu-button strong');
-    //btn.click();
+    btn.click();
 }
 
 export function clickHandler(event) {
