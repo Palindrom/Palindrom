@@ -13,7 +13,7 @@ class PalindromConnectionError extends PalindromError {
      * @param {String} url The relevant URL
      * @param {String} connectionType <WebSocket|HTTP>
      */
-    constructor(message, side, url = window.location.href, connectionType) {
+    constructor(message, side, url, connectionType) {
         if (!side || !['Server', 'Client'].includes(side)) {
             throw new TypeError(
                 "Error constructing PalindromConnectionError, `side` parameter is required and can either be 'Server' or 'Client'"
