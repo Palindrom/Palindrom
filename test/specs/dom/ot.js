@@ -134,5 +134,49 @@ if (typeof window !== 'undefined') {
         }, 13);
       }, 10);
     });
+
+    it('should bump the localVersion of the queue when morphUrl is called', function(
+      done
+    ) {
+      const baseUrl = window.location;
+      const url = new URL('/testURL', baseUrl).toString();
+      moxios.stubRequest(url, {
+        status: 200,
+        headers: {
+          contentType: 'application/json'
+        },
+        responseText: JSON.stringify(initialResponse)
+      });
+      const palindrom = new PalindromDOM({
+        remoteUrl: url,
+        localVersionPath: '/_ver#c$',
+        remoteVersionPath: '/_ver#s',
+        ot: true,
+      });
+      setTimeout(() => {
+        // make sure initial request is applied to `palindrom.obj`.
+        assert.equal(palindrom.obj.children.length, 3);
+
+        // make sure the version is not bumped yet
+        assert.equal(palindrom.queue.localVersion, 0);
+
+        const url2 = new URL('/testURL2', baseUrl).toString();
+        moxios.stubRequest(url2, {
+          status: 200,
+          headers: {
+            contentType: 'application/json-patch+json'
+          },
+          responseText: JSON.stringify(patch1)
+        });
+        
+        palindrom.morphUrl(url2);
+
+        setTimeout(() => {
+          // make sure the version is bumped now
+          assert.equal(palindrom.queue.localVersion, 1);
+          done();
+        }, 13);
+      }, 10);
+    });
   });
 }

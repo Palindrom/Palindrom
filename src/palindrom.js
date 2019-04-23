@@ -441,6 +441,12 @@ const Palindrom = (() => {
          * @returns {Response} response (https://github.com/axios/axios#response-schema)
          */
         async getPatchUsingHTTP(href) {
+            /* 
+                `getPatchUsingHTTP` is called upon morphing the page using a new URL without any modifications to the view-model,
+                this isolates the OT Queue and thus it loses track of the version. In the same time, `getPatchUsingHTTP` bumps the version
+                number on the server causing a mismatch between the two ends. Bumping the local version before `getPatchUsingHTTP` solves this problem.
+            */
+            this.palindrom.queue.send([]);
             // we don't need to try catch here because we want the error to be thrown at whoever calls getPatchUsingHTTP
             const res = await this.xhr(
                 href,
