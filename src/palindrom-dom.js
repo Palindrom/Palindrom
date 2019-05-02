@@ -55,13 +55,12 @@ class AbortError extends Error {};
             this.historyHandler = this.historyHandler.bind(this);
 
             this.morphUrlEventHandler = this.morphUrlEventHandler.bind(this);
-            this.redirectEventHandler = this.redirectEventHandler.bind(this);
             this._scrollWatcher = this._scrollWatcher.bind(this);
 
             /* in some cases, people emit redirect requests before `listen` is called */
             this.element.addEventListener(
                 'palindrom-redirect-pushstate',
-                this.redirectEventHandler
+                this.morphUrlEventHandler
             );
 
             if ('scrollRestoration' in history) {
@@ -81,7 +80,7 @@ class AbortError extends Error {};
 
             this.element.addEventListener(
                 'palindrom-redirect-pushstate',
-                this.redirectEventHandler
+                this.morphUrlEventHandler
             );
 
             this._watchingScroll();
@@ -109,7 +108,7 @@ class AbortError extends Error {};
             window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
             this.element.removeEventListener(
                 'palindrom-redirect-pushstate',
-                this.redirectEventHandler
+                this.morphUrlEventHandler
             );
 
             this.element.removeEventListener(
@@ -243,7 +242,7 @@ class AbortError extends Error {};
          * @param {palindrom-morph-url Event} event
          */
         morphUrlEventHandler(event) {
-            this.morphUrl(event.detail.url);
+            return this.morphUrl(event.detail.url);
         }
 
         clickHandler(event) {
@@ -291,10 +290,6 @@ class AbortError extends Error {};
                     event.preventDefault();
                 }
             }
-        }
-        async redirectEventHandler(event) {
-            const href = event.detail.url;
-            return await this.morphUrl(href);
         }
         async historyHandler(event) {
             await this.getPatchUsingHTTP(location.href);

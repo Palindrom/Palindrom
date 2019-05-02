@@ -352,14 +352,5 @@ export default class PalindromNetworkChannel {
                 this._handleFailureResponse(url, method, error);
                 throw error;
             });
-
-        /*.catch(error => {
-                if (isValid4xxResponse(error)) {
-                    return error.response;
-                } else {
-                    this._handleFailureResponse(error);
-                    return Promise.reject(error);
-                }
-            });*/
     }
 }
