@@ -97,7 +97,6 @@ if (typeof window !== 'undefined') {
             // make sure patch2 has NOT been applied (because patch1 didn't arrive yet)
             assert.equal(palindrom.obj.children.length, 3);
 
-            console.log(palindrom.obj.newChildren)
             assert.equal(palindrom.obj.newChildren, null);
 
             const url2 = getTestURL('/testURL2');
