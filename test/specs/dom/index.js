@@ -598,8 +598,8 @@ if (typeof window !== 'undefined') {
 
                         await palindrom.morphUrl(url);
 
-                        // scroll to bottom
-                        window.scrollTo(0, document.body.scrollHeight);
+                        // scroll to 100px
+                        window.scrollTo(0, 100);
 
                         // wait for scroll to finish
                         await sleep(30);
@@ -615,9 +615,11 @@ if (typeof window !== 'undefined') {
                         // go back
                         history.back();
 
-                        await sleep(50);
+                        // XHR + scroll delay
+                        await sleep(120);
 
                         expect(window.scrollY).to.equal(0);
+
                         fetchMock.restore();
                     });
                     it('should NOT scroll back when back button is hit and the user scrolled before Palindrom did', async () => {

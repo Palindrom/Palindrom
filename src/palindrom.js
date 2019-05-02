@@ -186,7 +186,7 @@ export default class Palindrom {
     }
 
     ping() {
-        this._sendPatches(this, []); // sends empty message to server
+        this._sendPatches([]); // sends empty message to server
     }
 
     _sendPatches(patches) {
