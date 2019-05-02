@@ -114,7 +114,7 @@ export default class PalindromNetworkChannel {
         // send message only if there is a working ws connection
         if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
             this._ws.send(msg);
-            this.onSend({ data: msg, url: this._ws.url, method: 'WS' });
+            this.onSend(msg, this._ws.url,'WS');
         } else {
             const url = this.remoteUrl.href;
             const data = await this._xhr(
@@ -150,7 +150,7 @@ export default class PalindromNetworkChannel {
         this.wsUrl = toWebSocketURL(this.remoteUrl.href);
         const upgradeURL = this.wsUrl;
 
-        this.closeConnection(this);
+        this.closeConnection();
         // in node, WebSocket will have `w3cwebsocket` prop. In the browser it won't
         
         const UsedSocket = WebSocket.w3cwebsocket || WebSocket;
@@ -273,9 +273,7 @@ export default class PalindromNetworkChannel {
     }
 
     _handleLocationHeader(res) {
-        const location =
-            res.headers &&
-            (res.headers.get('x-location') || res.headers.get('location'));
+        const location = res.headers.get('x-location') || res.headers.get('location');
         if (location) {
             this._setRemoteUrl(location);
         }
@@ -330,7 +328,7 @@ export default class PalindromNetworkChannel {
             headers['X-Referer'] = this.remoteUrl.pathname;
         }
 
-        this.onSend({ data, url, method });
+        this.onSend(data, url, method);
 
         let isomorphicFetch = typeof global !== 'undefined' ?  global.fetch : nodeFetch;
 

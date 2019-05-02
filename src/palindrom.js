@@ -278,7 +278,7 @@ export default class Palindrom {
                 findRangeErrors(this.obj, this.onIncomingPatchValidationError);
                 this.onStateReset(this.obj);
             }
-            this.onRemoteChange({ patches: sequence, results })
+            this.onRemoteChange(sequence, results);
         } catch (error) {
             if (this.debug) {
                 this.onIncomingPatchValidationError(error);
