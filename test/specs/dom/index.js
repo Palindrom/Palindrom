@@ -555,6 +555,7 @@ if (typeof window !== 'undefined') {
                     });
                     afterEach(function() {
                         palindrom.unobserve();
+                        palindrom.unlisten();
                         fetchMock.restore();
                     });
                     it('should scroll to top', async () => {
