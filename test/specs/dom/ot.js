@@ -84,7 +84,7 @@ if (typeof window !== 'undefined') {
                 useWebSocket: true
             });
 
-            await sleep(50);
+            await sleep(80);
 
             // make sure initial request is applied to `palindrom.obj`.
             assert.equal(palindrom.obj.children.length, 3);
