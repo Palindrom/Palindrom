@@ -340,7 +340,8 @@ export default class PalindromNetworkChannel {
         return dataPromise
             .then(data => {
                 // if we're here, it's a valid JSON response
-                if (response.ok) {
+                // response.ok is `false` for 4xx responses
+                if (response.status < 500) {
                     this._handleLocationHeader(response);
                     return data;
                 } else {
