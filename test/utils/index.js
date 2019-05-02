@@ -1,4 +1,4 @@
-export async function sleep(milliseconds) {
+export async function sleep(milliseconds = 30) {
     return new Promise(r => setTimeout(r, milliseconds));
 }
 export function createAndClickOnLinkWithoutPrevention(

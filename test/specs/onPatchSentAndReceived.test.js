@@ -158,7 +158,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             });
 
             /* wait for XHR */
-            await sleep(30);
+            await sleep();
 
             assert.equal(
                 onPatchReceived.callCount,

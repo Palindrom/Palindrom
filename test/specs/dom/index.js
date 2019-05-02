@@ -150,7 +150,7 @@ if (typeof window !== 'undefined') {
                     describe('Links with download attribute', function() {
                         it('should not intercept links with download attribute', async () => {
                             const href = getTestURL(
-                                'components/Palindrom/test/tests-logo.png'
+                                '/test/tests-logo.png'
                             );
 
                             createAndClickOnLinkWithoutPrevention(
@@ -369,7 +369,7 @@ if (typeof window !== 'undefined') {
                 describe('palindrom-morph-url event', function() {
                     beforeEach(async () => {
                         // wait for Palindrom to call .listen (after finishing the ajax request)
-                        await sleep(30);
+                        await sleep();
                     });
                     it('Dispatching it should call PalindromDOM.morphUrl and issue a request', async () => {
                         const morphUrlStub = sinon.spy(palindrom, 'morphUrl');
@@ -603,7 +603,7 @@ if (typeof window !== 'undefined') {
                         window.scrollTo(0, 100);
 
                         // wait for scroll to finish
-                        await sleep(30);
+                        await sleep();
 
                         expect(window.scrollY).to.not.equal(0);
                         
@@ -652,7 +652,7 @@ if (typeof window !== 'undefined') {
                             300
                         );
 
-                        await sleep(30);
+                        await sleep();
 
                         // Palindrom shouldn't scroll anymore and user's scroll value should be preserved
                         expect(window.scrollY).to.equal(

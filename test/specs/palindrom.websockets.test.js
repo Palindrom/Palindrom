@@ -218,7 +218,7 @@ describe('Before XHR connection is established', () => {
             onSocketOpened: () => (everConnected = true)
         });
 
-        await sleep(30);
+        await sleep();
 
         assert.equal(everConnected, true, 'should connect after XHR');
     });
@@ -278,7 +278,7 @@ describe('Sockets events', () => {
             'socket should not be opened before XHR delay'
         );
 
-        await sleep(20);
+        await sleep();
 
         assert.equal(
             spy.callCount,
@@ -354,7 +354,7 @@ describe('Sockets events', () => {
             });
 
             /* wait for XHR */
-            await sleep(30);
+            await sleep();
 
             palindrom.obj.firstName = 'Omar';
 
@@ -418,7 +418,7 @@ describe('Sockets events', () => {
             assert.equal(messages.length, 0);
 
             /* now socket is connected, let's issue a change */
-            await sleep(30);
+            await sleep();
 
             tempObj.firstName = 'Omar';
 

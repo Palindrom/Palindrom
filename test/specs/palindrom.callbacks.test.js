@@ -28,6 +28,7 @@ describe('Callbacks', () => {
         });
        
         await sleep();
+
         /* onLocalChange shouldn't be called now */
         assert(sentSpy.notCalled);
 
@@ -47,7 +48,7 @@ describe('Callbacks', () => {
             onStateReset: () => (stateWasReset = true)
         });
 
-        await sleep(30);
+        await sleep();
         assert.equal(stateWasReset, true, 'stateWasReset should be called');
     });
 });

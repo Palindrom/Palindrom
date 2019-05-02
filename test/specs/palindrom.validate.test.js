@@ -58,7 +58,7 @@ describe('Palindrom', () => {
                 onIncomingPatchValidationError: spy
             });
 
-            await sleep(30); 
+            await sleep(); 
             
             palindrom.validateAndApplySequence(tree, sequence);
 

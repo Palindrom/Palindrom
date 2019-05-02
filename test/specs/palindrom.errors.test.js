@@ -219,7 +219,7 @@ describe('Palindrom', () => {
                     onStateReset: obj => obj.val = Number.MAX_SAFE_INTEGER + 1,
                 });
 
-                await sleep(30);
+                await sleep();
 
                 // make sure WS is up
                 assert.equal(palindrom.network._ws.readyState, 1);
@@ -253,7 +253,7 @@ describe('Palindrom', () => {
                     onIncomingPatchValidationError: spy
                 });
 
-                await sleep(30);
+                await sleep();
                 server.send(
                     `[{"op": "replace", "path": "/val", "value": ${Number.MAX_SAFE_INTEGER +
                         1}}]`

@@ -35,11 +35,14 @@ describe('Palindrom', () => {
                 body: '{"hello": "world"}'
             });
             const spy = sinon.spy();
-             new Palindrom({
+
+            new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 onStateReset: spy
             });
-            await sleep();
+
+            await sleep(50);
+
             assert(spy.called);
             assert.deepEqual(spy.getCall(0).args[0], { hello: 'world' });
         });
