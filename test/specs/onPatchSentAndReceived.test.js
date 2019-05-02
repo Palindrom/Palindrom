@@ -55,7 +55,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             await sleep();
             assert(onPatchReceived.calledOnce);
 
-            assert.deepEqual(onPatchReceived.lastCall.args[0].data, [
+            assert.deepEqual(onPatchReceived.lastCall.args[0], [
                 {
                     op: 'replace',
                     path: '/hello',
@@ -190,7 +190,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             );
 
 
-            assert.deepEqual(onPatchReceived.lastCall.args[0].data, [
+            assert.deepEqual(onPatchReceived.lastCall.args[0], [
                 {
                     op: 'replace',
                     path: '/hello',

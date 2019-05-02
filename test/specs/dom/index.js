@@ -615,12 +615,12 @@ if (typeof window !== 'undefined') {
                         // go back
                         history.back();
 
-                        await sleep(30);
+                        await sleep(50);
 
                         expect(window.scrollY).to.equal(0);
                         fetchMock.restore();
                     });
-                    it('should NOT scroll back when back button is hit and the user scrolled', async () => {
+                    it('should NOT scroll back when back button is hit and the user scrolled before Palindrom did', async () => {
                         window.scrollTo(0, 0); // scroll to top
                         
                         fetchMock.mock('/newUrl-palindrom-scroll-5', {
@@ -628,28 +628,34 @@ if (typeof window !== 'undefined') {
                             body: '[]'
                         });
 
+                        // prep for back botton
+                        fetchMock.mock(window.location.href, {
+                            status: 200,
+                            body: '[]'
+                        });
+
+                        // the user navigated
                         await palindrom.morphUrl('/newUrl-palindrom-scroll-5');
-                        // scroll to bottom
-                        window.scrollTo(0, document.body.scrollHeight);
 
-                        // wait for rendering
-                        await sleep();
-                        expect(window.scrollY).to.not.equal(0);
-
+                        // and scrolled down
+                        window.scrollTo(0, 100);
                         
-                        // go back
+                        // then went back
                         history.go(-1);
 
-                        // scroll half way
+                        // then the user scrolled before Palindrom
                         window.scrollTo(
                             0,
-                            Math.floor(document.body.scrollHeight / 2)
+                            300
                         );
 
-                        await sleep();
+                        await sleep(30);
+
+                        // Palindrom shouldn't scroll anymore and user's scroll value should be preserved
                         expect(window.scrollY).to.equal(
-                            Math.floor(document.body.scrollHeight / 2)
+                            300
                         );
+
                         fetchMock.restore();
                     });
 

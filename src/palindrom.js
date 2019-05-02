@@ -53,6 +53,12 @@ export default class Palindrom {
             throw new TypeError('remoteUrl is required');
         }
 
+        if (options.callback) {
+            console.warn(
+                'options.callback is deprecated. Please use `onStateReset` instead'
+            );
+        }
+
         this.debug = options.debug != undefined ? options.debug : true;
 
         this.isObserving = false;
@@ -315,7 +321,7 @@ export default class Palindrom {
     }
 
     handleRemoteChange(data, url, method) {
-        this.onPatchReceived({ data, url, method })
+        this.onPatchReceived(data, url, method);
 
         this.heartbeat.notifyReceive();
         const patches = data || []; // fault tolerance - empty response string should be treated as empty patch array

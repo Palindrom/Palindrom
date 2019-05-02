@@ -304,6 +304,9 @@ class AbortError extends Error {};
             // if this handler is called && we're not attemptingScroll, then the user has scrolled!
             const scrollHandler = () => (userHadScrolled = !this._attemptingScroll);
             window.addEventListener('scroll', scrollHandler);
+            
+            // give the user a chance to cancel history scrolling by scrolling on their own (eg momentum mouse wheel)
+            await sleep(30);
 
             for (let i = 0; i < 30 && !userHadScrolled; i++) {
                 // prevent our scroll attempt from setting `hadScrolled`
