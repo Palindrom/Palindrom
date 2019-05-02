@@ -2,7 +2,7 @@ import PalindromDOM from '../../../src/palindrom-dom';
 import assert from 'assert';
 import fetchMock from 'fetch-mock';
 import { Server as MockSocketServer, MockWebSocket } from 'mock-socket';
-import { sleep } from '../../utils';
+import { sleep, getTestURL } from '../../utils';
 
 /** only run DOM tests in browsers */
 if (typeof window !== 'undefined') {
@@ -63,9 +63,11 @@ if (typeof window !== 'undefined') {
         });
 
         it('should patch a mix of XHR and WS incoming patches in the correct order', async () => {
-            const baseUrl = window.location;
-            const url = new URL('/testURL', baseUrl).toString();
-            const server = new MockSocketServer(url.replace('http', 'ws'));
+            const url = getTestURL('/testURL');
+            const wsUrl = getTestURL('/testURL', false, true);
+
+            const server = new MockSocketServer(wsUrl);
+
             fetchMock.mock(url, {
                 status: 200,
                 headers: {
@@ -73,6 +75,7 @@ if (typeof window !== 'undefined') {
                 },
                 body: JSON.stringify(initialResponse)
             });
+
             const palindrom = new PalindromDOM({
                 remoteUrl: url,
                 localVersionPath: '/_ver#c$',
@@ -80,20 +83,25 @@ if (typeof window !== 'undefined') {
                 ot: true,
                 useWebSocket: true
             });
-            await sleep();
+
+            await sleep(50);
+
             // make sure initial request is applied to `palindrom.obj`.
             assert.equal(palindrom.obj.children.length, 3);
 
             // respond with patch2, BEFORE patch1
-            await sleep();
             server.send(JSON.stringify(patch2));
 
             await sleep();
+
             // make sure patch2 has NOT been applied (because patch1 didn't arrive yet)
             assert.equal(palindrom.obj.children.length, 3);
+
+            console.log(palindrom.obj.newChildren)
             assert.equal(palindrom.obj.newChildren, null);
 
-            const url2 = new URL('/testURL2', baseUrl).toString();
+            const url2 = getTestURL('/testURL2');
+
             fetchMock.mock(url2, {
                 status: 200,
                 headers: {
@@ -101,13 +109,15 @@ if (typeof window !== 'undefined') {
                 },
                 body: JSON.stringify(patch1)
             });
-            palindrom.morphUrl(url2);
+
+            await palindrom.morphUrl(url2);
 
             await sleep();
             // by now, patch1 should have been applied, and pending patch2 should be applied, too.
 
             // verify patch1
             assert.equal(palindrom.obj.children.length, 4);
+
             assert.deepEqual(palindrom.obj.children, [1, 2, 3, 4]);
             // verify patch2
             assert.equal(palindrom.obj.newChildren.Name$, 'XXX');
