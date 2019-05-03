@@ -2,7 +2,7 @@ language: node_js
 dist: trusty
 before_script:
   - npm install -g serve
-  - serve  # start a Web server
+  - serve &  # start a Web server
   - sleep 3 # give Web server some time to bind to sockets, etc 
 node_js: 8
 addons:
