@@ -38,7 +38,7 @@ if (!username) {
     }
   ];
 
-  (async function hello() {
+  (async function() {
       try {
           await CapabilityRunner(allCaps[0]);
           await CapabilityRunner(allCaps[1]);

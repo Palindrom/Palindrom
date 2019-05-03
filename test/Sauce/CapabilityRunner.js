@@ -34,7 +34,7 @@ function CapabilityRunner(caps) {
       .build();
 
     driver.get(
-      "http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html"
+      "http://localhost:5000/test/MochaSpecRunner.html"
     );
 
     const symbols = { passed: "√", pending: "-", failed: "x" };
