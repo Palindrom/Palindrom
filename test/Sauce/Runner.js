@@ -22,6 +22,7 @@ if (!username) {
     {
       browserName: "firefox",
       platform: "macOS 10.14",
+      version: "66.0",
       username: username,
       accessKey: accessKey,
       name: "Firefox: Running tests",
