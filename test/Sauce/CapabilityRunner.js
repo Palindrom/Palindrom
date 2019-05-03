@@ -77,7 +77,7 @@ function CapabilityRunner(caps) {
         );
         if (spec.state === "failed") {
           hadErrored = 1;
-          console.log(`Spec "${spec.title}" failed, the error was`, spec.err);
+          console.log(`Spec "${spec.title}" failed, the error was`, spec.err, spec.err && spec.err.stack);
         }
       });
       console.log("");
