@@ -33,7 +33,7 @@ describe('Palindrom', () => {
                 assert.equal(spy.callCount, 0);
             });
 
-            it('should dispatch connection-error event on HTTP 599 response', async () => {
+            it('should call onConnectionError event on HTTP 599 response', async () => {
                 const spy = sinon.spy();
 
                 fetchMock.mock(getTestURL('testURL'), {
@@ -52,7 +52,7 @@ describe('Palindrom', () => {
                 assert(spy.calledOnce);
             });
 
-            it('should dispatch connection-error event on HTTP 500 response (patch)', async () => {
+            it('should call onConnectionError event on HTTP 500 response (patch)', async () => {
                 const spy = sinon.spy();
 
                 fetchMock.mock(getTestURL('testURL'), {
@@ -117,7 +117,7 @@ describe('Palindrom', () => {
 
                 assert.equal(spy.callCount, 0, 'onConnectionError should NOT be called now');
             });
-            it('should dispatch connection-error event on HTTP 599 response (patch)', async () => {
+            it('should call onConnectionError event on HTTP 599 response (patch)', async () => {
                 const spy = sinon.spy();
 
                 fetchMock.mock(getTestURL('testURL'), {
@@ -151,7 +151,7 @@ describe('Palindrom', () => {
             });
         });
         context('Numbers Validation', function() {
-            it('Initial HTTP response: out of range numbers should dispatch incoming-patch-validation-error event with a RangeError', async () => {
+            it('Initial HTTP response: out of range numbers should call onIncomingPatchValidationError event with a RangeError', async () => {
                 fetchMock.mock(getTestURL('testURL'), {
                     status: 200,
                     body: `{"value": ${Number.MAX_SAFE_INTEGER + 1}}`
@@ -172,7 +172,7 @@ describe('Palindrom', () => {
                         1}, variable path is: /value`
                 );
             });
-            it('Outgoing HTTP patches: out of range numbers should dispatch outgoing-patch-validation-error event with a RangeError', async () => {
+            it('Outgoing HTTP patches: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {
                 fetchMock.mock(getTestURL('testURL-range'), {
                     status: 200,
                     body: `{"val": 1}`
@@ -202,7 +202,7 @@ describe('Palindrom', () => {
                         1}, variable path is: /val`
                 );
             });
-            it('Outgoing socket patches: out of range numbers should dispatch outgoing-patch-validation-error event with a RangeError', async () => {
+            it('Outgoing socket patches: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {
                 const server = new MockSocketServer(getTestURL('testURL', false, true));
 
                 fetchMock.mock(getTestURL('testURL'), {
@@ -237,7 +237,7 @@ describe('Palindrom', () => {
 
                 server.stop();
             });
-            it('Incoming socket patches: out of range numbers should dispatch incoming-patch-validation-error event with a RangeError', async () => {
+            it('Incoming socket patches: out of range numbers should call onIncomingPatchValidationError event with a RangeError', async () => {
                 const server = new MockSocketServer(getTestURL('testURL', false, true));
 
                 fetchMock.mock(getTestURL('testURL'), {

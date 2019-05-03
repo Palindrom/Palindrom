@@ -41,7 +41,7 @@ describe('Callbacks', () => {
         ]);
     });
 
-    it('should dispatch state-reset event for applied patches on root (initial state)', async () => {
+    it('should call onStateReset callback for applied patches on root (initial state)', async () => {
         let stateWasReset = false;
         const palindrom = new Palindrom({
             remoteUrl: getTestURL('testURL'),
