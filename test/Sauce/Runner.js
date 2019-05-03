@@ -21,7 +21,7 @@ if (!username) {
     },
     {
       browserName: "firefox",
-      platform: "Windows 10",
+      platform: "macOS 10.14",
       username: username,
       accessKey: accessKey,
       name: "Firefox: Running tests",
