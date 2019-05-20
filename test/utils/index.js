@@ -63,7 +63,8 @@ export function clickElement(element) {
         const event = new window.MouseEvent('click', {
             view: window,
             bubbles: true,
-            cancelable: true
+            cancelable: true,
+            composed: true
         });
         element.dispatchEvent(event);
     }
@@ -77,7 +78,7 @@ export function createAndClickOnLinkNestedShadowDOM(href, parent) {
     const a = document.createElement('A');
     a.innerHTML = '<strong>Link</strong>';
     a.href = href;
-    div.createShadowRoot().appendChild(a);
+    div.attachShadow({mode: 'open'}).appendChild(a);
     parent.addEventListener('click', clickHandler);
     clickElement(a.firstChild);
 
