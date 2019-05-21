@@ -13,11 +13,11 @@ if (typeof window !== 'undefined') {
 
     describe('Links', function() {
         let currLoc, currScrollY, palindromNode, nodeB;
-        before(function() {
+        beforeEach(function() {
             currLoc = window.location.href;
             currScrollY = document.documentElement.scrollTop;
         });
-        after(function() {
+        afterEach(function() {
             history.pushState(null, null, currLoc);
             window.scrollTo(0, currScrollY);
         });
@@ -121,7 +121,7 @@ if (typeof window !== 'undefined') {
                         });
                         if (mode === 'default') {
                             it('relative path (nested, Shadow DOM content)', async () => {
-                                const url = getTestURL('subpage.html');
+                                const url = getTestURL('test/subpage.html');
 
                                 fetchMock.mock(url, {
                                     status: 200,
