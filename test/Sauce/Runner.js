@@ -8,7 +8,7 @@ if (!username) {
     "You need Sauce Labs access to run these specs, if you're a Palindrom org member, please contact @alshakero for this information, if not you need to add your own SauceLabs auth info to your system environment variables."
   );
   process.exit(1);
-  
+
 } else {
   const allCaps = [
     {
@@ -21,8 +21,7 @@ if (!username) {
     },
     {
       browserName: "firefox",
-      platform: "macOS 10.14",
-      version: "66.0",
+      platform: "Windows 10",
       username: username,
       accessKey: accessKey,
       name: "Firefox: Running tests",
