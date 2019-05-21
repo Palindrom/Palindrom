@@ -149,15 +149,15 @@ if (typeof window !== 'undefined') {
 
                     describe('Links with download attribute', function() {
                         it('should not intercept links with download attribute', async () => {
-                            const href = getTestURL(
-                                '/test/tests-logo.png'
-                            );
+                            // Firefox handles download links only for
+                            // the non-text, non-image files, from same domain.
+                            const href = 'download.me';
 
                             createAndClickOnLinkWithoutPrevention(
                                 href,
                                 mode === 'specific' ? palindromNode : null,
                                 false,
-                                'tests-logo.png'
+                                'download.me'
                             );
 
                             await sleep();
