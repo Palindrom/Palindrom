@@ -59,16 +59,19 @@
     "polyserve": "^0.27.12",
     "saucelabs": "^1.5.0",
     "selenium-webdriver": "^3.3.0",
+    "serve": "^11.0.0",
     "sinon": "^2.1.0",
     "webpack": "^4.30.0",
     "webpack-cli": "^3.2.3"
   },
   "scripts": {
     "version": "node ./bump-version.js && webpack && git add -A",
-    "test-sauce": "webpack && node test/Sauce/Runner.js",
-    "debug-tests": "mocha --inspect-brk test/runner-node.js",
+    "serve": "serve",
     "test": "webpack && mocha test/runner-node.js && node test/Sauce/Runner.js",
-    "test-browsers": "webpack && node test/Sauce/Runner.js",
+    "test-sauce": "webpack && node test/Sauce/Runner.js",
+    "test-node": "webpack && mocha test/runner-node.js",
+    "debug-tests-node": "mocha --inspect-brk test/runner-node.js",
+    "build-watch": "webpack  --watch",
     "build": "webpack"
   }
 }
