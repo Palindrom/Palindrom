@@ -1,3 +1,4 @@
+const CLIENT = 'Client';
 /**
  * Guarantees some communication to server and monitors responses for timeouts.
  * @param sendHeartbeatAction will be called to send a heartbeat
