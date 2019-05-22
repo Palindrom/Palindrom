@@ -182,10 +182,9 @@ export default class Palindrom {
     }
 
     _sendPatches(patches) {
-        const txt = JSON.stringify(patches);
         this.unobserve();
         this.heartbeat.notifySend();
-        this.network.send(txt);
+        this.network.send(patches);
         this.observe();
     }
 

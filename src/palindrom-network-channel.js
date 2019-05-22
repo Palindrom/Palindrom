@@ -92,12 +92,18 @@ export default class PalindromNetworkChannel {
         return this.useWebSocket;
     }
 
+    /**
+     * Fetches initial state from server using GET request,
+     * or fetches new state after reconnection using PATCH request if any `reconnectionPendingData` given.
+     * @param  {Array<JSONPatch>}  [reconnectionPendingData=null] Patches already sent to the remote, but not necesarily acknowledged
+     * @return {Promise<Object>}                           Promise for new state of the synced object.
+     */
     async _establish(reconnectionPendingData = null) {
         const data = await this._fetch(
             reconnectionPendingData ? 'PATCH' : 'GET',
             this.remoteUrl.href + (reconnectionPendingData ? '/reconnect' : ''),
             'application/json',
-            reconnectionPendingData
+            JSON.stringify(reconnectionPendingData)
         );
         if (this.useWebSocket) {
             this.webSocketUpgrade(this.onSocketOpened);
@@ -108,10 +114,11 @@ export default class PalindromNetworkChannel {
     /**
      * Send any text message by currently established channel
      * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
-     * @param  {String} msg message to be sent
+     * @param  {JSONPatch} patch message to be sent
      * @return {PalindromNetworkChannel}     self
      */
-    async send(msg) {
+    async send(patch) {
+        const msg = JSON.stringify(patch);
         // send message only if there is a working ws connection
         if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
             this._ws.send(msg);
@@ -317,7 +324,7 @@ export default class PalindromNetworkChannel {
      * @param {String} method HTTP method to be used
      * @param {String} [url=window.location] URL to send the request. If empty string, undefined or null given - the request will be sent to window location
      * @param {String} [accept] HTTP accept header
-     * @param {Object} [data] Data payload
+     * @param {String} [data] stringified data payload
      * @returns {Promise<Object>} promise for fetched JSON data
      */
     async _fetch(method, url, accept, data, setReferer) {
@@ -326,7 +333,7 @@ export default class PalindromNetworkChannel {
 
         if (data) {
             headers['Content-Type'] = 'application/json-patch+json';
-            config.body = JSON.stringify(data);
+            config.body = data;
         }
         if (accept) {
             headers['Accept'] = accept;
