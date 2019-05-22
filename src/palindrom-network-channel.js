@@ -118,13 +118,14 @@ export default class PalindromNetworkChannel {
             this.onSend(msg, this._ws.url,'WS');
         } else {
             const url = this.remoteUrl.href;
+            const method = 'PATCH';
             const data = await this._fetch(
-                'PATCH',
+                method,
                 url,
                 'application/json-patch+json',
                 msg
             );
-            this.onReceive(data, url, 'PATCH');
+            this.onReceive(data, url, method);
         }
         return this;
     }
@@ -245,14 +246,15 @@ export default class PalindromNetworkChannel {
      */
     async getPatchUsingHTTP(href) {
         // we don't need to try catch here because we want the error to be thrown at whoever calls getPatchUsingHTTP
+        const method = 'GET';
         const data = await this._fetch(
-            'GET',
+            method,
             href,
             'application/json-patch+json',
             null,
             true
         );
-        this.onReceive(data, href, 'GET');
+        this.onReceive(data, href, method);
         return data;
     }
 
@@ -312,7 +314,6 @@ export default class PalindromNetworkChannel {
 
     /**
      * Internal method to perform HTTP Request.
-     * Requests PATCH if there is given `data`, GET otherwie.
      * @param {String} method HTTP method to be used
      * @param {String} [url=window.location] URL to send the request. If empty string, undefined or null given - the request will be sent to window location
      * @param {String} [accept] HTTP accept header
