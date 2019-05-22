@@ -5,7 +5,7 @@ import { sleep, getTestURL } from '../utils';
 
 describe('Palindrom', () => {
     describe('#ignore by defineProperty', () => {
-        it('Should not send patches for non-enumerable properties', async () => {
+        it('Should not send a patch for non-enumerable properties', async () => {
             fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
                 location: 'http://localhost/testURL/patch-server',
@@ -17,7 +17,7 @@ describe('Palindrom', () => {
                 remoteUrl: getTestURL('testURL'),
                 onStateReset: obj => (tempObj = obj)
             });
-            
+
             await sleep();
             assert(fetchMock.calls().length === 1);
             // a change that emits a patch
@@ -42,7 +42,7 @@ describe('Palindrom', () => {
             await sleep();
             // no further requests
             assert(fetchMock.calls().length === 2);
-            
+
             fetchMock.restore();
         });
     });

@@ -123,9 +123,9 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             );
 
             /* prepare response */
-            server.on('message', patches => {
+            server.on('message', patch => {
                 /* make sure a correct patch is sent to server */
-                assert.deepEqual(JSON.parse(patches), [
+                assert.deepEqual(JSON.parse(patch), [
                     {
                         op: 'replace',
                         path: '/hello',
@@ -205,9 +205,9 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
     it('WebSocket - should call onPatchReceived even if the patch was bad', async () => {
         const server = new MockSocketServer(getTestURL('testURL', false, true));
         /* prepare response */
-        server.on('message', patches => {
+        server.on('message', patch => {
             /* make sure a correct patch is sent to server */
-            assert.deepEqual(JSON.parse(patches), [
+            assert.deepEqual(JSON.parse(patch), [
                 { op: 'replace', path: '/hello', value: 'onPatchSent callback' }
             ]);
 

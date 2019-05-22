@@ -8,7 +8,7 @@ import { sleep, getTestURL } from '../utils';
 describe('Palindrom', () => {
     describe('#error responses', () => {
         beforeEach(() => {
-            
+
         });
         afterEach(() => {
             fetchMock.restore();
@@ -29,7 +29,7 @@ describe('Palindrom', () => {
 
                 /* connection-error should be dispatched once now */
                 await sleep(50);
-                
+
                 assert.equal(spy.callCount, 0);
             });
 
@@ -172,7 +172,7 @@ describe('Palindrom', () => {
                         1}, variable path is: /value`
                 );
             });
-            it('Outgoing HTTP patches: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {
+            it('Outgoing HTTP patch: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {
                 fetchMock.mock(getTestURL('testURL-range'), {
                     status: 200,
                     body: `{"val": 1}`
@@ -182,7 +182,7 @@ describe('Palindrom', () => {
 
                 new Palindrom({
                     remoteUrl: getTestURL('testURL-range'),
-                    onStateReset: obj => 
+                    onStateReset: obj =>
                         obj.val = Number.MAX_SAFE_INTEGER + 1
                     ,
                     onOutgoingPatchValidationError: spy
@@ -191,18 +191,18 @@ describe('Palindrom', () => {
                 await sleep(20);
 
                 assert(spy.calledOnce, spy.callCount);
-                
+
                 const errorPassed = spy.getCall(0).args[0];
-                
+
                 assert(errorPassed instanceof RangeError);
-                
+
                 assert.equal(
                     errorPassed.message,
                     `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
                         1}, variable path is: /val`
                 );
             });
-            it('Outgoing socket patches: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {
+            it('Outgoing socket patch: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {
                 const server = new MockSocketServer(getTestURL('testURL', false, true));
 
                 fetchMock.mock(getTestURL('testURL'), {
@@ -237,7 +237,7 @@ describe('Palindrom', () => {
 
                 server.stop();
             });
-            it('Incoming socket patches: out of range numbers should call onIncomingPatchValidationError event with a RangeError', async () => {
+            it('Incoming socket patch: out of range numbers should call onIncomingPatchValidationError event with a RangeError', async () => {
                 const server = new MockSocketServer(getTestURL('testURL', false, true));
 
                 fetchMock.mock(getTestURL('testURL'), {

@@ -178,13 +178,13 @@ export default class Palindrom {
     }
 
     ping() {
-        this._sendPatches([]); // sends empty message to server
+        this._sendPatch([]); // sends empty message to server
     }
 
-    _sendPatches(patches) {
+    _sendPatch(patch) {
         this.unobserve();
         this.heartbeat.notifySend();
-        this.network.send(patches);
+        this.network.send(patch);
         this.observe();
     }
 
@@ -235,13 +235,13 @@ export default class Palindrom {
                 operation.path
             );
 
-        const patches = [operation];
+        const patch = [operation];
         if (this.debug) {
-            this.validateSequence(this.remoteObj, patches);
+            this.validateSequence(this.remoteObj, patch);
         }
 
-        this._sendPatches(this.queue.send(patches));
-        this.onLocalChange(patches);
+        this._sendPatch(this.queue.send(patch));
+        this.onLocalChange(patch);
     }
 
     validateAndApplySequence(tree, sequence) {
@@ -309,15 +309,15 @@ export default class Palindrom {
         this.onPatchReceived(data, url, method);
 
         this.heartbeat.notifyReceive();
-        const patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
+        const patch = data || []; // fault tolerance - empty response string should be treated as empty patch array
 
         validateNumericsRangesInPatch(
-            patches,
+            patch,
             this.onIncomingPatchValidationError,
             this.OTPatchIndexOffset
         );
 
-        if (patches.length === 0) {
+        if (patch.length === 0) {
             // ping message
             return;
         }
@@ -326,7 +326,7 @@ export default class Palindrom {
         if (!this.isObserving) {
             return;
         }
-        this.queue.receive(patches);
+        this.queue.receive(patch);
         if (
             this.queue.pending &&
             this.queue.pending.length &&
@@ -334,7 +334,7 @@ export default class Palindrom {
         ) {
             // remote counterpart probably failed to receive one of earlier messages, because it has been receiving
             // (but not acknowledging messages for some time
-            this.queue.pending.forEach(this._sendPatches, this);
+            this.queue.pending.forEach(this._sendPatch, this);
         }
 
         if (this.debug) {

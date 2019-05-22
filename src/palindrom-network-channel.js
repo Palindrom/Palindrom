@@ -139,10 +139,10 @@ export default class PalindromNetworkChannel {
 
     /**
      * Callback function that will be called once message from remote comes.
-     * @param {String} [JSONPatch_sequences] message with Array of JSONPatches that were send by remote.
+     * @param {JSONPatch} [JSONPatch] single JSON Patch (array of operations objects) that was send by remote.
      * @return {[type]} [description]
      */
-    onReceive(/*String_with_JSONPatch_sequences*/) {}
+    onReceive(/*JSONPatch*/) {}
 
     onSend() {}
     onStateChange() {}

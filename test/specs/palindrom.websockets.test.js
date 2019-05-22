@@ -223,7 +223,7 @@ describe('Before XHR connection is established', () => {
         assert.equal(everConnected, true, 'should connect after XHR');
     });
 
-    it("shouldn't send any change patches using WebSocket", async () => {
+    it("shouldn't send any change a patch using WebSocket", async () => {
         server = new MockSocketServer(getTestURL('testURL/koko', false, true));
         const messages = [];
 
@@ -234,9 +234,9 @@ describe('Before XHR connection is established', () => {
             body: '{"hello": "world"}'
         });
 
-        server.on('message', patches => {
-            let patchesParsed = JSON.parse(patches);
-            messages.push(...patchesParsed);
+        server.on('message', patch => {
+            let patchParsed = JSON.parse(patch);
+            messages.push(...patchParsed);
         });
 
         new Palindrom({
@@ -343,9 +343,9 @@ describe('Sockets events', () => {
 
             const messages = [];
 
-            server.on('message', patches => {
-                let patchesParsed = JSON.parse(patches);
-                messages.push(...patchesParsed);
+            server.on('message', patch => {
+                let patchParsed = JSON.parse(patch);
+                messages.push(...patchParsed);
             });
 
             var palindrom = new Palindrom({
@@ -369,7 +369,7 @@ describe('Sockets events', () => {
             });
         });
 
-        it('should send patches over HTTP before ws.readyState is OPENED, and over WebSocket after ws.readyState is OPENED', async () => {
+        it('should send a patch over HTTP before ws.readyState is OPENED, and over WebSocket after ws.readyState is OPENED', async () => {
             server = new MockSocketServer(
                 getTestURL('testURL/koko3', false, true)
             );
@@ -383,9 +383,9 @@ describe('Sockets events', () => {
 
             const messages = [];
 
-            server.on('message', patches => {
-                let patchesParsed = JSON.parse(patches);
-                messages.push(...patchesParsed);
+            server.on('message', patch => {
+                let patchParsed = JSON.parse(patch);
+                messages.push(...patchParsed);
             });
 
             let tempObj;

@@ -15,7 +15,7 @@ describe('Callbacks', () => {
         fetchMock.restore();
     });
 
-    it('should call onLocalChange callback for outgoing patches', async () => {
+    it('should call onLocalChange callback for an outgoing patch', async () => {
         const sentSpy = sinon.spy();
         let tempObj;
 
@@ -26,7 +26,7 @@ describe('Callbacks', () => {
                 tempObj = obj;
             }
         });
-       
+
         await sleep();
 
         /* onLocalChange shouldn't be called now */
@@ -41,7 +41,7 @@ describe('Callbacks', () => {
         ]);
     });
 
-    it('should call onStateReset callback for applied patches on root (initial state)', async () => {
+    it('should call onStateReset callback for an applied patch on root (initial state)', async () => {
         let stateWasReset = false;
         const palindrom = new Palindrom({
             remoteUrl: getTestURL('testURL'),
