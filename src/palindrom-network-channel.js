@@ -93,7 +93,7 @@ export default class PalindromNetworkChannel {
     }
 
     async _establish(reconnectionPendingData = null) {
-        const data = await this._xhr(
+        const data = await this._fetch(
             reconnectionPendingData ? 'PATCH' : 'GET',
             this.remoteUrl.href + (reconnectionPendingData ? '/reconnect' : ''),
             'application/json',
@@ -118,7 +118,7 @@ export default class PalindromNetworkChannel {
             this.onSend(msg, this._ws.url,'WS');
         } else {
             const url = this.remoteUrl.href;
-            const data = await this._xhr(
+            const data = await this._fetch(
                 'PATCH',
                 url,
                 'application/json-patch+json',
@@ -241,11 +241,11 @@ export default class PalindromNetworkChannel {
      * @param {String} href
      * @throws {Error} network error if occured
      * @returns {Promise<Object>} fetched patch
-     * @see #_xhr
+     * @see #_fetch
      */
     async getPatchUsingHTTP(href) {
         // we don't need to try catch here because we want the error to be thrown at whoever calls getPatchUsingHTTP
-        const data = await this._xhr(
+        const data = await this._fetch(
             'GET',
             href,
             'application/json-patch+json',
@@ -319,7 +319,7 @@ export default class PalindromNetworkChannel {
      * @param {Object} [data] Data payload
      * @returns {Promise<Object>} promise for fetched JSON data
      */
-    async _xhr(method, url, accept, data, setReferer) {
+    async _fetch(method, url, accept, data, setReferer) {
         const config = { headers: {}, method, credentials: 'include' };
         const headers = config.headers;
 
