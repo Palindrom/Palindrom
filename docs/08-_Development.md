@@ -42,7 +42,7 @@ npm run test-node
     2. Add your `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY` environment variables to your machine.
 
     3. Connect to SauceLabs using the command
-     `sc /u YOUR_SAUCE_USER /k YOUR_SAUCE_ACCESSKEY` where `sc` is the executable you get when you download **Sauce Connect**.
+     `sc /u %SAUCE_USERNAME% /k %SAUCE_ACCESS_KEY%` where `sc` is the executable you get when you download **Sauce Connect**.
 
     4. Start a web server `npm run serve`
 
