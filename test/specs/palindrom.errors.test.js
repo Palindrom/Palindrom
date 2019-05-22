@@ -14,7 +14,7 @@ describe('Palindrom', () => {
             fetchMock.restore();
         });
         context('Network', function() {
-            it('should not dispatch connection-error event on HTTP 400 response (non-patch responses)', async () => {
+            it('should NOT dispatch connection-error event on HTTP 400 response, containing JSON', async () => {
                 const spy = sinon.spy();
 
                 fetchMock.mock(getTestURL('testURL'), {
@@ -27,10 +27,28 @@ describe('Palindrom', () => {
                     onConnectionError: spy
                 });
 
+                await sleep(200);
+
+                assert.equal(spy.callCount, 0);
+            });
+
+            it('should dispatch connection-error event on HTTP 400 response, without JSON', async () => {
+                const spy = sinon.spy();
+
+                fetchMock.mock(getTestURL('testURL'), {
+                    status: 400,
+                    body: 'Bad Request'
+                });
+
+                const palindrom = new Palindrom({
+                    remoteUrl: getTestURL('testURL'),
+                    onConnectionError: spy
+                });
+
                 /* connection-error should be dispatched once now */
                 await sleep(50);
 
-                assert.equal(spy.callCount, 0);
+                assert.equal(spy.callCount, 1);
             });
 
             it('should call onConnectionError event on HTTP 599 response', async () => {
