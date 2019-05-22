@@ -23,7 +23,7 @@ describe('Palindrom', () => {
     });
     describe('#constructor', () => {
         beforeEach(() => {
-            
+
         });
         afterEach(() => {
             fetchMock.restore();
@@ -93,7 +93,7 @@ describe('Palindrom', () => {
 describe('Palindrom', () => {
     describe('#patching', () => {
         beforeEach(() => {
-            
+
         });
         afterEach(() => {
             fetchMock.restore();
@@ -121,10 +121,9 @@ describe('Palindrom', () => {
             await sleep();
             assert.equal(2, fetchMock.calls().length);
             let request = fetchMock.lastOptions();
-
             assert.equal(
                 '[{"op":"replace","path":"/hello","value":"galaxy"}]',
-                JSON.parse(request.body)
+                request.body
             );
         });
         it('should not patch changes after unobserve() was called', async () => {
@@ -145,14 +144,14 @@ describe('Palindrom', () => {
             assert.equal(tempObject.unwatched, 'object');
             tempObject.unwatched = 'objecto';
 
-            /* now two ajax requests should have happened, 
+            /* now two ajax requests should have happened,
             the initial one, and the patch one */
             await sleep();
             assert.equal(2, fetchMock.calls().length);
             let request = fetchMock.lastOptions();
             assert.equal(
                 '[{"op":"replace","path":"/unwatched","value":"objecto"}]',
-                JSON.parse(request.body)
+                request.body
             );
             palindrom.unobserve();
             tempObject.hello = "a change that shouldn't be considered";
@@ -177,14 +176,14 @@ describe('Palindrom', () => {
             assert.equal(1, fetchMock.calls().length);
             tempObject.unwatched = 'objecto';
 
-            /* now two ajax requests should had happened, 
+            /* now two ajax requests should had happened,
             the initial one, and the patch one */
             await sleep();
             assert.equal(2, fetchMock.calls().length);
             let request = fetchMock.lastOptions();
             assert.equal(
                 '[{"op":"replace","path":"/unwatched","value":"objecto"}]',
-                JSON.parse(request.body)
+                request.body
             );
             palindrom.unobserve();
             tempObject.unwatched = 'a change that should NOT be considered';
@@ -203,7 +202,7 @@ describe('Palindrom', () => {
             assert.equal(3, fetchMock.calls().length);
             assert.equal(
                 '[{"op":"replace","path":"/unwatched","value":"a change that SHOULD be considered"}]',
-                JSON.parse(request.body)
+                request.body
             );
         });
     });

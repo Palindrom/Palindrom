@@ -407,7 +407,7 @@ describe('Sockets events', () => {
 
                     assert.equal(
                         '[{"op":"add","path":"/name","value":"Mark"}]',
-                        JSON.parse(fetchMock.lastOptions().body)
+                        fetchMock.lastOptions().body
                     );
 
                     tempObj = obj;
