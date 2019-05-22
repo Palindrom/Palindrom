@@ -1,4 +1,4 @@
-/*! Palindrom, version: 5.2.0 */
+/*! Palindrom, version: 6.0.1 */
 exports["Palindrom"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -6020,7 +6020,7 @@ module.exports = __webpack_require__(49).version;
 /* 49 */
 /***/ (function(module) {
 
-module.exports = {"_args":[["websocket@1.0.26","C:\\Work\\Starcounter\\PalindromOrg\\Palindrom"]],"_from":"websocket@1.0.26","_id":"websocket@1.0.26","_inBundle":false,"_integrity":"sha512-fjcrYDPIQxpTnqFQ9JjxUQcdvR89MFAOjPBlF+vjOt49w/XW4fJknUoMz/mDIn2eK1AdslVojcaOxOqyZZV8rw==","_location":"/websocket","_phantomChildren":{},"_requested":{"type":"version","registry":true,"raw":"websocket@1.0.26","name":"websocket","escapedName":"websocket","rawSpec":"1.0.26","saveSpec":null,"fetchSpec":"1.0.26"},"_requiredBy":["/"],"_resolved":"https://registry.npmjs.org/websocket/-/websocket-1.0.26.tgz","_spec":"1.0.26","_where":"C:\\Work\\Starcounter\\PalindromOrg\\Palindrom","author":{"name":"Brian McKelvey","email":"brian@worlize.com","url":"https://www.worlize.com/"},"browser":"lib/browser.js","bugs":{"url":"https://github.com/theturtle32/WebSocket-Node/issues"},"config":{"verbose":false},"contributors":[{"name":"Iñaki Baz Castillo","email":"ibc@aliax.net","url":"http://dev.sipdoc.net"}],"dependencies":{"debug":"^2.2.0","nan":"^2.3.3","typedarray-to-buffer":"^3.1.2","yaeti":"^0.0.6"},"description":"Websocket Client & Server Library implementing the WebSocket protocol as specified in RFC 6455.","devDependencies":{"buffer-equal":"^1.0.0","faucet":"^0.0.1","gulp":"git+https://github.com/gulpjs/gulp.git#4.0","gulp-jshint":"^2.0.4","jshint":"^2.0.0","jshint-stylish":"^2.2.1","tape":"^4.0.1"},"directories":{"lib":"./lib"},"engines":{"node":">=0.10.0"},"homepage":"https://github.com/theturtle32/WebSocket-Node","keywords":["websocket","websockets","socket","networking","comet","push","RFC-6455","realtime","server","client"],"license":"Apache-2.0","main":"index","name":"websocket","repository":{"type":"git","url":"git+https://github.com/theturtle32/WebSocket-Node.git"},"scripts":{"gulp":"gulp","install":"(node-gyp rebuild 2> builderror.log) || (exit 0)","test":"faucet test/unit"},"version":"1.0.26"};
+module.exports = {"_args":[["websocket@1.0.26","D:\\repos\\web\\Palindrom"]],"_from":"websocket@1.0.26","_id":"websocket@1.0.26","_inBundle":false,"_integrity":"sha512-fjcrYDPIQxpTnqFQ9JjxUQcdvR89MFAOjPBlF+vjOt49w/XW4fJknUoMz/mDIn2eK1AdslVojcaOxOqyZZV8rw==","_location":"/websocket","_phantomChildren":{},"_requested":{"type":"version","registry":true,"raw":"websocket@1.0.26","name":"websocket","escapedName":"websocket","rawSpec":"1.0.26","saveSpec":null,"fetchSpec":"1.0.26"},"_requiredBy":["/"],"_resolved":"https://registry.npmjs.org/websocket/-/websocket-1.0.26.tgz","_spec":"1.0.26","_where":"D:\\repos\\web\\Palindrom","author":{"name":"Brian McKelvey","email":"brian@worlize.com","url":"https://www.worlize.com/"},"browser":"lib/browser.js","bugs":{"url":"https://github.com/theturtle32/WebSocket-Node/issues"},"config":{"verbose":false},"contributors":[{"name":"Iñaki Baz Castillo","email":"ibc@aliax.net","url":"http://dev.sipdoc.net"}],"dependencies":{"debug":"^2.2.0","nan":"^2.3.3","typedarray-to-buffer":"^3.1.2","yaeti":"^0.0.6"},"description":"Websocket Client & Server Library implementing the WebSocket protocol as specified in RFC 6455.","devDependencies":{"buffer-equal":"^1.0.0","faucet":"^0.0.1","gulp":"git+https://github.com/gulpjs/gulp.git#4.0","gulp-jshint":"^2.0.4","jshint":"^2.0.0","jshint-stylish":"^2.2.1","tape":"^4.0.1"},"directories":{"lib":"./lib"},"engines":{"node":">=0.10.0"},"homepage":"https://github.com/theturtle32/WebSocket-Node","keywords":["websocket","websockets","socket","networking","comet","push","RFC-6455","realtime","server","client"],"license":"Apache-2.0","main":"index","name":"websocket","repository":{"type":"git","url":"git+https://github.com/theturtle32/WebSocket-Node.git"},"scripts":{"gulp":"gulp","install":"(node-gyp rebuild 2> builderror.log) || (exit 0)","test":"faucet test/unit"},"version":"1.0.26"};
 
 /***/ }),
 /* 50 */
@@ -6380,7 +6380,7 @@ class palindrom_errors_PalindromConnectionError extends PalindromError {
      * @param {String} url The relevant URL
      * @param {String} connectionType <WebSocket|HTTP>
      */
-    constructor(message, side, url = window.location.href, connectionType) {
+    constructor(message, side, url, connectionType) {
         if (!side || !['Server', 'Client'].includes(side)) {
             throw new TypeError(
                 "Error constructing PalindromConnectionError, `side` parameter is required and can either be 'Server' or 'Client'"
@@ -8032,7 +8032,7 @@ and will import https://www.npmjs.com/package/websocket in node */
 
 
 
-const palindrom_network_channel_CLIENT = 'Client';
+const CLIENT = 'Client';
 const SERVER = 'Server';
 
 /**
@@ -8120,7 +8120,8 @@ class palindrom_network_channel_PalindromNetworkChannel {
     }
 
     async _establish(reconnectionPendingData = null) {
-        const data = await this._xhr(
+        const data = await this._fetch(
+            reconnectionPendingData ? 'PATCH' : 'GET',
             this.remoteUrl.href + (reconnectionPendingData ? '/reconnect' : ''),
             'application/json',
             reconnectionPendingData
@@ -8141,15 +8142,17 @@ class palindrom_network_channel_PalindromNetworkChannel {
         // send message only if there is a working ws connection
         if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
             this._ws.send(msg);
-            this.onSend({ data: msg, url: this._ws.url, method: 'WS' });
+            this.onSend(msg, this._ws.url,'WS');
         } else {
             const url = this.remoteUrl.href;
-            const data = await this._xhr(
+            const method = 'PATCH';
+            const data = await this._fetch(
+                method,
                 url,
                 'application/json-patch+json',
                 msg
             );
-            this.onReceive(data, url, 'GET');
+            this.onReceive(data, url, method);
         }
         return this;
     }
@@ -8177,9 +8180,9 @@ class palindrom_network_channel_PalindromNetworkChannel {
         this.wsUrl = toWebSocketURL(this.remoteUrl.href);
         const upgradeURL = this.wsUrl;
 
-        this.closeConnection(this);
+        this.closeConnection();
         // in node, WebSocket will have `w3cwebsocket` prop. In the browser it won't
-        
+
         const UsedSocket = websocket_default.a.w3cwebsocket || websocket_default.a;
         this._ws = new UsedSocket(upgradeURL);
         this._ws.onopen = event => {
@@ -8215,7 +8218,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
             ].join('\n');
 
             this.onFatalError(
-                new palindrom_errors_PalindromConnectionError(message, palindrom_network_channel_CLIENT, upgradeURL, 'WS')
+                new palindrom_errors_PalindromConnectionError(message, CLIENT, upgradeURL, 'WS')
             );
         };
         this._ws.onclose = event => {
@@ -8265,16 +8268,20 @@ class palindrom_network_channel_PalindromNetworkChannel {
     /**
      * @param {String} href
      * @throws {Error} network error if occured
+     * @returns {Promise<Object>} fetched patch
+     * @see #_fetch
      */
     async getPatchUsingHTTP(href) {
         // we don't need to try catch here because we want the error to be thrown at whoever calls getPatchUsingHTTP
-        const data = await this._xhr(
+        const method = 'GET';
+        const data = await this._fetch(
+            method,
             href,
             'application/json-patch+json',
             null,
             true
         );
-        this.onReceive(data, href, 'GET');
+        this.onReceive(data, href, method);
         return data;
     }
 
@@ -8300,9 +8307,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
     }
 
     _handleLocationHeader(res) {
-        const location =
-            res.headers &&
-            (res.headers.get('x-location') || res.headers.get('location'));
+        const location = res.headers.get('x-location') || res.headers.get('location');
         if (location) {
             this._setRemoteUrl(location);
         }
@@ -8329,20 +8334,20 @@ class palindrom_network_channel_PalindromNetworkChannel {
             'HTTP method: ' + method
         ].join('\n');
 
-        this.onFatalError(
-            new palindrom_errors_PalindromConnectionError(message, palindrom_network_channel_CLIENT, url, method)
+        this.onConnectionError(
+            new palindrom_errors_PalindromConnectionError(message, CLIENT, url, method)
         );
     }
 
     /**
-     * Internal method to perform XMLHttpRequest
-     * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
-     * @param accept (Optional) HTTP accept header
-     * @param data (Optional) Data payload
-     * @returns {XMLHttpRequest} performed XHR
+     * Internal method to perform HTTP Request.
+     * @param {String} method HTTP method to be used
+     * @param {String} [url=window.location] URL to send the request. If empty string, undefined or null given - the request will be sent to window location
+     * @param {String} [accept] HTTP accept header
+     * @param {Object} [data] Data payload
+     * @returns {Promise<Object>} promise for fetched JSON data
      */
-    async _xhr(url, accept, data, setReferer) {
-        const method = data ? 'PATCH' : 'GET';
+    async _fetch(method, url, accept, data, setReferer) {
         const config = { headers: {}, method, credentials: 'include' };
         const headers = config.headers;
 
@@ -8357,7 +8362,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
             headers['X-Referer'] = this.remoteUrl.pathname;
         }
 
-        this.onSend({ data, url, method });
+        this.onSend(data, url, method);
 
         let isomorphicFetch = typeof global !== 'undefined' ?  global.fetch : lib;
 
@@ -8367,6 +8372,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
         return dataPromise
             .then(data => {
                 // if we're here, it's a valid JSON response
+                // response.ok is `false` for 4xx responses
                 if (response.status < 500) {
                     this._handleLocationHeader(response);
                     return data;
@@ -8379,15 +8385,6 @@ class palindrom_network_channel_PalindromNetworkChannel {
                 this._handleFailureResponse(url, method, error);
                 throw error;
             });
-
-        /*.catch(error => {
-                if (isValid4xxResponse(error)) {
-                    return error.response;
-                } else {
-                    this._handleFailureResponse(error);
-                    return Promise.reject(error);
-                }
-            });*/
     }
 }
 
@@ -8486,42 +8483,8 @@ function Reconnector(
     reset();
 }
 
-// CONCATENATED MODULE: ./src/palindrom-event-target.js
-/*! Palindrom
- * https://github.com/Palindrom/Palindrom
- * (c) 2019 Omar Alsahker
- * MIT license
- */
-
-// privatize the prop
-const listeners = Symbol('listeners');
-
-class PalindromEventTarget {
-    constructor() {
-        this[listeners] = {};
-    }
-    addEventListener(name, callback) {
-        if (!this[listeners][name]) {
-            this[listeners][name] = new Set();
-        }
-        this[listeners][name].add(callback);
-    }
-    removeListener(name, callback) {
-        if (!this[listeners][name]) {
-            return;
-        }
-        this[listeners][name].remove(callback);
-    }
-    fire(eventName, detail) {
-        if (this[listeners][eventName]) {
-            this[listeners][eventName].forEach(listener =>
-                listener({ detail })
-            );
-        }
-    }
-}
-
 // CONCATENATED MODULE: ./src/heartbeat.js
+const heartbeat_CLIENT = 'Client';
 /**
  * Guarantees some communication to server and monitors responses for timeouts.
  * @param sendHeartbeatAction will be called to send a heartbeat
@@ -8566,7 +8529,7 @@ function Heartbeat(
             onError(
                 new PalindromConnectionError(
                     "Timeout has passed and response hasn't arrived",
-                    CLIENT,
+                    heartbeat_CLIENT,
                     this.remoteUrl,
                     'Unknown'
                 )
@@ -8645,7 +8608,6 @@ class NoQueue {
 
 
 
-
 /* this variable is bumped automatically when you call npm version */
 const palindromVersion = '6.0.1';
 
@@ -8662,7 +8624,7 @@ if (typeof palindrom_global === 'undefined') {
  * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
  * @param {Object} [options] map of arguments. See README.md for description
  */
-class palindrom_Palindrom extends PalindromEventTarget {
+class palindrom_Palindrom {
     /**
      * Palindrom version
      */
@@ -8670,7 +8632,6 @@ class palindrom_Palindrom extends PalindromEventTarget {
         return palindromVersion;
     }
     constructor(options) {
-        super();
         /**
          * Palindrom instance version
          */
@@ -8685,33 +8646,40 @@ class palindrom_Palindrom extends PalindromEventTarget {
             throw new TypeError('remoteUrl is required');
         }
 
+        if (options.callback) {
+            console.warn(
+                'options.callback is deprecated. Please use `onStateReset` instead'
+            );
+        }
+
         this.debug = options.debug != undefined ? options.debug : true;
 
         this.isObserving = false;
+
+        function noop() {}
+
+        this.onLocalChange = options.onLocalChange || noop;
+        this.onRemoteChange = options.onRemoteChange || noop;
+        this.onStateReset = options.onStateReset || options.callback || noop;
         this.filterLocalChange =
             options.filterLocalChange || (operation => operation);
 
-        /* these methods are all used more than once, hence are kept */
-        this.onPatchSent = detail => this.fire('patch-sent', detail);
-        this.onSocketStateChanged = detail =>
-            this.fire('socket-state-changed', detail);
-        this.onConnectionError = detail =>
-            this.fire('connection-error', detail);
-        this.onReconnectionCountdown = detail =>
-            this.fire('reconnection-countdown', detail);
-        this.onReconnectionEnd = detail =>
-            this.fire('reconnection-end', detail);
-        this.onSocketOpened = detail => this.fire('socket-opened', detail);
-        this.onIncomingPatchValidationError = detail =>
-            this.fire('incoming-patch-validation-error', detail);
-        this.onError = detail => this.fire('error', detail);
-        this.onOutgoingPatchValidationError = detail =>
-            this.fire('outgoing-patch-validation-error', detail);
-
+        this.onPatchReceived = options.onPatchReceived || noop;
+        this.onPatchSent = options.onPatchSent || noop;
+        this.onSocketStateChanged = options.onSocketStateChanged || noop;
+        this.onConnectionError = options.onConnectionError || noop;
         this.retransmissionThreshold = options.retransmissionThreshold || 3;
+        this.onReconnectionCountdown = options.onReconnectionCountdown || noop;
+        this.onReconnectionEnd = options.onReconnectionEnd || noop;
+        this.onSocketOpened = options.onSocketOpened || noop;
+        this.onIncomingPatchValidationError =
+            options.onIncomingPatchValidationError || noop;
+        this.onOutgoingPatchValidationError =
+            options.onOutgoingPatchValidationError || noop;
+        this.onError = options.onError || noop;
 
         this.reconnector = new Reconnector(
-            () => this._connectToRemote(JSON.stringify(this.queue.pending)),
+            () => this._connectToRemote(this.queue.pending),
             this.onReconnectionCountdown,
             this.onReconnectionEnd
         );
@@ -8734,7 +8702,7 @@ class palindrom_Palindrom extends PalindromEventTarget {
             options.useWebSocket || false, // useWebSocket
             this.handleRemoteChange.bind(this), //onReceive
             this.onPatchSent.bind(this), //onSend,
-            this.handleConnectionError.bind(this), //onConnectionError,
+            this.handleConnectionError.bind(this),
             this.onSocketOpened.bind(this),
             this.handleFatalError.bind(this), //onFatalError,
             this.onSocketStateChanged.bind(this) //onStateChange
@@ -8803,7 +8771,7 @@ class palindrom_Palindrom extends PalindromEventTarget {
     }
 
     ping() {
-        this._sendPatches(this, []); // sends empty message to server
+        this._sendPatches([]); // sends empty message to server
     }
 
     _sendPatches(patches) {
@@ -8813,7 +8781,9 @@ class palindrom_Palindrom extends PalindromEventTarget {
         this.network.send(txt);
         this.observe();
     }
-
+    /**
+     * Closes the Palindrom session probably
+     */
     closeConnection() {
         this.network.closeConnection();
     }
@@ -8869,14 +8839,14 @@ class palindrom_Palindrom extends PalindromEventTarget {
         if (this.debug) {
             this.validateSequence(this.remoteObj, patches);
         }
-        
+
         this._sendPatches(this.queue.send(patches));
-        this.fire('local-change', patches);
+        this.onLocalChange(patches);
     }
 
     validateAndApplySequence(tree, sequence) {
-        // we don't want this changes to generate patches since they originate from server, not client
         try {
+            // we don't want this changes to generate patches since they originate from server, not client
             this.unobserve();
             const results = Object(duplex["applyPatch"])(tree, sequence, this.debug);
             // notifications have to happen only where observe has been re-enabled
@@ -8891,10 +8861,9 @@ class palindrom_Palindrom extends PalindromEventTarget {
 
                 // validate json response
                 findRangeErrors(this.obj, this.onIncomingPatchValidationError);
-
-                this.fire('state-reset', this.obj);
+                this.onStateReset(this.obj);
             }
-            this.fire('remote-change', { patches: sequence, results });
+            this.onRemoteChange(sequence, results);
         } catch (error) {
             if (this.debug) {
                 this.onIncomingPatchValidationError(error);
@@ -8919,6 +8888,7 @@ class palindrom_Palindrom extends PalindromEventTarget {
     handleConnectionError() {
         this.heartbeat.stop();
         this.reconnector.triggerReconnection();
+        this.onConnectionError();
     }
 
     /**
@@ -8928,9 +8898,7 @@ class palindrom_Palindrom extends PalindromEventTarget {
     handleFatalError(palindromError) {
         this.heartbeat.stop();
         this.reconnector.stopReconnecting();
-        if (this.onConnectionError) {
-            this.onConnectionError(palindromError);
-        }
+        this.onConnectionError(palindromError);
     }
 
     reconnectNow() {
@@ -8938,7 +8906,7 @@ class palindrom_Palindrom extends PalindromEventTarget {
     }
 
     handleRemoteChange(data, url, method) {
-        this.fire('patch-received', { data, url, method });
+        this.onPatchReceived(data, url, method);
 
         this.heartbeat.notifyReceive();
         const patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
