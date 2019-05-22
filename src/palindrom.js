@@ -188,12 +188,6 @@ export default class Palindrom {
         this.network.send(txt);
         this.observe();
     }
-    /**
-     * Closes the Palindrom session probably
-     */
-    closeConnection() {
-        this.network.closeConnection();
-    }
 
     prepareProxifiedObject(obj) {
         if (!obj) {
