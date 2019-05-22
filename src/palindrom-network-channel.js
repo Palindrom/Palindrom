@@ -325,6 +325,7 @@ export default class PalindromNetworkChannel {
      * @param {String} [url=window.location] URL to send the request. If empty string, undefined or null given - the request will be sent to window location
      * @param {String} [accept] HTTP accept header
      * @param {String} [data] stringified data payload
+     * @param {Boolean} [setReferer=false] Should `X-Referer` header be sent
      * @returns {Promise<Object>} promise for fetched JSON data
      */
     async _fetch(method, url, accept, data, setReferer) {
