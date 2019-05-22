@@ -86,14 +86,6 @@ export default class Palindrom {
         this.onError = options.onError || noop;
 
         this.reconnector = new Reconnector(
-            () => makeReconnection(this),
-            this.onReconnectionCountdown,
-            this.onReconnectionEnd
-        );
-
-        this.retransmissionThreshold = options.retransmissionThreshold || 3;
-
-        this.reconnector = new Reconnector(
             () => this._connectToRemote(this.queue.pending),
             this.onReconnectionCountdown,
             this.onReconnectionEnd
