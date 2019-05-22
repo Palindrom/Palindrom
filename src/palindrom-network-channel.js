@@ -94,6 +94,7 @@ export default class PalindromNetworkChannel {
 
     async _establish(reconnectionPendingData = null) {
         const data = await this._xhr(
+            reconnectionPendingData ? 'PATCH' : 'GET',
             this.remoteUrl.href + (reconnectionPendingData ? '/reconnect' : ''),
             'application/json',
             reconnectionPendingData
@@ -118,11 +119,12 @@ export default class PalindromNetworkChannel {
         } else {
             const url = this.remoteUrl.href;
             const data = await this._xhr(
+                'PATCH',
                 url,
                 'application/json-patch+json',
                 msg
             );
-            this.onReceive(data, url, 'GET');
+            this.onReceive(data, url, 'PATCH');
         }
         return this;
     }
@@ -152,7 +154,7 @@ export default class PalindromNetworkChannel {
 
         this.closeConnection();
         // in node, WebSocket will have `w3cwebsocket` prop. In the browser it won't
-        
+
         const UsedSocket = WebSocket.w3cwebsocket || WebSocket;
         this._ws = new UsedSocket(upgradeURL);
         this._ws.onopen = event => {
@@ -238,10 +240,13 @@ export default class PalindromNetworkChannel {
     /**
      * @param {String} href
      * @throws {Error} network error if occured
+     * @returns {Promise<Object>} fetched patch
+     * @see #_xhr
      */
     async getPatchUsingHTTP(href) {
         // we don't need to try catch here because we want the error to be thrown at whoever calls getPatchUsingHTTP
         const data = await this._xhr(
+            'GET',
             href,
             'application/json-patch+json',
             null,
@@ -306,14 +311,15 @@ export default class PalindromNetworkChannel {
     }
 
     /**
-     * Internal method to perform XMLHttpRequest
-     * @param url (Optional) URL to send the request. If empty string, undefined or null given - the request will be sent to window location
-     * @param accept (Optional) HTTP accept header
-     * @param data (Optional) Data payload
-     * @returns {XMLHttpRequest} performed XHR
+     * Internal method to perform HTTP Request.
+     * Requests PATCH if there is given `data`, GET otherwie.
+     * @param {String} method HTTP method to be used
+     * @param {String} [url=window.location] URL to send the request. If empty string, undefined or null given - the request will be sent to window location
+     * @param {String} [accept] HTTP accept header
+     * @param {Object} [data] Data payload
+     * @returns {Promise<Object>} promise for fetched JSON data
      */
-    async _xhr(url, accept, data, setReferer) {
-        const method = data ? 'PATCH' : 'GET';
+    async _xhr(method, url, accept, data, setReferer) {
         const config = { headers: {}, method, credentials: 'include' };
         const headers = config.headers;
 
