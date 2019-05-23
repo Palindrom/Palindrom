@@ -314,7 +314,7 @@ export default class PalindromNetworkChannel {
             'HTTP method: ' + method
         ].join('\n');
 
-        this.onConnectionError(
+        this.onFatalError(
             new PalindromConnectionError(message, CLIENT, url, method)
         );
     }
