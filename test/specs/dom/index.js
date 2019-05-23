@@ -499,7 +499,7 @@ if (typeof window !== 'undefined') {
                         );
                     });
 
-                    it('Morphing to a URL should not dispatch the event after a failed request but should reject morphUrl call', async () => {
+                    it('Morphing to a URL should not dispatch the event after a failed request but should reject morphUrl call, with an Error stating HTTP code', async () => {
                         fetchMock.mock(getTestURL('testURL-599'), {
                             status: 509,
                             body: '{"hello": "world"}'
@@ -520,8 +520,10 @@ if (typeof window !== 'undefined') {
                             'palindrom-after-redirect',
                             handler
                         );
+                        const morphPromise = palindrom.morphUrl(getTestURL('testURL-599'))
+                        await assert.isRejected(morphPromise, Error, /HTTP.*509/);
 
-                        await assert.isRejected(palindrom.morphUrl(getTestURL('testURL-599')));
+                        await sleep()
                         assert.equal(hasFiredEvent, false);
                     });
                 });
