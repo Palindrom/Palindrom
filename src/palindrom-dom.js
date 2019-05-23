@@ -123,7 +123,7 @@ class AbortError extends Error {};
          * @throws {Error} network error if occured or the `palindrom-before-redirect` was cancelled by calling event.preventDefault()
          * @fires Palindrom#palindrom-before-redirect
          * @fires Palindrom#palindrom-after-redirect
-         * @returns {Response} response (https://github.com/axios/axios#response-schema)
+         * @returns {Promise<Object>} JSON response
          */
         async getPatchUsingHTTP(href) {
             /**
@@ -149,15 +149,15 @@ class AbortError extends Error {};
                 );
             }
 
-            const response = await this.network.getPatchUsingHTTP(href);
-            let detail = { href, response };
+            const data = await this.network.getPatchUsingHTTP(href);
+            let detail = { href, data };
 
             /**
              * palindrom-after-redirect event
              *
              * @event Palindrom#palindrom-after-redirect
              * @type {CustomEvent}
-             * @property {Object} detail containing `href: String` and `response: Response (https://developer.mozilla.org/en-US/docs/Web/API/Response)`
+             * @property {Object} detail containing `href: String` and `data: Object`
              */
             const afterEvent = new CustomEvent('palindrom-after-redirect', {
                 detail,
@@ -165,7 +165,7 @@ class AbortError extends Error {};
             });
 
             this.element.dispatchEvent(afterEvent);
-            return response;
+            return data;
         }
 
         //TODO move fallback to window.location.href from PalindromNetworkChannel to here (PalindromDOM)
@@ -304,7 +304,7 @@ class AbortError extends Error {};
             // if this handler is called && we're not attemptingScroll, then the user has scrolled!
             const scrollHandler = () => (userHadScrolled = !this._attemptingScroll);
             window.addEventListener('scroll', scrollHandler);
-            
+
             // give the user a chance to cancel history scrolling by scrolling on their own (eg momentum mouse wheel)
             await sleep(30);
 

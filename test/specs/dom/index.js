@@ -491,8 +491,8 @@ if (typeof window !== 'undefined') {
                         await sleep()
 
                         assert.equal(firedEvent.detail.href, rel);
-                        expect(firedEvent.detail.response).to.have.property('data');
-                        assert.deepEqual(firedEvent.detail.response.data, {"hello": "world"});
+                        expect(firedEvent.detail).to.have.property('data');
+                        assert.deepEqual(firedEvent.detail.data, {"hello": "world"});
 
                         expect(window.location.pathname).to.equal(
                             '/newUrl'

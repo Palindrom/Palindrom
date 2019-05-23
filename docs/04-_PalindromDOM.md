@@ -75,8 +75,8 @@ Palindrom uses the HTML5 history API to update the URL in the browser address ba
 
 PalindromDOM dispatches bubbling events before and after it manipulates browser history.
 
-- Before: it dispatches `palindrom-before-redirect` event with `detail` object containing `href: string` property that contains the URL.
-- After: it dispatches `palindrom-after-redirect` event with `detail` object containing `href: string` property that contains the URL and `response: Response` containing the HTTP response.
+- Before: it dispatches `palindrom-before-redirect` event with `detail` object containing `href: String` property that contains the URL.
+- After: it dispatches `palindrom-after-redirect` event with `detail` object containing `href: String` property that contains the URL and `data: Object` containing the JSON response.
 
 #### Morph URL with an event
 
