@@ -426,7 +426,7 @@ if (typeof window !== 'undefined') {
                             '/newUrl'
                         );
                     });
-                    it('Morphing to a URL should NOT issue a request after a canceled event', async () => {
+                    it('Morphing to a URL should NOT issue a request after a canceled event and morphUrl\'s retuned promise should resolve to `false`', async () => {
                         let originalRequestCount = fetchMock.calls().length;
                         let firedEvent;
 
@@ -445,8 +445,9 @@ if (typeof window !== 'undefined') {
                             handler
                         );
 
-                        await palindrom.morphUrl('/testURL');
+                        const result = await palindrom.morphUrl('/testURL');
 
+                        assert.equal(result, false, 'expected `morphUrl` to resolve  with `false`');
                         assert.equal(firedEvent.detail.href, '/testURL');
 
                         await sleep();
