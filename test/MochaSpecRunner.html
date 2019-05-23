@@ -15,11 +15,18 @@
     </div>
     <my-menu-button style="position: absolute; top: 0; right: 0" href="subpage.html">Distributed <strong>Content</strong></my-menu-button>
     <div id="mocha"></div>
+    <script src="./console.reporter.js"></script>
     <script>
-        mocha.setup('bdd');
+          mocha.setup({
+              ui: 'bdd',
+              reporter: ConsoleReporter
+          });
+          mocha.checkLeaks();
     </script>
     <script src="runner-browser.js"></script>
-    <script>
+    <script type="module">
+        // import { ConsoleReporter } from './console.reporter.js';
+
         window.name = 'Parent';
         /* wait for button component to load */
         setTimeout(() => {
