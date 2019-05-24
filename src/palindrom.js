@@ -10,7 +10,7 @@ import JSONPatcherProxy from 'jsonpatcherproxy';
 import { JSONPatchQueueSynchronous, JSONPatchQueue } from 'json-patch-queue';
 import JSONPatchOT from 'json-patch-ot';
 import JSONPatchOTAgent from 'json-patch-ot-agent';
-import { PalindromConnectionError } from './palindrom-errors';
+import { PalindromError, PalindromConnectionError } from './palindrom-errors';
 import Reconnector from './reconnector';
 import { Heartbeat, NoHeartbeat } from './heartbeat';
 import NoQueue from './noqueue';
@@ -261,7 +261,20 @@ export default class Palindrom {
 
                 // validate json response
                 findRangeErrors(this.obj, this.onIncomingPatchValidationError);
-                this.onStateReset(this.obj);
+                // Catch errors in onStateReset
+                try {
+                    this.onStateReset(this.obj);
+                } catch (error) {
+                   // to prevent the promise's catch from swallowing errors inside onStateReset
+                   this.onError(
+                       new PalindromError(
+                           `Error inside onStateReset callback: ${
+                               error.message
+                           }`
+                       )
+                   );
+                   console.error(error);
+               }
             }
             this.onRemoteChange(sequence, results);
         } catch (error) {

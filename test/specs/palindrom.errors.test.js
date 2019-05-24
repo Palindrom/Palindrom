@@ -1,4 +1,5 @@
 import Palindrom from '../../src/palindrom';
+import { PalindromError } from '../../src/palindrom-errors';
 import assert from 'assert';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
@@ -56,7 +57,6 @@ describe('Palindrom', () => {
 
                 fetchMock.mock(getTestURL('testURL'), {
                     status: 599,
-                    headers: { contentType: 'application/json' },
                     body: 'Server Error'
                 });
 
@@ -69,6 +69,31 @@ describe('Palindrom', () => {
                 await sleep(50);
                 assert(spy.calledOnce);
             });
+
+            it('should call onError with a clear message about errors inside onStateReset', async function() {
+                const spy = sinon.spy();
+
+                fetchMock.mock(getTestURL('testURL'), {
+                    status: 200,
+                    headers: { contentType: 'application/json' },
+                    body: '{"hello": "world"}'
+                });
+
+                new Palindrom({
+                    remoteUrl: getTestURL('testURL'),
+                    onStateReset: () => { throw new Error(); },
+                    onError: spy
+                });
+
+                await sleep(50);
+
+                assert(spy.calledOnce, 'Expected `onError` to be called once');
+
+                const errorPassed = spy.getCall(0).args[0];
+                assert(errorPassed instanceof PalindromError, 'Passed argument should be `PalindromError`');
+                assert(errorPassed.message.includes(`Error inside onStateReset callback:`), 'Error Message should include `Error inside onStateReset callback:`')
+            });
+
 
             it('should call onConnectionError event on HTTP 500 response (patch)', async () => {
                 const spy = sinon.spy();
