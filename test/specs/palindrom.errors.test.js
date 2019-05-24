@@ -57,7 +57,7 @@ describe('Palindrom', () => {
                 fetchMock.mock(getTestURL('testURL'), {
                     status: 599,
                     headers: { contentType: 'application/json' },
-                    body: '{"hello": "world"}'
+                    body: 'Server Error'
                 });
 
                 new Palindrom({
@@ -89,7 +89,7 @@ describe('Palindrom', () => {
                 await sleep();
 
                 fetchMock.mock(getTestURL('testURL'), {
-                    status: 509,
+                    status: 500,
                     headers: { contentType: 'application/json' },
                     body: `[{"op": "replace", "path": "/", "value": "Custom message"}]`
                 });
@@ -100,7 +100,6 @@ describe('Palindrom', () => {
                 await sleep();
 
                 assert.equal(spy.callCount, 1, 'onConnectionError should be called once now');
-                fetchMock.restore();
             });
 
             it('should NOT call onConnectionError on HTTP 400 response (patch)', async () => {
@@ -208,7 +207,7 @@ describe('Palindrom', () => {
 
                 await sleep(20);
 
-                assert(spy.calledOnce, spy.callCount);
+                assert(spy.calledOnce, `Expected \`onOutgoingPatchValidationError\` to be called once, but was called ${spy.callCount} times`);
 
                 const errorPassed = spy.getCall(0).args[0];
 
@@ -250,7 +249,7 @@ describe('Palindrom', () => {
 
                 assert.equal(
                     errorPassed.message,
-                    `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: 9007199254740992, variable path is: /val`
+                    `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER + 1}, variable path is: /val`
                 );
 
                 server.stop();
