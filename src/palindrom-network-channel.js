@@ -71,26 +71,6 @@ export default class PalindromNetworkChannel {
             }
         });
     }
-    get useWebSocket() {
-        return this._useWebSocket;
-    }
-    set useWebSocket(newValue) {
-        this._useWebSocket = newValue;
-
-        if (newValue == false) {
-            if (this._ws) {
-                this._ws.onclose = () => {
-                    //overwrites the previous onclose
-                    this._ws = null;
-                };
-                this._ws.close();
-            }
-            // define wsUrl if needed
-        } else if (!this.wsUrl) {
-            this.wsUrl = toWebSocketURL(this.remoteUrl.href);
-        }
-        return this.useWebSocket;
-    }
 
     /**
      * Fetches initial state from server using GET request,
