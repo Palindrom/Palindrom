@@ -6,7 +6,7 @@ import sinon from 'sinon';
 import { sleep, getTestURL } from '../utils';
 
 describe('Callbacks, onPatchSent and onPatchReceived', () => {
-    describe('XHR', function() {
+    describe('HTTP', function() {
         it('should call onPatchSent and onPatchReceived callbacks when a patch is sent and received', async () => {
             fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
@@ -51,7 +51,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
 
             assert(onPatchSent.calledTwice);
 
-            /* wait for XHR */
+            /* wait for HTTP */
             await sleep();
             assert(onPatchReceived.calledOnce);
 
@@ -104,7 +104,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             /* issue a change */
             tempObj.hello = 'onPatchSent callback';
 
-            /* wait for XHR */
+            /* wait for HTTP */
             await sleep(10);
 
             assert.equal(
@@ -157,7 +157,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                 onPatchSent
             });
 
-            /* wait for XHR */
+            /* wait for HTTP */
             await sleep();
 
             assert.equal(
@@ -236,7 +236,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             onPatchReceived
         });
 
-        /* wait for XHR */
+        /* wait for HTTP */
         await sleep(10);
 
         assert.equal(

@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
         beforeEach(function() {
             currLoc = window.location.href;
-            
+
         });
 
         afterEach(function() {
@@ -62,7 +62,7 @@ if (typeof window !== 'undefined') {
             fetchMock.restore();
         });
 
-        it('should patch a mix of XHR and WS incoming patches in the correct order', async () => {
+        it('should patch a mix of HTTP and WS incoming patches in the correct order', async () => {
             const url = getTestURL('/testURL');
             const wsUrl = getTestURL('/testURL', false, true);
 

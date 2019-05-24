@@ -25,11 +25,11 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             remoteUrl: getTestURL('testURL'),
             useWebSocket: true
         });
-        /* socket should be undefined before XHR delay */
+        /* socket should be undefined before HTTP delay */
         assert(typeof palindrom.network._ws === 'undefined');
 
         await sleep();
-        /* socket should NOT be undefined after XHR delay */
+        /* socket should NOT be undefined after HTTP delay */
         assert(typeof palindrom.network._ws !== 'undefined');
     });
 
@@ -193,7 +193,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         );
     });
 });
-describe('Before XHR connection is established', () => {
+describe('Before HTTP connection is established', () => {
     let server;
     afterEach(() => {
         fetchMock.restore();
@@ -214,13 +214,13 @@ describe('Before XHR connection is established', () => {
             remoteUrl,
             useWebSocket: true,
             onStateReset: () =>
-                assert(everConnected === false, `shouldn't connect before XHR`),
+                assert(everConnected === false, `shouldn't connect before HTTP`),
             onSocketOpened: () => (everConnected = true)
         });
 
         await sleep();
 
-        assert.equal(everConnected, true, 'should connect after XHR');
+        assert.equal(everConnected, true, 'should connect after HTTP');
     });
 
     it("shouldn't send any change a patch using WebSocket", async () => {
@@ -245,7 +245,7 @@ describe('Before XHR connection is established', () => {
             onStateReset: obj => (obj.firstName = 'Omar')
         });
 
-        // Wait for XHR to finish
+        // Wait for HTTP to finish
         await sleep(15);
 
         assert(messages.length === 0);
@@ -275,7 +275,7 @@ describe('Sockets events', () => {
         assert.equal(
             spy.callCount,
             0,
-            'socket should not be opened before XHR delay'
+            'socket should not be opened before HTTP delay'
         );
 
         await sleep();
@@ -283,7 +283,7 @@ describe('Sockets events', () => {
         assert.equal(
             spy.callCount,
             1,
-            'socket should be opened before XHR delay'
+            'socket should be opened before HTTP delay'
         );
     });
 
@@ -353,7 +353,7 @@ describe('Sockets events', () => {
                 useWebSocket: true
             });
 
-            /* wait for XHR */
+            /* wait for HTTP */
             await sleep();
 
             palindrom.obj.firstName = 'Omar';

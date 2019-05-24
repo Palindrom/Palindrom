@@ -609,7 +609,7 @@ if (typeof window !== 'undefined') {
                         // go back
                         history.back();
 
-                        // XHR + scroll delay
+                        // HTTP + scroll delay
                         await sleep(120);
 
                         expect(window.scrollY).to.equal(0);
