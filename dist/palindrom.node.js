@@ -8098,33 +8098,19 @@ class palindrom_network_channel_PalindromNetworkChannel {
             }
         });
     }
-    get useWebSocket() {
-        return this._useWebSocket;
-    }
-    set useWebSocket(newValue) {
-        this._useWebSocket = newValue;
 
-        if (newValue == false) {
-            if (this._ws) {
-                this._ws.onclose = () => {
-                    //overwrites the previous onclose
-                    this._ws = null;
-                };
-                this._ws.close();
-            }
-            // define wsUrl if needed
-        } else if (!this.wsUrl) {
-            this.wsUrl = toWebSocketURL(this.remoteUrl.href);
-        }
-        return this.useWebSocket;
-    }
-
+    /**
+     * Fetches initial state from server using GET request,
+     * or fetches new state after reconnection using PATCH request if any `reconnectionPendingData` given.
+     * @param  {Array<JSONPatch>}  [reconnectionPendingData=null] Patches already sent to the remote, but not necesarily acknowledged
+     * @return {Promise<Object>}                           Promise for new state of the synced object.
+     */
     async _establish(reconnectionPendingData = null) {
         const data = await this._fetch(
             reconnectionPendingData ? 'PATCH' : 'GET',
             this.remoteUrl.href + (reconnectionPendingData ? '/reconnect' : ''),
             'application/json',
-            reconnectionPendingData
+            JSON.stringify(reconnectionPendingData)
         );
         if (this.useWebSocket) {
             this.webSocketUpgrade(this.onSocketOpened);
@@ -8135,10 +8121,11 @@ class palindrom_network_channel_PalindromNetworkChannel {
     /**
      * Send any text message by currently established channel
      * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
-     * @param  {String} msg message to be sent
+     * @param  {JSONPatch} patch message to be sent
      * @return {PalindromNetworkChannel}     self
      */
-    async send(msg) {
+    async send(patch) {
+        const msg = JSON.stringify(patch);
         // send message only if there is a working ws connection
         if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
             this._ws.send(msg);
@@ -8159,10 +8146,10 @@ class palindrom_network_channel_PalindromNetworkChannel {
 
     /**
      * Callback function that will be called once message from remote comes.
-     * @param {String} [JSONPatch_sequences] message with Array of JSONPatches that were send by remote.
+     * @param {JSONPatch} [JSONPatch] single JSON Patch (array of operations objects) that was send by remote.
      * @return {[type]} [description]
      */
-    onReceive(/*String_with_JSONPatch_sequences*/) {}
+    onReceive(/*JSONPatch*/) {}
 
     onSend() {}
     onStateChange() {}
@@ -8334,7 +8321,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
             'HTTP method: ' + method
         ].join('\n');
 
-        this.onConnectionError(
+        this.onFatalError(
             new palindrom_errors_PalindromConnectionError(message, CLIENT, url, method)
         );
     }
@@ -8344,7 +8331,8 @@ class palindrom_network_channel_PalindromNetworkChannel {
      * @param {String} method HTTP method to be used
      * @param {String} [url=window.location] URL to send the request. If empty string, undefined or null given - the request will be sent to window location
      * @param {String} [accept] HTTP accept header
-     * @param {Object} [data] Data payload
+     * @param {String} [data] stringified data payload
+     * @param {Boolean} [setReferer=false] Should `X-Referer` header be sent
      * @returns {Promise<Object>} promise for fetched JSON data
      */
     async _fetch(method, url, accept, data, setReferer) {
@@ -8353,7 +8341,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
 
         if (data) {
             headers['Content-Type'] = 'application/json-patch+json';
-            config.body = JSON.stringify(data);
+            config.body = data;
         }
         if (accept) {
             headers['Accept'] = accept;
@@ -8771,21 +8759,14 @@ class palindrom_Palindrom {
     }
 
     ping() {
-        this._sendPatches([]); // sends empty message to server
+        this._sendPatch([]); // sends empty message to server
     }
 
-    _sendPatches(patches) {
-        const txt = JSON.stringify(patches);
+    _sendPatch(patch) {
         this.unobserve();
         this.heartbeat.notifySend();
-        this.network.send(txt);
+        this.network.send(patch);
         this.observe();
-    }
-    /**
-     * Closes the Palindrom session probably
-     */
-    closeConnection() {
-        this.network.closeConnection();
     }
 
     prepareProxifiedObject(obj) {
@@ -8835,13 +8816,13 @@ class palindrom_Palindrom {
                 operation.path
             );
 
-        const patches = [operation];
+        const patch = [operation];
         if (this.debug) {
-            this.validateSequence(this.remoteObj, patches);
+            this.validateSequence(this.remoteObj, patch);
         }
 
-        this._sendPatches(this.queue.send(patches));
-        this.onLocalChange(patches);
+        this._sendPatch(this.queue.send(patch));
+        this.onLocalChange(patch);
     }
 
     validateAndApplySequence(tree, sequence) {
@@ -8861,7 +8842,20 @@ class palindrom_Palindrom {
 
                 // validate json response
                 findRangeErrors(this.obj, this.onIncomingPatchValidationError);
-                this.onStateReset(this.obj);
+                // Catch errors in onStateReset
+                try {
+                    this.onStateReset(this.obj);
+                } catch (error) {
+                   // to prevent the promise's catch from swallowing errors inside onStateReset
+                   this.onError(
+                       new PalindromError(
+                           `Error inside onStateReset callback: ${
+                               error.message
+                           }`
+                       )
+                   );
+                   console.error(error);
+               }
             }
             this.onRemoteChange(sequence, results);
         } catch (error) {
@@ -8909,15 +8903,15 @@ class palindrom_Palindrom {
         this.onPatchReceived(data, url, method);
 
         this.heartbeat.notifyReceive();
-        const patches = data || []; // fault tolerance - empty response string should be treated as empty patch array
+        const patch = data || []; // fault tolerance - empty response string should be treated as empty patch array
 
         validateNumericsRangesInPatch(
-            patches,
+            patch,
             this.onIncomingPatchValidationError,
             this.OTPatchIndexOffset
         );
 
-        if (patches.length === 0) {
+        if (patch.length === 0) {
             // ping message
             return;
         }
@@ -8926,7 +8920,7 @@ class palindrom_Palindrom {
         if (!this.isObserving) {
             return;
         }
-        this.queue.receive(patches);
+        this.queue.receive(patch);
         if (
             this.queue.pending &&
             this.queue.pending.length &&
@@ -8934,7 +8928,7 @@ class palindrom_Palindrom {
         ) {
             // remote counterpart probably failed to receive one of earlier messages, because it has been receiving
             // (but not acknowledging messages for some time
-            this.queue.pending.forEach(this._sendPatches, this);
+            this.queue.pending.forEach(this._sendPatch, this);
         }
 
         if (this.debug) {
