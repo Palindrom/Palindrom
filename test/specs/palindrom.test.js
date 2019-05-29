@@ -1,11 +1,14 @@
 import Palindrom from '../../src/palindrom';
-import assert from 'assert';
+import { expect, assert } from 'chai';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { sleep, getTestURL } from '../utils';
 const currentVersion = require('../../package.json').version;
 
 describe('Palindrom', () => {
+    afterEach(() => {
+        fetchMock.restore();
+    });
     describe('Expose version', function() {
         it('Palindrom class should contain the version', function() {
             assert.equal(currentVersion, Palindrom.version);
@@ -22,14 +25,8 @@ describe('Palindrom', () => {
         });
     });
     describe('#constructor', () => {
-        beforeEach(() => {
-
-        });
-        afterEach(() => {
-            fetchMock.restore();
-        });
-        it('should initiate an ajax request when initiated, and call the callback function', async () => {
-            fetchMock.mock(getTestURL('testURL'), {
+        it('should initiate an HTTP GET request withot body when initiated, and call the callback function', async () => {
+            const mock = fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
                 headers: { Location: getTestURL('testURL') },
                 body: '{"hello": "world"}'
@@ -42,7 +39,14 @@ describe('Palindrom', () => {
             });
 
             await sleep(50);
+            // check HTTP fetch
+            expect(fetchMock.called(/testURL/)).to.be.ok;
+            expect(fetchMock.calls()).to.be.lengthOf(1);
+            const fetchOptions = fetchMock.lastOptions();
+            expect(fetchOptions).to.have.property('method', 'GET');
+            expect(fetchOptions).not.to.have.property('body');
 
+            // check callback
             assert(spy.called);
             assert.deepEqual(spy.getCall(0).args[0], { hello: 'world' });
         });
@@ -67,6 +71,9 @@ describe('Palindrom', () => {
     });
 });
 describe('Palindrom', () => {
+    afterEach(() => {
+        fetchMock.restore();
+    });
     describe('obj', () => {
         it('palindrom.obj should be readonly', async () => {
             fetchMock.mock(getTestURL('testURL'), {
@@ -86,18 +93,14 @@ describe('Palindrom', () => {
                 Error,
                 'palindrom.obj is readonly'
             );
-            fetchMock.restore();
         });
     });
 });
 describe('Palindrom', () => {
+    afterEach(() => {
+        fetchMock.restore();
+    });
     describe('#patching', () => {
-        beforeEach(() => {
-
-        });
-        afterEach(() => {
-            fetchMock.restore();
-        });
         it('should patch changes', async () => {
             fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
