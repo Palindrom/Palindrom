@@ -8106,12 +8106,10 @@ class palindrom_network_channel_PalindromNetworkChannel {
      * @return {Promise<Object>}                           Promise for new state of the synced object.
      */
     async _establish(reconnectionPendingData = null) {
-        const data = await this._fetch(
-            reconnectionPendingData ? 'PATCH' : 'GET',
-            this.remoteUrl.href + (reconnectionPendingData ? '/reconnect' : ''),
-            'application/json',
-            JSON.stringify(reconnectionPendingData)
-        );
+        const data = reconnectionPendingData ?
+            await this._fetch('PATCH', this.remoteUrl.href + '/reconnect', 'application/json', JSON.stringify(reconnectionPendingData)) :
+            await this._fetch('GET', this.remoteUrl.href, 'application/json', null);
+
         if (this.useWebSocket) {
             this.webSocketUpgrade(this.onSocketOpened);
         }
