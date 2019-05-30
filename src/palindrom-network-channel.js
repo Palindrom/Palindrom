@@ -271,7 +271,7 @@ export default class PalindromNetworkChannel {
         }
     }
     /**
-     * Handles unsecessful HTTP requests
+     * Handles unsuccessful HTTP requests
      * @param error
      */
     async _handleFailureResponse(url, method, error) {
@@ -300,7 +300,7 @@ export default class PalindromNetworkChannel {
     /**
      * Internal method to perform HTTP Request.
      * @param {String} method HTTP method to be used
-     * @param {String} [url=window.location] URL to send the request. If empty string, undefined or null given - the request will be sent to window location
+     * @param {String} url URL to send the request. If empty string, undefined or null given - the request will be sent to window location
      * @param {String} [accept] HTTP accept header
      * @param {String} [data] stringified data payload
      * @param {Boolean} [setReferer=false] Should `X-Referer` header be sent
