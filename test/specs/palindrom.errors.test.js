@@ -52,7 +52,25 @@ describe('Palindrom', () => {
                 assert.equal(spy.callCount, 1);
             });
 
-            it('should call onConnectionError event on HTTP 599 response', async () => {
+            it('should call onConnectionError event on HTTP 599 response, containing JSON', async () => {
+                const spy = sinon.spy();
+
+                fetchMock.mock(getTestURL('testURL'), {
+                    status: 599,
+                    body: '{"hello": "world"}'
+                });
+
+                new Palindrom({
+                    remoteUrl: getTestURL('testURL'),
+                    onConnectionError: spy
+                });
+
+                /* onConnectionError should be called once now */
+                await sleep(50);
+                assert(spy.calledOnce);
+            });
+
+            it('should call onConnectionError event on HTTP 599 response, without JSON', async () => {
                 const spy = sinon.spy();
 
                 fetchMock.mock(getTestURL('testURL'), {
