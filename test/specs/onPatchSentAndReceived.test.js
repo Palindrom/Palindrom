@@ -23,7 +23,8 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                     tempObj = obj;
                 },
                 onPatchReceived,
-                onPatchSent
+                onPatchSent,
+                useWebSocket: false // force HTTP for sending messages
             });
 
             await sleep(10);
