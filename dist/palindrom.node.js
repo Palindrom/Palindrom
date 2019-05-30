@@ -8144,10 +8144,11 @@ class palindrom_network_channel_PalindromNetworkChannel {
 
     /**
      * Callback function that will be called once message from remote comes.
-     * @param {JSONPatch} [JSONPatch] single JSON Patch (array of operations objects) that was send by remote.
-     * @return {[type]} [description]
+     * @param {JSONPatch} data single parsed JSON Patch (array of operations objects) that was send by remote.
+     * @param {String} url from which the chnage was issued
+     * @param {String} method HTTP method which resulted in this change ('GET' or 'PATCH') or 'WS' if came as Web Socket message
      */
-    onReceive(/*JSONPatch*/) {}
+    onReceive() {}
 
     onSend() {}
     onStateChange() {}
@@ -8896,7 +8897,14 @@ class palindrom_Palindrom {
     reconnectNow() {
         this.reconnector.reconnectNow();
     }
-
+    /**
+     * Callback to react on change received from remote.
+     * @see PalindromNetworkChannel.onReceive
+     * 
+     * @param {JSONPatch} data single parsed JSON Patch (array of operations objects) that was send by remote.
+     * @param {String} url from which the chnage was issued
+     * @param {String} method HTTP method which resulted in this change ('GET' or 'PATCH') or 'WS' if came as Web Socket message
+     */
     handleRemoteChange(data, url, method) {
         this.onPatchReceived(data, url, method);
 
