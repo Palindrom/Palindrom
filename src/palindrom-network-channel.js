@@ -110,6 +110,9 @@ export default class PalindromNetworkChannel {
                 'application/json-patch+json',
                 msg
             );
+
+            //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
+            //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
             this.onReceive(data, url, method);
         }
         return this;
@@ -181,6 +184,7 @@ export default class PalindromNetworkChannel {
             );
         };
         this._ws.onclose = event => {
+            //TODO none of the tests enters here
             this.onStateChange(
                 this._ws.readyState,
                 upgradeURL,
@@ -240,6 +244,9 @@ export default class PalindromNetworkChannel {
             null,
             true
         );
+
+        //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
+        //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
         this.onReceive(data, href, method);
         return data;
     }

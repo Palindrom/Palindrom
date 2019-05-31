@@ -301,7 +301,7 @@ export default class Palindrom {
     handleConnectionError() {
         this.heartbeat.stop();
         this.reconnector.triggerReconnection();
-        this.onConnectionError();
+        this.onConnectionError(); //TODO missing `PalindromError` according to docs
     }
 
     /**
@@ -326,6 +326,8 @@ export default class Palindrom {
      * @param {String} method HTTP method which resulted in this change ('GET' or 'PATCH') or 'WS' if came as Web Socket message
      */
     handleRemoteChange(data, url, method) {
+        //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
+        console.assert(data instanceof Array, "expecting parsed JSON-Patch");
         this.onPatchReceived(data, url, method);
 
         this.heartbeat.notifyReceive();
