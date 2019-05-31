@@ -322,7 +322,7 @@ export default class Palindrom {
      * @see PalindromNetworkChannel.onReceive
      * 
      * @param {JSONPatch} data single parsed JSON Patch (array of operations objects) that was send by remote.
-     * @param {String} url from which the chnage was issued
+     * @param {String} url from which the change was issued
      * @param {String} method HTTP method which resulted in this change ('GET' or 'PATCH') or 'WS' if came as Web Socket message
      */
     handleRemoteChange(data, url, method) {
