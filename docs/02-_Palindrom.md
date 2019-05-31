@@ -27,36 +27,36 @@ palindrom.obj.someProperty = "new value";
 - [Example with Vue](http://Palindrom.github.io/Palindrom/lab/vue/index.html)
 - [Example with React](http://Palindrom.github.io/Palindrom/lab/react/index.html)
 
-### Options (`Palindrom()` constructor parameters)
-All the parameters are optional.
+### Options (`Palindrom()` constructor argument)
+All the argument's properties are optional.
 ```javascript
-var palindrom = new Palindrom({attribute: value});
+var palindrom = new Palindrom({property: value});
 ```
 
-Attribute              | Type          | Default                | Description
+Property               | Type          | Default                | Description
 ---                    | ---           | ---                    | ---
 `remoteUrl`            | **`String`**      |  **Required**          | PATCH server URL
-`onStateReset`         | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established), **it can be called again if the state was reset by a root-replacing patch**.
+`onStateReset`         | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established), **it can be called again if the state was reset by a root-replacing patch**. Arguments: **`Object`** New state object
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
 `debug`                | *Boolean*     | `true`                 | Toggle debugging mode
-`filterLocalChange`            | *Function*      |       | A function that is called with every local change and allows you to filter (ignore) some changes. See [Filtering Patches](https://palindrom.github.io/#/docs/master/04-Filtering Patches) section.
-`onLocalChange`        | *Function*    |                        | Helper callback triggered each time a change is observed locally
-`onRemoteChange`       | *Function*    |                        | Helper callback triggered each time a change is received from the server and applied.
-`onPatchReceived`      | *Function*    |                        | Callback triggered each time a JSON-patch is received, called with three parameters: **`JSONPatch`** single, parsed JSON Patch (array of operations objects) that was send by remote, **`String`** URL from which the change was issued,  **`String`** HTTP method which resulted in this change ('GET' or 'PATCH') or 'WS' if came as Web Socket message
-`onPatchSent`          | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent, accepts two parameters: (**`String`** `data`, **`String`** `url`, **`String`** `method`)
-`onSocketStateChanged` | *Function*    |                        | Helper callback triggered when socket state changes, accepts next parameters: (**`int`** `state`, **`String`** `url`, **`String`** `data`, **`int`** `code`, **`String`** `reason`)
-`onError`    | *Function*    |                        | Helper callback triggered when a generic error occurs. Accepts one parameter: (*PalindromError* `error`) `PalindromError` has the following properties: (**`String`** `message`) it extends ES6 Error, it has the stack trace with all the information `Error` class offers.
-`onConnectionError`    | *Function*    |                        | Helper callback triggered when socket connection closed, socket connection failed to establish, http requiest failed. Accepts one parameter: (**`PalindromConnectionError`** `error`). `PalindromConnectionError` has the following properties: (**`String`** `message`, **`String`** `side <Server\|Client>`, **`String`** `url`, **`String`** `connectionType`). It extends ES6 Error class, it has the stack trace with all the information `Error` class offers.
-`onIncomingPatchValidationError`    | *Function*    |                        | Helper callback triggered when a wrong patch is received. It accepts one `Error` parameter.
-`onOutgoingPatchValidationError`    | *Function*    |                        | Helper callback triggered when a wrong patch is locally issued. It accepts one `Error` parameter.
+`filterLocalChange`            | *Function*      |       | A function that is called with every local change and allows you to filter (ignore) some changes. See [Filtering Patches](https://palindrom.github.io/#/docs/master/04-Filtering Patches) section. Arguments: **`Object`** Operation to go through the filter
+`onLocalChange`        | *Function*    |                        | Helper callback triggered each time a change is observed locally. Arguments: **`JSONPatch`** Patch (array of operations)
+`onRemoteChange`       | *Function*    |                        | Helper callback triggered each time a change is received from the server and applied. Arguments: **`JSONPatch`** Patch (array of operations), **`Array`** Validation results
+`onPatchReceived`      | *Function*    |                        | Callback triggered each time a JSON-patch is received. Arguments: **`JSONPatch`** Patch (array of operations) that was send by remote, **`String`** URL from which the change was issued,  **`String`** HTTP method which resulted in this change ('GET' or 'PATCH') or 'WS' if came as Web Socket message
+`onPatchSent`          | *Function*    |                        | Helper callback triggered each time a JSON-patch is sent. Arguments: (**`String`** `data` Patch (array of operations) serialized to string (optional, i.e. `null` if method equals `GET`), **`String`** `url`, **`String`** `method`)
+`onSocketStateChanged` | *Function*    |                        | Helper callback triggered when socket state changes. Arguments: **`number`** `state`, **`String`** `url`, **`String`** `data` (optional), **`number`** `code` (optional), **`String`** `reason` (only if `code` is provided)
+`onError`    | *Function*    |                        | Helper callback triggered when a generic error occurs. Arguments: **`PalindromError`** Error object that has the following properties: **`String`** `message`. It extends ES6 Error, it has the stack trace with all the information `Error` class offers.
+`onConnectionError`    | *Function*    |                        | Helper callback triggered when socket connection closed, socket connection failed to establish, http requiest failed. Arguments: **`PalindromConnectionError`** `error`). `PalindromConnectionError` has the following properties: (**`String`** `message`, **`String`** `side <Server\|Client>`, **`String`** `url`, **`String`** `connectionType`). It extends ES6 Error class, it has the stack trace with all the information `Error` class offers.
+`onIncomingPatchValidationError`    | *Function*    |                        | Helper callback triggered when a wrong patch is received. Arguments: **`Error`** Error object
+`onOutgoingPatchValidationError`    | *Function*    |                        | Helper callback triggered when a wrong patch is locally issued. Arguments: **`Error`** Error object
 `localVersionPath`     | *JSONPointer* | `disabled`             | local version path, set it to enable Versioned JSON Patch communication
 `remoteVersionPath`    | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
 `ot`                   | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
 `purity`               | *Boolean*     | `false`                | `true` to enable purist mode of OT
 `pingIntervalS`        | *Number*      | `0`                    | Palindrom will generate heartbeats every `pingIntervalS` seconds if no activity is detected. `0` - disable heartbeat
 `retransmissionThreshold`| *Number*    | `3`                    | After server reports this number of messages missing, we start retransmission
-`onReconnectionCountdown`| *Function*  |                        | Triggered when palindrom detected connection problem and reconnection is scheduled. Accepts number of milliseconds to scheduled reconnection. Called every second until countdown reaches 0 (inclusive)
-`onReconnectionEnd`    | *Function*    |                        | Triggered when palindrom successfully reconnected
+`onReconnectionCountdown`| *Function*  |                        | Triggered when palindrom detected connection problem and reconnection is scheduled. Called every second until countdown reaches 0 (inclusive). Arguments: **`number`** milliseconds to scheduled reconnection.
+`onReconnectionEnd`    | *Function*    |                        | Triggered when palindrom successfully reconnected. No arguments.
 `jsonpatch`            | *Object*      | `window.jsonpatch`       | The provider object for jsonpatch `apply` and  `validate`. By default it uses Starcounter-Jack/JSON-Patch library.
 
 
