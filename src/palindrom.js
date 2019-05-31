@@ -327,7 +327,7 @@ export default class Palindrom {
      */
     handleRemoteChange(data, url, method) {
         //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
-        console.assert(data instanceof Array, "expecting parsed JSON-Patch");
+        //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
         this.onPatchReceived(data, url, method);
 
         this.heartbeat.notifyReceive();
