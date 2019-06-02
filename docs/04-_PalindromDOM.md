@@ -65,6 +65,7 @@ Attribute   | Arguments          | Description
 ### Browser history
 
 Palindrom uses the HTML5 history API to update the URL in the browser address bar to reflect the new page. It also listens to a `popstate` event so it could ask the server for new JSON-Patch to morph the page back to previous state. Due to lack of native `pushstate` event you need to either:
+
  * call `palindrom.getPatchUsingHTTP(url)` after your `history.pushState(url)`. This method returns a [`Promise<Response>`](https://github.com/axios/axios#response-schema). This methods throws an error if the HTTP request has failed or the `palindrom-before-redirect` was canceled by calling `event.preventDefault()`.
  * call `palindrom.morphUrl(url)` - this will call `pushState` and update PalindromDOM's state for you,
  * trigger `palindrom-redirect-pushstate` with `{url: "/new/url"}` on `window`. This will call `morphUrl` for you,
@@ -73,8 +74,9 @@ Palindrom uses the HTML5 history API to update the URL in the browser address ba
 #### Browser history events
 
 PalindromDOM dispatches bubbling events before and after it manipulates browser history.
-- Before: it dispatches `palindrom-before-redirect` event with `detail` object containing `href: string` property that contains the URL.
-- After: it dispatches `palindrom-after-redirect` event with `detail` object containing `href: string` property that contains the URL and `successful: boolean` indicating whether the HTTP request was successful.
+
+- Before: it dispatches `palindrom-before-redirect` event with `detail` object containing `href: String` property that contains the URL.
+- After: it dispatches `palindrom-after-redirect` event with `detail` object containing `href: String` property that contains the URL and `data: Object` containing the JSON response.
 
 #### Morph URL with an event
 

@@ -1,233 +1,262 @@
-global.WebSocket = require('mock-socket').WebSocket;
-
-const MockSocketServer = require('mock-socket').Server;
-const Palindrom = require('../../src/palindrom');
-const assert = require('assert');
-const moxios = require('moxios');
-const sinon = require('sinon');
+import { Server as MockSocketServer } from 'mock-socket';
+import Palindrom from '../../src/palindrom';
+import assert from 'assert';
+import fetchMock from 'fetch-mock';
+import sinon from 'sinon';
+import { sleep, getTestURL } from '../utils';
 
 describe('Callbacks, onPatchSent and onPatchReceived', () => {
-  beforeEach(() => {
-    moxios.install();
-  });
-  afterEach(() => {
-    moxios.uninstall();
-  });
+    describe('HTTP', function() {
+        it('should call onPatchSent and onPatchReceived callbacks when a patch is sent and received', async () => {
+            fetchMock.mock(getTestURL('testURL'), {
+                status: 200,
+                body: '{"hello": "world"}'
+            });
 
-  describe('XHR', function() {
-    it('should call onPatchSent and onPatchReceived callbacks when a patch is sent and received', done => {
-      moxios.stubRequest('http://house.of.cards/testURL', {
-        status: 200,
-        headers: { location: 'http://house.of.cards/testURL2' },
-        responseText: '{"hello": "world"}'
-      });
+            const onPatchReceived = sinon.spy();
+            const onPatchSent = sinon.spy();
+            let tempObj;
 
-      const onPatchReceived = sinon.spy();
-      const onPatchSent = sinon.spy();
-      let tempObj;
+            new Palindrom({
+                remoteUrl: getTestURL('testURL'),
+                onStateReset: function(obj) {
+                    tempObj = obj;
+                },
+                onPatchReceived,
+                onPatchSent,
+                useWebSocket: false // force HTTP for sending messages
+            });
 
-      new Palindrom({
-        remoteUrl: 'http://house.of.cards/testURL',
-        onStateReset: function(obj) {
-          tempObj = obj;
-        },
-        onPatchReceived,
-        onPatchSent
-      });
+            await sleep(10);
 
-      setTimeout(() => {
-        /* onPatchReceived, shouldn't be called now */
-        assert(onPatchReceived.notCalled);
+            /* onPatchReceived, shouldn't be called now */
+            assert(
+                onPatchReceived.notCalled,
+                'onPatchReceived should not be called'
+            );
 
-        /* onPatchSent, shouldn be called once now, the initial request */
-        assert(onPatchSent.calledOnce);
+            /* onPatchSent, should be called now, the initial request  */
+            assert(onPatchSent.calledOnce, 'onPatchSent should be calledOnce');
 
-        /* prepare response */
-        moxios.stubRequest('http://house.of.cards/testURL2', {
-          status: 200,
-          headers: { Location: 'http://house.of.cards/testURL' },
-          responseText:
-            '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]'
+            fetchMock.restore();
+
+            /* prepare response */
+            fetchMock.mock(getTestURL('testURL'), {
+                status: 200,
+                body:
+                    '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]'
+            });
+
+            /* issue a change */
+            tempObj.hello = 'onPatchSent callback';
+
+            assert(onPatchSent.calledTwice);
+
+            /* wait for HTTP */
+            await sleep();
+            assert(onPatchReceived.calledOnce);
+
+            assert.deepEqual(onPatchReceived.lastCall.args[0], [
+                {
+                    op: 'replace',
+                    path: '/hello',
+                    value: 'onPatchReceived callback'
+                }
+            ]);
+
+            fetchMock.restore();
         });
+        it('should call onPatchReceived even if the patch was bad', async () => {
+            const onPatchReceived = sinon.spy();
+            let tempObj;
 
-        /* issue a change */
-        tempObj.hello = 'onPatchSent callback';
-        assert(onPatchSent.calledTwice);
+            fetchMock.mock(getTestURL('testURL'), {
+                status: 200,
+                body: '{"hello": "world"}'
+            });
 
-        /* wait for XHR */
-        setTimeout(() => {
-          assert(onPatchReceived.calledOnce);
-          assert.deepEqual(onPatchReceived.lastCall.args[0], [
-            {
-              op: 'replace',
-              path: '/hello',
-              value: 'onPatchReceived callback'
-            }
-          ]);
-          done();
-        }, 10);
-      }, 30);
+            new Palindrom({
+                remoteUrl: getTestURL('testURL'),
+                onStateReset: function(obj) {
+                    tempObj = obj;
+                },
+                onPatchReceived
+            });
+
+            await sleep();
+
+            assert.equal(
+                onPatchReceived.callCount,
+                0,
+                `onPatchReceived shouldn't be called now`
+            );
+
+            fetchMock.restore();
+
+            /* prepare response */
+            fetchMock.mock(getTestURL('testURL'), {
+                status: 200,
+                body:
+                    '[{"op":"replace", "path":"/hello", "value":' +
+                    (Number.MAX_SAFE_INTEGER + 1) +
+                    '}]'
+            });
+
+            /* issue a change */
+            tempObj.hello = 'onPatchSent callback';
+
+            /* wait for HTTP */
+            await sleep(10);
+
+            assert.equal(
+                onPatchReceived.callCount,
+                1,
+                `onPatchReceived should be called once now`
+            );
+            fetchMock.restore();
+        });
     });
-    it('should call onPatchReceived even if the patch was bad', done => {
-      moxios.stubRequest('http://house.of.cards/testURL', {
-        status: 200,
-        headers: { location: 'http://house.of.cards/testURL2' },
-        responseText: '{"hello": "world"}'
-      });
 
-      const onPatchReceived = sinon.spy();
-      let tempObj;
+    describe('WebSockets', function() {
+        it('should call onPatchSent and onPatchReceived callbacks when a patch is sent and received', async () => {
+            const server = new MockSocketServer(
+                getTestURL('testURL', false, true)
+            );
 
-      const palindrom = new Palindrom({
-        remoteUrl: 'http://house.of.cards/testURL',
-        onStateReset: function(obj) {
-          tempObj = obj;
-        },
-        onPatchReceived
-      });
+            /* prepare response */
+            server.on('message', patch => {
+                /* make sure a correct patch is sent to server */
+                assert.deepEqual(JSON.parse(patch), [
+                    {
+                        op: 'replace',
+                        path: '/hello',
+                        value: 'onPatchSent callback'
+                    }
+                ]);
+                /* respond */
+                server.send(
+                    '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]'
+                );
+            });
 
-      setTimeout(() => {
-        /* onPatchReceived, shouldn't be called now */
-        assert(onPatchReceived.notCalled);
+            const onPatchReceived = sinon.spy();
+            const onPatchSent = sinon.spy();
+            let tempObj;
 
-        /* prepare response */
-        moxios.stubRequest('http://house.of.cards/testURL2', {
-          status: 200,
-          headers: { Location: 'http://house.of.cards/testURL' },
-          responseText:
-            '[{"op":"replace", "path":"/hello", "value":' +
-            (Number.MAX_SAFE_INTEGER + 1) +
-            '}]'
+            fetchMock.mock(getTestURL('testURL'), {
+                status: 200,
+                body: '{"hello": "world"}'
+            });
+
+            new Palindrom({
+                useWebSocket: true,
+                remoteUrl: getTestURL('testURL'),
+                onStateReset: function(obj) {
+                    tempObj = obj;
+                },
+                onPatchReceived,
+                onPatchSent
+            });
+
+            /* wait for HTTP */
+            await sleep();
+
+            assert.equal(
+                onPatchReceived.callCount,
+                0,
+                `onPatchReceived shouldn't be called now`
+            );
+
+            /* onPatchSent, should be called now, for the initial request */
+            assert.equal(
+                onPatchSent.callCount,
+                1,
+                `onPatchSent should be called once`
+            );
+
+            tempObj.hello = 'onPatchSent callback';
+
+            assert.equal(
+                onPatchSent.callCount,
+                2,
+                'onPatchSent should be called twice'
+            );
+
+            await sleep(10);
+
+            assert.equal(
+                onPatchReceived.callCount,
+                1,
+                'onPatchReceived should be called once'
+            );
+
+
+            assert.deepEqual(onPatchReceived.lastCall.args[0], [
+                {
+                    op: 'replace',
+                    path: '/hello',
+                    value: 'onPatchReceived callback'
+                }
+            ]);
+            server.stop();
+            fetchMock.restore();
         });
-
-        /* issue a change */
-        tempObj.hello = 'onPatchSent callback';
-
-        /* wait for XHR */
-        setTimeout(() => {
-          assert(onPatchReceived.calledOnce);
-          done();
-        });
-      });
     });
-  });
 
-  describe('WebSockets', function() {
-    it('should call onPatchSent and onPatchReceived callbacks when a patch is sent and received', done => {
-      const server = new MockSocketServer(
-        'ws://house.of.cards/default/this_is_a_nice_url'
-      );
+    it('WebSocket - should call onPatchReceived even if the patch was bad', async () => {
+        const server = new MockSocketServer(getTestURL('testURL', false, true));
+        /* prepare response */
+        server.on('message', patch => {
+            /* make sure a correct patch is sent to server */
+            assert.deepEqual(JSON.parse(patch), [
+                { op: 'replace', path: '/hello', value: 'onPatchSent callback' }
+            ]);
 
-      moxios.stubRequest('http://house.of.cards/testURL', {
-        status: 200,
-        headers: { location: '/default/this_is_a_nice_url' },
-        responseText: '{"hello": "world"}'
-      });
+            /* respond */
+            server.send(
+                '[{"op":"replace", "path":"/hello", "value":' +
+                    (Number.MAX_SAFE_INTEGER + 1) +
+                    '}]'
+            );
+        });
 
-      /* prepare response */
-      server.on('message', patches => {
-        /* make sure a correct patch is sent to server */
-        assert.deepEqual(JSON.parse(patches), [
-          { op: 'replace', path: '/hello', value: 'onPatchSent callback' }
-        ]);
+        fetchMock.mock(getTestURL('testURL'), {
+            status: 200,
+            body: '{"hello": "Obj"}'
+        });
 
-        /* respond */
-        server.send(
-          '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]'
+        const onPatchReceived = sinon.spy();
+        let tempObj;
+
+        new Palindrom({
+            remoteUrl: getTestURL('testURL'),
+            onStateReset: function(obj) {
+                tempObj = obj;
+            },
+            useWebSocket: true,
+            onPatchReceived
+        });
+
+        /* wait for HTTP */
+        await sleep(10);
+
+        assert.equal(
+            onPatchReceived.callCount,
+            0,
+            `onPatchReceived shouldn't be called now`
         );
-      });
-
-      const onPatchReceived = sinon.spy();
-      const onPatchSent = sinon.spy();
-      let tempObj;
-
-      const palindrom = new Palindrom({
-        remoteUrl: 'http://house.of.cards/testURL',
-        onStateReset: function(obj) {
-          tempObj = obj;
-        },
-        useWebSocket: true,
-        onPatchReceived,
-        onPatchSent
-      });
-
-      setTimeout(() => {
-        /* onPatchReceived, shouldn't be called now */
-        assert(onPatchReceived.notCalled);
-
-        /* onPatchSent, should be called once now, the initial request */
-        assert(onPatchSent.calledOnce);
 
         /* issue a change */
         tempObj.hello = 'onPatchSent callback';
-        assert(onPatchSent.calledTwice);
 
-        /* wait for XHR */
-        setTimeout(() => {
-          assert(onPatchReceived.calledOnce);
-          assert.deepEqual(onPatchReceived.lastCall.args[0], [
-            {
-              op: 'replace',
-              path: '/hello',
-              value: 'onPatchReceived callback'
-            }
-          ]);
-          server.stop(done);
-        }, 10);
-      }, 10);
+        await sleep();
+
+        assert.equal(
+            onPatchReceived.callCount,
+            1,
+            `onPatchReceived should be called once now`
+        );
+        server.stop();
+        fetchMock.restore();
     });
-  });
-
-  it('should call onPatchReceived even if the patch was bad', done => {
-    const server = new MockSocketServer(
-      'ws://house.of.cards/default/this_is_a_nice_url'
-    );
-
-    moxios.stubRequest('http://house.of.cards/testURL', {
-      status: 200,
-      headers: { location: '/default/this_is_a_nice_url' },
-      responseText: '{"hello": "world"}'
-    });
-
-    /* prepare response */
-    server.on('message', patches => {
-      /* make sure a correct patch is sent to server */
-      assert.deepEqual(JSON.parse(patches), [
-        { op: 'replace', path: '/hello', value: 'onPatchSent callback' }
-      ]);
-
-      /* respond */
-      server.send(
-        '[{"op":"replace", "path":"/hello", "value":' +
-          (Number.MAX_SAFE_INTEGER + 1) +
-          '}]'
-      );
-    });
-
-    const onPatchReceived = sinon.spy();
-    let tempObj;
-
-    const palindrom = new Palindrom({
-      remoteUrl: 'http://house.of.cards/testURL',
-      onStateReset: function(obj) {
-        tempObj = obj;
-      },
-      useWebSocket: true,
-      onPatchReceived
-    });
-
-    setTimeout(() => {
-      /* onPatchReceived, shouldn't be called now */
-      assert(onPatchReceived.notCalled);
-
-      /* issue a change */
-      tempObj.hello = 'onPatchSent callback';
-
-      /* wait for XHR */
-      setTimeout(() => {
-        assert(onPatchReceived.calledOnce);
-        server.stop(done);
-      }, 10);
-    }, 10);
-  });
 });

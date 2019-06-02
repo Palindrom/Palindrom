@@ -1,12 +1,12 @@
-require('./specs/palindrom.callbacks.test');
-require('./specs/palindrom.test');
-require('./specs/palindrom.validate.test');
-require('./specs/palindrom.websockets.test');
-require('./specs/onPatchSentAndReceived.test');
-require('./specs/palindrom.errors.test');
-require('./specs/palindrom.ignore.defineProperty.test.js');
-require('./specs/palindrom.ignoreAdd.test');
-require('./specs/palindrom.filter.test');
+import './inject-mock-websocket';
+import './specs/palindrom.callbacks.test';
+import './specs/palindrom.test';
+import './specs/palindrom.validate.test';
+import './specs/palindrom.websockets.test';
+import './specs/onPatchSentAndReceived.test';
+import './specs/palindrom.errors.test';
+import './specs/palindrom.ignore.defineProperty.test.js';
+import './specs/palindrom.filter.test';
 
-require('./specs/dom/index');
-require('./specs/dom/ot'); //fixme: this does not clean up well, must be the last one
+import './specs/dom/index';
+import './specs/dom/ot'; //fixme: this does not clean up well, must be the last one

@@ -11,13 +11,13 @@
   ],
   "license": "MIT",
   "ignore": [
-    "lab/",
-    "test/",
-    "Gruntfile.js",
+    "src/*",
+    "docs/*",
+    "test/*",
+    ".npmignore",
+    ".travis.yml",
+    "bump-version.json",
+    "webpack.config.json",
     "node_modules"
-  ],
-  "devDependencies": {
-    "polymer": "*",
-    "palindrom-bunny": "Palindrom/palindrom-bunny"
-  }
+  ]
 }

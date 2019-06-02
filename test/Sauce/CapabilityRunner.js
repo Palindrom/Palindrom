@@ -34,7 +34,7 @@ function CapabilityRunner(caps) {
       .build();
 
     driver.get(
-      "http://localhost:8000/components/Palindrom/test/MochaSpecRunner.html"
+      "http://localhost:5000/test/MochaSpecRunner.html"
     );
 
     const symbols = { passed: "√", pending: "-", failed: "x" };
@@ -77,6 +77,7 @@ function CapabilityRunner(caps) {
         );
         if (spec.state === "failed") {
           hadErrored = 1;
+          console.log(`Spec "${spec.title}" failed, the error was`, spec.err, spec.err && spec.err.stack);
         }
       });
       console.log("");

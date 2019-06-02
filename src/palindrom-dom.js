@@ -3,11 +3,10 @@
  * (c) 2017 Joachim Wester
  * MIT license
  */
-const Palindrom = require('./palindrom');
+import Palindrom from './palindrom'
 
 class AbortError extends Error {};
 
-const PalindromDOM = (() => {
     /** scroll to coordiates and return if the scroll was successful */
     function attemptScroll(x, y) {
         scrollTo(x, y);
@@ -25,7 +24,7 @@ const PalindromDOM = (() => {
      * @extends {Palindrom}
      * @param {Object} [options] map of arguments. See README.md for description
      */
-    class PalindromDOM extends Palindrom {
+   export default class PalindromDOM extends Palindrom {
         constructor(options) {
             if (typeof options !== 'object') {
                 throw new Error(
@@ -35,6 +34,7 @@ const PalindromDOM = (() => {
             if (!options.remoteUrl) {
                 throw new Error('remoteUrl is required');
             }
+
             const onStateReset = options.onStateReset || options.callback;
             if (options.callback) {
                 console.warn(
@@ -53,6 +53,7 @@ const PalindromDOM = (() => {
             this.element = options.listenTo || document;
             this.clickHandler = this.clickHandler.bind(this);
             this.historyHandler = this.historyHandler.bind(this);
+
             this.morphUrlEventHandler = this.morphUrlEventHandler.bind(this);
             this._scrollWatcher = this._scrollWatcher.bind(this);
 
@@ -79,7 +80,7 @@ const PalindromDOM = (() => {
 
             this.element.addEventListener(
                 'palindrom-redirect-pushstate',
-                this.historyHandler
+                this.morphUrlEventHandler
             );
 
             this._watchingScroll();
@@ -107,7 +108,7 @@ const PalindromDOM = (() => {
             window.removeEventListener('popstate', this.historyHandler); //better here than in constructor, because Chrome triggers popstate on page load
             this.element.removeEventListener(
                 'palindrom-redirect-pushstate',
-                this.historyHandler
+                this.morphUrlEventHandler
             );
 
             this.element.removeEventListener(
@@ -122,7 +123,7 @@ const PalindromDOM = (() => {
          * @throws {Error} network error if occured or the `palindrom-before-redirect` was cancelled by calling event.preventDefault()
          * @fires Palindrom#palindrom-before-redirect
          * @fires Palindrom#palindrom-after-redirect
-         * @returns {Response} response (https://github.com/axios/axios#response-schema)
+         * @returns {Promise<Object>} JSON response
          */
         async getPatchUsingHTTP(href) {
             /**
@@ -148,15 +149,15 @@ const PalindromDOM = (() => {
                 );
             }
 
-            const response = await this.network.getPatchUsingHTTP(href);
-            let detail = { href, response };
+            const data = await this.network.getPatchUsingHTTP(href);
+            let detail = { href, data };
 
             /**
              * palindrom-after-redirect event
              *
              * @event Palindrom#palindrom-after-redirect
              * @type {CustomEvent}
-             * @property {Object} detail containing `href: String` and `response: Response (https://developer.mozilla.org/en-US/docs/Web/API/Response)`
+             * @property {Object} detail containing `href: String` and `data: Object`
              */
             const afterEvent = new CustomEvent('palindrom-after-redirect', {
                 detail,
@@ -164,7 +165,7 @@ const PalindromDOM = (() => {
             });
 
             this.element.dispatchEvent(afterEvent);
-            return response;
+            return data;
         }
 
         //TODO move fallback to window.location.href from PalindromNetworkChannel to here (PalindromDOM)
@@ -214,7 +215,7 @@ const PalindromDOM = (() => {
             const scrollY = window.scrollY;
             try {
                 const res = await this.getPatchUsingHTTP(url);
-                if (res && res.status < 500) {
+                if (res) {
                     // mark current state's scroll position
                     history.replaceState(
                         [scrollX, scrollY],
@@ -236,13 +237,12 @@ const PalindromDOM = (() => {
                 throw new Error(`HTTP request failed, error message: ${error.message}`);
             }
         }
-
         /**
          * Handles `palindrom-morph-url` event and channels its `detail.url` to `morphUrl`
          * @param {palindrom-morph-url Event} event
          */
         morphUrlEventHandler(event) {
-            this.morphUrl(event.detail.url);
+            return this.morphUrl(event.detail.url);
         }
 
         clickHandler(event) {
@@ -291,7 +291,6 @@ const PalindromDOM = (() => {
                 }
             }
         }
-
         async historyHandler(event) {
             await this.getPatchUsingHTTP(location.href);
             const [scrollX, scrollY] = event.state || [0, 0];
@@ -305,6 +304,9 @@ const PalindromDOM = (() => {
             // if this handler is called && we're not attemptingScroll, then the user has scrolled!
             const scrollHandler = () => (userHadScrolled = !this._attemptingScroll);
             window.addEventListener('scroll', scrollHandler);
+
+            // give the user a chance to cancel history scrolling by scrolling on their own (eg momentum mouse wheel)
+            await sleep(30);
 
             for (let i = 0; i < 30 && !userHadScrolled; i++) {
                 // prevent our scroll attempt from setting `hadScrolled`
@@ -346,10 +348,3 @@ const PalindromDOM = (() => {
             );
         }
     }
-
-    return PalindromDOM;
-})();
-
-module.exports = PalindromDOM;
-module.exports.default = PalindromDOM;
-module.exports.__esModule = true;

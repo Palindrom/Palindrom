@@ -1,78 +1,54 @@
-global.WebSocket = require("mock-socket").WebSocket;
+import Palindrom from '../../src/palindrom';
+import assert from 'assert';
+import fetchMock from 'fetch-mock';
+import sinon from 'sinon';
+import { sleep, getTestURL } from '../utils';
 
-const Palindrom = require("../../src/palindrom");
-const assert = require("assert");
-const moxios = require("moxios");
-const sinon = require("sinon");
-
-describe("Callbacks", () => {
-  beforeEach(() => {
-    moxios.install();
-  });
-  afterEach(() => {
-    moxios.uninstall();
-  });
-
-  it("should call onLocalChange callback for outgoing patches", done => {
-    moxios.stubRequest("http://house.of.cards/testURL", {
-      status: 200,
-      headers: { Location: "http://house.of.cards/testURL" },
-      responseText: '{"hello": "world"}'
+describe('Callbacks', () => {
+    beforeEach(() => {
+        fetchMock.mock(getTestURL('testURL'), {
+            status: 200,
+            body: '{"hello": "world"}'
+        });
+    });
+    afterEach(function() {
+        fetchMock.restore();
     });
 
-    const sentSpy = sinon.spy();
-    let tempObj;
+    it('should call onLocalChange callback for an outgoing patch', async () => {
+        const sentSpy = sinon.spy();
+        let tempObj;
 
-    const palindrom = new Palindrom({
-      remoteUrl: "http://house.of.cards/testURL",
-      onLocalChange: sentSpy,
-      onStateReset: function(obj) {
-        tempObj = obj;
-      }
-    });
+        new Palindrom({
+            remoteUrl: getTestURL('testURL'),
+            onLocalChange: sentSpy,
+            onStateReset: function(obj) {
+                tempObj = obj;
+            }
+        });
 
-    setTimeout(
-      () => {
+        await sleep();
+
         /* onLocalChange shouldn't be called now */
         assert(sentSpy.notCalled);
 
         /* issue a change */
-        tempObj.hello = "onLocalChange callback";
+        tempObj.hello = 'onLocalChange callback';
 
         assert(sentSpy.calledOnce);
         assert.deepEqual(sentSpy.lastCall.args[0], [
-          { op: "replace", path: "/hello", value: "onLocalChange callback" }
+            { op: 'replace', path: '/hello', value: 'onLocalChange callback' }
         ]);
-        done();
-      },
-      30
-    );
-  });
-
-  it("should call onStateReset callback for applied patches on root (initial state)", done => {
-    moxios.stubRequest("http://house.of.cards/testURL", {
-      status: 200,
-      headers: { Location: "http://house.of.cards/testURL" },
-      responseText: '{"hello": "world"}'
     });
 
-    const receivedSpy = sinon.spy();
-    let tempObj;
+    it('should call onStateReset callback for an applied patch on root (initial state)', async () => {
+        let stateWasReset = false;
+        const palindrom = new Palindrom({
+            remoteUrl: getTestURL('testURL'),
+            onStateReset: () => (stateWasReset = true)
+        });
 
-    const palindrom = new Palindrom({
-      remoteUrl: "http://house.of.cards/testURL",
-      onStateReset: function(obj) {
-        tempObj = obj;
-      },
-      onStateReset: receivedSpy
+        await sleep();
+        assert.equal(stateWasReset, true, 'stateWasReset should be called');
     });
-
-    setTimeout(
-      () => {
-        assert(receivedSpy.calledOnce);
-        done();
-      },
-      10
-    );
-  });
 });
