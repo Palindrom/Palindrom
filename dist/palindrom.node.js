@@ -1,4 +1,4 @@
-/*! Palindrom, version: 6.0.1 */
+/*! Palindrom, version: 6.1.0 */
 exports["Palindrom"] =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -6020,7 +6020,7 @@ module.exports = __webpack_require__(49).version;
 /* 49 */
 /***/ (function(module) {
 
-module.exports = {"_args":[["websocket@1.0.26","D:\\repos\\web\\Palindrom"]],"_from":"websocket@1.0.26","_id":"websocket@1.0.26","_inBundle":false,"_integrity":"sha512-fjcrYDPIQxpTnqFQ9JjxUQcdvR89MFAOjPBlF+vjOt49w/XW4fJknUoMz/mDIn2eK1AdslVojcaOxOqyZZV8rw==","_location":"/websocket","_phantomChildren":{},"_requested":{"type":"version","registry":true,"raw":"websocket@1.0.26","name":"websocket","escapedName":"websocket","rawSpec":"1.0.26","saveSpec":null,"fetchSpec":"1.0.26"},"_requiredBy":["/"],"_resolved":"https://registry.npmjs.org/websocket/-/websocket-1.0.26.tgz","_spec":"1.0.26","_where":"D:\\repos\\web\\Palindrom","author":{"name":"Brian McKelvey","email":"brian@worlize.com","url":"https://www.worlize.com/"},"browser":"lib/browser.js","bugs":{"url":"https://github.com/theturtle32/WebSocket-Node/issues"},"config":{"verbose":false},"contributors":[{"name":"Iñaki Baz Castillo","email":"ibc@aliax.net","url":"http://dev.sipdoc.net"}],"dependencies":{"debug":"^2.2.0","nan":"^2.3.3","typedarray-to-buffer":"^3.1.2","yaeti":"^0.0.6"},"description":"Websocket Client & Server Library implementing the WebSocket protocol as specified in RFC 6455.","devDependencies":{"buffer-equal":"^1.0.0","faucet":"^0.0.1","gulp":"git+https://github.com/gulpjs/gulp.git#4.0","gulp-jshint":"^2.0.4","jshint":"^2.0.0","jshint-stylish":"^2.2.1","tape":"^4.0.1"},"directories":{"lib":"./lib"},"engines":{"node":">=0.10.0"},"homepage":"https://github.com/theturtle32/WebSocket-Node","keywords":["websocket","websockets","socket","networking","comet","push","RFC-6455","realtime","server","client"],"license":"Apache-2.0","main":"index","name":"websocket","repository":{"type":"git","url":"git+https://github.com/theturtle32/WebSocket-Node.git"},"scripts":{"gulp":"gulp","install":"(node-gyp rebuild 2> builderror.log) || (exit 0)","test":"faucet test/unit"},"version":"1.0.26"};
+module.exports = {"_args":[["websocket@1.0.26","D:\\repos\\web\\palindrom"]],"_from":"websocket@1.0.26","_id":"websocket@1.0.26","_inBundle":false,"_integrity":"sha512-fjcrYDPIQxpTnqFQ9JjxUQcdvR89MFAOjPBlF+vjOt49w/XW4fJknUoMz/mDIn2eK1AdslVojcaOxOqyZZV8rw==","_location":"/websocket","_phantomChildren":{},"_requested":{"type":"version","registry":true,"raw":"websocket@1.0.26","name":"websocket","escapedName":"websocket","rawSpec":"1.0.26","saveSpec":null,"fetchSpec":"1.0.26"},"_requiredBy":["/"],"_resolved":"https://registry.npmjs.org/websocket/-/websocket-1.0.26.tgz","_spec":"1.0.26","_where":"D:\\repos\\web\\palindrom","author":{"name":"Brian McKelvey","email":"brian@worlize.com","url":"https://www.worlize.com/"},"browser":"lib/browser.js","bugs":{"url":"https://github.com/theturtle32/WebSocket-Node/issues"},"config":{"verbose":false},"contributors":[{"name":"Iñaki Baz Castillo","email":"ibc@aliax.net","url":"http://dev.sipdoc.net"}],"dependencies":{"debug":"^2.2.0","nan":"^2.3.3","typedarray-to-buffer":"^3.1.2","yaeti":"^0.0.6"},"description":"Websocket Client & Server Library implementing the WebSocket protocol as specified in RFC 6455.","devDependencies":{"buffer-equal":"^1.0.0","faucet":"^0.0.1","gulp":"git+https://github.com/gulpjs/gulp.git#4.0","gulp-jshint":"^2.0.4","jshint":"^2.0.0","jshint-stylish":"^2.2.1","tape":"^4.0.1"},"directories":{"lib":"./lib"},"engines":{"node":">=0.10.0"},"homepage":"https://github.com/theturtle32/WebSocket-Node","keywords":["websocket","websockets","socket","networking","comet","push","RFC-6455","realtime","server","client"],"license":"Apache-2.0","main":"index","name":"websocket","repository":{"type":"git","url":"git+https://github.com/theturtle32/WebSocket-Node.git"},"scripts":{"gulp":"gulp","install":"(node-gyp rebuild 2> builderror.log) || (exit 0)","test":"faucet test/unit"},"version":"1.0.26"};
 
 /***/ }),
 /* 50 */
@@ -8137,6 +8137,9 @@ class palindrom_network_channel_PalindromNetworkChannel {
                 'application/json-patch+json',
                 msg
             );
+
+            //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
+            //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
             this.onReceive(data, url, method);
         }
         return this;
@@ -8145,7 +8148,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
     /**
      * Callback function that will be called once message from remote comes.
      * @param {JSONPatch} data single parsed JSON Patch (array of operations objects) that was send by remote.
-     * @param {String} url from which the chnage was issued
+     * @param {String} url from which the change was issued
      * @param {String} method HTTP method which resulted in this change ('GET' or 'PATCH') or 'WS' if came as Web Socket message
      */
     onReceive() {}
@@ -8208,6 +8211,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
             );
         };
         this._ws.onclose = event => {
+            //TODO none of the tests enters here
             this.onStateChange(
                 this._ws.readyState,
                 upgradeURL,
@@ -8267,6 +8271,9 @@ class palindrom_network_channel_PalindromNetworkChannel {
             null,
             true
         );
+
+        //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
+        //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
         this.onReceive(data, href, method);
         return data;
     }
@@ -8596,7 +8603,7 @@ class NoQueue {
 
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '6.0.1';
+const palindromVersion = '6.1.0';
 
 if (typeof palindrom_global === 'undefined') {
     if (typeof window !== 'undefined') {
@@ -8881,7 +8888,7 @@ class palindrom_Palindrom {
     handleConnectionError() {
         this.heartbeat.stop();
         this.reconnector.triggerReconnection();
-        this.onConnectionError();
+        this.onConnectionError(); //TODO missing `PalindromError` according to docs
     }
 
     /**
@@ -8902,10 +8909,12 @@ class palindrom_Palindrom {
      * @see PalindromNetworkChannel.onReceive
      * 
      * @param {JSONPatch} data single parsed JSON Patch (array of operations objects) that was send by remote.
-     * @param {String} url from which the chnage was issued
+     * @param {String} url from which the change was issued
      * @param {String} method HTTP method which resulted in this change ('GET' or 'PATCH') or 'WS' if came as Web Socket message
      */
     handleRemoteChange(data, url, method) {
+        //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
+        //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
         this.onPatchReceived(data, url, method);
 
         this.heartbeat.notifyReceive();

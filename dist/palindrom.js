@@ -1,4 +1,4 @@
-/*! Palindrom, version: 6.0.1 */
+/*! Palindrom, version: 6.1.0 */
 var Palindrom =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -1121,6 +1121,9 @@ class PalindromNetworkChannel {
                 'application/json-patch+json',
                 msg
             );
+
+            //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
+            //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
             this.onReceive(data, url, method);
         }
         return this;
@@ -1129,7 +1132,7 @@ class PalindromNetworkChannel {
     /**
      * Callback function that will be called once message from remote comes.
      * @param {JSONPatch} data single parsed JSON Patch (array of operations objects) that was send by remote.
-     * @param {String} url from which the chnage was issued
+     * @param {String} url from which the change was issued
      * @param {String} method HTTP method which resulted in this change ('GET' or 'PATCH') or 'WS' if came as Web Socket message
      */
     onReceive() {}
@@ -1192,6 +1195,7 @@ class PalindromNetworkChannel {
             );
         };
         this._ws.onclose = event => {
+            //TODO none of the tests enters here
             this.onStateChange(
                 this._ws.readyState,
                 upgradeURL,
@@ -1251,6 +1255,9 @@ class PalindromNetworkChannel {
             null,
             true
         );
+
+        //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
+        //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
         this.onReceive(data, href, method);
         return data;
     }
@@ -2629,7 +2636,7 @@ class NoQueue {
 
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '6.0.1';
+const palindromVersion = '6.1.0';
 
 if (typeof global === 'undefined') {
     if (typeof window !== 'undefined') {
@@ -2914,7 +2921,7 @@ class palindrom_Palindrom {
     handleConnectionError() {
         this.heartbeat.stop();
         this.reconnector.triggerReconnection();
-        this.onConnectionError();
+        this.onConnectionError(); //TODO missing `PalindromError` according to docs
     }
 
     /**
@@ -2935,10 +2942,12 @@ class palindrom_Palindrom {
      * @see PalindromNetworkChannel.onReceive
      * 
      * @param {JSONPatch} data single parsed JSON Patch (array of operations objects) that was send by remote.
-     * @param {String} url from which the chnage was issued
+     * @param {String} url from which the change was issued
      * @param {String} method HTTP method which resulted in this change ('GET' or 'PATCH') or 'WS' if came as Web Socket message
      */
     handleRemoteChange(data, url, method) {
+        //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
+        //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
         this.onPatchReceived(data, url, method);
 
         this.heartbeat.notifyReceive();
