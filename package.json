@@ -59,7 +59,8 @@
     "serve": "^11.0.0",
     "sinon": "^7.3.2",
     "webpack": "^4.32.0",
-    "webpack-cli": "^3.2.3"
+    "webpack-cli": "^3.2.3",
+    "webpack-node-externals": "^1.7.2"
   },
   "scripts": {
     "version": "node ./bump-version.js && webpack && git add -A",

@@ -1,5 +1,6 @@
 const webpack = require('webpack');
 const version = require('./package.json').version;
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = [
     {
@@ -50,7 +51,8 @@ module.exports = [
         output: {
             filename: 'palindrom.node.js',
             library: 'Palindrom',
-            libraryTarget: 'commonjs'
+            libraryTarget: 'commonjs-module',
+            libraryExport: 'default'
         },
         mode: 'production',
         optimization: {
@@ -61,7 +63,7 @@ module.exports = [
             extensions: ['.js']
         },
         target: 'node',
-        externals: { './URLShim': 'URL' },
+        externals: [nodeExternals()],
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
     {
