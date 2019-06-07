@@ -6372,7 +6372,7 @@ class PalindromError extends Error {
     }
 }
 
-class palindrom_errors_PalindromConnectionError extends PalindromError {
+class PalindromConnectionError extends PalindromError {
     /**
      *
      * @param {String} message the message that describes the error
@@ -8183,7 +8183,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
                 var parsedMessage = JSON.parse(event.data);
             } catch (e) {
                 this.onFatalError(
-                    new palindrom_errors_PalindromConnectionError(
+                    new PalindromConnectionError(
                         event.data,
                         SERVER,
                         this._ws.url,
@@ -8207,7 +8207,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
             ].join('\n');
 
             this.onFatalError(
-                new palindrom_errors_PalindromConnectionError(message, CLIENT, upgradeURL, 'WS')
+                new PalindromConnectionError(message, CLIENT, upgradeURL, 'WS')
             );
         };
         this._ws.onclose = event => {
@@ -8229,7 +8229,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
 
             if (event.reason) {
                 this.onFatalError(
-                    new palindrom_errors_PalindromConnectionError(
+                    new PalindromConnectionError(
                         message,
                         SERVER,
                         upgradeURL,
@@ -8238,7 +8238,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
                 );
             } else if (!event.wasClean) {
                 this.onConnectionError(
-                    new palindrom_errors_PalindromConnectionError(
+                    new PalindromConnectionError(
                         message,
                         SERVER,
                         upgradeURL,
@@ -8328,7 +8328,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
         ].join('\n');
 
         this.onFatalError(
-            new palindrom_errors_PalindromConnectionError(message, CLIENT, url, method)
+            new PalindromConnectionError(message, CLIENT, url, method)
         );
     }
 
@@ -8478,6 +8478,7 @@ function Reconnector(
 }
 
 // CONCATENATED MODULE: ./src/heartbeat.js
+
 const heartbeat_CLIENT = 'Client';
 /**
  * Guarantees some communication to server and monitors responses for timeouts.
@@ -8884,11 +8885,12 @@ class palindrom_Palindrom {
 
     /**
      * Handle an error which is probably caused by random disconnection
+     * @param {PalindromConnectionError} palindromError
      */
-    handleConnectionError() {
+    handleConnectionError(palindromError) {
         this.heartbeat.stop();
         this.reconnector.triggerReconnection();
-        this.onConnectionError(); //TODO missing `PalindromError` according to docs
+        this.onConnectionError(palindromError);
     }
 
     /**

@@ -297,11 +297,12 @@ export default class Palindrom {
 
     /**
      * Handle an error which is probably caused by random disconnection
+     * @param {PalindromConnectionError} palindromError
      */
-    handleConnectionError() {
+    handleConnectionError(palindromError) {
         this.heartbeat.stop();
         this.reconnector.triggerReconnection();
-        this.onConnectionError(); //TODO missing `PalindromError` according to docs
+        this.onConnectionError(palindromError);
     }
 
     /**
