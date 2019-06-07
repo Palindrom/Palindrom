@@ -1342,7 +1342,7 @@ class PalindromNetworkChannel {
 
         this.onSend(data, url, method);
 
-        let isomorphicFetch = typeof global !== 'undefined' ?  global.fetch : node_fetch__WEBPACK_IMPORTED_MODULE_3___default.a;
+        let isomorphicFetch = typeof global !== 'undefined' && global.fetch || node_fetch__WEBPACK_IMPORTED_MODULE_3___default.a;
 
         const response = await isomorphicFetch(url, config);
         const dataPromise = response.json();

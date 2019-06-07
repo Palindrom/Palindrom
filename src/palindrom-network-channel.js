@@ -331,7 +331,7 @@ export default class PalindromNetworkChannel {
 
         this.onSend(data, url, method);
 
-        let isomorphicFetch = typeof global !== 'undefined' ?  global.fetch : nodeFetch;
+        let isomorphicFetch = typeof global !== 'undefined' && global.fetch || nodeFetch;
 
         const response = await isomorphicFetch(url, config);
         const dataPromise = response.json();
