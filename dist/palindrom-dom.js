@@ -2511,6 +2511,7 @@ function Reconnector(
 }
 
 // CONCATENATED MODULE: ./src/heartbeat.js
+
 const CLIENT = 'Client';
 /**
  * Guarantees some communication to server and monitors responses for timeouts.
@@ -2554,7 +2555,7 @@ function Heartbeat(
         scheduledError = setTimeout(() => {
             scheduledError = null;
             onError(
-                new PalindromConnectionError(
+                new palindrom_errors["a" /* PalindromConnectionError */](
                     "Timeout has passed and response hasn't arrived",
                     CLIENT,
                     this.remoteUrl,
@@ -2916,11 +2917,12 @@ class palindrom_Palindrom {
 
     /**
      * Handle an error which is probably caused by random disconnection
+     * @param {PalindromConnectionError} palindromError
      */
-    handleConnectionError() {
+    handleConnectionError(palindromError) {
         this.heartbeat.stop();
         this.reconnector.triggerReconnection();
-        this.onConnectionError(); //TODO missing `PalindromError` according to docs
+        this.onConnectionError(palindromError);
     }
 
     /**

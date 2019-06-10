@@ -1,3 +1,4 @@
+import { PalindromConnectionError } from './palindrom-errors';
 const CLIENT = 'Client';
 /**
  * Guarantees some communication to server and monitors responses for timeouts.
