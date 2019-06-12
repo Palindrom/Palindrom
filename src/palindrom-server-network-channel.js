@@ -8,17 +8,6 @@ import nodeFetch from 'node-fetch';
 const CLIENT = 'Client';
 const SERVER = 'Server';
 
-/**
- * Replaces http and https to ws and wss in a URL and returns it as a string.
- * @param  {String} remoteUrl HTTP remote address
- * @return {String}           WS address
- */
-function toWebSocketURL(remoteUrl) {
-    /* replace 'http' strictly in the beginning of the string,
-    this covers http and https */
-    return remoteUrl.replace(/^http/i, 'ws');
-}
-
 export default class PalindromServerNetworkChannel {
     constructor(
         palindrom,
