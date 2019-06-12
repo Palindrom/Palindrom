@@ -50,9 +50,9 @@ export default class Palindrom {
                 'Palindrom constructor requires an object argument.'
             );
         }
-        // if (!options.remoteUrl) {
-        //     throw new TypeError('remoteUrl is required');
-        // }
+        if (!options.runAsServer && !options.remoteUrl) {
+            throw new TypeError('remoteUrl is required');
+        }
 
         if (options.callback) {
             console.warn(
@@ -109,7 +109,7 @@ export default class Palindrom {
 
         this.network = new (options.runAsServer? PalindromServerNetworkChannel : PalindromNetworkChannel)(
             this, // palindrom instance TODO: to be removed, used for error reporting
-            // options.remoteUrl,
+            options.remoteUrl,
             options.useWebSocket || false, // useWebSocket
             this.handleRemoteChange.bind(this), //onReceive
             this.onPatchSent.bind(this), //onSend,

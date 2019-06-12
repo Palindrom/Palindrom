@@ -22,7 +22,7 @@ function toWebSocketURL(remoteUrl) {
 export default class PalindromServerNetworkChannel {
     constructor(
         palindrom,
-        // remoteUrl,
+        remoteUrl, //TODO this argument is not used in PalindromServerNetworkChannel. Refactor both channels to not need redundant parameters
         useWebSocket,
         onReceive,
         onSend,
