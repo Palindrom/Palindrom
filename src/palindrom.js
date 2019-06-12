@@ -162,11 +162,22 @@ export default class Palindrom {
                 this.validateAndApplySequence.bind(this)
             );
         }
-        this._connectToRemote(options.obj);
+        this.obj = options.obj;
+        this._connectToRemote();
     }
+    /**
+     * Prepares the initial state by fetching it (if client), setting the queues and observing (regardless if client or server)
+     * @param  {Array<JSONPatch>}  [reconnectionPendingData=null] Patches already sent to the remote, but not necesarily acknowledged
+     */
     async _connectToRemote(reconnectionPendingData = null) {
         this.heartbeat.stop();
-        const json = await this.network._establish(reconnectionPendingData);
+        let json;
+        if (this.network instanceof PalindromNetworkChannel) {
+            json = await this.network._establish(reconnectionPendingData);
+        }
+        else {
+            json = this.obj;
+        }
         this.reconnector.stopReconnecting();
 
         if (this.debug) {
