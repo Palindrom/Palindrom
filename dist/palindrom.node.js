@@ -573,21 +573,10 @@ and will import https://www.npmjs.com/package/websocket in node */
 const palindrom_server_network_channel_CLIENT = 'Client';
 const palindrom_server_network_channel_SERVER = 'Server';
 
-/**
- * Replaces http and https to ws and wss in a URL and returns it as a string.
- * @param  {String} remoteUrl HTTP remote address
- * @return {String}           WS address
- */
-function palindrom_server_network_channel_toWebSocketURL(remoteUrl) {
-    /* replace 'http' strictly in the beginning of the string,
-    this covers http and https */
-    return remoteUrl.replace(/^http/i, 'ws');
-}
-
 class palindrom_server_network_channel_PalindromServerNetworkChannel {
     constructor(
         palindrom,
-        // remoteUrl,
+        remoteUrl, //TODO this argument is not used in PalindromServerNetworkChannel. Refactor both channels to not need redundant parameters
         useWebSocket,
         onReceive,
         onSend,
@@ -639,23 +628,6 @@ class palindrom_server_network_channel_PalindromServerNetworkChannel {
                 return useWebSocket;
             }
         });
-    }
-
-    /**
-     * Fetches initial state from server using GET request,
-     * or fetches new state after reconnection using PATCH request if any `reconnectionPendingData` given.
-     * @param  {Array<JSONPatch>}  [reconnectionPendingData=null] Patches already sent to the remote, but not necesarily acknowledged
-     * @return {Promise<Object>}                           Promise for new state of the synced object.
-     */
-    async _establish(reconnectionPendingData = null) {
-        // const data = reconnectionPendingData ?
-        //     await this._fetch('PATCH', this.remoteUrl.href + '/reconnect', 'application/json', JSON.stringify(reconnectionPendingData)) :
-        //     await this._fetch('GET', this.remoteUrl.href, 'application/json', null);
-        const data = reconnectionPendingData;
-        if (this.useWebSocket) {
-            this.webSocketUpgrade(this.onSocketOpened);
-        }
-        return data;
     }
 
     /**
@@ -1194,9 +1166,9 @@ class palindrom_Palindrom {
                 'Palindrom constructor requires an object argument.'
             );
         }
-        // if (!options.remoteUrl) {
-        //     throw new TypeError('remoteUrl is required');
-        // }
+        if (!options.runAsServer && !options.remoteUrl) {
+            throw new TypeError('remoteUrl is required');
+        }
 
         if (options.callback) {
             console.warn(
@@ -1253,7 +1225,7 @@ class palindrom_Palindrom {
 
         this.network = new (options.runAsServer? palindrom_server_network_channel_PalindromServerNetworkChannel : palindrom_network_channel_PalindromNetworkChannel)(
             this, // palindrom instance TODO: to be removed, used for error reporting
-            // options.remoteUrl,
+            options.remoteUrl,
             options.useWebSocket || false, // useWebSocket
             this.handleRemoteChange.bind(this), //onReceive
             this.onPatchSent.bind(this), //onSend,
@@ -1306,11 +1278,22 @@ class palindrom_Palindrom {
                 this.validateAndApplySequence.bind(this)
             );
         }
-        this._connectToRemote(options.obj);
+        this.obj = options.obj;
+        this._connectToRemote();
     }
+    /**
+     * Prepares the initial state by fetching it (if client), setting the queues and observing (regardless if client or server)
+     * @param  {Array<JSONPatch>}  [reconnectionPendingData=null] Patches already sent to the remote, but not necesarily acknowledged
+     */
     async _connectToRemote(reconnectionPendingData = null) {
         this.heartbeat.stop();
-        const json = await this.network._establish(reconnectionPendingData);
+        let json;
+        if (this.network instanceof palindrom_network_channel_PalindromNetworkChannel) {
+            json = await this.network._establish(reconnectionPendingData);
+        }
+        else {
+            json = this.obj;
+        }
         this.reconnector.stopReconnecting();
 
         if (this.debug) {
