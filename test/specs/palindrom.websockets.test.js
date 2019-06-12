@@ -1,6 +1,6 @@
 import { Server as MockSocketServer } from 'mock-socket';
 import Palindrom from '../../src/palindrom';
-import assert from 'assert';
+import chai, { expect, assert } from 'chai';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { PalindromConnectionError } from '../../src/palindrom-errors';
@@ -195,13 +195,14 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
 });
 describe('Before HTTP connection is established', () => {
     let server;
+    beforeEach(() => {
+        server = new MockSocketServer(getTestURL('testURL/koko', false, true));
+    });
     afterEach(() => {
         fetchMock.restore();
         server.stop();
     });
     it("shouldn't start a socket connection", async () => {
-        server = new MockSocketServer(getTestURL('testURL/koko', false, true));
-
         const remoteUrl = getTestURL('testURL/koko');
         let everConnected = false;
 
@@ -224,7 +225,6 @@ describe('Before HTTP connection is established', () => {
     });
 
     it("shouldn't send any change a patch using WebSocket", async () => {
-        server = new MockSocketServer(getTestURL('testURL/koko', false, true));
         const messages = [];
 
         const remoteUrl = getTestURL('testURL/koko');
@@ -368,6 +368,41 @@ describe('Sockets events', () => {
                 value: 'Omar'
             });
         });
+
+        it('should call onConnectionError event if there is no response after `pingIntervalS`', async () => {
+            const connectionErrorSpy = sinon.spy();
+
+            server = new MockSocketServer(
+                getTestURL('testURL/koko', false, true)
+            );
+
+            const remoteUrl = getTestURL('testURL/koko');
+
+            fetchMock.mock(remoteUrl, {
+                status: 200,
+                body: '{"hello": "world"}'
+            });
+
+            var palindrom = new Palindrom({
+                remoteUrl,
+                onConnectionError: connectionErrorSpy,
+                pingIntervalS: 0.5,
+                useWebSocket: true
+            });
+
+            /* wait for HTTP & heartbeat */
+            
+            await sleep(1200);
+
+            /* onConnectionError should be called once now */
+            assert(connectionErrorSpy.calledOnce);
+            const argument = connectionErrorSpy.getCall(0).args[0];
+            expect(argument).to.be.an.instanceof(PalindromConnectionError);
+            expect(argument).to.have.property('message').that.match(/timeout/i);
+            expect(argument).to.have.property('side', "Client");
+        });
+
+        
 
         it('should send a patch over HTTP before ws.readyState is OPENED, and over WebSocket after ws.readyState is OPENED', async () => {
             server = new MockSocketServer(
