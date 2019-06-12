@@ -19,27 +19,31 @@ function toWebSocketURL(remoteUrl) {
     return remoteUrl.replace(/^http/i, 'ws');
 }
 
-export default class PalindromNetworkChannel {
+export default class PalindromServerNetworkChannel {
     constructor(
         palindrom,
-        remoteUrl,
+        // remoteUrl,
         useWebSocket,
         onReceive,
         onSend,
         onConnectionError,
         onSocketOpened,
         onFatalError,
-        onStateChange
+        onStateChange,
+        wsServer,
+        httpServer
     ) {
         // TODO(tomalec): to be removed once we will achieve better separation of concerns
         this.palindrom = palindrom;
+        this.wsServer = wsServer;
+        this.httpServer = httpServer;
 
-        if (typeof window !== 'undefined' && window.location) {
-            this.remoteUrl = new URL(remoteUrl, window.location.href);
-        } else {
-            // in Node, URL is absolute
-            this.remoteUrl = new URL(remoteUrl);
-        }
+        // if (typeof window !== 'undefined' && window.location) {
+        //     this.remoteUrl = new URL(remoteUrl, window.location.href);
+        // } else {
+        //     // in Node, URL is absolute
+        //     this.remoteUrl = new URL(remoteUrl);
+        // }
 
         onReceive && (this.onReceive = onReceive);
         onSend && (this.onSend = onSend);
@@ -65,7 +69,7 @@ export default class PalindromNetworkChannel {
                     }
                     // define wsUrl if needed
                 } else if (!this.wsUrl) {
-                    this.wsUrl = toWebSocketURL(this.remoteUrl.href);
+                    // this.wsUrl = toWebSocketURL(this.remoteUrl.href);
                 }
                 return useWebSocket;
             }
@@ -79,10 +83,10 @@ export default class PalindromNetworkChannel {
      * @return {Promise<Object>}                           Promise for new state of the synced object.
      */
     async _establish(reconnectionPendingData = null) {
-        const data = reconnectionPendingData ?
-            await this._fetch('PATCH', this.remoteUrl.href + '/reconnect', 'application/json', JSON.stringify(reconnectionPendingData)) :
-            await this._fetch('GET', this.remoteUrl.href, 'application/json', null);
-
+        // const data = reconnectionPendingData ?
+        //     await this._fetch('PATCH', this.remoteUrl.href + '/reconnect', 'application/json', JSON.stringify(reconnectionPendingData)) :
+        //     await this._fetch('GET', this.remoteUrl.href, 'application/json', null);
+        const data = reconnectionPendingData;
         if (this.useWebSocket) {
             this.webSocketUpgrade(this.onSocketOpened);
         }
@@ -93,7 +97,7 @@ export default class PalindromNetworkChannel {
      * Send any text message by currently established channel
      * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
      * @param  {JSONPatch} patch message to be sent
-     * @return {PalindromNetworkChannel}     self
+     * @return {PalindromServerNetworkChannel}     self
      */
     async send(patch) {
         const msg = JSON.stringify(patch);
@@ -102,18 +106,18 @@ export default class PalindromNetworkChannel {
             this._ws.send(msg);
             this.onSend(msg, this._ws.url,'WS');
         } else {
-            const url = this.remoteUrl.href;
-            const method = 'PATCH';
-            const data = await this._fetch(
-                method,
-                url,
-                'application/json-patch+json',
-                msg
-            );
+            // const url = this.remoteUrl.href;
+            // const method = 'PATCH';
+            // const data = await this._fetch(
+            //     method,
+            //     url,
+            //     'application/json-patch+json',
+            //     msg
+            // );
 
-            //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
-            //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
-            this.onReceive(data, url, method);
+            // //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
+            // //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
+            // this.onReceive(data, url, method);
         }
         return this;
     }
@@ -139,87 +143,101 @@ export default class PalindromNetworkChannel {
      * @returns {WebSocket} created WebSocket
      */
     webSocketUpgrade(onSocketOpenCallback) {
-        this.wsUrl = toWebSocketURL(this.remoteUrl.href);
+        // this.wsUrl = toWebSocketURL(this.remoteUrl.href);
         const upgradeURL = this.wsUrl;
 
         this.closeConnection();
         // in node, WebSocket will have `w3cwebsocket` prop. In the browser it won't
 
         const UsedSocket = WebSocket.w3cwebsocket || WebSocket;
-        this._ws = new UsedSocket(upgradeURL);
-        this._ws.onopen = event => {
-            this.onStateChange(this._ws.readyState, upgradeURL);
-            onSocketOpenCallback && onSocketOpenCallback(event);
-        };
-        this._ws.onmessage = event => {
-            try {
-                var parsedMessage = JSON.parse(event.data);
-            } catch (e) {
+
+        this.wsServer.on('connection', (ws, request) => {
+            this._ws = ws;
+            ws.protocol = "Palindrom.6.1";
+
+            
+            this.onStateChange(ws.readyState, upgradeURL);
+            onSocketOpenCallback && onSocketOpenCallback(ws, request);
+
+
+            ws.onmessage = event => {
+                try {
+                    var parsedMessage = JSON.parse(event.data);
+                } catch (e) {
+                    this.onFatalError(
+                        new PalindromConnectionError(
+                            event.data,
+                            SERVER,
+                            ws.url,
+                            'WS'
+                        )
+                    );
+                    return;
+                }
+                this.onReceive(parsedMessage, ws.url, 'WS');
+            };
+
+            ws.onerror = event => {
+                this.onStateChange(ws.readyState, upgradeURL, event.data);
+    
+                if (!this.useWebSocket) {
+                    return;
+                }
+    
+                const message = [
+                    'WebSocket connection could not be made',
+                    'readyState: ' + ws.readyState
+                ].join('\n');
+    
                 this.onFatalError(
-                    new PalindromConnectionError(
-                        event.data,
-                        SERVER,
-                        this._ws.url,
-                        'WS'
-                    )
+                    new PalindromConnectionError(message, CLIENT, upgradeURL, 'WS')
                 );
-                return;
-            }
-            this.onReceive(parsedMessage, this._ws.url, 'WS');
-        };
-        this._ws.onerror = event => {
-            this.onStateChange(this._ws.readyState, upgradeURL, event.data);
-
-            if (!this.useWebSocket) {
-                return;
-            }
-
-            const message = [
-                'WebSocket connection could not be made',
-                'readyState: ' + this._ws.readyState
-            ].join('\n');
-
-            this.onFatalError(
-                new PalindromConnectionError(message, CLIENT, upgradeURL, 'WS')
-            );
-        };
-        this._ws.onclose = event => {
-            //TODO none of the tests enters here
-            this.onStateChange(
-                this._ws.readyState,
-                upgradeURL,
-                null,
-                event.code,
-                event.reason
-            );
-
-            const message = [
-                'WebSocket connection closed unexpectedly.',
-                'reason: ' + event.reason,
-                'readyState: ' + this._ws.readyState,
-                'stateCode: ' + event.code
-            ].join('\n');
-
-            if (event.reason) {
-                this.onFatalError(
-                    new PalindromConnectionError(
-                        message,
-                        SERVER,
-                        upgradeURL,
-                        'WS'
-                    )
+            };
+            ws.onclose = event => {
+                //TODO none of the tests enters here
+                this.onStateChange(
+                    this._ws.readyState,
+                    upgradeURL,
+                    null,
+                    event.code,
+                    event.reason
                 );
-            } else if (!event.wasClean) {
-                this.onConnectionError(
-                    new PalindromConnectionError(
-                        message,
-                        SERVER,
-                        upgradeURL,
-                        'WS'
-                    )
-                );
-            }
-        };
+    
+                const message = [
+                    'WebSocket connection closed unexpectedly.',
+                    'reason: ' + event.reason,
+                    'readyState: ' + this._ws.readyState,
+                    'stateCode: ' + event.code
+                ].join('\n');
+    
+                if (event.reason) {
+                    this.onFatalError(
+                        new PalindromConnectionError(
+                            message,
+                            SERVER,
+                            upgradeURL,
+                            'WS'
+                        )
+                    );
+                } else if (!event.wasClean) {
+                    this.onConnectionError(
+                        new PalindromConnectionError(
+                            message,
+                            SERVER,
+                            upgradeURL,
+                            'WS'
+                        )
+                    );
+                }
+            };
+        
+            //send immediatly a feedback to the incoming connection    
+            // ws.send('{fullViewModel}');
+        });
+
+
+        
+        
     }
     closeConnection() {
         if (this._ws) {
@@ -269,7 +287,7 @@ export default class PalindromNetworkChannel {
             throw new PalindromError(message);
         }
         this.remoteUrlSet = true;
-        this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
+        // this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
     }
 
     _handleLocationHeader(res) {

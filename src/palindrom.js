@@ -5,6 +5,7 @@
  */
 
 import PalindromNetworkChannel from './palindrom-network-channel';
+import PalindromServerNetworkChannel from './palindrom-server-network-channel';
 import { applyPatch, validate } from 'fast-json-patch';
 import JSONPatcherProxy from 'jsonpatcherproxy';
 import { JSONPatchQueueSynchronous, JSONPatchQueue } from 'json-patch-queue';
@@ -49,9 +50,9 @@ export default class Palindrom {
                 'Palindrom constructor requires an object argument.'
             );
         }
-        if (!options.remoteUrl) {
-            throw new TypeError('remoteUrl is required');
-        }
+        // if (!options.remoteUrl) {
+        //     throw new TypeError('remoteUrl is required');
+        // }
 
         if (options.callback) {
             console.warn(
@@ -85,13 +86,16 @@ export default class Palindrom {
             options.onOutgoingPatchValidationError || noop;
         this.onError = options.onError || noop;
 
-        this.reconnector = new Reconnector(
-            () => this._connectToRemote(this.queue.pending),
-            this.onReconnectionCountdown,
-            this.onReconnectionEnd
-        );
+        const isClient = !options.runAsServer;
+        // if(isClient){
+            this.reconnector = new Reconnector(
+                () => this._connectToRemote(this.queue.pending),
+                this.onReconnectionCountdown,
+                this.onReconnectionEnd
+            );
+        // }
 
-        if (options.pingIntervalS) {
+        if (isClient && options.pingIntervalS) {
             const intervalMs = options.pingIntervalS * 1000;
             this.heartbeat = new Heartbeat(
                 this.ping.bind(this),
@@ -103,16 +107,18 @@ export default class Palindrom {
             this.heartbeat = new NoHeartbeat();
         }
 
-        this.network = new PalindromNetworkChannel(
+        this.network = new (options.runAsServer? PalindromServerNetworkChannel : PalindromNetworkChannel)(
             this, // palindrom instance TODO: to be removed, used for error reporting
-            options.remoteUrl,
+            // options.remoteUrl,
             options.useWebSocket || false, // useWebSocket
             this.handleRemoteChange.bind(this), //onReceive
             this.onPatchSent.bind(this), //onSend,
             this.handleConnectionError.bind(this),
             this.onSocketOpened.bind(this),
             this.handleFatalError.bind(this), //onFatalError,
-            this.onSocketStateChanged.bind(this) //onStateChange
+            this.onSocketStateChanged.bind(this), //onStateChange
+            options.wsServer,
+            options.httpServer
         );
         /**
          * how many OT operations are there in each patch 0, 1 or 2
@@ -156,7 +162,7 @@ export default class Palindrom {
                 this.validateAndApplySequence.bind(this)
             );
         }
-        this._connectToRemote();
+        this._connectToRemote(options.obj);
     }
     async _connectToRemote(reconnectionPendingData = null) {
         this.heartbeat.stop();
