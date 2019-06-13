@@ -631,6 +631,20 @@ class palindrom_server_network_channel_PalindromServerNetworkChannel {
     }
 
     /**
+     * Fetches initial state from server using GET request,
+     * or fetches new state after reconnection using PATCH request if any `reconnectionPendingData` given.
+     * @param  {Array<JSONPatch>}  [reconnectionPendingData=null] Patches already sent to the remote, but not necesarily acknowledged
+     * @param  {Object}  [initialState] Initial state of the view-model //TODO: refactor once reconnection is done, as it's useless forwarding from caller to caller.
+     * @return {Object}                           The synced object.
+     */
+    _establish(reconnectionPendingData = null, initialState) {
+        if (this.useWebSocket) {
+            this.webSocketUpgrade(this.onSocketOpened);
+        }
+        return initialState;
+    }
+
+    /**
      * Send any text message by currently established channel
      * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
      * @param  {JSONPatch} patch message to be sent
@@ -1281,19 +1295,9 @@ class palindrom_Palindrom {
         this.obj = options.obj;
         this._connectToRemote();
     }
-    /**
-     * Prepares the initial state by fetching it (if client), setting the queues and observing (regardless if client or server)
-     * @param  {Array<JSONPatch>}  [reconnectionPendingData=null] Patches already sent to the remote, but not necesarily acknowledged
-     */
     async _connectToRemote(reconnectionPendingData = null) {
         this.heartbeat.stop();
-        let json;
-        if (this.network instanceof palindrom_network_channel_PalindromNetworkChannel) {
-            json = await this.network._establish(reconnectionPendingData);
-        }
-        else {
-            json = this.obj;
-        }
+        const json = await this.network._establish(reconnectionPendingData, this.obj);
         this.reconnector.stopReconnecting();
 
         if (this.debug) {

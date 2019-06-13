@@ -69,17 +69,14 @@ export default class PalindromServerNetworkChannel {
      * Fetches initial state from server using GET request,
      * or fetches new state after reconnection using PATCH request if any `reconnectionPendingData` given.
      * @param  {Array<JSONPatch>}  [reconnectionPendingData=null] Patches already sent to the remote, but not necesarily acknowledged
-     * @return {Promise<Object>}                           Promise for new state of the synced object.
+     * @param  {Object}  [initialState] Initial state of the view-model //TODO: refactor once reconnection is done, as it's useless forwarding from caller to caller.
+     * @return {Object}                           The synced object.
      */
-    async _establish(reconnectionPendingData = null) {
-        // const data = reconnectionPendingData ?
-        //     await this._fetch('PATCH', this.remoteUrl.href + '/reconnect', 'application/json', JSON.stringify(reconnectionPendingData)) :
-        //     await this._fetch('GET', this.remoteUrl.href, 'application/json', null);
-        const data = reconnectionPendingData;
+    _establish(reconnectionPendingData = null, initialState) {
         if (this.useWebSocket) {
             this.webSocketUpgrade(this.onSocketOpened);
         }
-        return data;
+        return initialState;
     }
 
     /**

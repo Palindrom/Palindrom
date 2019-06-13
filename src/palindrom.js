@@ -162,11 +162,12 @@ export default class Palindrom {
                 this.validateAndApplySequence.bind(this)
             );
         }
-        this._connectToRemote(options.obj);
+        this.obj = options.obj;
+        this._connectToRemote();
     }
     async _connectToRemote(reconnectionPendingData = null) {
         this.heartbeat.stop();
-        const json = await this.network._establish(reconnectionPendingData);
+        const json = await this.network._establish(reconnectionPendingData, this.obj);
         this.reconnector.stopReconnecting();
 
         if (this.debug) {
