@@ -66,6 +66,23 @@ export default class PalindromServerNetworkChannel {
     }
 
     /**
+     * Fetches initial state from server using GET request,
+     * or fetches new state after reconnection using PATCH request if any `reconnectionPendingData` given.
+     * @param  {Array<JSONPatch>}  [reconnectionPendingData=null] Patches already sent to the remote, but not necesarily acknowledged
+     * @return {Promise<Object>}                           Promise for new state of the synced object.
+     */
+    async _establish(reconnectionPendingData = null) {
+        // const data = reconnectionPendingData ?
+        //     await this._fetch('PATCH', this.remoteUrl.href + '/reconnect', 'application/json', JSON.stringify(reconnectionPendingData)) :
+        //     await this._fetch('GET', this.remoteUrl.href, 'application/json', null);
+        const data = reconnectionPendingData;
+        if (this.useWebSocket) {
+            this.webSocketUpgrade(this.onSocketOpened);
+        }
+        return data;
+    }
+
+    /**
      * Send any text message by currently established channel
      * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
      * @param  {JSONPatch} patch message to be sent
