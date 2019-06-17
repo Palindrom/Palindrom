@@ -3194,6 +3194,21 @@ class palindrom_Palindrom {
         this.network.send(patch);
         this.observe();
     }
+    _filterAppliedRemoteChange(observedOperation){
+        // FIXME: It works only for sinle operation patches, and only for simple operations. Fails for move, copy, and array operations.
+        debugger
+        const operationBeingApplied = this._patchBeingApplied && this._patchBeingApplied[0];
+        if(operationBeingApplied &&
+            operationBeingApplied.op === observedOperation.op &&
+            operationBeingApplied.path === observedOperation.path &&
+            operationBeingApplied.value === observedOperation.value &&
+            operationBeingApplied.from === observedOperation.from &&
+            operationBeingApplied.to === observedOperation.to
+            ){
+                return false;
+            }
+        return observedOperation;
+    }
 
     prepareProxifiedObject(obj) {
         if (!obj) {
@@ -3203,7 +3218,7 @@ class palindrom_Palindrom {
         this.jsonPatcherProxy = new jsonpatcherproxy_default.a(obj);
 
         const proxifiedObj = this.jsonPatcherProxy.observe(false, operation => {
-            const filtered = this.filterLocalChange(operation);
+            const filtered = this._filterAppliedRemoteChange(operation) && this.filterLocalChange(operation);
             // totally ignore falsy (didn't pass the filter) JSON Patch operations
             filtered && this.handleLocalChange(filtered);
         });
@@ -3234,6 +3249,10 @@ class palindrom_Palindrom {
     }
 
     handleLocalChange(operation) {
+        // do nothing if that's the operation this instance is currently applying
+        if(operation == this.operationBeingApplied){
+            return 
+        }
         // it's a single operation, we need to check only it's value
         operation.value &&
             findRangeErrors(
@@ -3254,11 +3273,12 @@ class palindrom_Palindrom {
     validateAndApplySequence(tree, sequence) {
         try {
             // we don't want this changes to generate patches since they originate from server, not client
-            this.unobserve();
+            // this.unobserve(); // unobserve ignores changes made by setters
+            this._patchBeingApplied = sequence;
             const results = Object(duplex["applyPatch"])(tree, sequence, this.debug);
             // notifications have to happen only where observe has been re-enabled
             // otherwise some listener might produce changes that would go unnoticed
-            this.observe();
+            // this.observe();
             // the state was fully replaced
             if (results.newDocument !== tree) {
                 // object was reset, proxify it again
