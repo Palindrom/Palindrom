@@ -8,5 +8,9 @@ import './specs/palindrom.errors.test';
 import './specs/palindrom.ignore.defineProperty.test.js';
 import './specs/palindrom.filter.test';
 
+//server tests. Webpack is configured to skip the server tests in 'runner-browser.js' bundle
+import './specs/server/initialization';
+import './specs/server/websocket';
+
 import './specs/dom/index';
 import './specs/dom/ot'; //fixme: this does not clean up well, must be the last one
