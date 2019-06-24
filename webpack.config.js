@@ -120,7 +120,9 @@ module.exports = [
         externals: {
             websocket: 'window.MockWebSocket',
             './URLShim': 'URL',
-            'node-fetch': 'null'
+            'node-fetch': 'null',
+            './specs/server/initialization': 'null',
+            './specs/server/websocket': 'null',
         },
         resolve: {
             extensions: ['.js']
