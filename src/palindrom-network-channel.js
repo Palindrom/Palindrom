@@ -1,5 +1,6 @@
 import URL from './URLShim';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors';
+import { Heartbeat, NoHeartbeat } from './heartbeat';
 /* this package will be empty in the browser bundle,
 and will import https://www.npmjs.com/package/websocket in node */
 import WebSocket from 'websocket';
@@ -28,8 +29,8 @@ export default class PalindromNetworkChannel {
         onSend,
         onConnectionError,
         onSocketOpened,
-        onFatalError,
-        onStateChange
+        onStateChange,
+        pingIntervalS
     ) {
         // TODO(tomalec): to be removed once we will achieve better separation of concerns
         this.palindrom = palindrom;
@@ -44,7 +45,6 @@ export default class PalindromNetworkChannel {
         onReceive && (this.onReceive = onReceive);
         onSend && (this.onSend = onSend);
         onConnectionError && (this.onConnectionError = onConnectionError);
-        onFatalError && (this.onFatalError = onFatalError);
         onStateChange && (this.onStateChange = onStateChange);
         onSocketOpened && (this.onSocketOpened = onSocketOpened);
 
@@ -70,6 +70,18 @@ export default class PalindromNetworkChannel {
                 return useWebSocket;
             }
         });
+
+        if (pingIntervalS) {
+            const intervalMs = pingIntervalS * 1000;
+            this.heartbeat = new Heartbeat(
+                () => {this.send([]);},
+                this._handleConnectionError.bind(this),
+                intervalMs,
+                intervalMs
+            );
+        } else {
+            this.heartbeat = new NoHeartbeat();
+        }
     }
 
     /**
@@ -79,6 +91,7 @@ export default class PalindromNetworkChannel {
      * @return {Promise<Object>}                           Promise for new state of the synced object.
      */
     async _establish(reconnectionPendingData = null) {
+        this.heartbeat.stop();
         const data = reconnectionPendingData ?
             await this._fetch('PATCH', this.remoteUrl.href + '/reconnect', 'application/json', JSON.stringify(reconnectionPendingData)) :
             await this._fetch('GET', this.remoteUrl.href, 'application/json', null);
@@ -86,9 +99,37 @@ export default class PalindromNetworkChannel {
         if (this.useWebSocket) {
             this.webSocketUpgrade(this.onSocketOpened);
         }
+        this.heartbeat.start();
         return data;
     }
 
+    /**
+     * Handle an error which is probably caused by random disconnection
+     * @param {PalindromConnectionError} palindromError
+     */
+    _handleConnectionError(palindromError) {
+        this.heartbeat.stop();
+        this.palindrom.reconnector.triggerReconnection();
+        this.onConnectionError(palindromError);
+    }    
+    /**
+     * Handle an error which probably won't go away on itself (basically forward upstream)
+     * @param {PalindromConnectionError} palindromError
+     */
+    _handleFatalError(palindromError) {
+        this.heartbeat.stop();
+        this.palindrom.reconnector.stopReconnecting();
+        this.onConnectionError(palindromError);
+    }
+
+    /**
+     * Notify heartbeat and onReceive callback about received change
+     */
+    _notifyReceive() {
+        this.heartbeat.notifyReceive();
+        this.onReceive(...arguments);
+    }
+    
     /**
      * Send any text message by currently established channel
      * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
@@ -96,6 +137,7 @@ export default class PalindromNetworkChannel {
      * @return {PalindromNetworkChannel}     self
      */
     async send(patch) {
+        this.heartbeat.notifySend();
         const msg = JSON.stringify(patch);
         // send message only if there is a working ws connection
         if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
@@ -113,7 +155,7 @@ export default class PalindromNetworkChannel {
 
             //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
             //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
-            this.onReceive(data, url, method);
+            this._notifyReceive(data, url, method);
         }
         return this;
     }
@@ -155,7 +197,7 @@ export default class PalindromNetworkChannel {
             try {
                 var parsedMessage = JSON.parse(event.data);
             } catch (e) {
-                this.onFatalError(
+                this._handleFatalError(
                     new PalindromConnectionError(
                         event.data,
                         SERVER,
@@ -165,7 +207,7 @@ export default class PalindromNetworkChannel {
                 );
                 return;
             }
-            this.onReceive(parsedMessage, this._ws.url, 'WS');
+            this._notifyReceive(parsedMessage, this._ws.url, 'WS');
         };
         this._ws.onerror = event => {
             this.onStateChange(this._ws.readyState, upgradeURL, event.data);
@@ -179,7 +221,7 @@ export default class PalindromNetworkChannel {
                 'readyState: ' + this._ws.readyState
             ].join('\n');
 
-            this.onFatalError(
+            this._handleFatalError(
                 new PalindromConnectionError(message, CLIENT, upgradeURL, 'WS')
             );
         };
@@ -201,7 +243,7 @@ export default class PalindromNetworkChannel {
             ].join('\n');
 
             if (event.reason) {
-                this.onFatalError(
+                this._handleFatalError(
                     new PalindromConnectionError(
                         message,
                         SERVER,
@@ -210,7 +252,7 @@ export default class PalindromNetworkChannel {
                     )
                 );
             } else if (!event.wasClean) {
-                this.onConnectionError(
+                this._handleConnectionError(
                     new PalindromConnectionError(
                         message,
                         SERVER,
@@ -247,7 +289,7 @@ export default class PalindromNetworkChannel {
 
         //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
         //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
-        this.onReceive(data, href, method);
+        this._notifyReceive(data, href, method);
         return data;
     }
 
@@ -300,7 +342,7 @@ export default class PalindromNetworkChannel {
             'HTTP method: ' + method
         ].join('\n');
 
-        this.onFatalError(
+        this._handleFatalError(
             new PalindromConnectionError(message, CLIENT, url, method)
         );
     }
