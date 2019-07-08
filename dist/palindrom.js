@@ -83,7 +83,7 @@ var Palindrom =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 15);
+/******/ 	return __webpack_require__(__webpack_require__.s = 19);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -124,31 +124,25 @@ class PalindromConnectionError extends PalindromError {
 
 /***/ }),
 /* 1 */
-/***/ (function(module, exports) {
-
-module.exports = URL;
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports) {
-
-module.exports = WebSocket;
-
-/***/ }),
-/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
  * version: 3.0.0-rc.0
  */
-var queue = __webpack_require__(21);
-var sync = __webpack_require__(22);
+var queue = __webpack_require__(17);
+var sync = __webpack_require__(18);
 
 module.exports = { JSONPatchQueue: queue, JSONPatchQueueSynchronous: sync, /* Babel demands this */__esModule:  true };
 
 
 /***/ }),
-/* 4 */
+/* 2 */
+/***/ (function(module, exports) {
+
+module.exports = URL;
+
+/***/ }),
+/* 3 */
 /***/ (function(module, exports) {
 
 var __extends = (this && this.__extends) || function (d, b) {
@@ -313,24 +307,111 @@ exports.PatchError = PatchError;
 
 
 /***/ }),
+/* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Heartbeat; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return NoHeartbeat; });
+/* harmony import */ var _palindrom_errors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
+
+const CLIENT = 'Client';
+/**
+ * Guarantees some communication to server and monitors responses for timeouts.
+ * @param sendHeartbeatAction will be called to send a heartbeat
+ * @param onError will be called if no response will arrive after `timeoutMs` since a message has been sent
+ * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
+ * @param timeoutMs should a response fail to arrive in this time, `onError` will be called
+ * @constructor
+ */
+function Heartbeat(
+    sendHeartbeatAction,
+    onError,
+    intervalMs,
+    timeoutMs
+) {
+    let scheduledSend;
+    let scheduledError;
+
+    /**
+     * Call this function at the beginning of operation and after successful reconnection.
+     */
+    this.start = function() {
+        if (scheduledSend) {
+            return;
+        }
+        scheduledSend = setTimeout(() => {
+            this.notifySend();
+            sendHeartbeatAction();
+        }, intervalMs);
+    };
+
+    /**
+     * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
+     */
+    this.notifySend = function() {
+        clearTimeout(scheduledSend); // sending heartbeat will not be necessary until our response arrives
+        scheduledSend = null;
+        if (scheduledError) {
+            return;
+        }
+        scheduledError = setTimeout(() => {
+            scheduledError = null;
+            onError(
+                new _palindrom_errors__WEBPACK_IMPORTED_MODULE_0__[/* PalindromConnectionError */ "a"](
+                    "Timeout has passed and response hasn't arrived",
+                    CLIENT,
+                    this.remoteUrl,
+                    'Unknown'
+                )
+            ); // timeout has passed and response hasn't arrived
+        }, timeoutMs);
+    };
+
+    /**
+     * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
+     */
+    this.notifyReceive = function() {
+        clearTimeout(scheduledError);
+        scheduledError = null;
+        this.start();
+    };
+
+    /**
+     * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
+     */
+    this.stop = () => {
+        clearTimeout(scheduledSend);
+        scheduledSend = null;
+        clearTimeout(scheduledError);
+        scheduledError = null;
+    };
+}
+
+function NoHeartbeat() {
+    this.start = this.stop = this.notifySend = this.notifyReceive = () => {};
+}
+
+
+/***/ }),
 /* 5 */
 /***/ (function(module, exports) {
 
-module.exports = null;
+module.exports = WebSocket;
 
 /***/ }),
 /* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var equalsOptions = { strict: true };
-var _equals = __webpack_require__(8);
+var _equals = __webpack_require__(7);
 var areEquals = function (a, b) {
     return _equals(a, b, equalsOptions);
 };
-var helpers_1 = __webpack_require__(4);
-var core_1 = __webpack_require__(9);
+var helpers_1 = __webpack_require__(3);
+var core_1 = __webpack_require__(8);
 /* export all core functions */
-var core_2 = __webpack_require__(9);
+var core_2 = __webpack_require__(8);
 exports.applyOperation = core_2.applyOperation;
 exports.applyPatch = core_2.applyPatch;
 exports.applyReducer = core_2.applyReducer;
@@ -338,7 +419,7 @@ exports.getValueByPointer = core_2.getValueByPointer;
 exports.validate = core_2.validate;
 exports.validator = core_2.validator;
 /* export some helpers */
-var helpers_2 = __webpack_require__(4);
+var helpers_2 = __webpack_require__(3);
 exports.JsonPatchError = helpers_2.PatchError;
 exports.deepClone = helpers_2._deepClone;
 exports.escapePathComponent = helpers_2.escapePathComponent;
@@ -521,37 +602,11 @@ exports.compare = compare;
 
 /***/ }),
 /* 7 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || new Function("return this")();
-} catch (e) {
-	// This works if the window reference is available
-	if (typeof window === "object") g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var pSlice = Array.prototype.slice;
-var objectKeys = __webpack_require__(19);
-var isArguments = __webpack_require__(20);
+var objectKeys = __webpack_require__(15);
+var isArguments = __webpack_require__(16);
 
 var deepEqual = module.exports = function (actual, expected, opts) {
   if (!opts) opts = {};
@@ -646,15 +701,15 @@ function objEquiv(a, b, opts) {
 
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var equalsOptions = { strict: true };
-var _equals = __webpack_require__(8);
+var _equals = __webpack_require__(7);
 var areEquals = function (a, b) {
     return _equals(a, b, equalsOptions);
 };
-var helpers_1 = __webpack_require__(4);
+var helpers_1 = __webpack_require__(3);
 exports.JsonPatchError = helpers_1.PatchError;
 exports.deepClone = helpers_1._deepClone;
 /* We use a Javascript hash to store each
@@ -1029,18 +1084,18 @@ exports.validate = validate;
 
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return PalindromNetworkChannel; });
-/* harmony import */ var _URLShim__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
+/* harmony import */ var _URLShim__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
 /* harmony import */ var _URLShim__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_URLShim__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _palindrom_errors__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(0);
-/* harmony import */ var _heartbeat__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(11);
-/* harmony import */ var websocket__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(2);
+/* harmony import */ var _heartbeat__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(4);
+/* harmony import */ var websocket__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5);
 /* harmony import */ var websocket__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(websocket__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var node_fetch__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(5);
+/* harmony import */ var node_fetch__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(10);
 /* harmony import */ var node_fetch__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(node_fetch__WEBPACK_IMPORTED_MODULE_4__);
 
 
@@ -1441,97 +1496,16 @@ class PalindromNetworkChannel {
     }
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14)))
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports) {
+
+module.exports = null;
 
 /***/ }),
 /* 11 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Heartbeat; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return NoHeartbeat; });
-/* harmony import */ var _palindrom_errors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
-
-const CLIENT = 'Client';
-/**
- * Guarantees some communication to server and monitors responses for timeouts.
- * @param sendHeartbeatAction will be called to send a heartbeat
- * @param onError will be called if no response will arrive after `timeoutMs` since a message has been sent
- * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
- * @param timeoutMs should a response fail to arrive in this time, `onError` will be called
- * @constructor
- */
-function Heartbeat(
-    sendHeartbeatAction,
-    onError,
-    intervalMs,
-    timeoutMs
-) {
-    let scheduledSend;
-    let scheduledError;
-
-    /**
-     * Call this function at the beginning of operation and after successful reconnection.
-     */
-    this.start = function() {
-        if (scheduledSend) {
-            return;
-        }
-        scheduledSend = setTimeout(() => {
-            this.notifySend();
-            sendHeartbeatAction();
-        }, intervalMs);
-    };
-
-    /**
-     * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
-     */
-    this.notifySend = function() {
-        clearTimeout(scheduledSend); // sending heartbeat will not be necessary until our response arrives
-        scheduledSend = null;
-        if (scheduledError) {
-            return;
-        }
-        scheduledError = setTimeout(() => {
-            scheduledError = null;
-            onError(
-                new _palindrom_errors__WEBPACK_IMPORTED_MODULE_0__[/* PalindromConnectionError */ "a"](
-                    "Timeout has passed and response hasn't arrived",
-                    CLIENT,
-                    this.remoteUrl,
-                    'Unknown'
-                )
-            ); // timeout has passed and response hasn't arrived
-        }, timeoutMs);
-    };
-
-    /**
-     * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
-     */
-    this.notifyReceive = function() {
-        clearTimeout(scheduledError);
-        scheduledError = null;
-        this.start();
-    };
-
-    /**
-     * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
-     */
-    this.stop = () => {
-        clearTimeout(scheduledSend);
-        scheduledSend = null;
-        clearTimeout(scheduledError);
-        scheduledError = null;
-    };
-}
-
-function NoHeartbeat() {
-    this.start = this.stop = this.notifySend = this.notifyReceive = () => {};
-}
-
-
-/***/ }),
-/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1932,7 +1906,7 @@ if (true) {
 
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -2093,12 +2067,12 @@ if(true) {
 }
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 if(typeof JSONPatchQueue === 'undefined') {
 	if(true) {
-		var JSONPatchQueue = __webpack_require__(3).JSONPatchQueue;
+		var JSONPatchQueue = __webpack_require__(1).JSONPatchQueue;
 	}
 	else {}
 }
@@ -2202,31 +2176,388 @@ if(true) {
 }
 
 /***/ }),
+/* 14 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || new Function("return this")();
+} catch (e) {
+	// This works if the window reference is available
+	if (typeof window === "object") g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
 /* 15 */
+/***/ (function(module, exports) {
+
+exports = module.exports = typeof Object.keys === 'function'
+  ? Object.keys : shim;
+
+exports.shim = shim;
+function shim (obj) {
+  var keys = [];
+  for (var key in obj) keys.push(key);
+  return keys;
+}
+
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports) {
+
+var supportsArgumentsClass = (function(){
+  return Object.prototype.toString.call(arguments)
+})() == '[object Arguments]';
+
+exports = module.exports = supportsArgumentsClass ? supported : unsupported;
+
+exports.supported = supported;
+function supported(object) {
+  return Object.prototype.toString.call(object) == '[object Arguments]';
+};
+
+exports.unsupported = unsupported;
+function unsupported(object){
+  return object &&
+    typeof object == 'object' &&
+    typeof object.length == 'number' &&
+    Object.prototype.hasOwnProperty.call(object, 'callee') &&
+    !Object.prototype.propertyIsEnumerable.call(object, 'callee') ||
+    false;
+};
+
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * JSON Patch Queue for asynchronous operations, and asynchronous networking.
+ * version: 3.0.0-rc.0
+ * @param {Object} obj The target object where patches are applied
+ * @param {Array<JSON-Pointer>} versionPaths JSON-Pointers to version numbers [local, remote]
+ * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
+ * @param {Boolean} [purist]       If set to true adds test operation before replace.
+ */
+var JSONPatchQueue = function(obj, versionPaths, apply, purist){
+
+	/**
+	 * The target object where patches are applied
+	 * @type {Object}
+	 */
+	this.obj = obj;
+	/**
+	 * Queue of consecutive JSON Patch sequences. May contain gaps.
+	 * Item with index 0 has 1 version gap to this.remoteVersion.
+	 * @type {Array}
+	 */
+	this.waiting = [];
+	/**
+	 * JSON-Pointer to local version in shared JSON document
+	 * @type {JSONPointer}
+	 */
+	this.localPath = versionPaths[0];
+	/**
+	 * JSON-Pointer to remote version in shared JSON document
+	 * @type {JSONPointer}
+	 */
+	this.remotePath = versionPaths[1];
+	/**
+	 * Function to apply JSONPatchSequence to JSON object
+	 * @type {Function}
+	 */
+	this.apply = apply;
+	/**
+	 * If set to true adds test operation before replace.
+	 * @type {Bool}
+	 */
+	this.purist = purist;
+
+};
+/** local version */
+JSONPatchQueue.prototype.localVersion = 0;
+/** Latest localVersion that we know that was acknowledged by remote */
+// JSONPatchQueue.prototype.ackVersion = 0;
+/** Latest acknowledged remote version */
+JSONPatchQueue.prototype.remoteVersion = 0;
+
+// instance property
+//  JSONPatchQueue.prototype.waiting = [];
+/** needed? OT only? */
+// JSONPatchQueue.prototype.pending = [];
+/**
+ * Process received versioned JSON Patch
+ * Applies or adds to queue.
+ * @param  {JSONPatch} versionedJsonPatch patch to be applied
+ * @param  {Function} [applyCallback]     optional `function(object, consecutivePatch)` to be called when applied, if not given #apply will be called
+ */
+JSONPatchQueue.prototype.receive = function(versionedJsonPatch, applyCallback){
+	var apply = applyCallback || this.apply,
+		consecutivePatch = versionedJsonPatch.slice(0);
+	// strip Versioned JSON Patch specyfiv operation objects from given sequence
+		if(this.purist){
+			var testRemote = consecutivePatch.shift();
+		}
+		var replaceRemote = consecutivePatch.shift(),
+			newRemoteVersion = replaceRemote.value;
+
+	// TODO: perform versionedPath validation if needed (tomalec)
+
+	if( newRemoteVersion <= this.remoteVersion){
+	// someone is trying to change something that was already updated
+    	throw new Error("Given version was already applied.");
+	} else if ( newRemoteVersion == this.remoteVersion + 1 ){
+	// consecutive new version
+		while( consecutivePatch ){// process consecutive patch(-es)
+			this.remoteVersion++;
+			this.obj = apply(this.obj, consecutivePatch);
+			consecutivePatch = this.waiting.shift();
+		}
+	} else {
+	// add sequence to queue in correct position.
+		this.waiting[newRemoteVersion - this.remoteVersion -2] = consecutivePatch;
+	}
+};
+/**
+ * Wraps JSON Patch sequence with version related operation objects
+ * @param  {JSONPatch} sequence JSON Patch sequence to wrap
+ * @return {VersionedJSONPatch}
+ */
+JSONPatchQueue.prototype.send = function(sequence){
+	this.localVersion++;
+	var newSequence = sequence.slice(0);
+	if(this.purist){
+		newSequence.unshift({ // test for consecutiveness
+			op: "test",
+			path: this.localPath,
+			value: this.localVersion - 1
+		},{ // replace for queue
+			op: "replace",
+			path: this.localPath,
+			value: this.localVersion
+		});
+	} else {
+		newSequence.unshift({ // replace for queue (+assumed test for consecutiveness_)
+			op: "replace",
+			path: this.localPath,
+			value: this.localVersion
+		});
+	}
+	return newSequence;
+};
+
+JSONPatchQueue.getPropertyByJsonPointer = function(obj, pointer) {
+	var parts = pointer.split('/');
+	if(parts[0] === "") {
+		parts.shift();
+	}
+	var target = obj;
+	while(parts.length) {
+		var path = parts.shift().replace('~1', '/').replace('~0', '~');
+		if(parts.length) {
+			target = target[path];
+		}
+	}
+	return target[path];
+};
+
+/**
+ * Reset queue internals and object to new, given state
+ * @param newState versioned object representing desired state along with versions
+ */
+JSONPatchQueue.prototype.reset = function(newState){
+	this.remoteVersion = JSONPatchQueue.getPropertyByJsonPointer(newState, this.remotePath);
+	this.waiting = [];
+	var patch = [{ op: "replace", path: "", value: newState }];
+	return this.obj = this.apply(this.obj, patch);
+};
+
+if(true) {
+	module.exports = JSONPatchQueue;
+	module.exports.default = JSONPatchQueue;
+	/* Babel demands this */
+	module.exports.__esModule = true;
+}
+
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * JSON Patch Queue for synchronous operations, and asynchronous networking.
+ * version: 3.0.0-rc.0
+ * @param {Object} Obj The target object where patches are applied
+ * @param {JSON-Pointer} versionPath JSON-Pointers to version numbers
+ * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
+ * @param {Boolean} [purist]       If set to true adds test operation before replace.
+ */
+var JSONPatchQueueSynchronous = function(obj, versionPath, apply, purist){
+
+	/**
+	 * The target object where patches are applied
+	 * @type {Object}
+	 */
+	this.obj = obj;
+
+	/**
+	 * Queue of consecutive JSON Patch sequences. May contain gaps.
+	 * Item with index 0 has 1 sequence version gap to `this.version`.
+	 * @type {Array}
+	 */
+	this.waiting = [];
+	/**
+	 * JSON-Pointer to local version in shared JSON document
+	 * @type {JSONPointer}
+	 */
+	this.versionPath = versionPath;
+	/**
+	 * Function to apply JSONPatchSequence to JSON object
+	 * @type {Function}
+	 */
+	this.apply = apply;
+	/**
+	 * If set to true adds test operation before replace.
+	 * @type {Bool}
+	 */
+	this.purist = purist;
+};
+/** JSON version */
+JSONPatchQueueSynchronous.prototype.version = 0;
+//JSONPatchQueueSynchronous.prototype.purist = false;
+// instance property
+//  JSONPatchQueueSynchronous.prototype.waiting = [];
+/**
+ * Process received versioned JSON Patch.
+ * Applies or adds to queue.
+ * @param  {JSONPatch} versionedJsonPatch patch to be applied
+ * @param  {Function} [applyCallback]     optional `function(object, consecutivePatch)` to be called when applied, if not given #apply will be called
+ */
+JSONPatchQueueSynchronous.prototype.receive = function(versionedJsonPatch, applyCallback){
+	var apply = applyCallback || this.apply,
+		consecutivePatch = versionedJsonPatch.slice(0);
+	// strip Versioned JSON Patch specyfiv operation objects from given sequence
+		if(this.purist){
+			var testRemote = consecutivePatch.shift();
+		}
+		var replaceVersion = consecutivePatch.shift(),
+			newVersion = replaceVersion.value;
+
+	// TODO: perform versionedPath validation if needed (tomalec)
+
+	if( newVersion <= this.version){
+	// someone is trying to change something that was already updated
+    	throw new Error("Given version was already applied.");
+	} else if ( newVersion == this.version + 1 ){
+	// consecutive new version
+		while( consecutivePatch ){// process consecutive patch(-es)
+			this.version++;
+			this.obj = apply(this.obj, consecutivePatch);
+			consecutivePatch = this.waiting.shift();
+		}
+	} else {
+	// add sequence to queue in correct position.
+		this.waiting[newVersion - this.version -2] = consecutivePatch;
+	}
+};
+/**
+ * Wraps JSON Patch sequence with version related operation objects
+ * @param  {JSONPatch} sequence JSON Patch sequence to wrap
+ * @return {VersionedJSONPatch}
+ */
+JSONPatchQueueSynchronous.prototype.send = function(sequence){
+	this.version++;
+	var newSequence = sequence.slice(0);
+	newSequence.unshift({
+		op: "replace",
+		path: this.versionPath,
+		value: this.version
+	});
+	if(this.purist){
+		newSequence.unshift({ // test for purist
+			op: "test",
+			path: this.versionPath,
+			value: this.version-1
+		});
+	}
+	return newSequence;
+};
+
+JSONPatchQueueSynchronous.getPropertyByJsonPointer = function(obj, pointer) {
+	var parts = pointer.split('/');
+	if(parts[0] === "") {
+		parts.shift();
+	}
+	var target = obj;
+	while(parts.length) {
+		var path = parts.shift().replace('~1', '/').replace('~0', '~');
+		if(parts.length) {
+			target = target[path];
+		}
+	}
+	return target[path];
+};
+
+/**
+ * Reset queue internals and object to new, given state
+ * @param newState versioned object representing desired state along with versions
+ */
+JSONPatchQueueSynchronous.prototype.reset = function(newState){
+	this.version = JSONPatchQueueSynchronous.getPropertyByJsonPointer(newState, this.versionPath);
+	this.waiting = [];
+	var patch = [{ op: "replace", path: "", value: newState }];
+	return this.obj = this.apply(this.obj, patch);
+};
+
+if(true) {
+	module.exports = JSONPatchQueueSynchronous;
+	module.exports.default = JSONPatchQueueSynchronous;
+	/* Babel demands this */
+	module.exports.__esModule = true;
+}
+
+
+/***/ }),
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 
 // EXTERNAL MODULE: ./src/palindrom-network-channel.js
-var palindrom_network_channel = __webpack_require__(10);
+var palindrom_network_channel = __webpack_require__(9);
 
 // EXTERNAL MODULE: ./node_modules/fast-json-patch/lib/duplex.js
 var duplex = __webpack_require__(6);
 
 // EXTERNAL MODULE: ./node_modules/jsonpatcherproxy/src/jsonpatcherproxy.js
-var jsonpatcherproxy = __webpack_require__(12);
+var jsonpatcherproxy = __webpack_require__(11);
 var jsonpatcherproxy_default = /*#__PURE__*/__webpack_require__.n(jsonpatcherproxy);
 
 // EXTERNAL MODULE: ./node_modules/json-patch-queue/src/index.js
-var src = __webpack_require__(3);
+var src = __webpack_require__(1);
 
 // EXTERNAL MODULE: ./node_modules/json-patch-ot/src/json-patch-ot.js
-var json_patch_ot = __webpack_require__(13);
+var json_patch_ot = __webpack_require__(12);
 var json_patch_ot_default = /*#__PURE__*/__webpack_require__.n(json_patch_ot);
 
 // EXTERNAL MODULE: ./node_modules/json-patch-ot-agent/src/json-patch-ot-agent.js
-var json_patch_ot_agent = __webpack_require__(14);
+var json_patch_ot_agent = __webpack_require__(13);
 var json_patch_ot_agent_default = /*#__PURE__*/__webpack_require__.n(json_patch_ot_agent);
 
 // EXTERNAL MODULE: ./src/palindrom-errors.js
@@ -2705,340 +3036,6 @@ function findRangeErrors(val, errorHandler, variablePath = '') {
             )
         );
     }
-}
-
-
-/***/ }),
-/* 16 */,
-/* 17 */,
-/* 18 */,
-/* 19 */
-/***/ (function(module, exports) {
-
-exports = module.exports = typeof Object.keys === 'function'
-  ? Object.keys : shim;
-
-exports.shim = shim;
-function shim (obj) {
-  var keys = [];
-  for (var key in obj) keys.push(key);
-  return keys;
-}
-
-
-/***/ }),
-/* 20 */
-/***/ (function(module, exports) {
-
-var supportsArgumentsClass = (function(){
-  return Object.prototype.toString.call(arguments)
-})() == '[object Arguments]';
-
-exports = module.exports = supportsArgumentsClass ? supported : unsupported;
-
-exports.supported = supported;
-function supported(object) {
-  return Object.prototype.toString.call(object) == '[object Arguments]';
-};
-
-exports.unsupported = unsupported;
-function unsupported(object){
-  return object &&
-    typeof object == 'object' &&
-    typeof object.length == 'number' &&
-    Object.prototype.hasOwnProperty.call(object, 'callee') &&
-    !Object.prototype.propertyIsEnumerable.call(object, 'callee') ||
-    false;
-};
-
-
-/***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * JSON Patch Queue for asynchronous operations, and asynchronous networking.
- * version: 3.0.0-rc.0
- * @param {Object} obj The target object where patches are applied
- * @param {Array<JSON-Pointer>} versionPaths JSON-Pointers to version numbers [local, remote]
- * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
- * @param {Boolean} [purist]       If set to true adds test operation before replace.
- */
-var JSONPatchQueue = function(obj, versionPaths, apply, purist){
-
-	/**
-	 * The target object where patches are applied
-	 * @type {Object}
-	 */
-	this.obj = obj;
-	/**
-	 * Queue of consecutive JSON Patch sequences. May contain gaps.
-	 * Item with index 0 has 1 version gap to this.remoteVersion.
-	 * @type {Array}
-	 */
-	this.waiting = [];
-	/**
-	 * JSON-Pointer to local version in shared JSON document
-	 * @type {JSONPointer}
-	 */
-	this.localPath = versionPaths[0];
-	/**
-	 * JSON-Pointer to remote version in shared JSON document
-	 * @type {JSONPointer}
-	 */
-	this.remotePath = versionPaths[1];
-	/**
-	 * Function to apply JSONPatchSequence to JSON object
-	 * @type {Function}
-	 */
-	this.apply = apply;
-	/**
-	 * If set to true adds test operation before replace.
-	 * @type {Bool}
-	 */
-	this.purist = purist;
-
-};
-/** local version */
-JSONPatchQueue.prototype.localVersion = 0;
-/** Latest localVersion that we know that was acknowledged by remote */
-// JSONPatchQueue.prototype.ackVersion = 0;
-/** Latest acknowledged remote version */
-JSONPatchQueue.prototype.remoteVersion = 0;
-
-// instance property
-//  JSONPatchQueue.prototype.waiting = [];
-/** needed? OT only? */
-// JSONPatchQueue.prototype.pending = [];
-/**
- * Process received versioned JSON Patch
- * Applies or adds to queue.
- * @param  {JSONPatch} versionedJsonPatch patch to be applied
- * @param  {Function} [applyCallback]     optional `function(object, consecutivePatch)` to be called when applied, if not given #apply will be called
- */
-JSONPatchQueue.prototype.receive = function(versionedJsonPatch, applyCallback){
-	var apply = applyCallback || this.apply,
-		consecutivePatch = versionedJsonPatch.slice(0);
-	// strip Versioned JSON Patch specyfiv operation objects from given sequence
-		if(this.purist){
-			var testRemote = consecutivePatch.shift();
-		}
-		var replaceRemote = consecutivePatch.shift(),
-			newRemoteVersion = replaceRemote.value;
-
-	// TODO: perform versionedPath validation if needed (tomalec)
-
-	if( newRemoteVersion <= this.remoteVersion){
-	// someone is trying to change something that was already updated
-    	throw new Error("Given version was already applied.");
-	} else if ( newRemoteVersion == this.remoteVersion + 1 ){
-	// consecutive new version
-		while( consecutivePatch ){// process consecutive patch(-es)
-			this.remoteVersion++;
-			this.obj = apply(this.obj, consecutivePatch);
-			consecutivePatch = this.waiting.shift();
-		}
-	} else {
-	// add sequence to queue in correct position.
-		this.waiting[newRemoteVersion - this.remoteVersion -2] = consecutivePatch;
-	}
-};
-/**
- * Wraps JSON Patch sequence with version related operation objects
- * @param  {JSONPatch} sequence JSON Patch sequence to wrap
- * @return {VersionedJSONPatch}
- */
-JSONPatchQueue.prototype.send = function(sequence){
-	this.localVersion++;
-	var newSequence = sequence.slice(0);
-	if(this.purist){
-		newSequence.unshift({ // test for consecutiveness
-			op: "test",
-			path: this.localPath,
-			value: this.localVersion - 1
-		},{ // replace for queue
-			op: "replace",
-			path: this.localPath,
-			value: this.localVersion
-		});
-	} else {
-		newSequence.unshift({ // replace for queue (+assumed test for consecutiveness_)
-			op: "replace",
-			path: this.localPath,
-			value: this.localVersion
-		});
-	}
-	return newSequence;
-};
-
-JSONPatchQueue.getPropertyByJsonPointer = function(obj, pointer) {
-	var parts = pointer.split('/');
-	if(parts[0] === "") {
-		parts.shift();
-	}
-	var target = obj;
-	while(parts.length) {
-		var path = parts.shift().replace('~1', '/').replace('~0', '~');
-		if(parts.length) {
-			target = target[path];
-		}
-	}
-	return target[path];
-};
-
-/**
- * Reset queue internals and object to new, given state
- * @param newState versioned object representing desired state along with versions
- */
-JSONPatchQueue.prototype.reset = function(newState){
-	this.remoteVersion = JSONPatchQueue.getPropertyByJsonPointer(newState, this.remotePath);
-	this.waiting = [];
-	var patch = [{ op: "replace", path: "", value: newState }];
-	return this.obj = this.apply(this.obj, patch);
-};
-
-if(true) {
-	module.exports = JSONPatchQueue;
-	module.exports.default = JSONPatchQueue;
-	/* Babel demands this */
-	module.exports.__esModule = true;
-}
-
-
-/***/ }),
-/* 22 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- * JSON Patch Queue for synchronous operations, and asynchronous networking.
- * version: 3.0.0-rc.0
- * @param {Object} Obj The target object where patches are applied
- * @param {JSON-Pointer} versionPath JSON-Pointers to version numbers
- * @param {function} apply    apply(JSONobj, JSONPatchSequence) function to apply JSONPatch to object.
- * @param {Boolean} [purist]       If set to true adds test operation before replace.
- */
-var JSONPatchQueueSynchronous = function(obj, versionPath, apply, purist){
-
-	/**
-	 * The target object where patches are applied
-	 * @type {Object}
-	 */
-	this.obj = obj;
-
-	/**
-	 * Queue of consecutive JSON Patch sequences. May contain gaps.
-	 * Item with index 0 has 1 sequence version gap to `this.version`.
-	 * @type {Array}
-	 */
-	this.waiting = [];
-	/**
-	 * JSON-Pointer to local version in shared JSON document
-	 * @type {JSONPointer}
-	 */
-	this.versionPath = versionPath;
-	/**
-	 * Function to apply JSONPatchSequence to JSON object
-	 * @type {Function}
-	 */
-	this.apply = apply;
-	/**
-	 * If set to true adds test operation before replace.
-	 * @type {Bool}
-	 */
-	this.purist = purist;
-};
-/** JSON version */
-JSONPatchQueueSynchronous.prototype.version = 0;
-//JSONPatchQueueSynchronous.prototype.purist = false;
-// instance property
-//  JSONPatchQueueSynchronous.prototype.waiting = [];
-/**
- * Process received versioned JSON Patch.
- * Applies or adds to queue.
- * @param  {JSONPatch} versionedJsonPatch patch to be applied
- * @param  {Function} [applyCallback]     optional `function(object, consecutivePatch)` to be called when applied, if not given #apply will be called
- */
-JSONPatchQueueSynchronous.prototype.receive = function(versionedJsonPatch, applyCallback){
-	var apply = applyCallback || this.apply,
-		consecutivePatch = versionedJsonPatch.slice(0);
-	// strip Versioned JSON Patch specyfiv operation objects from given sequence
-		if(this.purist){
-			var testRemote = consecutivePatch.shift();
-		}
-		var replaceVersion = consecutivePatch.shift(),
-			newVersion = replaceVersion.value;
-
-	// TODO: perform versionedPath validation if needed (tomalec)
-
-	if( newVersion <= this.version){
-	// someone is trying to change something that was already updated
-    	throw new Error("Given version was already applied.");
-	} else if ( newVersion == this.version + 1 ){
-	// consecutive new version
-		while( consecutivePatch ){// process consecutive patch(-es)
-			this.version++;
-			this.obj = apply(this.obj, consecutivePatch);
-			consecutivePatch = this.waiting.shift();
-		}
-	} else {
-	// add sequence to queue in correct position.
-		this.waiting[newVersion - this.version -2] = consecutivePatch;
-	}
-};
-/**
- * Wraps JSON Patch sequence with version related operation objects
- * @param  {JSONPatch} sequence JSON Patch sequence to wrap
- * @return {VersionedJSONPatch}
- */
-JSONPatchQueueSynchronous.prototype.send = function(sequence){
-	this.version++;
-	var newSequence = sequence.slice(0);
-	newSequence.unshift({
-		op: "replace",
-		path: this.versionPath,
-		value: this.version
-	});
-	if(this.purist){
-		newSequence.unshift({ // test for purist
-			op: "test",
-			path: this.versionPath,
-			value: this.version-1
-		});
-	}
-	return newSequence;
-};
-
-JSONPatchQueueSynchronous.getPropertyByJsonPointer = function(obj, pointer) {
-	var parts = pointer.split('/');
-	if(parts[0] === "") {
-		parts.shift();
-	}
-	var target = obj;
-	while(parts.length) {
-		var path = parts.shift().replace('~1', '/').replace('~0', '~');
-		if(parts.length) {
-			target = target[path];
-		}
-	}
-	return target[path];
-};
-
-/**
- * Reset queue internals and object to new, given state
- * @param newState versioned object representing desired state along with versions
- */
-JSONPatchQueueSynchronous.prototype.reset = function(newState){
-	this.version = JSONPatchQueueSynchronous.getPropertyByJsonPointer(newState, this.versionPath);
-	this.waiting = [];
-	var patch = [{ op: "replace", path: "", value: newState }];
-	return this.obj = this.apply(this.obj, patch);
-};
-
-if(true) {
-	module.exports = JSONPatchQueueSynchronous;
-	module.exports.default = JSONPatchQueueSynchronous;
-	/* Babel demands this */
-	module.exports.__esModule = true;
 }
 
 
