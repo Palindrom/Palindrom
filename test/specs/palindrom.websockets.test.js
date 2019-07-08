@@ -11,21 +11,22 @@ chai.use(sinonChai);
 
 describe('Sockets - if `useWebSocket` flag is provided', () => {
     let mockSocketServer;
+    const remoteUrl = getTestURL('testURL');
+    const wsUrl = getTestURL('testURL', false, true);
     afterEach(() => {
         fetchMock.restore();
         mockSocketServer.stop();
     });
     it('should try to open WebSocket connection', async () => {
-        mockSocketServer = new MockSocketServer(getTestURL('testURL', false, true));
-
-        fetchMock.mock(getTestURL('testURL'), {
+        mockSocketServer = new MockSocketServer(wsUrl);
+        fetchMock.mock(remoteUrl, {
             status: 200,
-            headers: { location: getTestURL('testURL') },
+            headers: { location: remoteUrl },
             body: '{"hello": "world"}'
         });
 
         var palindrom = new Palindrom({
-            remoteUrl: getTestURL('testURL'),
+            remoteUrl,
             useWebSocket: true
         });
         /* socket should be undefined before HTTP delay */
@@ -37,16 +38,15 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     });
 
     it('should calculate WebSocket URL correctly', async () => {
-        mockSocketServer = new MockSocketServer(getTestURL('testURL', false, true));
-
-        fetchMock.mock(getTestURL('testURL'), {
+        mockSocketServer = new MockSocketServer(wsUrl);
+        fetchMock.mock(remoteUrl, {
             status: 200,
-            headers: { location: getTestURL('testURL') },
+            headers: { location: remoteUrl },
             body: '{"hello": "world"}'
         });
 
         var palindrom = new Palindrom({
-            remoteUrl: getTestURL('testURL'),
+            remoteUrl,
             useWebSocket: true
         });
 
@@ -62,14 +62,14 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             getTestURL('default/this_is_a_nice_url', false, true)
         );
 
-        fetchMock.mock(getTestURL('testURL'), {
+        fetchMock.mock(remoteUrl, {
             status: 200,
             headers: { location: '/default/this_is_a_nice_url' },
             body: '{"hello": "world"}'
         });
 
         var palindrom = new Palindrom({
-            remoteUrl: getTestURL('testURL'),
+            remoteUrl,
             useWebSocket: true
         });
 
@@ -85,14 +85,14 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             getTestURL('default/this_is_a_nice_url', false, true)
         );
 
-        fetchMock.mock(getTestURL('testURL'), {
+        fetchMock.mock(remoteUrl, {
             status: 200,
             headers: { location: 'default/this_is_a_nice_url' },
             body: '{"hello": "world"}'
         });
 
         var palindrom = new Palindrom({
-            remoteUrl: getTestURL('testURL'),
+            remoteUrl,
             useWebSocket: true
         });
 
