@@ -1,24 +1,34 @@
 import { Server as MockSocketServer } from 'mock-socket';
 import Palindrom from '../../src/palindrom';
-import assert from 'assert';
+import chai, { expect, assert } from 'chai';
+import sinonChai  from "sinon-chai";
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { sleep, getTestURL } from '../utils';
 
+chai.use(sinonChai);
+
 describe('Callbacks, onPatchSent and onPatchReceived', () => {
+    const remoteUrl = getTestURL('testURL');
+    let onPatchReceived;
+    let onPatchSent;
+    beforeEach(() => {
+        onPatchReceived = sinon.spy().named('onPatchReceived');
+        onPatchSent = sinon.spy().named('onPatchSent');
+        fetchMock.mock(remoteUrl, {
+            status: 200,
+            body: '{"hello": "world"}'
+        });
+    });
+    afterEach(() => {
+        fetchMock.restore();
+    });
     describe('HTTP', function() {
         it('should call onPatchSent and onPatchReceived callbacks when a patch is sent and received', async () => {
-            fetchMock.mock(getTestURL('testURL'), {
-                status: 200,
-                body: '{"hello": "world"}'
-            });
-
-            const onPatchReceived = sinon.spy();
-            const onPatchSent = sinon.spy();
             let tempObj;
 
             new Palindrom({
-                remoteUrl: getTestURL('testURL'),
+                remoteUrl,
                 onStateReset: function(obj) {
                     tempObj = obj;
                 },
@@ -27,7 +37,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                 useWebSocket: false // force HTTP for sending messages
             });
 
-            await sleep(10);
+            await sleep(100);
 
             /* onPatchReceived, shouldn't be called now */
             assert(
@@ -41,7 +51,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             fetchMock.restore();
 
             /* prepare response */
-            fetchMock.mock(getTestURL('testURL'), {
+            fetchMock.mock(remoteUrl, {
                 status: 200,
                 body:
                     '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]'
@@ -64,19 +74,12 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
                 }
             ]);
 
-            fetchMock.restore();
         });
         it('should call onPatchReceived even if the patch was bad', async () => {
-            const onPatchReceived = sinon.spy();
             let tempObj;
 
-            fetchMock.mock(getTestURL('testURL'), {
-                status: 200,
-                body: '{"hello": "world"}'
-            });
-
             new Palindrom({
-                remoteUrl: getTestURL('testURL'),
+                remoteUrl,
                 onStateReset: function(obj) {
                     tempObj = obj;
                 },
@@ -94,63 +97,54 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             fetchMock.restore();
 
             /* prepare response */
-            fetchMock.mock(getTestURL('testURL'), {
+            fetchMock.mock(remoteUrl, {
                 status: 200,
                 body:
                     '[{"op":"replace", "path":"/hello", "value":' +
                     (Number.MAX_SAFE_INTEGER + 1) +
                     '}]'
             });
-
+        
             /* issue a change */
             tempObj.hello = 'onPatchSent callback';
 
             /* wait for HTTP */
-            await sleep(10);
+            await sleep(100);
 
             assert.equal(
                 onPatchReceived.callCount,
                 1,
                 `onPatchReceived should be called once now`
             );
-            fetchMock.restore();
         });
     });
 
     describe('WebSockets', function() {
+        const remoteUrl = getTestURL('testURL');
+        let mockSocketServer, socketMessageSpy;
+        beforeEach(function(){
+            socketMessageSpy = sinon.spy().named('socketMessageSpy');
+            mockSocketServer = new MockSocketServer(getTestURL('testURL', false, true));
+        })
+        afterEach(()=>{
+            mockSocketServer.stop();
+        });
         it('should call onPatchSent and onPatchReceived callbacks when a patch is sent and received', async () => {
-            const server = new MockSocketServer(
-                getTestURL('testURL', false, true)
-            );
-
-            /* prepare response */
-            server.on('message', patch => {
-                /* make sure a correct patch is sent to server */
-                assert.deepEqual(JSON.parse(patch), [
-                    {
-                        op: 'replace',
-                        path: '/hello',
-                        value: 'onPatchSent callback'
-                    }
-                ]);
-                /* respond */
-                server.send(
-                    '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]'
-                );
+            mockSocketServer.on('connection', socket => {
+                /* prepare response */
+                socket.on('message', function(){
+                    socketMessageSpy(...arguments);
+                    /* respond */
+                    socket.send(
+                        '[{"op":"replace", "path":"/hello", "value":"onPatchReceived callback"}]'
+                    );
+                });
             });
-
-            const onPatchReceived = sinon.spy();
-            const onPatchSent = sinon.spy();
             let tempObj;
-
-            fetchMock.mock(getTestURL('testURL'), {
-                status: 200,
-                body: '{"hello": "world"}'
-            });
 
             new Palindrom({
                 useWebSocket: true,
-                remoteUrl: getTestURL('testURL'),
+                remoteUrl,
                 onStateReset: function(obj) {
                     tempObj = obj;
                 },
@@ -159,104 +153,94 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             });
 
             /* wait for HTTP */
-            await sleep();
-
-            assert.equal(
-                onPatchReceived.callCount,
-                0,
-                `onPatchReceived shouldn't be called now`
-            );
-
-            /* onPatchSent, should be called now, for the initial request */
-            assert.equal(
-                onPatchSent.callCount,
-                1,
-                `onPatchSent should be called once`
-            );
-
-            tempObj.hello = 'onPatchSent callback';
-
-            assert.equal(
-                onPatchSent.callCount,
-                2,
-                'onPatchSent should be called twice'
-            );
-
             await sleep(10);
 
-            assert.equal(
-                onPatchReceived.callCount,
-                1,
-                'onPatchReceived should be called once'
-            );
+            expect(onPatchReceived).not.to.be.called;
+            
+            /* onPatchSent, should be called now, for the initial request */
+            expect(onPatchSent).to.be.calledOnce;
+            
+            tempObj.hello = 'onPatchSent callback';
+            
+            expect(onPatchSent).to.be.calledTwice;
+            expect(onPatchSent).to.be.calledWithExactly(JSON.stringify([
+                {
+                    op: 'replace',
+                    path: '/hello',
+                    value: 'onPatchSent callback'
+                }
+            ]), remoteUrl.replace(/^http/, 'ws'), 'WS');
+            // wait for async mock-socket callbacks execution
+            await sleep();
+            expect(socketMessageSpy).to.be.calledOnceWithExactly(JSON.stringify([
+                    {
+                        op: 'replace',
+                        path: '/hello',
+                        value: 'onPatchSent callback'
+                    }
+            ]));
 
-
-            assert.deepEqual(onPatchReceived.lastCall.args[0], [
+            expect(onPatchReceived).to.be.calledOnce;
+            expect(onPatchReceived).to.be.calledOnceWithExactly([
                 {
                     op: 'replace',
                     path: '/hello',
                     value: 'onPatchReceived callback'
                 }
-            ]);
-            server.stop();
-            fetchMock.restore();
+            ], remoteUrl.replace(/^http/, 'ws'), 'WS');
+        });
+        it('should call onPatchReceived even if the patch was bad', async () => {
+            mockSocketServer.on('connection', socket => {
+                /* prepare response */
+                socket.on('message', function(){
+                    socketMessageSpy(...arguments);
+                    /* respond */
+                    socket.send(
+                        '[{"op":"replace", "path":"/hello", "value":' +
+                            (Number.MAX_SAFE_INTEGER + 1) +
+                            '}]'
+                    );
+                });
+            });
+    
+            let tempObj;
+    
+            new Palindrom({
+                remoteUrl: remoteUrl,
+                onStateReset: function(obj) {
+                    tempObj = obj;
+                },
+                useWebSocket: true,
+                onPatchReceived
+            });
+    
+            /* wait for HTTP */
+            await sleep(10);
+    
+            expect(onPatchReceived).not.to.be.called;
+    
+            /* issue a change */
+            tempObj.hello = 'onPatchSent callback';
+            // wait for async mock-socket callbacks execution
+            await sleep();
+            expect(socketMessageSpy).to.be.calledOnceWithExactly(JSON.stringify([
+                    {
+                        op: 'replace',
+                        path: '/hello',
+                        value: 'onPatchSent callback'
+                    }
+            ]));
+    
+    
+            expect(onPatchReceived).to.be.calledOnce;
+            expect(onPatchReceived).to.be.calledOnceWithExactly([
+                {
+                    op: 'replace',
+                    path: '/hello',
+                    value: 9007199254740992
+                }
+            ], remoteUrl.replace(/^http/, 'ws'), 'WS');
         });
     });
 
-    it('WebSocket - should call onPatchReceived even if the patch was bad', async () => {
-        const server = new MockSocketServer(getTestURL('testURL', false, true));
-        /* prepare response */
-        server.on('message', patch => {
-            /* make sure a correct patch is sent to server */
-            assert.deepEqual(JSON.parse(patch), [
-                { op: 'replace', path: '/hello', value: 'onPatchSent callback' }
-            ]);
-
-            /* respond */
-            server.send(
-                '[{"op":"replace", "path":"/hello", "value":' +
-                    (Number.MAX_SAFE_INTEGER + 1) +
-                    '}]'
-            );
-        });
-
-        fetchMock.mock(getTestURL('testURL'), {
-            status: 200,
-            body: '{"hello": "Obj"}'
-        });
-
-        const onPatchReceived = sinon.spy();
-        let tempObj;
-
-        new Palindrom({
-            remoteUrl: getTestURL('testURL'),
-            onStateReset: function(obj) {
-                tempObj = obj;
-            },
-            useWebSocket: true,
-            onPatchReceived
-        });
-
-        /* wait for HTTP */
-        await sleep(10);
-
-        assert.equal(
-            onPatchReceived.callCount,
-            0,
-            `onPatchReceived shouldn't be called now`
-        );
-
-        /* issue a change */
-        tempObj.hello = 'onPatchSent callback';
-
-        await sleep();
-
-        assert.equal(
-            onPatchReceived.callCount,
-            1,
-            `onPatchReceived should be called once now`
-        );
-        server.stop();
-        fetchMock.restore();
-    });
 });

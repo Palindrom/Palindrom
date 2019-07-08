@@ -1,10 +1,13 @@
 import { Server as MockSocketServer } from 'mock-socket';
 import Palindrom from '../../src/palindrom';
 import chai, { expect, assert } from 'chai';
+import sinonChai  from "sinon-chai";
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { PalindromConnectionError } from '../../src/palindrom-errors';
 import { sleep, getTestURL } from '../utils';
+
+chai.use(sinonChai);
 
 describe('Sockets - if `useWebSocket` flag is provided', () => {
     let mockSocketServer;
@@ -246,9 +249,16 @@ describe('Before HTTP connection is established', () => {
 });
 describe('Sockets events', () => {
     const remoteUrl = getTestURL('testURL/koko');
-    let mockSocketServer;
+    let mockSocketServer, mockSocket, socketMessageSpy;
     beforeEach(function(){
+        mockSocket = null;
+        socketMessageSpy = sinon.spy();
         mockSocketServer = new MockSocketServer(getTestURL('testURL/koko', false, true));
+        mockSocketServer.on('connection', socket => {
+            mockSocket = socket;
+            socket.on('message', socketMessageSpy);
+        });
+        
         fetchMock.mock(remoteUrl, {
             status: 200,
             body: '{"hello": "world"}'
@@ -258,7 +268,7 @@ describe('Sockets events', () => {
         fetchMock.restore();
         mockSocketServer.stop();
     });
-    it('socket-opened event should be called', async () => {
+    it('`onSocketOpened` callback should be called', async () => {
         var spy = sinon.spy();
         new Palindrom({
             remoteUrl,
@@ -294,14 +304,14 @@ describe('Sockets events', () => {
 
         await sleep();
 
-        mockSocketServer.send(`[{"op": "replace", "path": "/hello", "value": "bye"}]`);
+        mockSocket.send(`[{"op": "replace", "path": "/hello", "value": "bye"}]`);
 
         assert.equal(palindrom.obj.hello, 'bye');
 
         /* no issues so far */
         assert(spy.notCalled);
 
-        mockSocketServer.send(`Some error message from the server`);
+        mockSocket.send(`Some error message from the server`);
 
         /* Now! */
         assert(spy.calledOnce);
@@ -317,13 +327,6 @@ describe('Sockets events', () => {
 
     context('After connection is established', () => {
         it('should send new changes over WebSocket', async () => {
-            const messages = [];
-
-            mockSocketServer.on('message', patch => {
-                let patchParsed = JSON.parse(patch);
-                messages.push(...patchParsed);
-            });
-
             var palindrom = new Palindrom({
                 remoteUrl,
                 useWebSocket: true
@@ -336,13 +339,11 @@ describe('Sockets events', () => {
 
             await sleep();
 
-            assert.equal(messages.length, 1);
-
-            assert.deepEqual(messages[0], {
+            expect(socketMessageSpy).to.have.been.calledOnceWithExactly(JSON.stringify([{
                 op: 'add',
                 path: '/firstName',
                 value: 'Omar'
-            });
+            }]));
         });
 
         it('should call onConnectionError event if there is no response after `pingIntervalS`', async () => {
@@ -359,7 +360,7 @@ describe('Sockets events', () => {
             await sleep(1200);
 
             /* onConnectionError should be called once now */
-            assert(connectionErrorSpy.calledOnce);
+            expect(connectionErrorSpy).to.have.been.calledOnce;
             const argument = connectionErrorSpy.getCall(0).args[0];
             expect(argument).to.be.an.instanceof(PalindromConnectionError);
             expect(argument).to.have.property('message').that.match(/timeout/i);
@@ -369,13 +370,6 @@ describe('Sockets events', () => {
         
 
         it('should send a patch over HTTP before ws.readyState is OPENED, and over WebSocket after ws.readyState is OPENED', async () => {
-            const messages = [];
-
-            mockSocketServer.on('message', patch => {
-                let patchParsed = JSON.parse(patch);
-                messages.push(...patchParsed);
-            });
-
             let tempObj;
             new Palindrom({
                 remoteUrl,
@@ -403,7 +397,7 @@ describe('Sockets events', () => {
             });
 
             /* make sure there is no socket messages */
-            assert.equal(messages.length, 0);
+            expect(socketMessageSpy).not.to.be.called;
 
             /* now socket is connected, let's issue a change */
             await sleep();
@@ -412,21 +406,16 @@ describe('Sockets events', () => {
 
             await sleep();
 
-            assert.equal(messages.length, 1);
-            assert.equal(
-                JSON.stringify(messages[0]),
-                '{"op":"add","path":"/firstName","value":"Omar"}'
-            );
-
+            expect(socketMessageSpy).to.have.been.calledOnceWithExactly('[{"op":"add","path":"/firstName","value":"Omar"}]');
+            
             /* now socket is connected, let's issue another change */
             await sleep();
             tempObj.firstName = 'Hanan';
+            // mock-socket is asynchronous, so let's wait for it to propagate event
+            await sleep(10);
 
-            assert.equal(messages.length, 2);
-            assert.equal(
-                JSON.stringify(messages[1]),
-                '{"op":"replace","path":"/firstName","value":"Hanan"}'
-            );
+            expect(socketMessageSpy).to.have.been.calledTwice;
+            expect(socketMessageSpy).to.have.been.calledWithExactly('[{"op":"replace","path":"/firstName","value":"Hanan"}]');
         });
     });
 });
