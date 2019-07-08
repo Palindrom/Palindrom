@@ -12,7 +12,6 @@ import JSONPatchOT from 'json-patch-ot';
 import JSONPatchOTAgent from 'json-patch-ot-agent';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors';
 import Reconnector from './reconnector';
-import { Heartbeat, NoHeartbeat } from './heartbeat';
 import NoQueue from './noqueue';
 
 /* this variable is bumped automatically when you call npm version */
@@ -91,28 +90,16 @@ export default class Palindrom {
             this.onReconnectionEnd
         );
 
-        if (options.pingIntervalS) {
-            const intervalMs = options.pingIntervalS * 1000;
-            this.heartbeat = new Heartbeat(
-                this.ping.bind(this),
-                this.handleConnectionError.bind(this),
-                intervalMs,
-                intervalMs
-            );
-        } else {
-            this.heartbeat = new NoHeartbeat();
-        }
-
         this.network = new PalindromNetworkChannel(
             this, // palindrom instance TODO: to be removed, used for error reporting
             options.remoteUrl,
             options.useWebSocket || false, // useWebSocket
             this.handleRemoteChange.bind(this), //onReceive
             this.onPatchSent.bind(this), //onSend,
-            this.handleConnectionError.bind(this),
+            this.onConnectionError.bind(this),
             this.onSocketOpened.bind(this),
-            this.handleFatalError.bind(this), //onFatalError,
-            this.onSocketStateChanged.bind(this) //onStateChange
+            this.onSocketStateChanged.bind(this), //onStateChange
+            options.pingIntervalS
         );
         /**
          * how many OT operations are there in each patch 0, 1 or 2
@@ -159,7 +146,6 @@ export default class Palindrom {
         this._connectToRemote();
     }
     async _connectToRemote(reconnectionPendingData = null) {
-        this.heartbeat.stop();
         const json = await this.network._establish(reconnectionPendingData);
         this.reconnector.stopReconnecting();
 
@@ -168,7 +154,6 @@ export default class Palindrom {
         }
 
         this.queue.reset(json);
-        this.heartbeat.start();
     }
     get useWebSocket() {
         return this.network.useWebSocket;
@@ -177,13 +162,8 @@ export default class Palindrom {
         this.network.useWebSocket = newValue;
     }
 
-    ping() {
-        this._sendPatch([]); // sends empty message to server
-    }
-
     _sendPatch(patch) {
         this.unobserve();
-        this.heartbeat.notifySend();
         this.network.send(patch);
         this.observe();
     }
@@ -295,26 +275,6 @@ export default class Palindrom {
         }
     }
 
-    /**
-     * Handle an error which is probably caused by random disconnection
-     * @param {PalindromConnectionError} palindromError
-     */
-    handleConnectionError(palindromError) {
-        this.heartbeat.stop();
-        this.reconnector.triggerReconnection();
-        this.onConnectionError(palindromError);
-    }
-
-    /**
-     * Handle an error which probably won't go away on itself (basically forward upstream)
-     * @param {PalindromConnectionError} palindromError
-     */
-    handleFatalError(palindromError) {
-        this.heartbeat.stop();
-        this.reconnector.stopReconnecting();
-        this.onConnectionError(palindromError);
-    }
-
     reconnectNow() {
         this.reconnector.reconnectNow();
     }
@@ -331,7 +291,6 @@ export default class Palindrom {
         //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
         this.onPatchReceived(data, url, method);
 
-        this.heartbeat.notifyReceive();
         const patch = data || []; // fault tolerance - empty response string should be treated as empty patch array
 
         validateNumericsRangesInPatch(

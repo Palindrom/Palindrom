@@ -96,13 +96,13 @@ module.exports = require("websocket");
 /* 1 */
 /***/ (function(module, exports) {
 
-module.exports = require("node-fetch");
+module.exports = require("url");
 
 /***/ }),
 /* 2 */
 /***/ (function(module, exports) {
 
-module.exports = require("url");
+module.exports = require("node-fetch");
 
 /***/ }),
 /* 3 */
@@ -118,385 +118,9 @@ module.exports = require("json-patch-queue");
 
 /***/ }),
 /* 5 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-"use strict";
-
-
-/*!
- * https://github.com/Palindrom/JSONPatcherProxy
- * (c) 2017 Starcounter 
- * MIT license
- * 
- * Vocabulary used in this file:
- *  * root - root object that is deeply observed by JSONPatcherProxy
- *  * tree - any subtree within the root or the root
- */
-
-/** Class representing a JS Object observer  */
-const JSONPatcherProxy = (function() {
-  /**
-  * Deep clones your object and returns a new object.
-  */
-  function deepClone(obj) {
-    switch (typeof obj) {
-      case 'object':
-        return JSON.parse(JSON.stringify(obj)); //Faster than ES5 clone - http://jsperf.com/deep-cloning-of-objects/5
-      case 'undefined':
-        return null; //this is how JSON.stringify behaves for array items
-      default:
-        return obj; //no need to clone primitives
-    }
-  }
-  JSONPatcherProxy.deepClone = deepClone;
-
-  function escapePathComponent(str) {
-    if (str.indexOf('/') == -1 && str.indexOf('~') == -1) return str;
-    return str.replace(/~/g, '~0').replace(/\//g, '~1');
-  }
-  JSONPatcherProxy.escapePathComponent = escapePathComponent;
-
-  /**
-   * Walk up the parenthood tree to get the path
-   * @param {JSONPatcherProxy} instance 
-   * @param {Object} tree the object you need to find its path
-   */
-  function getPathToTree(instance, tree) {
-    const pathComponents = [];
-    let parenthood = instance._parenthoodMap.get(tree);
-    while (parenthood && parenthood.key) {
-      // because we're walking up-tree, we need to use the array as a stack
-      pathComponents.unshift(parenthood.key);
-      parenthood = instance._parenthoodMap.get(parenthood.parent);
-    }
-    if (pathComponents.length) {
-      const path = pathComponents.join('/');
-      return '/' + path;
-    }
-    return '';
-  }
-  /**
-   * A callback to be used as the proxy set trap callback.
-   * It updates parenthood map if needed, proxifies nested newly-added objects, calls default callback with the changes occurred.
-   * @param {JSONPatcherProxy} instance JSONPatcherProxy instance
-   * @param {Proxy} proxifiedTree the proxy of the affected object
-   * @param {Object} tree the affected object
-   * @param {String} key the effect property's name
-   * @param {Any} newValue the value being set
-   */
-  function trapForSet(instance, proxifiedTree, tree, key, newValue) {
-    const pathToKey = getPathToTree(instance, tree) + '/' + escapePathComponent(key);
-    const subtreeMetadata = instance._treeMetadataMap.get(newValue);
-
-    if (instance._treeMetadataMap.has(newValue)) {
-      instance._parenthoodMap.set(subtreeMetadata.originalObject, { parent: tree, key });
-    }
-    /*
-        mark already proxified values as inherited.
-        rationale: proxy.arr.shift()
-        will emit
-        {op: replace, path: '/arr/1', value: arr_2}
-        {op: remove, path: '/arr/2'}
-
-        by default, the second operation would revoke the proxy, and this renders arr revoked.
-        That's why we need to remember the proxies that are inherited.
-      */
-    /*
-    Why do we need to check instance._isProxifyingTreeNow?
-
-    We need to make sure we mark revocables as inherited ONLY when we're observing,
-    because throughout the first proxification, a sub-object is proxified and then assigned to 
-    its parent object. This assignment of a pre-proxified object can fool us into thinking
-    that it's a proxified object moved around, while in fact it's the first assignment ever. 
-
-    Checking _isProxifyingTreeNow ensures this is not happening in the first proxification, 
-    but in fact is is a proxified object moved around the tree
-    */
-    if (subtreeMetadata && !instance._isProxifyingTreeNow) {
-      subtreeMetadata.inherited = true;
-    }
-
-    // if the new value is an object, make sure to watch it
-    if (
-      newValue &&
-      typeof newValue == 'object' &&
-      !instance._treeMetadataMap.has(newValue)
-    ) {
-      instance._parenthoodMap.set(newValue, { parent: tree, key });
-      newValue = instance._proxifyTreeRecursively(tree, newValue, key);
-    }
-    // let's start with this operation, and may or may not update it later
-    const operation = {
-      op: 'remove',
-      path: pathToKey
-    };
-    const isTreeAnArray = Array.isArray(tree);
-    if (typeof newValue == 'undefined') {
-      // applying De Morgan's laws would be a tad faster, but less readable
-      if (!isTreeAnArray && !tree.hasOwnProperty(key)) {
-        // `undefined` is being set to an already undefined value, keep silent
-        return Reflect.set(tree, key, newValue, proxifiedTree);
-      } else {
-        // when array element is set to `undefined`, should generate replace to `null`
-        if (isTreeAnArray) {
-          // undefined array elements are JSON.stringified to `null`
-          (operation.op = 'replace'), (operation.value = null);
-        }
-        const oldSubtreeMetadata = instance._treeMetadataMap.get(tree[key]);
-        if (oldSubtreeMetadata) {
-          //TODO there is no test for this!
-          instance._parenthoodMap.delete(tree[key]);
-          instance._disableTrapsForTreeMetadata(oldSubtreeMetadata);
-          instance._treeMetadataMap.delete(oldSubtreeMetadata);
-        }
-      }
-    } else {
-      if (isTreeAnArray && !Number.isInteger(+key.toString())) {
-        /* array props (as opposed to indices) don't emit any patches, to avoid needless `length` patches */
-        if(key != 'length') {
-          console.warn('JSONPatcherProxy noticed a non-integer prop was set for an array. This will not emit a patch');
-        }
-        return Reflect.set(tree, key, newValue, proxifiedTree);
-      }
-      operation.op = 'add';
-      if (tree.hasOwnProperty(key)) {
-        if (typeof tree[key] !== 'undefined' || isTreeAnArray) {
-          operation.op = 'replace'; // setting `undefined` array elements is a `replace` op
-        }
-      }
-      operation.value = newValue;
-    }
-    const reflectionResult = Reflect.set(tree, key, newValue, proxifiedTree);
-    instance._defaultCallback(operation);
-    return reflectionResult;
-  }
-  /**
-   * A callback to be used as the proxy delete trap callback.
-   * It updates parenthood map if needed, calls default callbacks with the changes occurred.
-   * @param {JSONPatcherProxy} instance JSONPatcherProxy instance
-   * @param {Object} tree the effected object
-   * @param {String} key the effected property's name
-   */
-  function trapForDeleteProperty(instance, tree, key) {
-    if (typeof tree[key] !== 'undefined') {
-      const pathToKey = getPathToTree(instance, tree) + '/' + escapePathComponent(key);
-      const subtreeMetadata = instance._treeMetadataMap.get(tree[key]);
-
-      if (subtreeMetadata) {
-        if (subtreeMetadata.inherited) {
-          /*
-            this is an inherited proxy (an already proxified object that was moved around), 
-            we shouldn't revoke it, because even though it was removed from path1, it is still used in path2.
-            And we know that because we mark moved proxies with `inherited` flag when we move them
-
-            it is a good idea to remove this flag if we come across it here, in trapForDeleteProperty.
-            We DO want to revoke the proxy if it was removed again.
-          */
-          subtreeMetadata.inherited = false;
-        } else {
-          instance._parenthoodMap.delete(subtreeMetadata.originalObject);
-          instance._disableTrapsForTreeMetadata(subtreeMetadata);
-          instance._treeMetadataMap.delete(tree[key]);
-        }
-      }
-      const reflectionResult = Reflect.deleteProperty(tree, key);
-
-      instance._defaultCallback({
-        op: 'remove',
-        path: pathToKey
-      });
-
-      return reflectionResult;
-    }
-  }
-  /**
-    * Creates an instance of JSONPatcherProxy around your object of interest `root`. 
-    * @param {Object|Array} root - the object you want to wrap
-    * @param {Boolean} [showDetachedWarning = true] - whether to log a warning when a detached sub-object is modified @see {@link https://github.com/Palindrom/JSONPatcherProxy#detached-objects} 
-    * @returns {JSONPatcherProxy}
-    * @constructor
-    */
-  function JSONPatcherProxy(root, showDetachedWarning) {
-    this._isProxifyingTreeNow = false;
-    this._isObserving = false;
-    this._treeMetadataMap = new Map();
-    this._parenthoodMap = new Map();
-    // default to true
-    if (typeof showDetachedWarning !== 'boolean') {
-      showDetachedWarning = true;
-    }
-
-    this._showDetachedWarning = showDetachedWarning;
-    this._originalRoot = root;
-    this._cachedProxy = null;
-    this._isRecording = false;
-    this._userCallback;
-    this._defaultCallback;
-    this._patches;
-  }
-
-  JSONPatcherProxy.prototype._generateProxyAtKey = function(parent, tree, key) {
-    if (!tree) {
-      return tree;
-    }
-    const handler = {
-      set: (...args) => trapForSet(this, treeMetadata.proxy, ...args),
-      deleteProperty: (...args) => trapForDeleteProperty(this, ...args)
-    };
-    const treeMetadata = Proxy.revocable(tree, handler);
-    // cache the object that contains traps to disable them later.
-    treeMetadata.handler = handler;
-    treeMetadata.originalObject = tree;
-
-    /* keeping track of the object's parent and the key within the parent */
-    this._parenthoodMap.set(tree, { parent, key });
-
-    /* keeping track of all the proxies to be able to revoke them later */
-    this._treeMetadataMap.set(treeMetadata.proxy, treeMetadata);
-    return treeMetadata.proxy;
-  };
-  // grab tree's leaves one by one, encapsulate them into a proxy and return
-  JSONPatcherProxy.prototype._proxifyTreeRecursively = function(parent, tree, key) {
-    for (let key in tree) {
-      if (tree.hasOwnProperty(key)) {
-        if (tree[key] instanceof Object) {
-          tree[key] = this._proxifyTreeRecursively(
-            tree,
-            tree[key],
-            escapePathComponent(key)
-          );
-        }
-      }
-    }
-    return this._generateProxyAtKey(parent, tree, key);
-  };
-  // this function is for aesthetic purposes
-  JSONPatcherProxy.prototype._proxifyRoot = function(root) {
-    /*
-    while proxifying object tree,
-    the proxifying operation itself is being
-    recorded, which in an unwanted behavior,
-    that's why we disable recording through this
-    initial process;
-    */
-    this.pause();
-    this._isProxifyingTreeNow = true;
-    const proxifiedRoot = this._proxifyTreeRecursively(
-      undefined,
-      root,
-      ''
-    );
-    /* OK you can record now */
-    this._isProxifyingTreeNow = false;
-    this.resume();
-    return proxifiedRoot;
-  };
-  /**
-   * Turns a proxified object into a forward-proxy object; doesn't emit any patches anymore, like a normal object
-   * @param {Object} treeMetadata
-   */
-  JSONPatcherProxy.prototype._disableTrapsForTreeMetadata = function(treeMetadata) {
-    if (this._showDetachedWarning) {
-      const message =
-        "You're accessing an object that is detached from the observedObject tree, see https://github.com/Palindrom/JSONPatcherProxy#detached-objects";
-
-      treeMetadata.handler.set = (
-        parent,
-        key,
-        newValue
-      ) => {
-        console.warn(message);
-        return Reflect.set(parent, key, newValue);
-      };
-      treeMetadata.handler.set = (
-        parent,
-        key,
-        newValue
-      ) => {
-        console.warn(message);
-        return Reflect.set(parent, key, newValue);
-      };
-      treeMetadata.handler.deleteProperty = (
-        parent,
-        key
-      ) => {
-        return Reflect.deleteProperty(parent, key);
-      };
-    } else {
-      delete treeMetadata.handler.set;
-      delete treeMetadata.handler.get;
-      delete treeMetadata.handler.deleteProperty;
-    }
-  };
-  /**
-   * Proxifies the object that was passed in the constructor and returns a proxified mirror of it. Even though both parameters are options. You need to pass at least one of them.
-   * @param {Boolean} [record] - whether to record object changes to a later-retrievable patches array.
-   * @param {Function} [callback] - this will be synchronously called with every object change with a single `patch` as the only parameter.
-   */
-  JSONPatcherProxy.prototype.observe = function(record, callback) {
-    if (!record && !callback) {
-      throw new Error('You need to either record changes or pass a callback');
-    }
-    this._isRecording = record;
-    this._userCallback = callback;
-    /*
-    I moved it here to remove it from `unobserve`,
-    this will also make the constructor faster, why initiate
-    the array before they decide to actually observe with recording?
-    They might need to use only a callback.
-    */
-    if (record) this._patches = [];
-    this._cachedProxy = this._proxifyRoot(this._originalRoot);
-    return this._cachedProxy;
-  };
-  /**
-   * If the observed is set to record, it will synchronously return all the patches and empties patches array.
-   */
-  JSONPatcherProxy.prototype.generate = function() {
-    if (!this._isRecording) {
-      throw new Error('You should set record to true to get patches later');
-    }
-    return this._patches.splice(0, this._patches.length);
-  };
-  /**
-   * Revokes all proxies, rendering the observed object useless and good for garbage collection @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/revocable}
-   */
-  JSONPatcherProxy.prototype.revoke = function() {
-    this._treeMetadataMap.forEach(el => {
-      el.revoke();
-    });
-  };
-  /**
-   * Disables all proxies' traps, turning the observed object into a forward-proxy object, like a normal object that you can modify silently.
-   */
-  JSONPatcherProxy.prototype.disableTraps = function() {
-    this._treeMetadataMap.forEach(this._disableTrapsForTreeMetadata, this);
-  };
-  /**
-   * Restores callback back to the original one provided to `observe`.
-   */
-  JSONPatcherProxy.prototype.resume = function() {
-    this._defaultCallback = operation => {
-      this._isRecording && this._patches.push(operation);
-      this._userCallback && this._userCallback(operation);
-    };
-    this._isObserving = true;
-  };
-  /**
-   * Replaces callback with a noop function.
-   */
-  JSONPatcherProxy.prototype.pause = function() {
-    this._defaultCallback = () => {};
-    this._isObserving = false;
-  }
-  return JSONPatcherProxy;
-})();
-
-if (true) {
-  module.exports = JSONPatcherProxy;
-  module.exports.default = JSONPatcherProxy;
-}
-
+module.exports = require("jsonpatcherproxy");
 
 /***/ }),
 /* 6 */
@@ -518,7 +142,7 @@ module.exports = require("json-patch-ot-agent");
 __webpack_require__.r(__webpack_exports__);
 
 // EXTERNAL MODULE: external "url"
-var external_url_ = __webpack_require__(2);
+var external_url_ = __webpack_require__(1);
 
 // CONCATENATED MODULE: ./src/URLShim.js
 /*! Palindrom
@@ -572,15 +196,95 @@ class PalindromConnectionError extends PalindromError {
         this.connectionType = connectionType;
     }
 }
+// CONCATENATED MODULE: ./src/heartbeat.js
+
+const CLIENT = 'Client';
+/**
+ * Guarantees some communication to server and monitors responses for timeouts.
+ * @param sendHeartbeatAction will be called to send a heartbeat
+ * @param onError will be called if no response will arrive after `timeoutMs` since a message has been sent
+ * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
+ * @param timeoutMs should a response fail to arrive in this time, `onError` will be called
+ * @constructor
+ */
+function Heartbeat(
+    sendHeartbeatAction,
+    onError,
+    intervalMs,
+    timeoutMs
+) {
+    let scheduledSend;
+    let scheduledError;
+
+    /**
+     * Call this function at the beginning of operation and after successful reconnection.
+     */
+    this.start = function() {
+        if (scheduledSend) {
+            return;
+        }
+        scheduledSend = setTimeout(() => {
+            this.notifySend();
+            sendHeartbeatAction();
+        }, intervalMs);
+    };
+
+    /**
+     * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
+     */
+    this.notifySend = function() {
+        clearTimeout(scheduledSend); // sending heartbeat will not be necessary until our response arrives
+        scheduledSend = null;
+        if (scheduledError) {
+            return;
+        }
+        scheduledError = setTimeout(() => {
+            scheduledError = null;
+            onError(
+                new PalindromConnectionError(
+                    "Timeout has passed and response hasn't arrived",
+                    CLIENT,
+                    this.remoteUrl,
+                    'Unknown'
+                )
+            ); // timeout has passed and response hasn't arrived
+        }, timeoutMs);
+    };
+
+    /**
+     * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
+     */
+    this.notifyReceive = function() {
+        clearTimeout(scheduledError);
+        scheduledError = null;
+        this.start();
+    };
+
+    /**
+     * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
+     */
+    this.stop = () => {
+        clearTimeout(scheduledSend);
+        scheduledSend = null;
+        clearTimeout(scheduledError);
+        scheduledError = null;
+    };
+}
+
+function NoHeartbeat() {
+    this.start = this.stop = this.notifySend = this.notifyReceive = () => {};
+}
+
 // EXTERNAL MODULE: external "websocket"
 var external_websocket_ = __webpack_require__(0);
 var external_websocket_default = /*#__PURE__*/__webpack_require__.n(external_websocket_);
 
 // EXTERNAL MODULE: external "node-fetch"
-var external_node_fetch_ = __webpack_require__(1);
+var external_node_fetch_ = __webpack_require__(2);
 var external_node_fetch_default = /*#__PURE__*/__webpack_require__.n(external_node_fetch_);
 
 // CONCATENATED MODULE: ./src/palindrom-network-channel.js
+
 
 
 /* this package will be empty in the browser bundle,
@@ -588,7 +292,7 @@ and will import https://www.npmjs.com/package/websocket in node */
 
 
 
-const CLIENT = 'Client';
+const palindrom_network_channel_CLIENT = 'Client';
 const SERVER = 'Server';
 
 /**
@@ -611,8 +315,8 @@ class palindrom_network_channel_PalindromNetworkChannel {
         onSend,
         onConnectionError,
         onSocketOpened,
-        onFatalError,
-        onStateChange
+        onStateChange,
+        pingIntervalS
     ) {
         // TODO(tomalec): to be removed once we will achieve better separation of concerns
         this.palindrom = palindrom;
@@ -627,7 +331,6 @@ class palindrom_network_channel_PalindromNetworkChannel {
         onReceive && (this.onReceive = onReceive);
         onSend && (this.onSend = onSend);
         onConnectionError && (this.onConnectionError = onConnectionError);
-        onFatalError && (this.onFatalError = onFatalError);
         onStateChange && (this.onStateChange = onStateChange);
         onSocketOpened && (this.onSocketOpened = onSocketOpened);
 
@@ -653,6 +356,18 @@ class palindrom_network_channel_PalindromNetworkChannel {
                 return useWebSocket;
             }
         });
+
+        if (pingIntervalS) {
+            const intervalMs = pingIntervalS * 1000;
+            this.heartbeat = new Heartbeat(
+                () => {this.send([]);},
+                this._handleConnectionError.bind(this),
+                intervalMs,
+                intervalMs
+            );
+        } else {
+            this.heartbeat = new NoHeartbeat();
+        }
     }
 
     /**
@@ -662,6 +377,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
      * @return {Promise<Object>}                           Promise for new state of the synced object.
      */
     async _establish(reconnectionPendingData = null) {
+        this.heartbeat.stop();
         const data = reconnectionPendingData ?
             await this._fetch('PATCH', this.remoteUrl.href + '/reconnect', 'application/json', JSON.stringify(reconnectionPendingData)) :
             await this._fetch('GET', this.remoteUrl.href, 'application/json', null);
@@ -669,9 +385,37 @@ class palindrom_network_channel_PalindromNetworkChannel {
         if (this.useWebSocket) {
             this.webSocketUpgrade(this.onSocketOpened);
         }
+        this.heartbeat.start();
         return data;
     }
 
+    /**
+     * Handle an error which is probably caused by random disconnection
+     * @param {PalindromConnectionError} palindromError
+     */
+    _handleConnectionError(palindromError) {
+        this.heartbeat.stop();
+        this.palindrom.reconnector.triggerReconnection();
+        this.onConnectionError(palindromError);
+    }    
+    /**
+     * Handle an error which probably won't go away on itself (basically forward upstream)
+     * @param {PalindromConnectionError} palindromError
+     */
+    _handleFatalError(palindromError) {
+        this.heartbeat.stop();
+        this.palindrom.reconnector.stopReconnecting();
+        this.onConnectionError(palindromError);
+    }
+
+    /**
+     * Notify heartbeat and onReceive callback about received change
+     */
+    _notifyReceive() {
+        this.heartbeat.notifyReceive();
+        this.onReceive(...arguments);
+    }
+    
     /**
      * Send any text message by currently established channel
      * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
@@ -679,6 +423,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
      * @return {PalindromNetworkChannel}     self
      */
     async send(patch) {
+        this.heartbeat.notifySend();
         const msg = JSON.stringify(patch);
         // send message only if there is a working ws connection
         if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
@@ -696,7 +441,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
 
             //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
             //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
-            this.onReceive(data, url, method);
+            this._notifyReceive(data, url, method);
         }
         return this;
     }
@@ -738,7 +483,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
             try {
                 var parsedMessage = JSON.parse(event.data);
             } catch (e) {
-                this.onFatalError(
+                this._handleFatalError(
                     new PalindromConnectionError(
                         event.data,
                         SERVER,
@@ -748,7 +493,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
                 );
                 return;
             }
-            this.onReceive(parsedMessage, this._ws.url, 'WS');
+            this._notifyReceive(parsedMessage, this._ws.url, 'WS');
         };
         this._ws.onerror = event => {
             this.onStateChange(this._ws.readyState, upgradeURL, event.data);
@@ -762,8 +507,8 @@ class palindrom_network_channel_PalindromNetworkChannel {
                 'readyState: ' + this._ws.readyState
             ].join('\n');
 
-            this.onFatalError(
-                new PalindromConnectionError(message, CLIENT, upgradeURL, 'WS')
+            this._handleFatalError(
+                new PalindromConnectionError(message, palindrom_network_channel_CLIENT, upgradeURL, 'WS')
             );
         };
         this._ws.onclose = event => {
@@ -784,7 +529,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
             ].join('\n');
 
             if (event.reason) {
-                this.onFatalError(
+                this._handleFatalError(
                     new PalindromConnectionError(
                         message,
                         SERVER,
@@ -793,7 +538,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
                     )
                 );
             } else if (!event.wasClean) {
-                this.onConnectionError(
+                this._handleConnectionError(
                     new PalindromConnectionError(
                         message,
                         SERVER,
@@ -830,7 +575,7 @@ class palindrom_network_channel_PalindromNetworkChannel {
 
         //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
         //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
-        this.onReceive(data, href, method);
+        this._notifyReceive(data, href, method);
         return data;
     }
 
@@ -883,8 +628,8 @@ class palindrom_network_channel_PalindromNetworkChannel {
             'HTTP method: ' + method
         ].join('\n');
 
-        this.onFatalError(
-            new PalindromConnectionError(message, CLIENT, url, method)
+        this._handleFatalError(
+            new PalindromConnectionError(message, palindrom_network_channel_CLIENT, url, method)
         );
     }
 
@@ -941,9 +686,9 @@ class palindrom_network_channel_PalindromNetworkChannel {
 // EXTERNAL MODULE: external "fast-json-patch"
 var external_fast_json_patch_ = __webpack_require__(3);
 
-// EXTERNAL MODULE: ../JSONPatcherProxy/src/jsonpatcherproxy.js
-var jsonpatcherproxy = __webpack_require__(5);
-var jsonpatcherproxy_default = /*#__PURE__*/__webpack_require__.n(jsonpatcherproxy);
+// EXTERNAL MODULE: external "jsonpatcherproxy"
+var external_jsonpatcherproxy_ = __webpack_require__(5);
+var external_jsonpatcherproxy_default = /*#__PURE__*/__webpack_require__.n(external_jsonpatcherproxy_);
 
 // EXTERNAL MODULE: external "json-patch-queue"
 var external_json_patch_queue_ = __webpack_require__(4);
@@ -1033,85 +778,6 @@ function Reconnector(
     reset();
 }
 
-// CONCATENATED MODULE: ./src/heartbeat.js
-
-const heartbeat_CLIENT = 'Client';
-/**
- * Guarantees some communication to server and monitors responses for timeouts.
- * @param sendHeartbeatAction will be called to send a heartbeat
- * @param onError will be called if no response will arrive after `timeoutMs` since a message has been sent
- * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
- * @param timeoutMs should a response fail to arrive in this time, `onError` will be called
- * @constructor
- */
-function Heartbeat(
-    sendHeartbeatAction,
-    onError,
-    intervalMs,
-    timeoutMs
-) {
-    let scheduledSend;
-    let scheduledError;
-
-    /**
-     * Call this function at the beginning of operation and after successful reconnection.
-     */
-    this.start = function() {
-        if (scheduledSend) {
-            return;
-        }
-        scheduledSend = setTimeout(() => {
-            this.notifySend();
-            sendHeartbeatAction();
-        }, intervalMs);
-    };
-
-    /**
-     * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
-     */
-    this.notifySend = function() {
-        clearTimeout(scheduledSend); // sending heartbeat will not be necessary until our response arrives
-        scheduledSend = null;
-        if (scheduledError) {
-            return;
-        }
-        scheduledError = setTimeout(() => {
-            scheduledError = null;
-            onError(
-                new PalindromConnectionError(
-                    "Timeout has passed and response hasn't arrived",
-                    heartbeat_CLIENT,
-                    this.remoteUrl,
-                    'Unknown'
-                )
-            ); // timeout has passed and response hasn't arrived
-        }, timeoutMs);
-    };
-
-    /**
-     * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
-     */
-    this.notifyReceive = function() {
-        clearTimeout(scheduledError);
-        scheduledError = null;
-        this.start();
-    };
-
-    /**
-     * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
-     */
-    this.stop = () => {
-        clearTimeout(scheduledSend);
-        scheduledSend = null;
-        clearTimeout(scheduledError);
-        scheduledError = null;
-    };
-}
-
-function NoHeartbeat() {
-    this.start = this.stop = this.notifySend = this.notifyReceive = () => {};
-}
-
 // CONCATENATED MODULE: ./src/noqueue.js
 /**
  * Non-queuing object that conforms JSON-Patch-Queue API
@@ -1147,7 +813,6 @@ class NoQueue {
  * (c) 2017 Joachim Wester
  * MIT license
  */
-
 
 
 
@@ -1235,28 +900,16 @@ class palindrom_Palindrom {
             this.onReconnectionEnd
         );
 
-        if (options.pingIntervalS) {
-            const intervalMs = options.pingIntervalS * 1000;
-            this.heartbeat = new Heartbeat(
-                this.ping.bind(this),
-                this.handleConnectionError.bind(this),
-                intervalMs,
-                intervalMs
-            );
-        } else {
-            this.heartbeat = new NoHeartbeat();
-        }
-
         this.network = new palindrom_network_channel_PalindromNetworkChannel(
             this, // palindrom instance TODO: to be removed, used for error reporting
             options.remoteUrl,
             options.useWebSocket || false, // useWebSocket
             this.handleRemoteChange.bind(this), //onReceive
             this.onPatchSent.bind(this), //onSend,
-            this.handleConnectionError.bind(this),
+            this.onConnectionError.bind(this),
             this.onSocketOpened.bind(this),
-            this.handleFatalError.bind(this), //onFatalError,
-            this.onSocketStateChanged.bind(this) //onStateChange
+            this.onSocketStateChanged.bind(this), //onStateChange
+            options.pingIntervalS
         );
         /**
          * how many OT operations are there in each patch 0, 1 or 2
@@ -1303,7 +956,6 @@ class palindrom_Palindrom {
         this._connectToRemote();
     }
     async _connectToRemote(reconnectionPendingData = null) {
-        this.heartbeat.stop();
         const json = await this.network._establish(reconnectionPendingData);
         this.reconnector.stopReconnecting();
 
@@ -1312,7 +964,6 @@ class palindrom_Palindrom {
         }
 
         this.queue.reset(json);
-        this.heartbeat.start();
     }
     get useWebSocket() {
         return this.network.useWebSocket;
@@ -1321,13 +972,8 @@ class palindrom_Palindrom {
         this.network.useWebSocket = newValue;
     }
 
-    ping() {
-        this._sendPatch([]); // sends empty message to server
-    }
-
     _sendPatch(patch) {
         this.unobserve();
-        this.heartbeat.notifySend();
         this.network.send(patch);
         this.observe();
     }
@@ -1337,7 +983,7 @@ class palindrom_Palindrom {
             obj = {};
         }
         /* wrap a new object with a proxy observer */
-        this.jsonPatcherProxy = new jsonpatcherproxy_default.a(obj);
+        this.jsonPatcherProxy = new external_jsonpatcherproxy_default.a(obj);
 
         const proxifiedObj = this.jsonPatcherProxy.observe(false, operation => {
             const filtered = this.filterLocalChange(operation);
@@ -1439,26 +1085,6 @@ class palindrom_Palindrom {
         }
     }
 
-    /**
-     * Handle an error which is probably caused by random disconnection
-     * @param {PalindromConnectionError} palindromError
-     */
-    handleConnectionError(palindromError) {
-        this.heartbeat.stop();
-        this.reconnector.triggerReconnection();
-        this.onConnectionError(palindromError);
-    }
-
-    /**
-     * Handle an error which probably won't go away on itself (basically forward upstream)
-     * @param {PalindromConnectionError} palindromError
-     */
-    handleFatalError(palindromError) {
-        this.heartbeat.stop();
-        this.reconnector.stopReconnecting();
-        this.onConnectionError(palindromError);
-    }
-
     reconnectNow() {
         this.reconnector.reconnectNow();
     }
@@ -1475,7 +1101,6 @@ class palindrom_Palindrom {
         //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
         this.onPatchReceived(data, url, method);
 
-        this.heartbeat.notifyReceive();
         const patch = data || []; // fault tolerance - empty response string should be treated as empty patch array
 
         validateNumericsRangesInPatch(
