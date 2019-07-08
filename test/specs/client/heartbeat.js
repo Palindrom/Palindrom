@@ -18,7 +18,7 @@ describe('HTTP Client', () => {
     afterEach(() => {
         fetchMock.restore();
         // hackish way to silence previous instances of Palindrom.
-        palindrom.heartbeat.stop()
+        palindrom.network.heartbeat.stop()
         // console.info('palindrom\'s heartbeat stopped');
     });
     describe('Heartbeat', function () {
