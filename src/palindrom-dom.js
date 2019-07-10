@@ -348,3 +348,4 @@ class AbortError extends Error {};
             );
         }
     }
+export {Palindrom, PalindromDOM};
