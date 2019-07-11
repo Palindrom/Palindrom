@@ -808,6 +808,7 @@ class NoQueue {
 
 // CONCATENATED MODULE: ./src/palindrom.js
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return palindrom_Palindrom; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Palindrom", function() { return palindrom_Palindrom; });
 /*! Palindrom
  * https://github.com/Palindrom/Palindrom
  * (c) 2017 Joachim Wester
