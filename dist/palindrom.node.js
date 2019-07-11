@@ -90,31 +90,31 @@ module.exports =
 /* 0 */
 /***/ (function(module, exports) {
 
-module.exports = require("websocket");
+module.exports = require("url");
 
 /***/ }),
 /* 1 */
 /***/ (function(module, exports) {
 
-module.exports = require("url");
+module.exports = require("websocket");
 
 /***/ }),
 /* 2 */
 /***/ (function(module, exports) {
 
-module.exports = require("node-fetch");
+module.exports = require("fast-json-patch");
 
 /***/ }),
 /* 3 */
 /***/ (function(module, exports) {
 
-module.exports = require("fast-json-patch");
+module.exports = require("json-patch-queue");
 
 /***/ }),
 /* 4 */
 /***/ (function(module, exports) {
 
-module.exports = require("json-patch-queue");
+module.exports = require("node-fetch");
 
 /***/ }),
 /* 5 */
@@ -142,7 +142,7 @@ module.exports = require("json-patch-ot-agent");
 __webpack_require__.r(__webpack_exports__);
 
 // EXTERNAL MODULE: external "url"
-var external_url_ = __webpack_require__(1);
+var external_url_ = __webpack_require__(0);
 
 // CONCATENATED MODULE: ./src/URLShim.js
 /*! Palindrom
@@ -276,11 +276,11 @@ function NoHeartbeat() {
 }
 
 // EXTERNAL MODULE: external "websocket"
-var external_websocket_ = __webpack_require__(0);
+var external_websocket_ = __webpack_require__(1);
 var external_websocket_default = /*#__PURE__*/__webpack_require__.n(external_websocket_);
 
 // EXTERNAL MODULE: external "node-fetch"
-var external_node_fetch_ = __webpack_require__(2);
+var external_node_fetch_ = __webpack_require__(4);
 var external_node_fetch_default = /*#__PURE__*/__webpack_require__.n(external_node_fetch_);
 
 // CONCATENATED MODULE: ./src/palindrom-network-channel.js
@@ -684,14 +684,14 @@ class palindrom_network_channel_PalindromNetworkChannel {
 }
 
 // EXTERNAL MODULE: external "fast-json-patch"
-var external_fast_json_patch_ = __webpack_require__(3);
+var external_fast_json_patch_ = __webpack_require__(2);
 
 // EXTERNAL MODULE: external "jsonpatcherproxy"
 var external_jsonpatcherproxy_ = __webpack_require__(5);
 var external_jsonpatcherproxy_default = /*#__PURE__*/__webpack_require__.n(external_jsonpatcherproxy_);
 
 // EXTERNAL MODULE: external "json-patch-queue"
-var external_json_patch_queue_ = __webpack_require__(4);
+var external_json_patch_queue_ = __webpack_require__(3);
 
 // EXTERNAL MODULE: external "json-patch-ot"
 var external_json_patch_ot_ = __webpack_require__(6);
