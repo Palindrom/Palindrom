@@ -215,7 +215,7 @@ describe('Palindrom', () => {
             beforeEach(() => {
                 fetchMock.mock(remoteUrl, {
                     status: 200,
-                    body: `{"value": ${Number.MAX_SAFE_INTEGER + 1}}`
+                    body: `{"amount": ${Number.MAX_SAFE_INTEGER + 1}}`
                 });
             });
             afterEach(() => {
@@ -236,7 +236,7 @@ describe('Palindrom', () => {
                     assert.equal(
                         errorPassed.message,
                         `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
-                            1}, variable path is: /value`
+                            1}, variable path is: /amount`
                     );
                 });
                 it('Outgoing patch: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {
@@ -245,7 +245,7 @@ describe('Palindrom', () => {
                     new Palindrom({
                         remoteUrl,
                         onStateReset: obj =>
-                            obj.val = Number.MAX_SAFE_INTEGER + 1
+                            obj.amount = Number.MAX_SAFE_INTEGER + 1
                         ,
                         onOutgoingPatchValidationError
                     });
@@ -261,7 +261,7 @@ describe('Palindrom', () => {
                     assert.equal(
                         errorPassed.message,
                         `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
-                            1}, variable path is: /val`
+                            1}, variable path is: /amount`
                     );
                 });
             });
@@ -280,7 +280,7 @@ describe('Palindrom', () => {
                         remoteUrl,
                         useWebSocket: true,
                         onOutgoingPatchValidationError,
-                        onStateReset: obj => obj.val = Number.MAX_SAFE_INTEGER + 1,
+                        onStateReset: obj => obj.amount = Number.MAX_SAFE_INTEGER + 1,
                     });
     
                     await sleep();
@@ -296,7 +296,7 @@ describe('Palindrom', () => {
     
                     assert.equal(
                         errorPassed.message,
-                        `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER + 1}, variable path is: /val`
+                        `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER + 1}, variable path is: /amount`
                     );
                 });
                 it('Incoming patch: out of range numbers should call onIncomingPatchValidationError event with a RangeError', async () => {    
@@ -308,7 +308,7 @@ describe('Palindrom', () => {
                             // socketMessageSpy(...arguments);
                             /* respond */
                             socket.send(
-                                `[{"op": "replace", "path": "/val", "value": ${Number.MAX_SAFE_INTEGER +
+                                `[{"op": "replace", "path": "/amount", "value": ${Number.MAX_SAFE_INTEGER +
                                     1}}]`
                             );
                         });
@@ -327,7 +327,7 @@ describe('Palindrom', () => {
                     assert.equal(
                         errorPassed.message,
                         `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
-                            1}, variable path is: /value`
+                            1}, variable path is: /amount`
                     );
                 });
             });
