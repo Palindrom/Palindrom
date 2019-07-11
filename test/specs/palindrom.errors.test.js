@@ -265,7 +265,7 @@ describe('Palindrom', () => {
                     );
                 });
             });
-            context('WebSocker', () => {
+            context('WebSocket', () => {
                 let mockSocketServer;
                 beforeEach(() => {
                     mockSocketServer = new MockSocketServer(getTestURL('testURL', false, true));
