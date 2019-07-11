@@ -3039,6 +3039,8 @@ function findRangeErrors(val, errorHandler, variablePath = '') {
 
 // CONCATENATED MODULE: ./src/palindrom-dom.js
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return palindrom_dom_PalindromDOM; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PalindromDOM", function() { return palindrom_dom_PalindromDOM; });
+/* concated harmony reexport Palindrom */__webpack_require__.d(__webpack_exports__, "Palindrom", function() { return palindrom_Palindrom; });
 /*! Palindrom
  * https://github.com/Palindrom/Palindrom
  * (c) 2017 Joachim Wester
@@ -3389,6 +3391,7 @@ class AbortError extends Error {};
             );
         }
     }
+
 
 /***/ })
 /******/ ])["default"];

@@ -22,8 +22,8 @@
     "email": "joachimwester@me.com",
     "url": "http://www.starcounter.com/"
   },
-  "main": "./dist/palindrom.node.js",
-  "browser": "./dist/palindrom.min.js",
+  "main": "./src/palindrom.js",
+  "browser": "./src/palindrom-dom.js",
   "files": [
     "dist/*",
     "src/*"
