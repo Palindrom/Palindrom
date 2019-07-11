@@ -365,3 +365,4 @@ function findRangeErrors(val, errorHandler, variablePath = '') {
         );
     }
 }
+export {Palindrom};
