@@ -153,7 +153,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             });
 
             /* wait for HTTP */
-            await sleep(10);
+            await sleep(50);
 
             expect(onPatchReceived).not.to.be.called;
             
@@ -215,7 +215,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             });
     
             /* wait for HTTP */
-            await sleep(10);
+            await sleep(50);
     
             expect(onPatchReceived).not.to.be.called;
     
