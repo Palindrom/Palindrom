@@ -249,13 +249,15 @@ describe('Before HTTP connection is established', () => {
 });
 describe('Sockets events', () => {
     const remoteUrl = getTestURL('testURL/koko');
-    let mockSocketServer, mockSocket, socketMessageSpy;
+    let mockSocketServer, mockSocket, socketMessageSpy, socketConnectedspy;
     beforeEach(function(){
         mockSocket = null;
-        socketMessageSpy = sinon.spy();
+        socketMessageSpy = sinon.spy().named('socket message');
+        socketConnectedspy = sinon.spy().named('socket connection');
         mockSocketServer = new MockSocketServer(getTestURL('testURL/koko', false, true));
         mockSocketServer.on('connection', socket => {
             mockSocket = socket;
+            socketConnectedspy(...arguments);
             socket.on('message', socketMessageSpy);
         });
         
@@ -269,26 +271,20 @@ describe('Sockets events', () => {
         mockSocketServer.stop();
     });
     it('`onSocketOpened` callback should be called', async () => {
-        var spy = sinon.spy();
+        const onSocketOpened = sinon.spy().named('onSocketOpened');
         new Palindrom({
             remoteUrl,
             useWebSocket: true,
-            onSocketOpened: spy
+            onSocketOpened
         });
 
-        assert.equal(
-            spy.callCount,
-            0,
-            'socket should not be opened before HTTP delay'
-        );
-
-        await sleep();
-
-        assert.equal(
-            spy.callCount,
-            1,
-            'socket should be opened before HTTP delay'
-        );
+        expect(onSocketOpened, '`onSocketOpened` should not be called before HTTP delay').not.to.be.called;
+        expect(socketConnectedspy, 'Web Socket connection should not be opened before HTTP delay').not.to.be.called;
+        
+        await sleep(50);
+        
+        expect(onSocketOpened, '`onSocketOpened` should be called after HTTP delay').to.be.called;
+        expect(socketConnectedspy, 'Web Socket connection should be opened after HTTP delay').to.be.called;
     });
 
     it('Should call onConnectionError even when a non-JSON message is sent', async () => {
