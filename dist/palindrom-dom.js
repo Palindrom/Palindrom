@@ -3039,6 +3039,8 @@ function findRangeErrors(val, errorHandler, variablePath = '') {
 
 // CONCATENATED MODULE: ./src/palindrom-dom.js
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return palindrom_dom_PalindromDOM; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PalindromDOM", function() { return palindrom_dom_PalindromDOM; });
+/* concated harmony reexport Palindrom */__webpack_require__.d(__webpack_exports__, "Palindrom", function() { return palindrom_Palindrom; });
 /*! Palindrom
  * https://github.com/Palindrom/Palindrom
  * (c) 2017 Joachim Wester
@@ -3373,6 +3375,22 @@ class AbortError extends Error {};
                 //type string is reported in Polymer / Canary (Web Platform features disabled)
                 const parser = document.createElement('A');
                 parser.href = elem;
+
+                // @see http://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
+                // IE doesn't populate all link properties when setting .href with a relative URL,
+                // however .href will return an absolute URL which then can be used on itself
+                // to populate these additional fields.
+                if (parser.host == '') {
+                    parser.href = parser.href;
+                }
+                elem = parser;
+            }
+            return (
+                elem.protocol == window.location.protocol &&
+                elem.host == window.location.host
+            );
+        }
+    }
 
                 // @see http://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
                 // IE doesn't populate all link properties when setting .href with a relative URL,
