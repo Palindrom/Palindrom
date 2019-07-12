@@ -135,7 +135,7 @@ palindrom.useWebSocket = false;
 Palindrom will try to detect connection problems and then reconnect to server. If `pingIntervalS` is set it determines maximal time without network activity. When this time passes and no activity has been detected
 Palindrom will issue a heartbeat patch (an empty patch, consisting only of version operations).
 
-When connection problem is detected (e.g. there was no response to heartbeat or websocket has been closed) palindrom will schedule reconnection and trigger `onReconnectionCountdown` callback with number of milliseconds
+When connection problem is detected (e.g. there was no response to heartbeat or websocket has been not cleanly closed without a `.reason`) palindrom will schedule reconnection and trigger `onReconnectionCountdown` callback with number of milliseconds
 to scheduled reconnection as argument, it will then trigger it every second. When countdown reaches 0 (callback is still called then) palindrom will try to reconnect (using `/reconnect` endpoint) to server. If this reconnection
 fails then new reconnection will be scheduled for twice as many seconds (i.e. first it will occur after a seconds, then two seconds, then four, etc.). If reconnection succeeds, `onReconnectionEnd` callback will be triggered
 and normal operations will continue.
