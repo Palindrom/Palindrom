@@ -3392,6 +3392,21 @@ class AbortError extends Error {};
         }
     }
 
+                // @see http://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
+                // IE doesn't populate all link properties when setting .href with a relative URL,
+                // however .href will return an absolute URL which then can be used on itself
+                // to populate these additional fields.
+                if (parser.host == '') {
+                    parser.href = parser.href;
+                }
+                elem = parser;
+            }
+            return (
+                elem.protocol == window.location.protocol &&
+                elem.host == window.location.host
+            );
+        }
+    }
 
 /***/ })
 /******/ ])["default"];

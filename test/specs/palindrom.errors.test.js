@@ -211,122 +211,125 @@ describe('Palindrom', () => {
             });
         });
         context('Numbers Validation', function() {
-            it('Initial HTTP response: out of range numbers should call onIncomingPatchValidationError event with a RangeError', async () => {
-                fetchMock.mock(getTestURL('testURL'), {
+            const remoteUrl = getTestURL('testURL');
+            beforeEach(() => {
+                fetchMock.mock(remoteUrl, {
                     status: 200,
-                    body: `{"value": ${Number.MAX_SAFE_INTEGER + 1}}`
+                    body: `{"amount": ${Number.MAX_SAFE_INTEGER + 1}}`
                 });
-                const spy = sinon.spy();
-                const palindrom = new Palindrom({
-                    remoteUrl: getTestURL('testURL'),
-                    onIncomingPatchValidationError: spy
-                });
-
-                await sleep();
-                assert(spy.calledOnce);
-                const errorPassed = spy.getCall(0).args[0];
-                assert(errorPassed instanceof RangeError);
-                assert.equal(
-                    errorPassed.message,
-                    `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
-                        1}, variable path is: /value`
-                );
             });
-            it('Outgoing HTTP patch: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {
-                fetchMock.mock(getTestURL('testURL-range'), {
-                    status: 200,
-                    body: `{"val": 1}`
-                });
-
-                const spy = sinon.spy();
-
-                new Palindrom({
-                    remoteUrl: getTestURL('testURL-range'),
-                    onStateReset: obj =>
-                        obj.val = Number.MAX_SAFE_INTEGER + 1
-                    ,
-                    onOutgoingPatchValidationError: spy
-                });
-
-                await sleep(20);
-
-                assert(spy.calledOnce, `Expected \`onOutgoingPatchValidationError\` to be called once, but was called ${spy.callCount} times`);
-
-                const errorPassed = spy.getCall(0).args[0];
-
-                assert(errorPassed instanceof RangeError);
-
-                assert.equal(
-                    errorPassed.message,
-                    `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
-                        1}, variable path is: /val`
-                );
+            afterEach(() => {
+                fetchMock.restore();
             });
-            it('Outgoing socket patch: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {
-                const server = new MockSocketServer(getTestURL('testURL', false, true));
-
-                fetchMock.mock(getTestURL('testURL'), {
-                    status: 200,
-                    body: '{"val": 100}'
+            context('HTTP', () => {
+                it('Initial response: out of range numbers should call onIncomingPatchValidationError event with a RangeError', async () => {
+                    const onIncomingPatchValidationError = sinon.spy().named('onIncomingPatchValidationError');
+                    const palindrom = new Palindrom({
+                        remoteUrl,
+                        onIncomingPatchValidationError
+                    });
+    
+                    await sleep();
+                    assert(onIncomingPatchValidationError.calledOnce);
+                    const errorPassed = onIncomingPatchValidationError.getCall(0).args[0];
+                    assert(errorPassed instanceof RangeError);
+                    assert.equal(
+                        errorPassed.message,
+                        `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
+                            1}, variable path is: /amount`
+                    );
                 });
-
-                var spy = sinon.spy();
-
-                var palindrom = new Palindrom({
-                    remoteUrl: getTestURL('testURL'),
-                    useWebSocket: true,
-                    onOutgoingPatchValidationError: spy,
-                    onStateReset: obj => obj.val = Number.MAX_SAFE_INTEGER + 1,
+                it('Outgoing patch: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {
+                    const onOutgoingPatchValidationError = sinon.spy().named('onOutgoingPatchValidationError');
+    
+                    new Palindrom({
+                        remoteUrl,
+                        onStateReset: obj =>
+                            obj.amount = Number.MAX_SAFE_INTEGER + 1
+                        ,
+                        onOutgoingPatchValidationError
+                    });
+    
+                    await sleep(20);
+    
+                    assert(onOutgoingPatchValidationError.calledOnce, `Expected \`onOutgoingPatchValidationError\` to be called once, but was called ${onOutgoingPatchValidationError.callCount} times`);
+    
+                    const errorPassed = onOutgoingPatchValidationError.getCall(0).args[0];
+    
+                    assert(errorPassed instanceof RangeError);
+    
+                    assert.equal(
+                        errorPassed.message,
+                        `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
+                            1}, variable path is: /amount`
+                    );
                 });
-
-                await sleep();
-
-                // make sure WS is up
-                assert.equal(palindrom.network._ws.readyState, 1);
-
-                assert(spy.calledOnce);
-
-                const errorPassed = spy.getCall(0).args[0];
-
-                assert(errorPassed instanceof RangeError);
-
-                assert.equal(
-                    errorPassed.message,
-                    `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER + 1}, variable path is: /val`
-                );
-
-                server.stop();
             });
-            it('Incoming socket patch: out of range numbers should call onIncomingPatchValidationError event with a RangeError', async () => {
-                const server = new MockSocketServer(getTestURL('testURL', false, true));
-
-                fetchMock.mock(getTestURL('testURL'), {
-                    status: 200,
-                    body: '{"val": 100}'
+            context('WebSocket', () => {
+                let mockSocketServer;
+                beforeEach(() => {
+                    mockSocketServer = new MockSocketServer(getTestURL('testURL', false, true));
                 });
-
-                var spy = sinon.spy();
-
-                new Palindrom({
-                    remoteUrl: getTestURL('testURL'),
-                    useWebSocket: true,
-                    onIncomingPatchValidationError: spy
+                afterEach(() => {
+                    mockSocketServer.stop();
                 });
+                it('Outgoing patch: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {    
+                    const onOutgoingPatchValidationError = sinon.spy().named('onOutgoingPatchValidationError');
+    
+                    const palindrom = new Palindrom({
+                        remoteUrl,
+                        useWebSocket: true,
+                        onOutgoingPatchValidationError,
+                        onStateReset: obj => obj.amount = Number.MAX_SAFE_INTEGER + 1,
+                    });
+    
+                    await sleep();
+    
+                    // make sure WS is up
+                    assert.equal(palindrom.network._ws.readyState, 1);
+    
+                    assert(onOutgoingPatchValidationError.calledOnce);
+    
+                    const errorPassed = onOutgoingPatchValidationError.getCall(0).args[0];
+    
+                    assert(errorPassed instanceof RangeError);
+    
+                    assert.equal(
+                        errorPassed.message,
+                        `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER + 1}, variable path is: /amount`
+                    );
+                });
+                it('Incoming patch: out of range numbers should call onIncomingPatchValidationError event with a RangeError', async () => {    
+                    const onIncomingPatchValidationError = sinon.spy().named('onIncomingPatchValidationError');
 
-                await sleep();
-                server.send(
-                    `[{"op": "replace", "path": "/val", "value": ${Number.MAX_SAFE_INTEGER +
-                        1}}]`
-                );
-                assert(spy.calledOnce);
-                const errorPassed = spy.getCall(0).args[0];
-                assert(errorPassed instanceof RangeError);
-                assert.equal(
-                    errorPassed.message,
-                    `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
-                        1}, variable path is: /val`
-                );
-                server.stop();
+                    mockSocketServer.on('connection', socket => {
+                        /* prepare response */
+                        socket.on('message', function(){
+                            // socketMessageSpy(...arguments);
+                            /* respond */
+                            socket.send(
+                                `[{"op": "replace", "path": "/amount", "value": ${Number.MAX_SAFE_INTEGER +
+                                    1}}]`
+                            );
+                        });
+                    });
+    
+                    new Palindrom({
+                        remoteUrl,
+                        useWebSocket: true,
+                        onIncomingPatchValidationError
+                    });
+    
+                    await sleep();
+                    assert(onIncomingPatchValidationError.calledOnce);
+                    const errorPassed = onIncomingPatchValidationError.getCall(0).args[0];
+                    assert(errorPassed instanceof RangeError);
+                    assert.equal(
+                        errorPassed.message,
+                        `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
+                            1}, variable path is: /amount`
+                    );
+                });
             });
         });
     });
