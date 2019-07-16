@@ -1,5 +1,5 @@
 import { Server as MockSocketServer } from 'mock-socket';
-import Palindrom from '../../src/palindrom';
+import { Palindrom } from '../../src/palindrom';
 import chai, { expect, assert } from 'chai';
 import sinonChai  from "sinon-chai";
 import fetchMock from 'fetch-mock';

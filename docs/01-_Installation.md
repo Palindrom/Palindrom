@@ -25,17 +25,17 @@ npm install palindrom --save
 Then you can require it CommonJS or ES6/TS style:
 
 ```js
-//CommonJS
-var Palindrom = require('palindrom');
+// CommonJS
+const Palindrom = require('palindrom').Palindrom;
+const PalindromDOM = require('palindrom').PalindromDOM;
 
 // ES6/TS
-import Palindrom from 'palindrom'
+import { Palindrom } from 'palindrom';
+import { PalindromDOM } from 'palindrom';
 ```
 
-Note: The NPM package uses `src/palindrom.js` as the `main` entry point and `src/palindrom-dom.js` as the `browser` entry point.
+Note: The NPM package uses an entry point without a default export. Depending on your environment (Node or browser), you should choose one of the two named exports available: `Palindrom` and `PalindromDOM`.
 
-For the `main` entry point, `Palindrom` is the default export and named export. This entry point is used by default in Node.
+##### GitHub:
 
-For the `browser` entry point, `PalindromDOM` is the default export. `Palindrom` and `PalindromDOM` are the named exports. This entry point is used by Webpack.
-
-###### Or just download it manually from [github](https://github.com/Palindrom/Palindrom/archive/master.zip).
+You can [browse the source code on GitHub](https://github.com/Palindrom/Palindrom) or download [a ZIP archive from there](https://github.com/Palindrom/Palindrom/archive/master.zip).

@@ -63,7 +63,7 @@ Then you can require it CommonJS or ES6/TS style:
 var Palindrom = require('palindrom');
 
 // ES6/TS
-import Palindrom from 'palindrom'
+import { Palindrom } from 'palindrom'
 ```
 
 ###### Or just download it manually from [github](https://github.com/Palindrom/Palindrom/archive/master.zip).
