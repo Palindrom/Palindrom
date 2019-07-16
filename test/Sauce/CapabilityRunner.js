@@ -32,6 +32,8 @@ function CapabilityRunner(caps) {
         "http://" + username + ":" + accessKey + "@localhost:4445/wd/hub"
       )
       .build();
+    // let tests execute for 2 minutes
+    driver.manage().timeouts().setScriptTimeout(2*60*1000);
 
     driver.get(
       "http://localhost:5000/test/MochaSpecRunner.html"
