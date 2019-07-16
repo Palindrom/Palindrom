@@ -2,8 +2,6 @@
 
 > Extension to Palindrom that adds DOM into two-way data binding chain (DOM ↔ local JSON ↔ remote JSON). Client side library that binds data on DOM level, so it integrates nicely with good old JavaScript, WebComponents, or Angular.
 
-Implements [Server communication](https://github.com/Starcounter-Jack/Palindrom/wiki/Server-communication).
-
 ### Usage
 
 After DOM is ready, initialize with the constructor:
