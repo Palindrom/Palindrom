@@ -32,8 +32,6 @@ function CapabilityRunner(caps) {
         "http://" + username + ":" + accessKey + "@localhost:4445/wd/hub"
       )
       .build();
-    // let tests execute for 2 minutes
-    driver.manage().timeouts().setScriptTimeout(2*60*1000);
 
     driver.get(
       "http://localhost:5000/test/MochaSpecRunner.html"
@@ -58,7 +56,8 @@ function CapabilityRunner(caps) {
     driver.getSession().then(sessionID => {
       /*set driver ID to end session later */
       driver.sessionID = sessionID.id_;
-      retryUntil(checkIfDone, { interval: 15000 }).then(testResults => {
+      // let tests execute for 2 minutes (10 * 15 seconds)
+      retryUntil(checkIfDone, { interval: 15000, max_tries: 10 }).then(testResults => {
         console.log("Specs finished");
         analyzeResults(testResults);
       }).catch(error => {
