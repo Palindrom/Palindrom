@@ -23,9 +23,9 @@ palindrom.obj.someProperty = "new value";
 
 ### Demo
 
-- [Example with Polymer's Template Binding and Web Components](http://Palindrom.github.io/Palindrom/lab/polymer/index.html)
-- [Example with Vue](http://Palindrom.github.io/Palindrom/lab/vue/index.html)
-- [Example with React](http://Palindrom.github.io/Palindrom/lab/react/index.html)
+- [Example with Polymer's Template Binding and Web Components](http://palindrom.github.io/Palindrom/lab/polymer/index.html)
+- [Example with Vue](http://palindrom.github.io/Palindrom/lab/vue/dist/index.html)
+- [Example with React](http://palindrom.github.io/Palindrom/lab/react/index.html)
 
 ### Options (`Palindrom()` constructor argument)
 All the argument's properties are optional.

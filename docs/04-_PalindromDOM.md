@@ -2,8 +2,6 @@
 
 > Extension to Palindrom that adds DOM into two-way data binding chain (DOM ↔ local JSON ↔ remote JSON). Client side library that binds data on DOM level, so it integrates nicely with good old JavaScript, WebComponents, or Angular.
 
-Implements [Server communication](https://github.com/Starcounter-Jack/Palindrom/wiki/Server-communication).
-
 ### Usage
 
 After DOM is ready, initialize with the constructor:
@@ -22,9 +20,9 @@ Now any changes to `palindrom.obj` will trigger a HTTP PATCH request. And any re
 
 ### Demo
 
-- [Example with Polymer's Template Binding and Web Components](http://Palindrom.github.io/lab/polymer/index.html)
-- [Example with Vue](http://Palindrom.github.io/lab/vue/index.html)
-- [Example with React](http://Palindrom.github.io/lab/react/index.html)
+- [Example with Polymer's Template Binding and Web Components](http://palindrom.github.io/lab/polymer/index.html)
+- [Example with Vue](http://palindrom.github.io/lab/vue/dist/index.html)
+- [Example with React](http://palindrom.github.io/lab/react/index.html)
 
 ### Options (`PalindromDOM()` constructor parameters)
 
