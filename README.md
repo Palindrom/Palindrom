@@ -87,9 +87,9 @@ palindrom.obj.someProperty = "new value";
 
 ### Demo
 
-- [Example with Polymer's Template Binding and Web Components](http://Palindrom.github.io/lab/polymer/index.html)
-- [Example with Vue](http://Palindrom.github.io/lab/vue/index.html)
-- [Example with React](http://Palindrom.github.io/lab/react/index.html)
+- [Example with Polymer's Template Binding and Web Components](http://palindrom.github.io/lab/polymer/index.html)
+- [Example with Vue](https://palindrom.github.io/lab/vue/dist/index.html)
+- [Example with React](http://palindrom.github.io/lab/react/index.html)
 
 
 ### Changelog
