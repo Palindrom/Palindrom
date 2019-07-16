@@ -32,4 +32,10 @@ var Palindrom = require('palindrom');
 import Palindrom from 'palindrom'
 ```
 
+Note: The NPM package uses `src/palindrom.js` as the `main` entry point and `src/palindrom-dom.js` as the `browser` entry point.
+
+For the `main` entry point, `Palindrom` is the default export and named export. This entry point is used by default in Node.
+
+For the `browser` entry point, `PalindromDOM` is the default export. `Palindrom` and `PalindromDOM` are the named exports. This entry point is used by Webpack.
+
 ###### Or just download it manually from [github](https://github.com/Palindrom/Palindrom/archive/master.zip).
