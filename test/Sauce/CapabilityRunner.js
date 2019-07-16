@@ -55,8 +55,9 @@ function CapabilityRunner(caps) {
     /* get session ID and keep checking if tests are finished */
     driver.getSession().then(sessionID => {
       /*set driver ID to end session later */
-      driver.sessionID = sessionID.id_;
-      retryUntil(checkIfDone, { interval: 15000 }).then(testResults => {
+      driver.sessionID = sessionID.id_; 
+      // let tests execute for 2 minutes (10 * 15 seconds)
+      retryUntil(checkIfDone, { interval: 15000, max_tries: 10 }).then(testResults => {
         console.log("Specs finished");
         analyzeResults(testResults);
       }).catch(error => {
