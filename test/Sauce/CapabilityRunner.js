@@ -47,7 +47,7 @@ function CapabilityRunner(caps) {
             if (results) {
               resolve(results);
             } else {
-              reject();
+              reject("No test results (`window.testResults`), probably tests didn't finished yet.");
             }
           });
       });
@@ -69,15 +69,19 @@ function CapabilityRunner(caps) {
       const resultsSummary = { passed: 0, pending: 0, failed: 0 };
       const colorMap = { passed: "green", failed: "red", pending: "yellow" };
       var hadErrored = 0;
+      function coloredFullTitle(titlePath){
+        return titlePath.slice(0,-1).map((e)=>e.grey).concat(titlePath.slice(-1)).join(' > ');
+      }
       results.forEach(spec => {
         resultsSummary[spec.state]++;
         console.log("");
+        const coloredTitle = coloredFullTitle(spec.titlePath);
         console.log(
-          "   " + symbols[spec.state][colorMap[spec.state]] + " " + spec.title
+          "   " + symbols[spec.state][colorMap[spec.state]] + " " + coloredTitle
         );
         if (spec.state === "failed") {
           hadErrored = 1;
-          console.log(`Spec "${spec.title}" failed, the error was`, spec.err, spec.err && spec.err.stack);
+          console.log(`Spec "${coloredTitle}" failed, the error was`, spec.err, spec.err && spec.err.stack);
         }
       });
       console.log("");
