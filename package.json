@@ -1,6 +1,6 @@
 {
   "name": "palindrom",
-  "version": "6.1.0",
+  "version": "6.2.0",
   "description": "",
   "license": "MIT",
   "homepage": "https://github.com/palindrom/Palindrom",
@@ -22,8 +22,7 @@
     "email": "joachimwester@me.com",
     "url": "http://www.starcounter.com/"
   },
-  "main": "./src/palindrom.js",
-  "browser": "./src/palindrom-dom.js",
+  "main": "./src/palindrom-dom.js",
   "files": [
     "dist/*",
     "src/*"

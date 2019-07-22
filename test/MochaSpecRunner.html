@@ -27,15 +27,15 @@
             const tempResults = [];
 
             runner.on('pass', function (spec) {
-                let smallerSpec = { title: spec.title, state: 'passed' };
+                let smallerSpec = { title: spec.title, titlePath: spec.titlePath(), state: 'passed' };
                 tempResults.push(smallerSpec);
             });
             runner.on('fail', function (spec) {
-                let smallerSpec = { title: spec.title, state: 'failed', err: spec.err };
+                let smallerSpec = { title: spec.title, titlePath: spec.titlePath(), state: 'failed', err: spec.err };
                 tempResults.push(smallerSpec);
             })
             runner.on('pending', function (spec) {
-                let smallerSpec = { title: spec.title, state: 'pending' };
+                let smallerSpec = { title: spec.title, titlePath: spec.titlePath(), state: 'pending' };
                 tempResults.push(smallerSpec);
             });
             runner.on('end', function () {

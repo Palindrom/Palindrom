@@ -49,7 +49,7 @@ function CapabilityRunner(caps) {
             if (results) {
               resolve(results);
             } else {
-              reject();
+              reject("No test results (`window.testResults`), probably tests haven't finished yet.");
             }
           });
       });
@@ -57,8 +57,9 @@ function CapabilityRunner(caps) {
     /* get session ID and keep checking if tests are finished */
     driver.getSession().then(sessionID => {
       /*set driver ID to end session later */
-      driver.sessionID = sessionID.id_;
-      retryUntil(checkIfDone, { interval: 15000 }).then(testResults => {
+      driver.sessionID = sessionID.id_; 
+      // let tests execute for 2 minutes (10 * 15 seconds)
+      retryUntil(checkIfDone, { interval: 15000, max_tries: 10 }).then(testResults => {
         console.log("Specs finished");
         analyzeResults(testResults);
       }).catch(error => {
@@ -71,15 +72,19 @@ function CapabilityRunner(caps) {
       const resultsSummary = { passed: 0, pending: 0, failed: 0 };
       const colorMap = { passed: "green", failed: "red", pending: "yellow" };
       var hadErrored = 0;
+      function coloredFullTitle(titlePath){
+        return titlePath.slice(0,-1).map((e)=>e.grey).concat(titlePath.slice(-1)).join(' > ');
+      }
       results.forEach(spec => {
         resultsSummary[spec.state]++;
         console.log("");
+        const coloredTitle = coloredFullTitle(spec.titlePath);
         console.log(
-          "   " + symbols[spec.state][colorMap[spec.state]] + " " + spec.title
+          "   " + symbols[spec.state][colorMap[spec.state]] + " " + coloredTitle
         );
         if (spec.state === "failed") {
           hadErrored = 1;
-          console.log(`Spec "${spec.title}" failed, the error was`, spec.err, spec.err && spec.err.stack);
+          console.log(`Spec "${coloredTitle}" failed, the error was`, spec.err, spec.err && spec.err.stack);
         }
       });
       console.log("");

@@ -15,7 +15,7 @@ import Reconnector from './reconnector';
 import NoQueue from './noqueue';
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '6.1.0';
+const palindromVersion = '6.2.0';
 
 if (typeof global === 'undefined') {
     if (typeof window !== 'undefined') {
@@ -30,7 +30,7 @@ if (typeof global === 'undefined') {
  * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
  * @param {Object} [options] map of arguments. See README.md for description
  */
-export default class Palindrom {
+class Palindrom {
     /**
      * Palindrom version
      */

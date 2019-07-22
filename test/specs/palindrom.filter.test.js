@@ -1,4 +1,4 @@
-import Palindrom from '../../src/palindrom';
+import { Palindrom } from '../../src/palindrom';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import assert from 'assert';

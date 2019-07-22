@@ -1,4 +1,4 @@
-import Palindrom from '../../../src/palindrom';
+import { Palindrom } from '../../../src/palindrom';
 import chai, { expect, assert } from 'chai';
 import sinonChai  from "sinon-chai";
 import { sleep, getTestURL } from '../../utils';
