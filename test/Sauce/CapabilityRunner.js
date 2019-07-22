@@ -47,7 +47,7 @@ function CapabilityRunner(caps) {
             if (results) {
               resolve(results);
             } else {
-              reject("No test results (`window.testResults`), probably tests didn't finished yet.");
+              reject("No test results (`window.testResults`), probably tests haven't finished yet.");
             }
           });
       });
