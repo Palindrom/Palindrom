@@ -1,6 +1,8 @@
 # Installation
 
-#### You can install using [bower](http://bower.io/) and [NPM](http://npmjs.com/):
+The library comes in two flavours: `Palindrom` and `PalindromDOM`. The difference is explained on the [`PalindromDOM` page](04-_PalindromDOM.md).
+
+#### You can install the library using [Bower](http://bower.io/) or [NPM](http://npmjs.com/):
 
 ##### Bower:
 
@@ -8,13 +10,15 @@
 bower install Palindrom --save
 ```
 
-Then add source to your HTML
+Then add source to your HTML:
 
 ```html
-<!-- include Palindrom bundle -->
-<script src="bower_components/Palindrom/dist/palindrom.js"></script>
+<!-- include a bundle with Palindrom global object -->
+<script src="bower_components/Palindrom/dist/palindrom.min.js"></script>
+<!-- or, include a bundle with PalindromDOM global object -->
+<script src="bower_components/Palindrom/dist/palindrom-dom.min.js"></script>
 ```
-See [Dependencies section](#dependencies) for more details.
+See [Dependencies page](06-_Dependencies.md) for details about what's in the bundles.
 
 ##### NPM:
 
@@ -26,15 +30,17 @@ Then you can require it CommonJS or ES6/TS style:
 
 ```js
 // CommonJS
+// require Palindrom constructor
 const Palindrom = require('palindrom').Palindrom;
+// or, require PalindromDOM constructor
 const PalindromDOM = require('palindrom').PalindromDOM;
 
 // ES6/TS
+// import Palindrom constructor
 import { Palindrom } from 'palindrom';
+// or, import PalindromDOM constructor
 import { PalindromDOM } from 'palindrom';
 ```
-
-Note: The NPM package uses an entry point without a default export. Depending on your environment (Node or browser), you should choose one of the two named exports available: `Palindrom` and `PalindromDOM`.
 
 ##### GitHub:
 
