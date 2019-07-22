@@ -3,7 +3,7 @@
  * (c) 2017 Joachim Wester
  * MIT license
  */
-import Palindrom from './palindrom'
+import { Palindrom } from './palindrom'
 
 class AbortError extends Error {};
 
@@ -24,7 +24,7 @@ class AbortError extends Error {};
      * @extends {Palindrom}
      * @param {Object} [options] map of arguments. See README.md for description
      */
-   export default class PalindromDOM extends Palindrom {
+   class PalindromDOM extends Palindrom {
         constructor(options) {
             if (typeof options !== 'object') {
                 throw new Error(

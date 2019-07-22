@@ -1,4 +1,4 @@
-import PalindromDOM from '../../../src/palindrom-dom';
+import { PalindromDOM } from '../../../src/palindrom-dom';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import chai, { expect, assert } from 'chai';

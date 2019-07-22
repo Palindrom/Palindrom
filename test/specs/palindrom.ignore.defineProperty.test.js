@@ -1,4 +1,4 @@
-import Palindrom from '../../src/palindrom';
+import { Palindrom } from '../../src/palindrom';
 import fetchMock from 'fetch-mock';
 import assert from 'assert';
 import { sleep, getTestURL } from '../utils';

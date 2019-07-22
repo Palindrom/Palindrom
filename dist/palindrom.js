@@ -145,16 +145,16 @@ module.exports = URL;
 /* 3 */
 /***/ (function(module, exports) {
 
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
 /*!
  * https://github.com/Starcounter-Jack/JSON-Patch
  * (c) 2017 Joachim Wester
  * MIT license
  */
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var _hasOwnProperty = Object.prototype.hasOwnProperty;
 function hasOwnProperty(obj, key) {
     return _hasOwnProperty.call(obj, key);
@@ -291,15 +291,25 @@ function hasUndefined(obj) {
     return false;
 }
 exports.hasUndefined = hasUndefined;
+function patchErrorMessageFormatter(message, args) {
+    var messageParts = [message];
+    for (var key in args) {
+        var value = typeof args[key] === 'object' ? JSON.stringify(args[key], null, 2) : args[key]; // pretty print
+        if (typeof value !== 'undefined') {
+            messageParts.push(key + ": " + value);
+        }
+    }
+    return messageParts.join('\n');
+}
 var PatchError = (function (_super) {
     __extends(PatchError, _super);
     function PatchError(message, name, index, operation, tree) {
-        _super.call(this, message);
-        this.message = message;
+        _super.call(this, patchErrorMessageFormatter(message, { name: name, index: index, operation: operation, tree: tree }));
         this.name = name;
         this.index = index;
         this.operation = operation;
         this.tree = tree;
+        this.message = patchErrorMessageFormatter(message, { name: name, index: index, operation: operation, tree: tree });
     }
     return PatchError;
 }(Error));
@@ -403,15 +413,15 @@ module.exports = WebSocket;
 /* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var equalsOptions = { strict: true };
-var _equals = __webpack_require__(7);
-var areEquals = function (a, b) {
-    return _equals(a, b, equalsOptions);
-};
+/*!
+ * https://github.com/Starcounter-Jack/JSON-Patch
+ * (c) 2017 Joachim Wester
+ * MIT license
+ */
 var helpers_1 = __webpack_require__(3);
-var core_1 = __webpack_require__(8);
+var core_1 = __webpack_require__(7);
 /* export all core functions */
-var core_2 = __webpack_require__(8);
+var core_2 = __webpack_require__(7);
 exports.applyOperation = core_2.applyOperation;
 exports.applyPatch = core_2.applyPatch;
 exports.applyReducer = core_2.applyReducer;
@@ -574,9 +584,13 @@ function _generate(mirror, obj, patches, path) {
                 }
             }
         }
-        else {
+        else if (Array.isArray(mirror) === Array.isArray(obj)) {
             patches.push({ op: "remove", path: path + "/" + helpers_1.escapePathComponent(key) });
             deleted = true; // property has been deleted
+        }
+        else {
+            patches.push({ op: "replace", path: path, value: obj });
+            changed = true;
         }
     }
     if (!deleted && newKeys.length == oldKeys.length) {
@@ -604,108 +618,8 @@ exports.compare = compare;
 /* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var pSlice = Array.prototype.slice;
-var objectKeys = __webpack_require__(15);
-var isArguments = __webpack_require__(16);
-
-var deepEqual = module.exports = function (actual, expected, opts) {
-  if (!opts) opts = {};
-  // 7.1. All identical values are equivalent, as determined by ===.
-  if (actual === expected) {
-    return true;
-
-  } else if (actual instanceof Date && expected instanceof Date) {
-    return actual.getTime() === expected.getTime();
-
-  // 7.3. Other pairs that do not both pass typeof value == 'object',
-  // equivalence is determined by ==.
-  } else if (!actual || !expected || typeof actual != 'object' && typeof expected != 'object') {
-    return opts.strict ? actual === expected : actual == expected;
-
-  // 7.4. For all other Object pairs, including Array objects, equivalence is
-  // determined by having the same number of owned properties (as verified
-  // with Object.prototype.hasOwnProperty.call), the same set of keys
-  // (although not necessarily the same order), equivalent values for every
-  // corresponding key, and an identical 'prototype' property. Note: this
-  // accounts for both named and indexed properties on Arrays.
-  } else {
-    return objEquiv(actual, expected, opts);
-  }
-}
-
-function isUndefinedOrNull(value) {
-  return value === null || value === undefined;
-}
-
-function isBuffer (x) {
-  if (!x || typeof x !== 'object' || typeof x.length !== 'number') return false;
-  if (typeof x.copy !== 'function' || typeof x.slice !== 'function') {
-    return false;
-  }
-  if (x.length > 0 && typeof x[0] !== 'number') return false;
-  return true;
-}
-
-function objEquiv(a, b, opts) {
-  var i, key;
-  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
-    return false;
-  // an identical 'prototype' property.
-  if (a.prototype !== b.prototype) return false;
-  //~~~I've managed to break Object.keys through screwy arguments passing.
-  //   Converting to array solves the problem.
-  if (isArguments(a)) {
-    if (!isArguments(b)) {
-      return false;
-    }
-    a = pSlice.call(a);
-    b = pSlice.call(b);
-    return deepEqual(a, b, opts);
-  }
-  if (isBuffer(a)) {
-    if (!isBuffer(b)) {
-      return false;
-    }
-    if (a.length !== b.length) return false;
-    for (i = 0; i < a.length; i++) {
-      if (a[i] !== b[i]) return false;
-    }
-    return true;
-  }
-  try {
-    var ka = objectKeys(a),
-        kb = objectKeys(b);
-  } catch (e) {//happens when one is a string literal and the other isn't
-    return false;
-  }
-  // having the same number of owned properties (keys incorporates
-  // hasOwnProperty)
-  if (ka.length != kb.length)
-    return false;
-  //the same set of keys (although not necessarily the same order),
-  ka.sort();
-  kb.sort();
-  //~~~cheap key test
-  for (i = ka.length - 1; i >= 0; i--) {
-    if (ka[i] != kb[i])
-      return false;
-  }
-  //equivalent values for every corresponding key, and
-  //~~~possibly expensive deep test
-  for (i = ka.length - 1; i >= 0; i--) {
-    key = ka[i];
-    if (!deepEqual(a[key], b[key], opts)) return false;
-  }
-  return typeof a === typeof b;
-}
-
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
 var equalsOptions = { strict: true };
-var _equals = __webpack_require__(7);
+var _equals = __webpack_require__(14);
 var areEquals = function (a, b) {
     return _equals(a, b, equalsOptions);
 };
@@ -814,11 +728,14 @@ exports.getValueByPointer = getValueByPointer;
  * @param operation The operation to apply
  * @param validateOperation `false` is without validation, `true` to use default jsonpatch's validation, or you can pass a `validateOperation` callback to be used for validation.
  * @param mutateDocument Whether to mutate the original document or clone it before applying
+ * @param banPrototypeModifications Whether to ban modifications to `__proto__`, defaults to `true`.
  * @return `{newDocument, result}` after the operation
  */
-function applyOperation(document, operation, validateOperation, mutateDocument) {
+function applyOperation(document, operation, validateOperation, mutateDocument, banPrototypeModifications, index) {
     if (validateOperation === void 0) { validateOperation = false; }
     if (mutateDocument === void 0) { mutateDocument = true; }
+    if (banPrototypeModifications === void 0) { banPrototypeModifications = true; }
+    if (index === void 0) { index = 0; }
     if (validateOperation) {
         if (typeof validateOperation == 'function') {
             validateOperation(operation, 0, document, operation.path);
@@ -849,7 +766,7 @@ function applyOperation(document, operation, validateOperation, mutateDocument) 
         else if (operation.op === 'test') {
             returnValue.test = areEquals(document, operation.value);
             if (returnValue.test === false) {
-                throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+                throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', index, operation, document);
             }
             returnValue.newDocument = document;
             return returnValue;
@@ -865,7 +782,7 @@ function applyOperation(document, operation, validateOperation, mutateDocument) 
         }
         else {
             if (validateOperation) {
-                throw new exports.JsonPatchError('Operation `op` property is not one of operations defined in RFC-6902', 'OPERATION_OP_INVALID', 0, operation, document);
+                throw new exports.JsonPatchError('Operation `op` property is not one of operations defined in RFC-6902', 'OPERATION_OP_INVALID', index, operation, document);
             }
             else {
                 return returnValue;
@@ -892,6 +809,9 @@ function applyOperation(document, operation, validateOperation, mutateDocument) 
         }
         while (true) {
             key = keys[t];
+            if (banPrototypeModifications && key == '__proto__') {
+                throw new TypeError('JSON-Patch: modifying `__proto__` prop is banned for security reasons, if this was on purpose, please set `banPrototypeModifications` flag false and pass it to this function. More info in fast-json-patch README');
+            }
             if (validateOperation) {
                 if (existingPathFragment === undefined) {
                     if (obj[key] === undefined) {
@@ -912,7 +832,7 @@ function applyOperation(document, operation, validateOperation, mutateDocument) 
                 }
                 else {
                     if (validateOperation && !helpers_1.isInteger(key)) {
-                        throw new exports.JsonPatchError("Expected an unsigned base-10 integer value, making the new referenced value the array element with the zero-based index", "OPERATION_PATH_ILLEGAL_ARRAY_INDEX", 0, operation.path, operation);
+                        throw new exports.JsonPatchError("Expected an unsigned base-10 integer value, making the new referenced value the array element with the zero-based index", "OPERATION_PATH_ILLEGAL_ARRAY_INDEX", index, operation, document);
                     } // only parse key when it's an integer for `arr.prop` to work
                     else if (helpers_1.isInteger(key)) {
                         key = ~~key;
@@ -920,11 +840,11 @@ function applyOperation(document, operation, validateOperation, mutateDocument) 
                 }
                 if (t >= len) {
                     if (validateOperation && operation.op === "add" && key > obj.length) {
-                        throw new exports.JsonPatchError("The specified index MUST NOT be greater than the number of elements in the array", "OPERATION_VALUE_OUT_OF_BOUNDS", 0, operation.path, operation);
+                        throw new exports.JsonPatchError("The specified index MUST NOT be greater than the number of elements in the array", "OPERATION_VALUE_OUT_OF_BOUNDS", index, operation, document);
                     }
                     var returnValue = arrOps[operation.op].call(operation, obj, key, document); // Apply patch
                     if (returnValue.test === false) {
-                        throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+                        throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', index, operation, document);
                     }
                     return returnValue;
                 }
@@ -936,7 +856,7 @@ function applyOperation(document, operation, validateOperation, mutateDocument) 
                 if (t >= len) {
                     var returnValue = objOps[operation.op].call(operation, obj, key, document); // Apply patch
                     if (returnValue.test === false) {
-                        throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+                        throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', index, operation, document);
                     }
                     return returnValue;
                 }
@@ -957,10 +877,12 @@ exports.applyOperation = applyOperation;
  * @param patch The patch to apply
  * @param validateOperation `false` is without validation, `true` to use default jsonpatch's validation, or you can pass a `validateOperation` callback to be used for validation.
  * @param mutateDocument Whether to mutate the original document or clone it before applying
+ * @param banPrototypeModifications Whether to ban modifications to `__proto__`, defaults to `true`.
  * @return An array of `{newDocument, result}` after the patch
  */
-function applyPatch(document, patch, validateOperation, mutateDocument) {
+function applyPatch(document, patch, validateOperation, mutateDocument, banPrototypeModifications) {
     if (mutateDocument === void 0) { mutateDocument = true; }
+    if (banPrototypeModifications === void 0) { banPrototypeModifications = true; }
     if (validateOperation) {
         if (!Array.isArray(patch)) {
             throw new exports.JsonPatchError('Patch sequence must be an array', 'SEQUENCE_NOT_AN_ARRAY');
@@ -971,7 +893,8 @@ function applyPatch(document, patch, validateOperation, mutateDocument) {
     }
     var results = new Array(patch.length);
     for (var i = 0, length_1 = patch.length; i < length_1; i++) {
-        results[i] = applyOperation(document, patch[i], validateOperation);
+        // we don't need to pass mutateDocument argument because if it was true, we already deep cloned the object, we'll just pass `true`
+        results[i] = applyOperation(document, patch[i], validateOperation, true, banPrototypeModifications, i);
         document = results[i].newDocument; // in case root was replaced
     }
     results.newDocument = document;
@@ -987,10 +910,10 @@ exports.applyPatch = applyPatch;
  * @param operation The operation to apply
  * @return The updated document
  */
-function applyReducer(document, operation) {
+function applyReducer(document, operation, index) {
     var operationResult = applyOperation(document, operation);
     if (operationResult.test === false) {
-        throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+        throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', index, operation, document);
     }
     return operationResult.newDocument;
 }
@@ -1084,7 +1007,7 @@ exports.validate = validate;
 
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1095,7 +1018,7 @@ exports.validate = validate;
 /* harmony import */ var _heartbeat__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(4);
 /* harmony import */ var websocket__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5);
 /* harmony import */ var websocket__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(websocket__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var node_fetch__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(10);
+/* harmony import */ var node_fetch__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9);
 /* harmony import */ var node_fetch__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(node_fetch__WEBPACK_IMPORTED_MODULE_4__);
 
 
@@ -1496,16 +1419,16 @@ class PalindromNetworkChannel {
     }
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(14)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13)))
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, exports) {
 
 module.exports = null;
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1906,7 +1829,7 @@ if (true) {
 
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -2067,7 +1990,7 @@ if(true) {
 }
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 if(typeof JSONPatchQueue === 'undefined') {
@@ -2176,7 +2099,7 @@ if(true) {
 }
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports) {
 
 var g;
@@ -2199,6 +2122,106 @@ try {
 // easier to handle this case. if(!global) { ...}
 
 module.exports = g;
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var pSlice = Array.prototype.slice;
+var objectKeys = __webpack_require__(15);
+var isArguments = __webpack_require__(16);
+
+var deepEqual = module.exports = function (actual, expected, opts) {
+  if (!opts) opts = {};
+  // 7.1. All identical values are equivalent, as determined by ===.
+  if (actual === expected) {
+    return true;
+
+  } else if (actual instanceof Date && expected instanceof Date) {
+    return actual.getTime() === expected.getTime();
+
+  // 7.3. Other pairs that do not both pass typeof value == 'object',
+  // equivalence is determined by ==.
+  } else if (!actual || !expected || typeof actual != 'object' && typeof expected != 'object') {
+    return opts.strict ? actual === expected : actual == expected;
+
+  // 7.4. For all other Object pairs, including Array objects, equivalence is
+  // determined by having the same number of owned properties (as verified
+  // with Object.prototype.hasOwnProperty.call), the same set of keys
+  // (although not necessarily the same order), equivalent values for every
+  // corresponding key, and an identical 'prototype' property. Note: this
+  // accounts for both named and indexed properties on Arrays.
+  } else {
+    return objEquiv(actual, expected, opts);
+  }
+}
+
+function isUndefinedOrNull(value) {
+  return value === null || value === undefined;
+}
+
+function isBuffer (x) {
+  if (!x || typeof x !== 'object' || typeof x.length !== 'number') return false;
+  if (typeof x.copy !== 'function' || typeof x.slice !== 'function') {
+    return false;
+  }
+  if (x.length > 0 && typeof x[0] !== 'number') return false;
+  return true;
+}
+
+function objEquiv(a, b, opts) {
+  var i, key;
+  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
+    return false;
+  // an identical 'prototype' property.
+  if (a.prototype !== b.prototype) return false;
+  //~~~I've managed to break Object.keys through screwy arguments passing.
+  //   Converting to array solves the problem.
+  if (isArguments(a)) {
+    if (!isArguments(b)) {
+      return false;
+    }
+    a = pSlice.call(a);
+    b = pSlice.call(b);
+    return deepEqual(a, b, opts);
+  }
+  if (isBuffer(a)) {
+    if (!isBuffer(b)) {
+      return false;
+    }
+    if (a.length !== b.length) return false;
+    for (i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+  try {
+    var ka = objectKeys(a),
+        kb = objectKeys(b);
+  } catch (e) {//happens when one is a string literal and the other isn't
+    return false;
+  }
+  // having the same number of owned properties (keys incorporates
+  // hasOwnProperty)
+  if (ka.length != kb.length)
+    return false;
+  //the same set of keys (although not necessarily the same order),
+  ka.sort();
+  kb.sort();
+  //~~~cheap key test
+  for (i = ka.length - 1; i >= 0; i--) {
+    if (ka[i] != kb[i])
+      return false;
+  }
+  //equivalent values for every corresponding key, and
+  //~~~possibly expensive deep test
+  for (i = ka.length - 1; i >= 0; i--) {
+    key = ka[i];
+    if (!deepEqual(a[key], b[key], opts)) return false;
+  }
+  return typeof a === typeof b;
+}
 
 
 /***/ }),
@@ -2540,24 +2563,24 @@ if(true) {
 __webpack_require__.r(__webpack_exports__);
 
 // EXTERNAL MODULE: ./src/palindrom-network-channel.js
-var palindrom_network_channel = __webpack_require__(9);
+var palindrom_network_channel = __webpack_require__(8);
 
 // EXTERNAL MODULE: ./node_modules/fast-json-patch/lib/duplex.js
 var duplex = __webpack_require__(6);
 
 // EXTERNAL MODULE: ./node_modules/jsonpatcherproxy/src/jsonpatcherproxy.js
-var jsonpatcherproxy = __webpack_require__(11);
+var jsonpatcherproxy = __webpack_require__(10);
 var jsonpatcherproxy_default = /*#__PURE__*/__webpack_require__.n(jsonpatcherproxy);
 
 // EXTERNAL MODULE: ./node_modules/json-patch-queue/src/index.js
 var src = __webpack_require__(1);
 
 // EXTERNAL MODULE: ./node_modules/json-patch-ot/src/json-patch-ot.js
-var json_patch_ot = __webpack_require__(12);
+var json_patch_ot = __webpack_require__(11);
 var json_patch_ot_default = /*#__PURE__*/__webpack_require__.n(json_patch_ot);
 
 // EXTERNAL MODULE: ./node_modules/json-patch-ot-agent/src/json-patch-ot-agent.js
-var json_patch_ot_agent = __webpack_require__(13);
+var json_patch_ot_agent = __webpack_require__(12);
 var json_patch_ot_agent_default = /*#__PURE__*/__webpack_require__.n(json_patch_ot_agent);
 
 // EXTERNAL MODULE: ./src/palindrom-errors.js
@@ -2669,7 +2692,6 @@ class NoQueue {
 }
 
 // CONCATENATED MODULE: ./src/palindrom.js
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return palindrom_Palindrom; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Palindrom", function() { return palindrom_Palindrom; });
 /*! Palindrom
  * https://github.com/Palindrom/Palindrom

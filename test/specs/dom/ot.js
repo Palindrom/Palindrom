@@ -1,4 +1,4 @@
-import PalindromDOM from '../../../src/palindrom-dom';
+import { PalindromDOM } from '../../../src/palindrom-dom';
 import assert from 'assert';
 import fetchMock from 'fetch-mock';
 import { Server as MockSocketServer, MockWebSocket } from 'mock-socket';
