@@ -1,4 +1,4 @@
-/*! Palindrom, version: 6.1.0 */
+/*! Palindrom, version: 6.2.0 */
 var Palindrom =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -2710,7 +2710,7 @@ class NoQueue {
 
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '6.1.0';
+const palindromVersion = '6.2.0';
 
 if (typeof global === 'undefined') {
     if (typeof window !== 'undefined') {
