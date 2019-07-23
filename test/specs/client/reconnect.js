@@ -24,7 +24,8 @@ function variantDescribe(name, variants, fn) {
 
 describe('WS Client', () => {
     let palindrom, onReconnectionCountdown, onReconnectionEnd, mockSocketServer, anotherSocket;
-    afterEach(async () => {
+    afterEach(async function(){
+        this.timeout(3000);
         fetchMock.restore();
         // FIXME: https://github.com/Palindrom/Palindrom/issues/248
         // hackish way to silence previous instances of Palindrom.
@@ -79,7 +80,7 @@ describe('WS Client', () => {
                     body: `{"witaj": "swiecie", "${remoteVersion}": 777}`
                 }, {name: 'reconnect'});
                 // wait for HTTP responses and WebSocket server to be established
-                await sleep();
+                await sleep(100);
                 // issue a change that will not get acknoledged by server
                 palindrom.obj.hello = 'OT';
                 // close the WS
@@ -96,6 +97,7 @@ describe('WS Client', () => {
                     
                     await sleep(pingIntervalS*1000 + 10);
                     // establish
+                    console.log('flaky')
                     expect(fetchMock.calls('establish')).to.be.lengthOf(1, "expected `establish` to be fetched once");
                     expect(fetchMock.called(/testURL/)).to.be.ok;
                     
@@ -118,8 +120,8 @@ describe('WS Client', () => {
                             anotherSocketConnectedSpy(...arguments);
                             socket.on('message', anotherSocketMessageSpy);
                         });
-                        this.timeout(pingIntervalS*2*1000);
-                        sleep(pingIntervalS*1000+10).then(done);
+                        this.timeout(pingIntervalS*4*1000);
+                        sleep(pingIntervalS*3*1000+10).then(done);
                     })
                     it('should replace the `palindrom.obj` with whatever was given by server', async () => {
                         expect(palindrom.obj).to.deep.equal({
@@ -131,6 +133,8 @@ describe('WS Client', () => {
                         expect(palindrom.queue.remoteVersion).to.equal(777);
                     });
                     it('should try to establish another Web Socket connection', async() => {
+
+                        console.log('flakuy')
                         expect(anotherSocketConnectedSpy).to.be.calledOnce;    
                     });
                     it(`should send WS ping messages over new web socket`, async () => {         
