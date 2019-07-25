@@ -208,5 +208,39 @@ describe('Palindrom', () => {
                 request.body
             );
         });
+        it('should not patch changes after stop() was called', async () => {
+            fetchMock.mock(getTestURL('testURL'), {
+                status: 200,
+                headers: { contentType: 'application/json' },
+                body: '{"unwatched": "object"}'
+            });
+            assert.equal(0, fetchMock.calls().length, 'asdsad');
+            let tempObject;
+            const palindrom = new Palindrom({
+                remoteUrl: getTestURL('testURL'),
+                onStateReset: obj => (tempObject = obj)
+            })
+            ;
+            await sleep();
+            assert.equal(1, fetchMock.calls().length);
+            assert.equal(tempObject.unwatched, 'object');
+            tempObject.unwatched = 'objecto';
+
+            /* now two ajax requests should have happened,
+            the initial one, and the patch one */
+            await sleep();
+            assert.equal(2, fetchMock.calls().length);
+            let request = fetchMock.lastOptions();
+            assert.equal(
+                '[{"op":"replace","path":"/unwatched","value":"objecto"}]',
+                request.body
+            );
+            palindrom.stop();
+            tempObject.hello = "a change that shouldn't be considered";
+
+            /* now palindrom is unobserved, requests should stay 2 */
+            await sleep();
+            assert.equal(2, fetchMock.calls().length);
+        });
     });
 });
