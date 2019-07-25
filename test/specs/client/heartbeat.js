@@ -17,9 +17,8 @@ describe('HTTP Client', () => {
     let palindrom, onReconnectionCountdown, onReconnectionEnd;
     afterEach(() => {
         fetchMock.restore();
-        // hackish way to silence previous instances of Palindrom.
-        palindrom.network.heartbeat.stop()
-        // console.info('palindrom\'s heartbeat stopped');
+        // stop all networking and DOM activity of abandoned instance
+        palindrom.stop();
     });
     describe('Heartbeat', function () {
         it('When created with no `pingIntervalS` should not send any patch on idle', async function () {

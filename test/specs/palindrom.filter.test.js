@@ -5,13 +5,13 @@ import assert from 'assert';
 import { sleep, getTestURL } from '../utils';
 
 describe('Palindrom', () => {
+    let palindrom;
+    afterEach(() => {
+        fetchMock.restore();
+        // stop all networking and DOM activity of abandoned instance
+        palindrom.stop();
+    });
     describe('#filterLocalChange', () => {
-        beforeEach(() => {
-            
-        });
-        afterEach(() => {
-            fetchMock.restore();
-        });
         it('Should use options.filterLocalChange function when local changes occur', async () => {
             const spy = sinon.spy();
 
@@ -20,7 +20,7 @@ describe('Palindrom', () => {
                 headers: { contentType: 'application/json' },
                 body: '{"hello": "world"}'
             });
-            new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 filterLocalChange: op => {
                     spy();
@@ -42,7 +42,7 @@ describe('Palindrom', () => {
                 body: '{"hello": "world"}'
             });
             let tempObj;
-            const palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 filterLocalChange: operation =>
                     !operation.path.startsWith('/$$') && operation,

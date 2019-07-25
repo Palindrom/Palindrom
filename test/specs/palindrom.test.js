@@ -6,8 +6,11 @@ import { sleep, getTestURL } from '../utils';
 const currentVersion = require('../../package.json').version;
 
 describe('Palindrom', () => {
+    let palindrom;
     afterEach(() => {
         fetchMock.restore();
+        // stop all networking and DOM activity of abandoned instance
+        palindrom && palindrom.stop();
     });
     describe('Expose version', function() {
         it('Palindrom class should contain the version', function() {
@@ -18,7 +21,7 @@ describe('Palindrom', () => {
                 status: 200,
                 body: '{"hello": "world"}'
             })
-            const palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL')
             });
             assert.equal(currentVersion, palindrom.version);
@@ -33,7 +36,7 @@ describe('Palindrom', () => {
             });
             const spy = sinon.spy();
 
-            new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 onStateReset: spy
             });
@@ -57,7 +60,7 @@ describe('Palindrom', () => {
                 body: '{"hello": "world","": {"hola": "mundo"}}'
             });
             const spy = sinon.spy();
-            let palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 onStateReset: spy
             });
@@ -69,11 +72,6 @@ describe('Palindrom', () => {
             assert.equal('mundo', palindrom.obj[''].hola);
         });
     });
-});
-describe('Palindrom', () => {
-    afterEach(() => {
-        fetchMock.restore();
-    });
     describe('obj', () => {
         it('palindrom.obj should be readonly', async () => {
             fetchMock.mock(getTestURL('testURL'), {
@@ -82,7 +80,7 @@ describe('Palindrom', () => {
                 body: '{"hello": "world"}'
             });
 
-            const palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL')
             });
 
@@ -95,11 +93,6 @@ describe('Palindrom', () => {
             );
         });
     });
-});
-describe('Palindrom', () => {
-    afterEach(() => {
-        fetchMock.restore();
-    });
     describe('#patching', () => {
         it('should patch changes', async () => {
             fetchMock.mock(getTestURL('testURL'), {
@@ -110,7 +103,7 @@ describe('Palindrom', () => {
 
             let tempObject;
 
-            new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 onStateReset: obj => (tempObject = obj)
             });
@@ -137,7 +130,7 @@ describe('Palindrom', () => {
             });
             assert.equal(0, fetchMock.calls().length, 'asdsad');
             let tempObject;
-            const palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 onStateReset: obj => (tempObject = obj)
             })
@@ -170,7 +163,7 @@ describe('Palindrom', () => {
                 body: '{"unwatched": "object"}'
             });
             let tempObject;
-            const palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 onStateReset: obj => (tempObject = obj)
             });
@@ -216,7 +209,7 @@ describe('Palindrom', () => {
             });
             assert.equal(0, fetchMock.calls().length, 'asdsad');
             let tempObject;
-            const palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 onStateReset: obj => (tempObject = obj)
             })

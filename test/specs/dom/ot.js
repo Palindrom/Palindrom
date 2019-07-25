@@ -135,8 +135,11 @@ if (typeof window !== 'undefined') {
             assert.equal(palindrom.obj.newChildren.Name$, null);
             assert.deepEqual(palindrom.obj.newChildren, {});
 
+            // stop all networking and DOM activity of abandoned instance
             palindrom.unobserve();
             palindrom.unlisten();
+            palindrom.stop();
+            
             mockSocketServer.stop();
             fetchMock.restore();
         });
