@@ -26,17 +26,14 @@ describe('WS Client', () => {
     let palindrom, onReconnectionCountdown, onReconnectionEnd, mockSocketServer, anotherSocket;
     afterEach(async () => {
         fetchMock.restore();
-        // FIXME: https://github.com/Palindrom/Palindrom/issues/248
-        // hackish way to silence previous instances of Palindrom.
-        palindrom.network.heartbeat.stop()
-        palindrom.network.closeConnection();
+        
+        // stop all networking and DOM activity of abandoned instance
+        palindrom.stop();
         // console.info('palindrom\'s heartbeat stopped');
         mockSocketServer.stop();
         anotherSocket.stop();
         // wait for all socket  events to be triggered
         await sleep(10);
-        // FIXME: wait for ping callback to pass, https://github.com/Palindrom/Palindrom/issues/248
-        await sleep(1000);
     });
     describe('Reconnect', function () {
         // Fails due to bug
