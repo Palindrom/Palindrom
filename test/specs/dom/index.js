@@ -55,8 +55,11 @@ if (typeof window !== 'undefined') {
                     afterEach(function() {
                         window.history.pushState.restore();
                         historySpy = null;
+                        // stop all networking and DOM activity of abandoned instance
                         palindrom.unobserve();
                         palindrom.unlisten();
+                        palindrom.stop();
+
                         fetchMock.restore();
                     });
 
@@ -295,7 +298,17 @@ if (typeof window !== 'undefined') {
                         await sleep(5);
                     });
 
-                    it('should start listening to DOM changes after `.listen()` was called', async () => {
+                    it('should stop listening to DOM changes after `.stop()` was called', async () => {
+                        palindrom.stop();
+                        createAndClickOnLink(
+                            '#will_not_get_caught_by_palindrom',
+                            mode === 'specific' ? palindromNode : null
+                        );
+                        expect(historySpy.callCount).to.equal(0);
+                        await sleep(5);
+                    });
+
+                    it('should start listening to DOM changes after `unlisten()` then `.listen()` were called', async () => {
                         palindrom.unlisten();
                         palindrom.listen();
 
@@ -338,8 +351,10 @@ if (typeof window !== 'undefined') {
                     history.pushState(null, null, currLoc);
                     window.scrollTo(0, currScrollY);
 
+                    // stop all networking and DOM activity of abandoned instance
                     palindrom.unobserve();
                     palindrom.unlisten();
+                    palindrom.stop();
                     fetchMock.restore();
                 });
 
@@ -549,6 +564,7 @@ if (typeof window !== 'undefined') {
 
                         palindrom.unobserve();
                         palindrom.unlisten();
+                        palindrom.stop();
                         fetchMock.restore();
                     });
                     it('should scroll to top', async () => {

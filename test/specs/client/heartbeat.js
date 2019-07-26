@@ -17,9 +17,8 @@ describe('HTTP Client', () => {
     let palindrom, onReconnectionCountdown, onReconnectionEnd;
     afterEach(() => {
         fetchMock.restore();
-        // hackish way to silence previous instances of Palindrom.
-        palindrom.network.heartbeat.stop()
-        // console.info('palindrom\'s heartbeat stopped');
+        // stop all networking and DOM activity of abandoned instance
+        palindrom.stop();
     });
     describe('Heartbeat', function () {
         it('When created with no `pingIntervalS` should not send any patch on idle', async function () {
@@ -40,7 +39,12 @@ describe('HTTP Client', () => {
                 status: 200,
                 headers: { contentType: 'application/json-patch+json' },
                 body: '[]'
-            }, {name: 'ping'});
+            }, {
+                name: 'ping',
+                functionMatcher: function() {
+                    debugger
+                }
+            });
             
             await sleep(1.5*1000);
             // only establish is called
@@ -75,7 +79,25 @@ describe('HTTP Client', () => {
                     status: 200,
                     headers: { contentType: 'application/json-patch+json' },
                     body: '[]'
-                }, {name: 'ping'});
+                }, {
+                    name: 'ping',
+                    functionMatcher: function(url, options){
+                        return options.body === '[]';
+                    }
+                });
+                fetchMock.patch(getTestURL('testURL'), {
+                    status: 200,
+                    headers: { contentType: 'application/json-patch+json' },
+                    body: `[
+                        {"op": "replace", "path": "${remoteVersionPath}", "value": 100}, 
+                        {"op": "test", "path": "${localVersionPath}", "value": 1}
+                    ]`
+                }, {
+                    name: 'patch',
+                    functionMatcher: function(url, options){
+                        return options.body !== '[]';
+                    }
+                });
 
             });
             it(`should send empty patch (\`[]\`) after ${pingIntervalS} seconds after establish`, async () => {
@@ -105,11 +127,11 @@ describe('HTTP Client', () => {
                 // change
                 palindrom.obj.hello = "Ping Machine";
                 await sleep(10);
-                expect(fetchMock.calls('ping')).to.be.lengthOf(1);
+                expect(fetchMock.calls('patch')).to.be.lengthOf(1, 'should send patch request just after a change');
 
                 await sleep(pingIntervalS*1000 + 10);
                 // // ping
-                expect(fetchMock.calls('ping')).to.be.lengthOf(2);
+                expect(fetchMock.calls('ping')).to.be.lengthOf(1, 'should send ping request `pingIntervalS` after a change');
                 const [pingURL, pingCall] = fetchMock.lastCall();
                 expect(pingURL).to.equal(getTestURL('testURL'));
                 expect(pingCall).to.have.property('body','[]');
@@ -170,7 +192,70 @@ describe('HTTP Client', () => {
                     });
                 });
             });
-            
+            describe('once .stop method is called', () => {
+
+                it(`before establish connection responds, should NOT send empty patches (\`[]\`) on idle (even ${pingIntervalS} seconds after sending local change)`, async () => {
+                    // make sure establish request was sent
+                    expect(fetchMock.calls('establish')).to.be.lengthOf(1);
+                    expect(fetchMock.called(/testURL/)).to.be.ok;
+
+                    palindrom.stop();
+                    // wait for establish response
+                    await sleep(10);
+                    expect(fetchMock.calls('ping')).to.be.lengthOf(0);
+
+                    // change
+                    palindrom.obj.hello = "Ping Machine";
+                    await sleep(10);
+                    expect(fetchMock.calls('ping')).to.be.lengthOf(0);
+    
+                    await sleep(pingIntervalS*1000 + 10);
+                    // // ping
+                    expect(fetchMock.calls('ping')).to.be.lengthOf(0);
+                    
+                }).timeout(pingIntervalS*2*1000);
+                it(`after establish connection responds, should NOT send empty patches (\`[]\`) on idle (even ${pingIntervalS} seconds after sending local change)`, async () => {
+                    // make sure establish request was sent
+                    expect(fetchMock.calls('establish')).to.be.lengthOf(1);
+                    expect(fetchMock.called(/testURL/)).to.be.ok;
+
+                    // wait for establish response
+                    await sleep(10);
+                    palindrom.stop();
+                    expect(fetchMock.calls('ping')).to.be.lengthOf(0);
+
+                    // change
+                    palindrom.obj.hello = "Ping Machine";
+                    await sleep(10);
+                    expect(fetchMock.calls('ping')).to.be.lengthOf(0);
+
+                    await sleep(pingIntervalS*1000 + 10);
+                    // // ping
+                    expect(fetchMock.calls('ping')).to.be.lengthOf(0);
+                    
+                }).timeout(pingIntervalS*2*1000);
+                it(`after establish connection responds, just after issueing a change, should NOT send empty patches (\`[]\`) on idle (even ${pingIntervalS} seconds after sending local change)`, async () => {
+                    // make sure establish request was sent
+                    expect(fetchMock.calls('establish')).to.be.lengthOf(1);
+                    expect(fetchMock.called(/testURL/)).to.be.ok;
+
+                    // wait for establish response
+                    await sleep(10);
+                    expect(fetchMock.calls('ping')).to.be.lengthOf(0, 'should not call ping before a change');
+                    
+                    // change
+                    palindrom.obj.hello = "Ping Machine";
+                    expect(fetchMock.calls('ping')).to.be.lengthOf(0, 'should not call ping immediatelly after a change');
+                    expect(fetchMock.calls('patch')).to.be.lengthOf(1, 'should call patch immediatelly after a change');
+                    palindrom.stop();
+                    await sleep(10);
+                    expect(fetchMock.calls('ping')).to.be.lengthOf(0, 'should not call ping immediatelly after stop is called');
+                    
+                    await sleep(pingIntervalS*1000 + 10);
+                    // // ping
+                    expect(fetchMock.calls('ping')).to.be.lengthOf(0, 'should not call ping after a change');
+                }).timeout(pingIntervalS*2*1000);
+            });
         });
     });
 });

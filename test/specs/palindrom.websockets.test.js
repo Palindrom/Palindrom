@@ -13,9 +13,12 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     let mockSocketServer;
     const remoteUrl = getTestURL('testURL');
     const wsUrl = getTestURL('testURL', false, true);
+    let palindrom;
     afterEach(() => {
         fetchMock.restore();
         mockSocketServer.stop();
+        // stop all networking and DOM activity of abandoned instance
+        palindrom.stop();
     });
     it('should try to open WebSocket connection', async () => {
         mockSocketServer = new MockSocketServer(wsUrl);
@@ -25,7 +28,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             body: '{"hello": "world"}'
         });
 
-        var palindrom = new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl,
             useWebSocket: true
         });
@@ -45,7 +48,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             body: '{"hello": "world"}'
         });
 
-        var palindrom = new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl,
             useWebSocket: true
         });
@@ -68,7 +71,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             body: '{"hello": "world"}'
         });
 
-        var palindrom = new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl,
             useWebSocket: true
         });
@@ -91,7 +94,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             body: '{"hello": "world"}'
         });
 
-        var palindrom = new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl,
             useWebSocket: true
         });
@@ -114,7 +117,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             body: '{"hello": "world"}'
         });
 
-        var palindrom = new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl: getTestURL('testURL/koko'),
             useWebSocket: true
         });
@@ -137,7 +140,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             body: '{"hello": "world"}'
         });
 
-        var palindrom = new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl: getTestURL('testURL/koko'),
             useWebSocket: true
         });
@@ -159,7 +162,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             body: '{"hello": "world"}'
         });
 
-        var palindrom = new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl: 'https://localhost/testURL/koko',
             useWebSocket: true
         });
@@ -184,7 +187,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             body: '{"hello": "world"}'
         });
 
-        var palindrom = new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl,
             useWebSocket: true
         });
@@ -199,6 +202,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
 describe('Before HTTP connection is established', () => {
     const remoteUrl = getTestURL('testURL/koko');
     let mockSocketServer;
+    let palindrom;
     beforeEach(() => {
         mockSocketServer = new MockSocketServer(getTestURL('testURL/koko', false, true));
         fetchMock.mock(remoteUrl, {
@@ -209,12 +213,14 @@ describe('Before HTTP connection is established', () => {
     afterEach(() => {
         fetchMock.restore();
         mockSocketServer.stop();
+        // stop all networking and DOM activity of abandoned instance
+        palindrom.stop();
     });
     it("shouldn't start a socket connection", async () => {
         let everConnected = false;
 
 
-        var palindrom = new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl,
             useWebSocket: true,
             onStateReset: () =>
@@ -235,7 +241,7 @@ describe('Before HTTP connection is established', () => {
             messages.push(...patchParsed);
         });
 
-        new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl,
             useWebSocket: true,
             onStateReset: obj => (obj.firstName = 'Omar')
@@ -249,7 +255,7 @@ describe('Before HTTP connection is established', () => {
 });
 describe('Sockets events', () => {
     const remoteUrl = getTestURL('testURL/koko');
-    let mockSocketServer, mockSocket, socketMessageSpy, socketConnectedspy;
+    let mockSocketServer, mockSocket, socketMessageSpy, socketConnectedspy, palindrom;
     beforeEach(function(){
         mockSocket = null;
         socketMessageSpy = sinon.spy().named('socket message');
@@ -269,10 +275,12 @@ describe('Sockets events', () => {
     afterEach(() => {
         fetchMock.restore();
         mockSocketServer.stop();
+        // stop all networking and DOM activity of abandoned instance
+        palindrom.stop();
     });
     it('`onSocketOpened` callback should be called', async () => {
         const onSocketOpened = sinon.spy().named('onSocketOpened');
-        new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl,
             useWebSocket: true,
             onSocketOpened
@@ -289,7 +297,7 @@ describe('Sockets events', () => {
 
     it('Should call onConnectionError even when a non-JSON message is sent', async () => {
         var spy = sinon.spy();
-        var palindrom = new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl,
             useWebSocket: true,
             onConnectionError: spy
@@ -323,7 +331,7 @@ describe('Sockets events', () => {
 
     context('After connection is established', () => {
         it('should send new changes over WebSocket', async () => {
-            var palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl,
                 useWebSocket: true
             });
@@ -344,7 +352,7 @@ describe('Sockets events', () => {
 
         it('should call onConnectionError event if there is no response after `pingIntervalS`', async () => {
             const connectionErrorSpy = sinon.spy();
-            var palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl,
                 onConnectionError: connectionErrorSpy,
                 pingIntervalS: 0.5,
@@ -367,7 +375,7 @@ describe('Sockets events', () => {
 
         it('should send a patch over HTTP before ws.readyState is OPENED, and over WebSocket after ws.readyState is OPENED', async () => {
             let tempObj;
-            new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl,
                 useWebSocket: true,
                 onStateReset: obj => {

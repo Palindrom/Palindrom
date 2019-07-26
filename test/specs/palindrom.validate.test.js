@@ -6,13 +6,13 @@ import { validate, JsonPatchError } from 'fast-json-patch';
 import { sleep, getTestURL } from '../utils';
 
 describe('Palindrom', () => {
+    let palindrom;
+    afterEach(() => {
+        fetchMock.restore();
+        // stop all networking and DOM activity of abandoned instance
+        palindrom.stop();
+    });
     describe('#ValidatePatches', () => {
-        beforeEach(() => {
-            
-        });
-        afterEach(() => {
-            fetchMock.restore();
-        });
         it('should pass empty sequence', async () => {
             fetchMock.mock(getTestURL('testURL'), {
                 status: 200,
@@ -27,7 +27,7 @@ describe('Palindrom', () => {
             const sequence = [];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 onIncomingPatchValidationError: spy
             });
@@ -53,7 +53,7 @@ describe('Palindrom', () => {
             const sequence = [{ op: 'replace', path: '/address$', value: '' }];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 onIncomingPatchValidationError: spy
             });
@@ -87,7 +87,7 @@ describe('Palindrom', () => {
             ];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 onIncomingPatchValidationError: spy
             });
@@ -114,7 +114,7 @@ describe('Palindrom', () => {
             const sequence = [{ op: 'replace', path: '/address$' }];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 onIncomingPatchValidationError: spy
             });
@@ -147,7 +147,7 @@ describe('Palindrom', () => {
             ];
             const spy = sinon.spy();
 
-            const palindrom = new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: getTestURL('testURL'),
                 onIncomingPatchValidationError: spy
             });
