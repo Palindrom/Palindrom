@@ -56,8 +56,6 @@ if (typeof window !== 'undefined') {
                         window.history.pushState.restore();
                         historySpy = null;
                         // stop all networking and DOM activity of abandoned instance
-                        palindrom.unobserve();
-                        palindrom.unlisten();
                         palindrom.stop();
 
                         fetchMock.restore();
@@ -352,8 +350,6 @@ if (typeof window !== 'undefined') {
                     window.scrollTo(0, currScrollY);
 
                     // stop all networking and DOM activity of abandoned instance
-                    palindrom.unobserve();
-                    palindrom.unlisten();
                     palindrom.stop();
                     fetchMock.restore();
                 });
@@ -562,8 +558,6 @@ if (typeof window !== 'undefined') {
                         history.pushState(null, null, currLoc);
                         window.scrollTo(0, currScrollY);
 
-                        palindrom.unobserve();
-                        palindrom.unlisten();
                         palindrom.stop();
                         fetchMock.restore();
                     });

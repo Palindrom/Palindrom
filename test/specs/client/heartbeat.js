@@ -40,10 +40,7 @@ describe('HTTP Client', () => {
                 headers: { contentType: 'application/json-patch+json' },
                 body: '[]'
             }, {
-                name: 'ping',
-                functionMatcher: function() {
-                    debugger
-                }
+                name: 'ping'
             });
             
             await sleep(1.5*1000);
