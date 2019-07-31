@@ -1,6 +1,6 @@
-import URL from './URLShim';
-import { PalindromError, PalindromConnectionError } from './palindrom-errors';
-import { Heartbeat, NoHeartbeat } from './heartbeat';
+import URL from './URLShim.js';
+import { PalindromError, PalindromConnectionError } from './palindrom-errors.js';
+import { Heartbeat, NoHeartbeat } from './heartbeat.js';
 /* this package will be empty in the browser bundle,
 and will import https://www.npmjs.com/package/websocket in node */
 import WebSocket from 'websocket';
@@ -111,7 +111,7 @@ export default class PalindromNetworkChannel {
         this.heartbeat.stop();
         this.palindrom.reconnector.triggerReconnection();
         this.onConnectionError(palindromError);
-    }    
+    }
     /**
      * Handle an error which probably won't go away on itself (basically forward upstream)
      * @param {PalindromConnectionError} palindromError
@@ -129,7 +129,7 @@ export default class PalindromNetworkChannel {
         this.heartbeat.notifyReceive();
         this.onReceive(...arguments);
     }
-    
+
     /**
      * Send any text message by currently established channel
      * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)

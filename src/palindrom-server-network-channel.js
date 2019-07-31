@@ -1,5 +1,5 @@
-import URL from './URLShim';
-import { PalindromError, PalindromConnectionError } from './palindrom-errors';
+import URL from './URLShim.js';
+import { PalindromError, PalindromConnectionError } from './palindrom-errors.js';
 /* this package will be empty in the browser bundle,
 and will import https://www.npmjs.com/package/websocket in node */
 import WebSocket from 'websocket';

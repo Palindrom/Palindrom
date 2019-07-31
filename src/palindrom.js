@@ -4,16 +4,19 @@
  * MIT license
  */
 
-import PalindromNetworkChannel from './palindrom-network-channel';
-import PalindromServerNetworkChannel from './palindrom-server-network-channel';
-import { applyPatch, validate } from 'fast-json-patch';
+import PalindromNetworkChannel from './palindrom-network-channel.js';
+import PalindromServerNetworkChannel from './palindrom-server-network-channel.js';
+
+import { require } from './requireShim.js';
+
+const { applyPatch, validate } = require('fast-json-patch');
 import JSONPatcherProxy from 'jsonpatcherproxy';
-import { JSONPatchQueueSynchronous, JSONPatchQueue } from 'json-patch-queue';
+const { JSONPatchQueueSynchronous, JSONPatchQueue } = require('json-patch-queue');
 import JSONPatchOT from 'json-patch-ot';
 import JSONPatchOTAgent from 'json-patch-ot-agent';
-import { PalindromError, PalindromConnectionError } from './palindrom-errors';
-import Reconnector from './reconnector';
-import NoQueue from './noqueue';
+import { PalindromError, PalindromConnectionError } from './palindrom-errors.js';
+import Reconnector from './reconnector.js';
+import NoQueue from './noqueue.js';
 
 /* this variable is bumped automatically when you call npm version */
 const palindromVersion = '6.2.0';
@@ -284,7 +287,7 @@ class Palindrom {
     /**
      * Callback to react on change received from remote.
      * @see PalindromNetworkChannel.onReceive
-     * 
+     *
      * @param {JSONPatch} data single parsed JSON Patch (array of operations objects) that was send by remote.
      * @param {String} url from which the change was issued
      * @param {String} method HTTP method which resulted in this change ('GET' or 'PATCH') or 'WS' if came as Web Socket message

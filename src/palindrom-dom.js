@@ -3,7 +3,7 @@
  * (c) 2017 Joachim Wester
  * MIT license
  */
-import { Palindrom } from './palindrom'
+import { Palindrom } from './palindrom.js'
 
 class AbortError extends Error {};
 
