@@ -17,7 +17,6 @@ export default class PalindromServerNetworkChannel {
         onSend,
         onConnectionError,
         onSocketOpened,
-        onFatalError,
         onStateChange,
         wsServer,
         httpServer
@@ -37,7 +36,6 @@ export default class PalindromServerNetworkChannel {
         onReceive && (this.onReceive = onReceive);
         onSend && (this.onSend = onSend);
         onConnectionError && (this.onConnectionError = onConnectionError);
-        onFatalError && (this.onFatalError = onFatalError);
         onStateChange && (this.onStateChange = onStateChange);
         onSocketOpened && (this.onSocketOpened = onSocketOpened);
 
@@ -77,6 +75,21 @@ export default class PalindromServerNetworkChannel {
             this.webSocketUpgrade(this.onSocketOpened);
         }
         return initialState;
+    }
+
+    /**
+     * Handle an error which is probably caused by random disconnection
+     * @param {PalindromConnectionError} palindromError
+     */
+    _handleConnectionError(palindromError) {
+        this.onConnectionError(palindromError);
+    }
+    /**
+     * Handle an error which probably won't go away on itself (basically forward upstream)
+     * @param {PalindromConnectionError} palindromError
+     */
+    _handleFatalError(palindromError) {
+        this.onConnectionError(palindromError);
     }
 
     /**
@@ -141,7 +154,7 @@ export default class PalindromServerNetworkChannel {
             this._ws = ws;
             ws.protocol = "Palindrom.6.1";
 
-            
+
             this.onStateChange(ws.readyState, upgradeURL);
             onSocketOpenCallback && onSocketOpenCallback(ws, request);
 
@@ -150,7 +163,7 @@ export default class PalindromServerNetworkChannel {
                 try {
                     var parsedMessage = JSON.parse(event.data);
                 } catch (e) {
-                    this.onFatalError(
+                    this._handleFatalError(
                         new PalindromConnectionError(
                             event.data,
                             SERVER,
@@ -165,17 +178,17 @@ export default class PalindromServerNetworkChannel {
 
             ws.onerror = event => {
                 this.onStateChange(ws.readyState, upgradeURL, event.data);
-    
+
                 if (!this.useWebSocket) {
                     return;
                 }
-    
+
                 const message = [
                     'WebSocket connection could not be made',
                     'readyState: ' + ws.readyState
                 ].join('\n');
-    
-                this.onFatalError(
+
+                this._handleFatalError(
                     new PalindromConnectionError(message, CLIENT, upgradeURL, 'WS')
                 );
             };
@@ -188,16 +201,16 @@ export default class PalindromServerNetworkChannel {
                     event.code,
                     event.reason
                 );
-    
+
                 const message = [
                     'WebSocket connection closed unexpectedly.',
                     'reason: ' + event.reason,
                     'readyState: ' + this._ws.readyState,
                     'stateCode: ' + event.code
                 ].join('\n');
-    
+
                 if (event.reason) {
-                    this.onFatalError(
+                    this._handleFatalError(
                         new PalindromConnectionError(
                             message,
                             SERVER,
@@ -206,7 +219,7 @@ export default class PalindromServerNetworkChannel {
                         )
                     );
                 } else if (!event.wasClean) {
-                    this.onConnectionError(
+                    this._handleConnectionError(
                         new PalindromConnectionError(
                             message,
                             SERVER,
@@ -216,14 +229,14 @@ export default class PalindromServerNetworkChannel {
                     );
                 }
             };
-        
-            //send immediatly a feedback to the incoming connection    
+
+            //send immediatly a feedback to the incoming connection
             // ws.send('{fullViewModel}');
         });
 
 
-        
-        
+
+
     }
     closeConnection() {
         if (this._ws) {

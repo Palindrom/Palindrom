@@ -13,11 +13,10 @@ import JSONPatchOT from 'json-patch-ot';
 import JSONPatchOTAgent from 'json-patch-ot-agent';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors';
 import Reconnector from './reconnector';
-import { Heartbeat, NoHeartbeat } from './heartbeat';
 import NoQueue from './noqueue';
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '6.1.0';
+const palindromVersion = '6.2.0';
 
 if (typeof global === 'undefined') {
     if (typeof window !== 'undefined') {
@@ -32,7 +31,7 @@ if (typeof global === 'undefined') {
  * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
  * @param {Object} [options] map of arguments. See README.md for description
  */
-export default class Palindrom {
+class Palindrom {
     /**
      * Palindrom version
      */
@@ -86,26 +85,11 @@ export default class Palindrom {
             options.onOutgoingPatchValidationError || noop;
         this.onError = options.onError || noop;
 
-        const isClient = !options.runAsServer;
-        // if(isClient){
-            this.reconnector = new Reconnector(
-                () => this._connectToRemote(this.queue.pending),
-                this.onReconnectionCountdown,
-                this.onReconnectionEnd
-            );
-        // }
-
-        if (isClient && options.pingIntervalS) {
-            const intervalMs = options.pingIntervalS * 1000;
-            this.heartbeat = new Heartbeat(
-                this.ping.bind(this),
-                this.handleConnectionError.bind(this),
-                intervalMs,
-                intervalMs
-            );
-        } else {
-            this.heartbeat = new NoHeartbeat();
-        }
+        this.reconnector = new Reconnector(
+            () => this._connectToRemote(this.queue.pending),
+            this.onReconnectionCountdown,
+            this.onReconnectionEnd
+        );
 
         this.network = new (options.runAsServer? PalindromServerNetworkChannel : PalindromNetworkChannel)(
             this, // palindrom instance TODO: to be removed, used for error reporting
@@ -113,11 +97,10 @@ export default class Palindrom {
             options.useWebSocket || false, // useWebSocket
             this.handleRemoteChange.bind(this), //onReceive
             this.onPatchSent.bind(this), //onSend,
-            this.handleConnectionError.bind(this),
+            this.onConnectionError.bind(this),
             this.onSocketOpened.bind(this),
-            this.handleFatalError.bind(this), //onFatalError,
             this.onSocketStateChanged.bind(this), //onStateChange
-            options.wsServer,
+            options.runAsServer ? options.wsServer : options.pingIntervalS,
             options.httpServer
         );
         /**
@@ -166,7 +149,6 @@ export default class Palindrom {
         this._connectToRemote();
     }
     async _connectToRemote(reconnectionPendingData = null) {
-        this.heartbeat.stop();
         const json = await this.network._establish(reconnectionPendingData, this.obj);
         this.reconnector.stopReconnecting();
 
@@ -175,7 +157,6 @@ export default class Palindrom {
         }
 
         this.queue.reset(json);
-        this.heartbeat.start();
     }
     get useWebSocket() {
         return this.network.useWebSocket;
@@ -184,13 +165,8 @@ export default class Palindrom {
         this.network.useWebSocket = newValue;
     }
 
-    ping() {
-        this._sendPatch([]); // sends empty message to server
-    }
-
     _sendPatch(patch) {
         this.unobserve();
-        this.heartbeat.notifySend();
         this.network.send(patch);
         this.observe();
     }
@@ -302,26 +278,6 @@ export default class Palindrom {
         }
     }
 
-    /**
-     * Handle an error which is probably caused by random disconnection
-     * @param {PalindromConnectionError} palindromError
-     */
-    handleConnectionError(palindromError) {
-        this.heartbeat.stop();
-        this.reconnector.triggerReconnection();
-        this.onConnectionError(palindromError);
-    }
-
-    /**
-     * Handle an error which probably won't go away on itself (basically forward upstream)
-     * @param {PalindromConnectionError} palindromError
-     */
-    handleFatalError(palindromError) {
-        this.heartbeat.stop();
-        this.reconnector.stopReconnecting();
-        this.onConnectionError(palindromError);
-    }
-
     reconnectNow() {
         this.reconnector.reconnectNow();
     }
@@ -338,7 +294,6 @@ export default class Palindrom {
         //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
         this.onPatchReceived(data, url, method);
 
-        this.heartbeat.notifyReceive();
         const patch = data || []; // fault tolerance - empty response string should be treated as empty patch array
 
         validateNumericsRangesInPatch(
@@ -413,3 +368,4 @@ function findRangeErrors(val, errorHandler, variablePath = '') {
         );
     }
 }
+export {Palindrom};

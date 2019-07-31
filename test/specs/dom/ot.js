@@ -1,4 +1,4 @@
-import PalindromDOM from '../../../src/palindrom-dom';
+import { PalindromDOM } from '../../../src/palindrom-dom';
 import assert from 'assert';
 import fetchMock from 'fetch-mock';
 import { Server as MockSocketServer, MockWebSocket } from 'mock-socket';
@@ -66,7 +66,12 @@ if (typeof window !== 'undefined') {
             const url = getTestURL('/testURL');
             const wsUrl = getTestURL('/testURL', false, true);
 
-            const server = new MockSocketServer(wsUrl);
+            let mockSocket;
+            const mockSocketServer = new MockSocketServer(wsUrl);
+            
+            mockSocketServer.on('connection', socket => {
+                mockSocket = socket;
+            });
 
             fetchMock.mock(url, {
                 status: 200,
@@ -90,7 +95,7 @@ if (typeof window !== 'undefined') {
             assert.equal(palindrom.obj.children.length, 3);
 
             // respond with patch2, BEFORE patch1
-            server.send(JSON.stringify(patch2));
+            mockSocket.send(JSON.stringify(patch2));
 
             await sleep();
 
@@ -122,7 +127,7 @@ if (typeof window !== 'undefined') {
             assert.equal(palindrom.obj.newChildren.Name$, 'XXX');
 
             // OK send patch3
-            server.send(JSON.stringify(patch3));
+            mockSocket.send(JSON.stringify(patch3));
 
             await sleep();
 
@@ -132,7 +137,7 @@ if (typeof window !== 'undefined') {
 
             palindrom.unobserve();
             palindrom.unlisten();
-            server.stop();
+            mockSocketServer.stop();
             fetchMock.restore();
         });
     });

@@ -1,4 +1,4 @@
-import PalindromServer from '../../../src/palindrom';
+import { Palindrom as PalindromServer } from '../../../src/palindrom';
 import { HttpMock } from '../../utils/http-mock';
 import { WSServerMock, WSServerMockConnection } from '../../utils/ws-server-mock';
 import { assert } from 'chai';
@@ -57,7 +57,7 @@ describe('Server', () => {
             const data = {};
             data[localVersion] = 0;
             data[remoteVersion] = 0;
-            
+
             const onPatchReceived = sinon.spy();
             const palindrom = new PalindromServer({
                 runAsServer: true,

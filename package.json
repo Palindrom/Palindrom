@@ -1,6 +1,6 @@
 {
   "name": "palindrom",
-  "version": "6.1.0",
+  "version": "6.2.0",
   "description": "",
   "license": "MIT",
   "homepage": "https://github.com/palindrom/Palindrom",
@@ -22,8 +22,7 @@
     "email": "joachimwester@me.com",
     "url": "http://www.starcounter.com/"
   },
-  "main": "./dist/palindrom.node.js",
-  "browser": "./dist/palindrom.min.js",
+  "main": "./src/palindrom-dom.js",
   "files": [
     "dist/*",
     "src/*"
@@ -53,11 +52,12 @@
     "colors": "^1.3.2",
     "fetch-mock": "^7.3.1",
     "mocha": "^6.1.4",
-    "mock-socket": "6.0.4",
+    "mock-socket": "^8.0.5",
     "saucelabs": "^1.5.0",
     "selenium-webdriver": "^3.3.0",
     "serve": "^11.0.0",
     "sinon": "^7.3.2",
+    "sinon-chai": "^3.3.0",
     "webpack": "^4.32.0",
     "webpack-cli": "^3.2.3",
     "webpack-node-externals": "^1.7.2"

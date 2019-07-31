@@ -1,28 +1,32 @@
 import { Server as MockSocketServer } from 'mock-socket';
-import Palindrom from '../../src/palindrom';
+import { Palindrom } from '../../src/palindrom';
 import chai, { expect, assert } from 'chai';
+import sinonChai  from "sinon-chai";
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { PalindromConnectionError } from '../../src/palindrom-errors';
 import { sleep, getTestURL } from '../utils';
 
+chai.use(sinonChai);
+
 describe('Sockets - if `useWebSocket` flag is provided', () => {
-    let server;
+    let mockSocketServer;
+    const remoteUrl = getTestURL('testURL');
+    const wsUrl = getTestURL('testURL', false, true);
     afterEach(() => {
         fetchMock.restore();
-        server.stop();
+        mockSocketServer.stop();
     });
     it('should try to open WebSocket connection', async () => {
-        server = new MockSocketServer(getTestURL('testURL', false, true));
-
-        fetchMock.mock(getTestURL('testURL'), {
+        mockSocketServer = new MockSocketServer(wsUrl);
+        fetchMock.mock(remoteUrl, {
             status: 200,
-            headers: { location: getTestURL('testURL') },
+            headers: { location: remoteUrl },
             body: '{"hello": "world"}'
         });
 
         var palindrom = new Palindrom({
-            remoteUrl: getTestURL('testURL'),
+            remoteUrl,
             useWebSocket: true
         });
         /* socket should be undefined before HTTP delay */
@@ -34,16 +38,15 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     });
 
     it('should calculate WebSocket URL correctly', async () => {
-        server = new MockSocketServer(getTestURL('testURL', false, true));
-
-        fetchMock.mock(getTestURL('testURL'), {
+        mockSocketServer = new MockSocketServer(wsUrl);
+        fetchMock.mock(remoteUrl, {
             status: 200,
-            headers: { location: getTestURL('testURL') },
+            headers: { location: remoteUrl },
             body: '{"hello": "world"}'
         });
 
         var palindrom = new Palindrom({
-            remoteUrl: getTestURL('testURL'),
+            remoteUrl,
             useWebSocket: true
         });
 
@@ -55,18 +58,18 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     });
 
     it('should resolve to correct WebSocket URL from location header, with root slash /', async () => {
-        server = new MockSocketServer(
+        mockSocketServer = new MockSocketServer(
             getTestURL('default/this_is_a_nice_url', false, true)
         );
 
-        fetchMock.mock(getTestURL('testURL'), {
+        fetchMock.mock(remoteUrl, {
             status: 200,
             headers: { location: '/default/this_is_a_nice_url' },
             body: '{"hello": "world"}'
         });
 
         var palindrom = new Palindrom({
-            remoteUrl: getTestURL('testURL'),
+            remoteUrl,
             useWebSocket: true
         });
 
@@ -78,18 +81,18 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     });
 
     it('should resolve to correct WebSocket URL from location header, relatively', async () => {
-        server = new MockSocketServer(
+        mockSocketServer = new MockSocketServer(
             getTestURL('default/this_is_a_nice_url', false, true)
         );
 
-        fetchMock.mock(getTestURL('testURL'), {
+        fetchMock.mock(remoteUrl, {
             status: 200,
             headers: { location: 'default/this_is_a_nice_url' },
             body: '{"hello": "world"}'
         });
 
         var palindrom = new Palindrom({
-            remoteUrl: getTestURL('testURL'),
+            remoteUrl,
             useWebSocket: true
         });
 
@@ -101,7 +104,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     });
 
     it('should resolve to correct WebSocket URL from location header, with root slash and extra pathname', async () => {
-        server = new MockSocketServer(
+        mockSocketServer = new MockSocketServer(
             getTestURL('default/this_is_a_nice_url', false, true)
         );
 
@@ -124,7 +127,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     });
 
     it('should resolve to correct WebSocket URL from location header, without root slash and extra pathname', async () => {
-        server = new MockSocketServer(
+        mockSocketServer = new MockSocketServer(
             getTestURL('testURL/default/this_is_a_nice_url', false, true)
         );
 
@@ -146,7 +149,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         );
     });
     it('should use wss for https remote URL', async () => {
-        server = new MockSocketServer(
+        mockSocketServer = new MockSocketServer(
             'wss://localhost/testURL/default/this_is_a_nice_url'
         );
 
@@ -169,7 +172,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     });
 
     it('should use same host, port, username, and password as provided in remoteUrl', async () => {
-        server = new MockSocketServer(
+        mockSocketServer = new MockSocketServer(
             getTestURL('test/this_is_a_nice_url', false, true)
         );
 
@@ -194,22 +197,22 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     });
 });
 describe('Before HTTP connection is established', () => {
-    let server;
+    const remoteUrl = getTestURL('testURL/koko');
+    let mockSocketServer;
     beforeEach(() => {
-        server = new MockSocketServer(getTestURL('testURL/koko', false, true));
-    });
-    afterEach(() => {
-        fetchMock.restore();
-        server.stop();
-    });
-    it("shouldn't start a socket connection", async () => {
-        const remoteUrl = getTestURL('testURL/koko');
-        let everConnected = false;
-
+        mockSocketServer = new MockSocketServer(getTestURL('testURL/koko', false, true));
         fetchMock.mock(remoteUrl, {
             status: 200,
             body: '{"hello": "world"}'
         });
+    });
+    afterEach(() => {
+        fetchMock.restore();
+        mockSocketServer.stop();
+    });
+    it("shouldn't start a socket connection", async () => {
+        let everConnected = false;
+
 
         var palindrom = new Palindrom({
             remoteUrl,
@@ -227,14 +230,7 @@ describe('Before HTTP connection is established', () => {
     it("shouldn't send any change a patch using WebSocket", async () => {
         const messages = [];
 
-        const remoteUrl = getTestURL('testURL/koko');
-
-        fetchMock.mock(remoteUrl, {
-            status: 200,
-            body: '{"hello": "world"}'
-        });
-
-        server.on('message', patch => {
+        mockSocketServer.on('message', patch => {
             let patchParsed = JSON.parse(patch);
             messages.push(...patchParsed);
         });
@@ -252,52 +248,49 @@ describe('Before HTTP connection is established', () => {
     });
 });
 describe('Sockets events', () => {
-    let server;
-    afterEach(() => {
-        fetchMock.restore();
-        server.stop();
-    });
-    it('socket-opened event should be called', async () => {
-        server = new MockSocketServer(getTestURL('testURL', false, true));
-
-        fetchMock.mock(getTestURL('testURL'), {
+    const remoteUrl = getTestURL('testURL/koko');
+    let mockSocketServer, mockSocket, socketMessageSpy, socketConnectedspy;
+    beforeEach(function(){
+        mockSocket = null;
+        socketMessageSpy = sinon.spy().named('socket message');
+        socketConnectedspy = sinon.spy().named('socket connection');
+        mockSocketServer = new MockSocketServer(getTestURL('testURL/koko', false, true));
+        mockSocketServer.on('connection', socket => {
+            mockSocket = socket;
+            socketConnectedspy(...arguments);
+            socket.on('message', socketMessageSpy);
+        });
+        
+        fetchMock.mock(remoteUrl, {
             status: 200,
             body: '{"hello": "world"}'
         });
-
-        var spy = sinon.spy();
+    });
+    afterEach(() => {
+        fetchMock.restore();
+        mockSocketServer.stop();
+    });
+    it('`onSocketOpened` callback should be called', async () => {
+        const onSocketOpened = sinon.spy().named('onSocketOpened');
         new Palindrom({
-            remoteUrl: getTestURL('testURL'),
+            remoteUrl,
             useWebSocket: true,
-            onSocketOpened: spy
+            onSocketOpened
         });
 
-        assert.equal(
-            spy.callCount,
-            0,
-            'socket should not be opened before HTTP delay'
-        );
-
-        await sleep();
-
-        assert.equal(
-            spy.callCount,
-            1,
-            'socket should be opened before HTTP delay'
-        );
+        expect(onSocketOpened, '`onSocketOpened` should not be called before HTTP delay').not.to.be.called;
+        expect(socketConnectedspy, 'Web Socket connection should not be opened before HTTP delay').not.to.be.called;
+        
+        await sleep(50);
+        
+        expect(onSocketOpened, '`onSocketOpened` should be called after HTTP delay').to.be.called;
+        expect(socketConnectedspy, 'Web Socket connection should be opened after HTTP delay').to.be.called;
     });
 
     it('Should call onConnectionError even when a non-JSON message is sent', async () => {
-        server = new MockSocketServer(getTestURL('testURL', false, true));
-
-        fetchMock.mock(getTestURL('testURL'), {
-            status: 200,
-            body: '{"hello": "world"}'
-        });
-
         var spy = sinon.spy();
         var palindrom = new Palindrom({
-            remoteUrl: getTestURL('testURL'),
+            remoteUrl,
             useWebSocket: true,
             onConnectionError: spy
         });
@@ -307,14 +300,14 @@ describe('Sockets events', () => {
 
         await sleep();
 
-        server.send(`[{"op": "replace", "path": "/hello", "value": "bye"}]`);
+        mockSocket.send(`[{"op": "replace", "path": "/hello", "value": "bye"}]`);
 
         assert.equal(palindrom.obj.hello, 'bye');
 
         /* no issues so far */
         assert(spy.notCalled);
 
-        server.send(`Some error message from the server`);
+        mockSocket.send(`Some error message from the server`);
 
         /* Now! */
         assert(spy.calledOnce);
@@ -330,24 +323,6 @@ describe('Sockets events', () => {
 
     context('After connection is established', () => {
         it('should send new changes over WebSocket', async () => {
-            server = new MockSocketServer(
-                getTestURL('testURL/koko', false, true)
-            );
-
-            const remoteUrl = getTestURL('testURL/koko');
-
-            fetchMock.mock(remoteUrl, {
-                status: 200,
-                body: '{"hello": "world"}'
-            });
-
-            const messages = [];
-
-            server.on('message', patch => {
-                let patchParsed = JSON.parse(patch);
-                messages.push(...patchParsed);
-            });
-
             var palindrom = new Palindrom({
                 remoteUrl,
                 useWebSocket: true
@@ -360,29 +335,15 @@ describe('Sockets events', () => {
 
             await sleep();
 
-            assert.equal(messages.length, 1);
-
-            assert.deepEqual(messages[0], {
+            expect(socketMessageSpy).to.have.been.calledOnceWithExactly(JSON.stringify([{
                 op: 'add',
                 path: '/firstName',
                 value: 'Omar'
-            });
+            }]));
         });
 
         it('should call onConnectionError event if there is no response after `pingIntervalS`', async () => {
             const connectionErrorSpy = sinon.spy();
-
-            server = new MockSocketServer(
-                getTestURL('testURL/koko', false, true)
-            );
-
-            const remoteUrl = getTestURL('testURL/koko');
-
-            fetchMock.mock(remoteUrl, {
-                status: 200,
-                body: '{"hello": "world"}'
-            });
-
             var palindrom = new Palindrom({
                 remoteUrl,
                 onConnectionError: connectionErrorSpy,
@@ -395,7 +356,7 @@ describe('Sockets events', () => {
             await sleep(1200);
 
             /* onConnectionError should be called once now */
-            assert(connectionErrorSpy.calledOnce);
+            expect(connectionErrorSpy).to.have.been.calledOnce;
             const argument = connectionErrorSpy.getCall(0).args[0];
             expect(argument).to.be.an.instanceof(PalindromConnectionError);
             expect(argument).to.have.property('message').that.match(/timeout/i);
@@ -405,24 +366,6 @@ describe('Sockets events', () => {
         
 
         it('should send a patch over HTTP before ws.readyState is OPENED, and over WebSocket after ws.readyState is OPENED', async () => {
-            server = new MockSocketServer(
-                getTestURL('testURL/koko3', false, true)
-            );
-
-            const remoteUrl = getTestURL('testURL/koko3');
-
-            fetchMock.mock(remoteUrl, {
-                status: 200,
-                body: '{"hello": "world"}'
-            });
-
-            const messages = [];
-
-            server.on('message', patch => {
-                let patchParsed = JSON.parse(patch);
-                messages.push(...patchParsed);
-            });
-
             let tempObj;
             new Palindrom({
                 remoteUrl,
@@ -450,7 +393,7 @@ describe('Sockets events', () => {
             });
 
             /* make sure there is no socket messages */
-            assert.equal(messages.length, 0);
+            expect(socketMessageSpy).not.to.be.called;
 
             /* now socket is connected, let's issue a change */
             await sleep();
@@ -459,21 +402,16 @@ describe('Sockets events', () => {
 
             await sleep();
 
-            assert.equal(messages.length, 1);
-            assert.equal(
-                JSON.stringify(messages[0]),
-                '{"op":"add","path":"/firstName","value":"Omar"}'
-            );
-
+            expect(socketMessageSpy).to.have.been.calledOnceWithExactly('[{"op":"add","path":"/firstName","value":"Omar"}]');
+            
             /* now socket is connected, let's issue another change */
             await sleep();
             tempObj.firstName = 'Hanan';
+            // mock-socket is asynchronous, so let's wait for it to propagate event
+            await sleep(10);
 
-            assert.equal(messages.length, 2);
-            assert.equal(
-                JSON.stringify(messages[1]),
-                '{"op":"replace","path":"/firstName","value":"Hanan"}'
-            );
+            expect(socketMessageSpy).to.have.been.calledTwice;
+            expect(socketMessageSpy).to.have.been.calledWithExactly('[{"op":"replace","path":"/firstName","value":"Hanan"}]');
         });
     });
 });

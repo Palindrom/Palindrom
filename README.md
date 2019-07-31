@@ -59,14 +59,20 @@ npm install palindrom --save
 Then you can require it CommonJS or ES6/TS style:
 
 ```js
-//CommonJS
-var Palindrom = require('palindrom');
+// CommonJS
+const Palindrom = require('palindrom').Palindrom;
+const PalindromDOM = require('palindrom').PalindromDOM;
 
 // ES6/TS
-import Palindrom from 'palindrom'
+import { Palindrom } from 'palindrom';
+import { PalindromDOM } from 'palindrom';
 ```
 
-###### Or just download it manually from [github](https://github.com/Palindrom/Palindrom/archive/master.zip).
+Note: The NPM package uses an entry point without a default export. Depending on your environment (Node or browser), you should choose one of the two named exports available: `Palindrom` and `PalindromDOM`.
+
+##### GitHub:
+
+You can [browse the source code on GitHub](https://github.com/Palindrom/Palindrom) or download [a ZIP archive from there](https://github.com/Palindrom/Palindrom/archive/master.zip).
 
 ### Usage
 
@@ -87,9 +93,9 @@ palindrom.obj.someProperty = "new value";
 
 ### Demo
 
-- [Example with Polymer's Template Binding and Web Components](http://Palindrom.github.io/lab/polymer/index.html)
-- [Example with Vue](http://Palindrom.github.io/lab/vue/index.html)
-- [Example with React](http://Palindrom.github.io/lab/react/index.html)
+- [Example with Polymer's Template Binding and Web Components](http://palindrom.github.io/lab/polymer/index.html)
+- [Example with Vue](https://palindrom.github.io/lab/vue/dist/index.html)
+- [Example with React](http://palindrom.github.io/lab/react/index.html)
 
 
 ### Changelog

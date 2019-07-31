@@ -1,4 +1,4 @@
-import PalindromDOM from '../../../src/palindrom-dom';
+import { PalindromDOM } from '../../../src/palindrom-dom';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import chai, { expect, assert } from 'chai';
@@ -361,9 +361,9 @@ if (typeof window !== 'undefined') {
                 describe('palindrom-morph-url event', function() {
                     beforeEach(async () => {
                         // wait for Palindrom to call .listen (after finishing the ajax request)
-                        await sleep();
+                        await sleep(100);
                     });
-                    it('Dispatching it should call PalindromDOM.morphUrl and issue a request', async () => {
+                    it('Dispatching it, after connection is established, should call PalindromDOM.morphUrl and issue a request', async () => {
                         const morphUrlStub = sinon.spy(palindrom, 'morphUrl');
 
                         fetchMock.mock('/new-palindrom-url', {

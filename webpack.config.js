@@ -47,26 +47,6 @@ module.exports = [
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
     {
-        entry: './src/palindrom.js',
-        output: {
-            filename: 'palindrom.node.js',
-            library: 'Palindrom',
-            libraryTarget: 'commonjs-module',
-            libraryExport: 'default'
-        },
-        mode: 'production',
-        optimization: {
-            // We no not want to minimize our code for node
-            minimize: false
-        },
-        resolve: {
-            extensions: ['.js']
-        },
-        target: 'node',
-        externals: [nodeExternals()],
-        plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
-    },
-    {
         entry: './src/palindrom-dom.js',
         output: {
             filename: 'palindrom-dom.js',

@@ -29,9 +29,13 @@ You can find more information on the `target` attribute at [MDN](https://develop
 
 ### Cancellable events before and after navigation
 
-Before and after morphing the page upon navigation within your app, Palindrom dispatches bubbling navigation events, `palindrom-before-navigation` and `palindrom-after-navigation`. You can use these events to watch or even cancel navigation.
+Before and after morphing the page upon navigation within your app, PalindromDOM dispatches bubbling navigation events, `palindrom-before-redirect` and `palindrom-after-redirect`. You can use these events to watch or even cancel navigation.
 
-To cancel Palindrom navigation, you can cancel `palindrom-before-navigation` event by calling `event.preventDefault()` inside your event handler. Then, after you show your confirmation box or whatever purpose you canceled the navigation for, you can continue the navigation by calling `palindrom.morphUrl` to the same URL. To record the navigation URL, you can get it from `event.detail.href` of `palindrom-before-navigation` event.
+The `palindrom-before-redirect` cancellable event is dispatched before the navigation occurs, with `detail` object containing `href: String` property that contains the URL.
+
+To cancel PalindromDOM navigation, you can cancel `palindrom-before-redirect` event by calling `event.preventDefault()` inside your event handler. Then, after you show your confirmation box or whatever purpose you cancelled the navigation for, you can continue the navigation by calling `palindrom.morphUrl` to the same URL. To record the navigation URL, you can get it from `event.detail.href` of `palindrom-before-redirect` event.
+
+The `palindrom-after-redirect` event is dispatched after the navigation occurs, with `detail` object containing `href: String` property that contains the URL and `data: Object` containing the JSON response.
 
 #### Note
 
@@ -41,7 +45,7 @@ A programmatic call to `palindrom.morphUrl` also triggers the navigation events 
 
 ```js
 let handledNavigation = false;
-document.addEventListener('palindrom-before-navigation', event => {
+document.addEventListener('palindrom-before-redirect', event => {
     if (!handledNavigation) {
         if (confirm('Are you sure you want to leave this page?')) {
             // to prevent futher blockage
@@ -55,4 +59,4 @@ document.addEventListener('palindrom-before-navigation', event => {
 });
 ```
 
-Palindrom only triggers the events `palindrom-before-navigation` and `palindrom-after-navigation` for the intercepted links. For non-intercepted links, you may use the native [beforeunload](`https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event`) event.
+PalindromDOM only triggers the events `palindrom-before-redirect` and `palindrom-after-redirect` for the intercepted links. For non-intercepted links, you may use the native [beforeunload](`https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event`) event.

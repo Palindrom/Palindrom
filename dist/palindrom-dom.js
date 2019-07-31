@@ -1,4 +1,4 @@
-/*! Palindrom, version: 6.1.0 */
+/*! Palindrom, version: 6.2.0 */
 var PalindromDOM =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -83,7 +83,7 @@ var PalindromDOM =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 19);
+/******/ 	return __webpack_require__(__webpack_require__.s = 20);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -147,8 +147,8 @@ module.exports = null;
 /**
  * version: 3.0.0-rc.0
  */
-var queue = __webpack_require__(17);
-var sync = __webpack_require__(18);
+var queue = __webpack_require__(18);
+var sync = __webpack_require__(19);
 
 module.exports = { JSONPatchQueue: queue, JSONPatchQueueSynchronous: sync, /* Babel demands this */__esModule:  true };
 
@@ -157,16 +157,16 @@ module.exports = { JSONPatchQueue: queue, JSONPatchQueueSynchronous: sync, /* Ba
 /* 5 */
 /***/ (function(module, exports) {
 
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
 /*!
  * https://github.com/Starcounter-Jack/JSON-Patch
  * (c) 2017 Joachim Wester
  * MIT license
  */
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var _hasOwnProperty = Object.prototype.hasOwnProperty;
 function hasOwnProperty(obj, key) {
     return _hasOwnProperty.call(obj, key);
@@ -303,15 +303,25 @@ function hasUndefined(obj) {
     return false;
 }
 exports.hasUndefined = hasUndefined;
+function patchErrorMessageFormatter(message, args) {
+    var messageParts = [message];
+    for (var key in args) {
+        var value = typeof args[key] === 'object' ? JSON.stringify(args[key], null, 2) : args[key]; // pretty print
+        if (typeof value !== 'undefined') {
+            messageParts.push(key + ": " + value);
+        }
+    }
+    return messageParts.join('\n');
+}
 var PatchError = (function (_super) {
     __extends(PatchError, _super);
     function PatchError(message, name, index, operation, tree) {
-        _super.call(this, message);
-        this.message = message;
+        _super.call(this, patchErrorMessageFormatter(message, { name: name, index: index, operation: operation, tree: tree }));
         this.name = name;
         this.index = index;
         this.operation = operation;
         this.tree = tree;
+        this.message = patchErrorMessageFormatter(message, { name: name, index: index, operation: operation, tree: tree });
     }
     return PatchError;
 }(Error));
@@ -320,13 +330,100 @@ exports.PatchError = PatchError;
 
 /***/ }),
 /* 6 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Heartbeat; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return NoHeartbeat; });
+/* harmony import */ var _palindrom_errors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
+
+const CLIENT = 'Client';
+/**
+ * Guarantees some communication to server and monitors responses for timeouts.
+ * @param sendHeartbeatAction will be called to send a heartbeat
+ * @param onError will be called if no response will arrive after `timeoutMs` since a message has been sent
+ * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
+ * @param timeoutMs should a response fail to arrive in this time, `onError` will be called
+ * @constructor
+ */
+function Heartbeat(
+    sendHeartbeatAction,
+    onError,
+    intervalMs,
+    timeoutMs
+) {
+    let scheduledSend;
+    let scheduledError;
+
+    /**
+     * Call this function at the beginning of operation and after successful reconnection.
+     */
+    this.start = function() {
+        if (scheduledSend) {
+            return;
+        }
+        scheduledSend = setTimeout(() => {
+            this.notifySend();
+            sendHeartbeatAction();
+        }, intervalMs);
+    };
+
+    /**
+     * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
+     */
+    this.notifySend = function() {
+        clearTimeout(scheduledSend); // sending heartbeat will not be necessary until our response arrives
+        scheduledSend = null;
+        if (scheduledError) {
+            return;
+        }
+        scheduledError = setTimeout(() => {
+            scheduledError = null;
+            onError(
+                new _palindrom_errors__WEBPACK_IMPORTED_MODULE_0__[/* PalindromConnectionError */ "a"](
+                    "Timeout has passed and response hasn't arrived",
+                    CLIENT,
+                    this.remoteUrl,
+                    'Unknown'
+                )
+            ); // timeout has passed and response hasn't arrived
+        }, timeoutMs);
+    };
+
+    /**
+     * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
+     */
+    this.notifyReceive = function() {
+        clearTimeout(scheduledError);
+        scheduledError = null;
+        this.start();
+    };
+
+    /**
+     * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
+     */
+    this.stop = () => {
+        clearTimeout(scheduledSend);
+        scheduledSend = null;
+        clearTimeout(scheduledError);
+        scheduledError = null;
+    };
+}
+
+function NoHeartbeat() {
+    this.start = this.stop = this.notifySend = this.notifyReceive = () => {};
+}
+
+
+/***/ }),
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var equalsOptions = { strict: true };
-var _equals = __webpack_require__(8);
-var areEquals = function (a, b) {
-    return _equals(a, b, equalsOptions);
-};
+/*!
+ * https://github.com/Starcounter-Jack/JSON-Patch
+ * (c) 2017 Joachim Wester
+ * MIT license
+ */
 var helpers_1 = __webpack_require__(5);
 var core_1 = __webpack_require__(9);
 /* export all core functions */
@@ -493,9 +590,13 @@ function _generate(mirror, obj, patches, path) {
                 }
             }
         }
-        else {
+        else if (Array.isArray(mirror) === Array.isArray(obj)) {
             patches.push({ op: "remove", path: path + "/" + helpers_1.escapePathComponent(key) });
             deleted = true; // property has been deleted
+        }
+        else {
+            patches.push({ op: "replace", path: path, value: obj });
+            changed = true;
         }
     }
     if (!deleted && newKeys.length == oldKeys.length) {
@@ -520,7 +621,7 @@ exports.compare = compare;
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports) {
 
 var g;
@@ -546,111 +647,11 @@ module.exports = g;
 
 
 /***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var pSlice = Array.prototype.slice;
-var objectKeys = __webpack_require__(15);
-var isArguments = __webpack_require__(16);
-
-var deepEqual = module.exports = function (actual, expected, opts) {
-  if (!opts) opts = {};
-  // 7.1. All identical values are equivalent, as determined by ===.
-  if (actual === expected) {
-    return true;
-
-  } else if (actual instanceof Date && expected instanceof Date) {
-    return actual.getTime() === expected.getTime();
-
-  // 7.3. Other pairs that do not both pass typeof value == 'object',
-  // equivalence is determined by ==.
-  } else if (!actual || !expected || typeof actual != 'object' && typeof expected != 'object') {
-    return opts.strict ? actual === expected : actual == expected;
-
-  // 7.4. For all other Object pairs, including Array objects, equivalence is
-  // determined by having the same number of owned properties (as verified
-  // with Object.prototype.hasOwnProperty.call), the same set of keys
-  // (although not necessarily the same order), equivalent values for every
-  // corresponding key, and an identical 'prototype' property. Note: this
-  // accounts for both named and indexed properties on Arrays.
-  } else {
-    return objEquiv(actual, expected, opts);
-  }
-}
-
-function isUndefinedOrNull(value) {
-  return value === null || value === undefined;
-}
-
-function isBuffer (x) {
-  if (!x || typeof x !== 'object' || typeof x.length !== 'number') return false;
-  if (typeof x.copy !== 'function' || typeof x.slice !== 'function') {
-    return false;
-  }
-  if (x.length > 0 && typeof x[0] !== 'number') return false;
-  return true;
-}
-
-function objEquiv(a, b, opts) {
-  var i, key;
-  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
-    return false;
-  // an identical 'prototype' property.
-  if (a.prototype !== b.prototype) return false;
-  //~~~I've managed to break Object.keys through screwy arguments passing.
-  //   Converting to array solves the problem.
-  if (isArguments(a)) {
-    if (!isArguments(b)) {
-      return false;
-    }
-    a = pSlice.call(a);
-    b = pSlice.call(b);
-    return deepEqual(a, b, opts);
-  }
-  if (isBuffer(a)) {
-    if (!isBuffer(b)) {
-      return false;
-    }
-    if (a.length !== b.length) return false;
-    for (i = 0; i < a.length; i++) {
-      if (a[i] !== b[i]) return false;
-    }
-    return true;
-  }
-  try {
-    var ka = objectKeys(a),
-        kb = objectKeys(b);
-  } catch (e) {//happens when one is a string literal and the other isn't
-    return false;
-  }
-  // having the same number of owned properties (keys incorporates
-  // hasOwnProperty)
-  if (ka.length != kb.length)
-    return false;
-  //the same set of keys (although not necessarily the same order),
-  ka.sort();
-  kb.sort();
-  //~~~cheap key test
-  for (i = ka.length - 1; i >= 0; i--) {
-    if (ka[i] != kb[i])
-      return false;
-  }
-  //equivalent values for every corresponding key, and
-  //~~~possibly expensive deep test
-  for (i = ka.length - 1; i >= 0; i--) {
-    key = ka[i];
-    if (!deepEqual(a[key], b[key], opts)) return false;
-  }
-  return typeof a === typeof b;
-}
-
-
-/***/ }),
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var equalsOptions = { strict: true };
-var _equals = __webpack_require__(8);
+var _equals = __webpack_require__(15);
 var areEquals = function (a, b) {
     return _equals(a, b, equalsOptions);
 };
@@ -759,11 +760,14 @@ exports.getValueByPointer = getValueByPointer;
  * @param operation The operation to apply
  * @param validateOperation `false` is without validation, `true` to use default jsonpatch's validation, or you can pass a `validateOperation` callback to be used for validation.
  * @param mutateDocument Whether to mutate the original document or clone it before applying
+ * @param banPrototypeModifications Whether to ban modifications to `__proto__`, defaults to `true`.
  * @return `{newDocument, result}` after the operation
  */
-function applyOperation(document, operation, validateOperation, mutateDocument) {
+function applyOperation(document, operation, validateOperation, mutateDocument, banPrototypeModifications, index) {
     if (validateOperation === void 0) { validateOperation = false; }
     if (mutateDocument === void 0) { mutateDocument = true; }
+    if (banPrototypeModifications === void 0) { banPrototypeModifications = true; }
+    if (index === void 0) { index = 0; }
     if (validateOperation) {
         if (typeof validateOperation == 'function') {
             validateOperation(operation, 0, document, operation.path);
@@ -794,7 +798,7 @@ function applyOperation(document, operation, validateOperation, mutateDocument) 
         else if (operation.op === 'test') {
             returnValue.test = areEquals(document, operation.value);
             if (returnValue.test === false) {
-                throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+                throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', index, operation, document);
             }
             returnValue.newDocument = document;
             return returnValue;
@@ -810,7 +814,7 @@ function applyOperation(document, operation, validateOperation, mutateDocument) 
         }
         else {
             if (validateOperation) {
-                throw new exports.JsonPatchError('Operation `op` property is not one of operations defined in RFC-6902', 'OPERATION_OP_INVALID', 0, operation, document);
+                throw new exports.JsonPatchError('Operation `op` property is not one of operations defined in RFC-6902', 'OPERATION_OP_INVALID', index, operation, document);
             }
             else {
                 return returnValue;
@@ -837,6 +841,9 @@ function applyOperation(document, operation, validateOperation, mutateDocument) 
         }
         while (true) {
             key = keys[t];
+            if (banPrototypeModifications && key == '__proto__') {
+                throw new TypeError('JSON-Patch: modifying `__proto__` prop is banned for security reasons, if this was on purpose, please set `banPrototypeModifications` flag false and pass it to this function. More info in fast-json-patch README');
+            }
             if (validateOperation) {
                 if (existingPathFragment === undefined) {
                     if (obj[key] === undefined) {
@@ -857,7 +864,7 @@ function applyOperation(document, operation, validateOperation, mutateDocument) 
                 }
                 else {
                     if (validateOperation && !helpers_1.isInteger(key)) {
-                        throw new exports.JsonPatchError("Expected an unsigned base-10 integer value, making the new referenced value the array element with the zero-based index", "OPERATION_PATH_ILLEGAL_ARRAY_INDEX", 0, operation.path, operation);
+                        throw new exports.JsonPatchError("Expected an unsigned base-10 integer value, making the new referenced value the array element with the zero-based index", "OPERATION_PATH_ILLEGAL_ARRAY_INDEX", index, operation, document);
                     } // only parse key when it's an integer for `arr.prop` to work
                     else if (helpers_1.isInteger(key)) {
                         key = ~~key;
@@ -865,11 +872,11 @@ function applyOperation(document, operation, validateOperation, mutateDocument) 
                 }
                 if (t >= len) {
                     if (validateOperation && operation.op === "add" && key > obj.length) {
-                        throw new exports.JsonPatchError("The specified index MUST NOT be greater than the number of elements in the array", "OPERATION_VALUE_OUT_OF_BOUNDS", 0, operation.path, operation);
+                        throw new exports.JsonPatchError("The specified index MUST NOT be greater than the number of elements in the array", "OPERATION_VALUE_OUT_OF_BOUNDS", index, operation, document);
                     }
                     var returnValue = arrOps[operation.op].call(operation, obj, key, document); // Apply patch
                     if (returnValue.test === false) {
-                        throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+                        throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', index, operation, document);
                     }
                     return returnValue;
                 }
@@ -881,7 +888,7 @@ function applyOperation(document, operation, validateOperation, mutateDocument) 
                 if (t >= len) {
                     var returnValue = objOps[operation.op].call(operation, obj, key, document); // Apply patch
                     if (returnValue.test === false) {
-                        throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+                        throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', index, operation, document);
                     }
                     return returnValue;
                 }
@@ -902,10 +909,12 @@ exports.applyOperation = applyOperation;
  * @param patch The patch to apply
  * @param validateOperation `false` is without validation, `true` to use default jsonpatch's validation, or you can pass a `validateOperation` callback to be used for validation.
  * @param mutateDocument Whether to mutate the original document or clone it before applying
+ * @param banPrototypeModifications Whether to ban modifications to `__proto__`, defaults to `true`.
  * @return An array of `{newDocument, result}` after the patch
  */
-function applyPatch(document, patch, validateOperation, mutateDocument) {
+function applyPatch(document, patch, validateOperation, mutateDocument, banPrototypeModifications) {
     if (mutateDocument === void 0) { mutateDocument = true; }
+    if (banPrototypeModifications === void 0) { banPrototypeModifications = true; }
     if (validateOperation) {
         if (!Array.isArray(patch)) {
             throw new exports.JsonPatchError('Patch sequence must be an array', 'SEQUENCE_NOT_AN_ARRAY');
@@ -916,7 +925,8 @@ function applyPatch(document, patch, validateOperation, mutateDocument) {
     }
     var results = new Array(patch.length);
     for (var i = 0, length_1 = patch.length; i < length_1; i++) {
-        results[i] = applyOperation(document, patch[i], validateOperation);
+        // we don't need to pass mutateDocument argument because if it was true, we already deep cloned the object, we'll just pass `true`
+        results[i] = applyOperation(document, patch[i], validateOperation, true, banPrototypeModifications, i);
         document = results[i].newDocument; // in case root was replaced
     }
     results.newDocument = document;
@@ -932,10 +942,10 @@ exports.applyPatch = applyPatch;
  * @param operation The operation to apply
  * @return The updated document
  */
-function applyReducer(document, operation) {
+function applyReducer(document, operation, index) {
     var operationResult = applyOperation(document, operation);
     if (operationResult.test === false) {
-        throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', 0, operation, document);
+        throw new exports.JsonPatchError("Test operation failed", 'TEST_OPERATION_FAILED', index, operation, document);
     }
     return operationResult.newDocument;
 }
@@ -1037,10 +1047,12 @@ exports.validate = validate;
 /* harmony import */ var _URLShim__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
 /* harmony import */ var _URLShim__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_URLShim__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _palindrom_errors__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(0);
-/* harmony import */ var websocket__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1);
-/* harmony import */ var websocket__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(websocket__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var node_fetch__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3);
-/* harmony import */ var node_fetch__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(node_fetch__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _heartbeat__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6);
+/* harmony import */ var websocket__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(1);
+/* harmony import */ var websocket__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(websocket__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var node_fetch__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3);
+/* harmony import */ var node_fetch__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(node_fetch__WEBPACK_IMPORTED_MODULE_4__);
+
 
 
 /* this package will be empty in the browser bundle,
@@ -1071,8 +1083,8 @@ class PalindromNetworkChannel {
         onSend,
         onConnectionError,
         onSocketOpened,
-        onFatalError,
-        onStateChange
+        onStateChange,
+        pingIntervalS
     ) {
         // TODO(tomalec): to be removed once we will achieve better separation of concerns
         this.palindrom = palindrom;
@@ -1087,7 +1099,6 @@ class PalindromNetworkChannel {
         onReceive && (this.onReceive = onReceive);
         onSend && (this.onSend = onSend);
         onConnectionError && (this.onConnectionError = onConnectionError);
-        onFatalError && (this.onFatalError = onFatalError);
         onStateChange && (this.onStateChange = onStateChange);
         onSocketOpened && (this.onSocketOpened = onSocketOpened);
 
@@ -1113,6 +1124,18 @@ class PalindromNetworkChannel {
                 return useWebSocket;
             }
         });
+
+        if (pingIntervalS) {
+            const intervalMs = pingIntervalS * 1000;
+            this.heartbeat = new _heartbeat__WEBPACK_IMPORTED_MODULE_2__[/* Heartbeat */ "a"](
+                () => {this.send([]);},
+                this._handleConnectionError.bind(this),
+                intervalMs,
+                intervalMs
+            );
+        } else {
+            this.heartbeat = new _heartbeat__WEBPACK_IMPORTED_MODULE_2__[/* NoHeartbeat */ "b"]();
+        }
     }
 
     /**
@@ -1122,6 +1145,7 @@ class PalindromNetworkChannel {
      * @return {Promise<Object>}                           Promise for new state of the synced object.
      */
     async _establish(reconnectionPendingData = null) {
+        this.heartbeat.stop();
         const data = reconnectionPendingData ?
             await this._fetch('PATCH', this.remoteUrl.href + '/reconnect', 'application/json', JSON.stringify(reconnectionPendingData)) :
             await this._fetch('GET', this.remoteUrl.href, 'application/json', null);
@@ -1129,9 +1153,37 @@ class PalindromNetworkChannel {
         if (this.useWebSocket) {
             this.webSocketUpgrade(this.onSocketOpened);
         }
+        this.heartbeat.start();
         return data;
     }
 
+    /**
+     * Handle an error which is probably caused by random disconnection
+     * @param {PalindromConnectionError} palindromError
+     */
+    _handleConnectionError(palindromError) {
+        this.heartbeat.stop();
+        this.palindrom.reconnector.triggerReconnection();
+        this.onConnectionError(palindromError);
+    }    
+    /**
+     * Handle an error which probably won't go away on itself (basically forward upstream)
+     * @param {PalindromConnectionError} palindromError
+     */
+    _handleFatalError(palindromError) {
+        this.heartbeat.stop();
+        this.palindrom.reconnector.stopReconnecting();
+        this.onConnectionError(palindromError);
+    }
+
+    /**
+     * Notify heartbeat and onReceive callback about received change
+     */
+    _notifyReceive() {
+        this.heartbeat.notifyReceive();
+        this.onReceive(...arguments);
+    }
+    
     /**
      * Send any text message by currently established channel
      * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
@@ -1139,6 +1191,7 @@ class PalindromNetworkChannel {
      * @return {PalindromNetworkChannel}     self
      */
     async send(patch) {
+        this.heartbeat.notifySend();
         const msg = JSON.stringify(patch);
         // send message only if there is a working ws connection
         if (this.useWebSocket && this._ws && this._ws.readyState === 1) {
@@ -1156,7 +1209,7 @@ class PalindromNetworkChannel {
 
             //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
             //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
-            this.onReceive(data, url, method);
+            this._notifyReceive(data, url, method);
         }
         return this;
     }
@@ -1188,7 +1241,7 @@ class PalindromNetworkChannel {
         this.closeConnection();
         // in node, WebSocket will have `w3cwebsocket` prop. In the browser it won't
 
-        const UsedSocket = websocket__WEBPACK_IMPORTED_MODULE_2___default.a.w3cwebsocket || websocket__WEBPACK_IMPORTED_MODULE_2___default.a;
+        const UsedSocket = websocket__WEBPACK_IMPORTED_MODULE_3___default.a.w3cwebsocket || websocket__WEBPACK_IMPORTED_MODULE_3___default.a;
         this._ws = new UsedSocket(upgradeURL);
         this._ws.onopen = event => {
             this.onStateChange(this._ws.readyState, upgradeURL);
@@ -1198,7 +1251,7 @@ class PalindromNetworkChannel {
             try {
                 var parsedMessage = JSON.parse(event.data);
             } catch (e) {
-                this.onFatalError(
+                this._handleFatalError(
                     new _palindrom_errors__WEBPACK_IMPORTED_MODULE_1__[/* PalindromConnectionError */ "a"](
                         event.data,
                         SERVER,
@@ -1208,7 +1261,7 @@ class PalindromNetworkChannel {
                 );
                 return;
             }
-            this.onReceive(parsedMessage, this._ws.url, 'WS');
+            this._notifyReceive(parsedMessage, this._ws.url, 'WS');
         };
         this._ws.onerror = event => {
             this.onStateChange(this._ws.readyState, upgradeURL, event.data);
@@ -1222,7 +1275,7 @@ class PalindromNetworkChannel {
                 'readyState: ' + this._ws.readyState
             ].join('\n');
 
-            this.onFatalError(
+            this._handleFatalError(
                 new _palindrom_errors__WEBPACK_IMPORTED_MODULE_1__[/* PalindromConnectionError */ "a"](message, CLIENT, upgradeURL, 'WS')
             );
         };
@@ -1244,7 +1297,7 @@ class PalindromNetworkChannel {
             ].join('\n');
 
             if (event.reason) {
-                this.onFatalError(
+                this._handleFatalError(
                     new _palindrom_errors__WEBPACK_IMPORTED_MODULE_1__[/* PalindromConnectionError */ "a"](
                         message,
                         SERVER,
@@ -1253,7 +1306,7 @@ class PalindromNetworkChannel {
                     )
                 );
             } else if (!event.wasClean) {
-                this.onConnectionError(
+                this._handleConnectionError(
                     new _palindrom_errors__WEBPACK_IMPORTED_MODULE_1__[/* PalindromConnectionError */ "a"](
                         message,
                         SERVER,
@@ -1290,7 +1343,7 @@ class PalindromNetworkChannel {
 
         //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
         //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
-        this.onReceive(data, href, method);
+        this._notifyReceive(data, href, method);
         return data;
     }
 
@@ -1343,7 +1396,7 @@ class PalindromNetworkChannel {
             'HTTP method: ' + method
         ].join('\n');
 
-        this.onFatalError(
+        this._handleFatalError(
             new _palindrom_errors__WEBPACK_IMPORTED_MODULE_1__[/* PalindromConnectionError */ "a"](message, CLIENT, url, method)
         );
     }
@@ -1374,7 +1427,7 @@ class PalindromNetworkChannel {
 
         this.onSend(data, url, method);
 
-        let isomorphicFetch = typeof global !== 'undefined' && global.fetch || node_fetch__WEBPACK_IMPORTED_MODULE_3___default.a;
+        let isomorphicFetch = typeof global !== 'undefined' && global.fetch || node_fetch__WEBPACK_IMPORTED_MODULE_4___default.a;
 
         const response = await isomorphicFetch(url, config);
         const dataPromise = response.json();
@@ -1398,7 +1451,7 @@ class PalindromNetworkChannel {
     }
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)))
 
 /***/ }),
 /* 11 */
@@ -1432,7 +1485,6 @@ class PalindromServerNetworkChannel {
         onSend,
         onConnectionError,
         onSocketOpened,
-        onFatalError,
         onStateChange,
         wsServer,
         httpServer
@@ -1452,7 +1504,6 @@ class PalindromServerNetworkChannel {
         onReceive && (this.onReceive = onReceive);
         onSend && (this.onSend = onSend);
         onConnectionError && (this.onConnectionError = onConnectionError);
-        onFatalError && (this.onFatalError = onFatalError);
         onStateChange && (this.onStateChange = onStateChange);
         onSocketOpened && (this.onSocketOpened = onSocketOpened);
 
@@ -1492,6 +1543,21 @@ class PalindromServerNetworkChannel {
             this.webSocketUpgrade(this.onSocketOpened);
         }
         return initialState;
+    }
+
+    /**
+     * Handle an error which is probably caused by random disconnection
+     * @param {PalindromConnectionError} palindromError
+     */
+    _handleConnectionError(palindromError) {
+        this.onConnectionError(palindromError);
+    }
+    /**
+     * Handle an error which probably won't go away on itself (basically forward upstream)
+     * @param {PalindromConnectionError} palindromError
+     */
+    _handleFatalError(palindromError) {
+        this.onConnectionError(palindromError);
     }
 
     /**
@@ -1556,7 +1622,7 @@ class PalindromServerNetworkChannel {
             this._ws = ws;
             ws.protocol = "Palindrom.6.1";
 
-            
+
             this.onStateChange(ws.readyState, upgradeURL);
             onSocketOpenCallback && onSocketOpenCallback(ws, request);
 
@@ -1565,7 +1631,7 @@ class PalindromServerNetworkChannel {
                 try {
                     var parsedMessage = JSON.parse(event.data);
                 } catch (e) {
-                    this.onFatalError(
+                    this._handleFatalError(
                         new _palindrom_errors__WEBPACK_IMPORTED_MODULE_1__[/* PalindromConnectionError */ "a"](
                             event.data,
                             SERVER,
@@ -1580,17 +1646,17 @@ class PalindromServerNetworkChannel {
 
             ws.onerror = event => {
                 this.onStateChange(ws.readyState, upgradeURL, event.data);
-    
+
                 if (!this.useWebSocket) {
                     return;
                 }
-    
+
                 const message = [
                     'WebSocket connection could not be made',
                     'readyState: ' + ws.readyState
                 ].join('\n');
-    
-                this.onFatalError(
+
+                this._handleFatalError(
                     new _palindrom_errors__WEBPACK_IMPORTED_MODULE_1__[/* PalindromConnectionError */ "a"](message, CLIENT, upgradeURL, 'WS')
                 );
             };
@@ -1603,16 +1669,16 @@ class PalindromServerNetworkChannel {
                     event.code,
                     event.reason
                 );
-    
+
                 const message = [
                     'WebSocket connection closed unexpectedly.',
                     'reason: ' + event.reason,
                     'readyState: ' + this._ws.readyState,
                     'stateCode: ' + event.code
                 ].join('\n');
-    
+
                 if (event.reason) {
-                    this.onFatalError(
+                    this._handleFatalError(
                         new _palindrom_errors__WEBPACK_IMPORTED_MODULE_1__[/* PalindromConnectionError */ "a"](
                             message,
                             SERVER,
@@ -1621,7 +1687,7 @@ class PalindromServerNetworkChannel {
                         )
                     );
                 } else if (!event.wasClean) {
-                    this.onConnectionError(
+                    this._handleConnectionError(
                         new _palindrom_errors__WEBPACK_IMPORTED_MODULE_1__[/* PalindromConnectionError */ "a"](
                             message,
                             SERVER,
@@ -1631,14 +1697,14 @@ class PalindromServerNetworkChannel {
                     );
                 }
             };
-        
-            //send immediatly a feedback to the incoming connection    
+
+            //send immediatly a feedback to the incoming connection
             // ws.send('{fullViewModel}');
         });
 
 
-        
-        
+
+
     }
     closeConnection() {
         if (this._ws) {
@@ -1774,7 +1840,7 @@ class PalindromServerNetworkChannel {
     }
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)))
 
 /***/ }),
 /* 12 */
@@ -2449,6 +2515,106 @@ if(true) {
 
 /***/ }),
 /* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var pSlice = Array.prototype.slice;
+var objectKeys = __webpack_require__(16);
+var isArguments = __webpack_require__(17);
+
+var deepEqual = module.exports = function (actual, expected, opts) {
+  if (!opts) opts = {};
+  // 7.1. All identical values are equivalent, as determined by ===.
+  if (actual === expected) {
+    return true;
+
+  } else if (actual instanceof Date && expected instanceof Date) {
+    return actual.getTime() === expected.getTime();
+
+  // 7.3. Other pairs that do not both pass typeof value == 'object',
+  // equivalence is determined by ==.
+  } else if (!actual || !expected || typeof actual != 'object' && typeof expected != 'object') {
+    return opts.strict ? actual === expected : actual == expected;
+
+  // 7.4. For all other Object pairs, including Array objects, equivalence is
+  // determined by having the same number of owned properties (as verified
+  // with Object.prototype.hasOwnProperty.call), the same set of keys
+  // (although not necessarily the same order), equivalent values for every
+  // corresponding key, and an identical 'prototype' property. Note: this
+  // accounts for both named and indexed properties on Arrays.
+  } else {
+    return objEquiv(actual, expected, opts);
+  }
+}
+
+function isUndefinedOrNull(value) {
+  return value === null || value === undefined;
+}
+
+function isBuffer (x) {
+  if (!x || typeof x !== 'object' || typeof x.length !== 'number') return false;
+  if (typeof x.copy !== 'function' || typeof x.slice !== 'function') {
+    return false;
+  }
+  if (x.length > 0 && typeof x[0] !== 'number') return false;
+  return true;
+}
+
+function objEquiv(a, b, opts) {
+  var i, key;
+  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
+    return false;
+  // an identical 'prototype' property.
+  if (a.prototype !== b.prototype) return false;
+  //~~~I've managed to break Object.keys through screwy arguments passing.
+  //   Converting to array solves the problem.
+  if (isArguments(a)) {
+    if (!isArguments(b)) {
+      return false;
+    }
+    a = pSlice.call(a);
+    b = pSlice.call(b);
+    return deepEqual(a, b, opts);
+  }
+  if (isBuffer(a)) {
+    if (!isBuffer(b)) {
+      return false;
+    }
+    if (a.length !== b.length) return false;
+    for (i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+  try {
+    var ka = objectKeys(a),
+        kb = objectKeys(b);
+  } catch (e) {//happens when one is a string literal and the other isn't
+    return false;
+  }
+  // having the same number of owned properties (keys incorporates
+  // hasOwnProperty)
+  if (ka.length != kb.length)
+    return false;
+  //the same set of keys (although not necessarily the same order),
+  ka.sort();
+  kb.sort();
+  //~~~cheap key test
+  for (i = ka.length - 1; i >= 0; i--) {
+    if (ka[i] != kb[i])
+      return false;
+  }
+  //equivalent values for every corresponding key, and
+  //~~~possibly expensive deep test
+  for (i = ka.length - 1; i >= 0; i--) {
+    key = ka[i];
+    if (!deepEqual(a[key], b[key], opts)) return false;
+  }
+  return typeof a === typeof b;
+}
+
+
+/***/ }),
+/* 16 */
 /***/ (function(module, exports) {
 
 exports = module.exports = typeof Object.keys === 'function'
@@ -2463,7 +2629,7 @@ function shim (obj) {
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports) {
 
 var supportsArgumentsClass = (function(){
@@ -2489,7 +2655,7 @@ function unsupported(object){
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -2642,7 +2808,7 @@ if(true) {
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -2779,7 +2945,7 @@ if(true) {
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2792,7 +2958,7 @@ var palindrom_network_channel = __webpack_require__(10);
 var palindrom_server_network_channel = __webpack_require__(11);
 
 // EXTERNAL MODULE: ./node_modules/fast-json-patch/lib/duplex.js
-var duplex = __webpack_require__(6);
+var duplex = __webpack_require__(7);
 
 // EXTERNAL MODULE: ./node_modules/jsonpatcherproxy/src/jsonpatcherproxy.js
 var jsonpatcherproxy = __webpack_require__(12);
@@ -2889,85 +3055,6 @@ function Reconnector(
     reset();
 }
 
-// CONCATENATED MODULE: ./src/heartbeat.js
-
-const CLIENT = 'Client';
-/**
- * Guarantees some communication to server and monitors responses for timeouts.
- * @param sendHeartbeatAction will be called to send a heartbeat
- * @param onError will be called if no response will arrive after `timeoutMs` since a message has been sent
- * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
- * @param timeoutMs should a response fail to arrive in this time, `onError` will be called
- * @constructor
- */
-function Heartbeat(
-    sendHeartbeatAction,
-    onError,
-    intervalMs,
-    timeoutMs
-) {
-    let scheduledSend;
-    let scheduledError;
-
-    /**
-     * Call this function at the beginning of operation and after successful reconnection.
-     */
-    this.start = function() {
-        if (scheduledSend) {
-            return;
-        }
-        scheduledSend = setTimeout(() => {
-            this.notifySend();
-            sendHeartbeatAction();
-        }, intervalMs);
-    };
-
-    /**
-     * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
-     */
-    this.notifySend = function() {
-        clearTimeout(scheduledSend); // sending heartbeat will not be necessary until our response arrives
-        scheduledSend = null;
-        if (scheduledError) {
-            return;
-        }
-        scheduledError = setTimeout(() => {
-            scheduledError = null;
-            onError(
-                new palindrom_errors["a" /* PalindromConnectionError */](
-                    "Timeout has passed and response hasn't arrived",
-                    CLIENT,
-                    this.remoteUrl,
-                    'Unknown'
-                )
-            ); // timeout has passed and response hasn't arrived
-        }, timeoutMs);
-    };
-
-    /**
-     * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
-     */
-    this.notifyReceive = function() {
-        clearTimeout(scheduledError);
-        scheduledError = null;
-        this.start();
-    };
-
-    /**
-     * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
-     */
-    this.stop = () => {
-        clearTimeout(scheduledSend);
-        scheduledSend = null;
-        clearTimeout(scheduledError);
-        scheduledError = null;
-    };
-}
-
-function NoHeartbeat() {
-    this.start = this.stop = this.notifySend = this.notifyReceive = () => {};
-}
-
 // CONCATENATED MODULE: ./src/noqueue.js
 /**
  * Non-queuing object that conforms JSON-Patch-Queue API
@@ -3014,9 +3101,8 @@ class NoQueue {
 
 
 
-
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '6.1.0';
+const palindromVersion = '6.2.0';
 
 if (typeof global === 'undefined') {
     if (typeof window !== 'undefined') {
@@ -3085,26 +3171,11 @@ class palindrom_Palindrom {
             options.onOutgoingPatchValidationError || noop;
         this.onError = options.onError || noop;
 
-        const isClient = !options.runAsServer;
-        // if(isClient){
-            this.reconnector = new Reconnector(
-                () => this._connectToRemote(this.queue.pending),
-                this.onReconnectionCountdown,
-                this.onReconnectionEnd
-            );
-        // }
-
-        if (isClient && options.pingIntervalS) {
-            const intervalMs = options.pingIntervalS * 1000;
-            this.heartbeat = new Heartbeat(
-                this.ping.bind(this),
-                this.handleConnectionError.bind(this),
-                intervalMs,
-                intervalMs
-            );
-        } else {
-            this.heartbeat = new NoHeartbeat();
-        }
+        this.reconnector = new Reconnector(
+            () => this._connectToRemote(this.queue.pending),
+            this.onReconnectionCountdown,
+            this.onReconnectionEnd
+        );
 
         this.network = new (options.runAsServer? palindrom_server_network_channel["a" /* default */] : palindrom_network_channel["a" /* default */])(
             this, // palindrom instance TODO: to be removed, used for error reporting
@@ -3112,11 +3183,10 @@ class palindrom_Palindrom {
             options.useWebSocket || false, // useWebSocket
             this.handleRemoteChange.bind(this), //onReceive
             this.onPatchSent.bind(this), //onSend,
-            this.handleConnectionError.bind(this),
+            this.onConnectionError.bind(this),
             this.onSocketOpened.bind(this),
-            this.handleFatalError.bind(this), //onFatalError,
             this.onSocketStateChanged.bind(this), //onStateChange
-            options.wsServer,
+            options.runAsServer ? options.wsServer : options.pingIntervalS,
             options.httpServer
         );
         /**
@@ -3165,7 +3235,6 @@ class palindrom_Palindrom {
         this._connectToRemote();
     }
     async _connectToRemote(reconnectionPendingData = null) {
-        this.heartbeat.stop();
         const json = await this.network._establish(reconnectionPendingData, this.obj);
         this.reconnector.stopReconnecting();
 
@@ -3174,7 +3243,6 @@ class palindrom_Palindrom {
         }
 
         this.queue.reset(json);
-        this.heartbeat.start();
     }
     get useWebSocket() {
         return this.network.useWebSocket;
@@ -3183,13 +3251,8 @@ class palindrom_Palindrom {
         this.network.useWebSocket = newValue;
     }
 
-    ping() {
-        this._sendPatch([]); // sends empty message to server
-    }
-
     _sendPatch(patch) {
         this.unobserve();
-        this.heartbeat.notifySend();
         this.network.send(patch);
         this.observe();
     }
@@ -3301,26 +3364,6 @@ class palindrom_Palindrom {
         }
     }
 
-    /**
-     * Handle an error which is probably caused by random disconnection
-     * @param {PalindromConnectionError} palindromError
-     */
-    handleConnectionError(palindromError) {
-        this.heartbeat.stop();
-        this.reconnector.triggerReconnection();
-        this.onConnectionError(palindromError);
-    }
-
-    /**
-     * Handle an error which probably won't go away on itself (basically forward upstream)
-     * @param {PalindromConnectionError} palindromError
-     */
-    handleFatalError(palindromError) {
-        this.heartbeat.stop();
-        this.reconnector.stopReconnecting();
-        this.onConnectionError(palindromError);
-    }
-
     reconnectNow() {
         this.reconnector.reconnectNow();
     }
@@ -3337,7 +3380,6 @@ class palindrom_Palindrom {
         //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
         this.onPatchReceived(data, url, method);
 
-        this.heartbeat.notifyReceive();
         const patch = data || []; // fault tolerance - empty response string should be treated as empty patch array
 
         validateNumericsRangesInPatch(
@@ -3414,7 +3456,8 @@ function findRangeErrors(val, errorHandler, variablePath = '') {
 }
 
 // CONCATENATED MODULE: ./src/palindrom-dom.js
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return palindrom_dom_PalindromDOM; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PalindromDOM", function() { return palindrom_dom_PalindromDOM; });
+/* concated harmony reexport Palindrom */__webpack_require__.d(__webpack_exports__, "Palindrom", function() { return palindrom_Palindrom; });
 /*! Palindrom
  * https://github.com/Palindrom/Palindrom
  * (c) 2017 Joachim Wester
@@ -3765,6 +3808,7 @@ class AbortError extends Error {};
             );
         }
     }
+
 
 /***/ })
 /******/ ])["default"];

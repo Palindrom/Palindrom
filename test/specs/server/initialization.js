@@ -1,4 +1,4 @@
-import PalindromServer from '../../../src/palindrom';
+import { Palindrom as PalindromServer } from '../../../src/palindrom';
 import { HttpMock } from '../../utils/http-mock';
 import { WSServerMock } from '../../utils/ws-server-mock';
 import { assert } from 'chai';
