@@ -6,7 +6,7 @@
 
 import PalindromNetworkChannel from './palindrom-network-channel';
 import { applyPatch, validate } from 'fast-json-patch';
-import JSONPatcherProxy from 'jsonpatcherproxy';
+import {createDraft, finishDraft } from "immer"
 import { JSONPatchQueueSynchronous, JSONPatchQueue } from 'json-patch-queue';
 import JSONPatchOT from 'json-patch-ot';
 import JSONPatchOTAgent from 'json-patch-ot-agent';
@@ -143,6 +143,7 @@ class Palindrom {
                 this.validateAndApplySequence.bind(this)
             );
         }
+        this._immerOperations = [];
         this._connectToRemote();
     }
     async _connectToRemote(reconnectionPendingData = null) {
@@ -163,82 +164,69 @@ class Palindrom {
     }
 
     _sendPatch(patch) {
-        this.unobserve();
         this.network.send(patch);
-        this.observe();
     }
 
-    prepareProxifiedObject(obj) {
-        if (!obj) {
-            obj = {};
-        }
-        /* wrap a new object with a proxy observer */
-        this.jsonPatcherProxy = new JSONPatcherProxy(obj);
-
-        const proxifiedObj = this.jsonPatcherProxy.observe(false, operation => {
-            const filtered = this.filterLocalChange(operation);
-            // totally ignore falsy (didn't pass the filter) JSON Patch operations
-            filtered && this.handleLocalChange(filtered);
-        });
-
-        /* make it read-only and expose it as `obj` */
-        Object.defineProperty(this, 'obj', {
-            get() {
-                return proxifiedObj;
-            },
-            set() {
-                throw new Error('palindrom.obj is readonly');
-            },
-            /* so that we can redefine it */
-            configurable: true
-        });
-        /* JSONPatcherProxy default state is observing */
-        this.isObserving = true;
-    }
-
-    observe() {
-        this.jsonPatcherProxy && this.jsonPatcherProxy.resume();
+    observe(obj) {
+        this.obj = createDraft(obj || this._nextObj);
+        this.queue.obj = this.obj;
+        this._nextObj = null;
         this.isObserving = true;
     }
 
     unobserve() {
-        this.jsonPatcherProxy && this.jsonPatcherProxy.pause();
+        if (this.obj) {
+            const finalized = finishDraft(this.obj, operations => {
+                operations = operations.map(this.filterLocalChange);
+
+                // totally ignore falsy (didn't pass the filter) JSON Patch operations
+                if (!operations.length) {
+                    return;
+                }
+
+                for(var i=0; i<operations.length; i++) {
+                    operations[i].path = "/" + operations[i].path.join("/");
+                    operations[i].value &&
+                    findRangeErrors(
+                        operations[i].value,
+                        this.onOutgoingPatchValidationError,
+                        operations[i].path
+                    );
+                }
+
+                if (this.debug) {
+                    this.validateSequence(this.remoteObj, operations);
+                }
+
+                this._immerOperations.push(...operations);
+            });
+            this._nextObj = createDraft(finalized);
+            this.queue.obj = this._nextObj;
+            this.obj = null;
+        }
         this.isObserving = false;
     }
 
-    handleLocalChange(operation) {
-        // it's a single operation, we need to check only it's value
-        operation.value &&
-            findRangeErrors(
-                operation.value,
-                this.onOutgoingPatchValidationError,
-                operation.path
-            );
-
-        const patch = [operation];
-        if (this.debug) {
-            this.validateSequence(this.remoteObj, patch);
-        }
-
-        this._sendPatch(this.queue.send(patch));
-        this.onLocalChange(patch);
+    collect() {
+        this.unobserve();
+        const operations = this._immerOperations;
+        this._immerOperations = [];
+        this._sendPatch(this.queue.send(operations));
+        this.observe();
+        this.onLocalChange(operations);
     }
 
     validateAndApplySequence(tree, sequence) {
         try {
             // we don't want this changes to generate patches since they originate from server, not client
             this.unobserve();
+            tree = this.queue.obj;
             const results = applyPatch(tree, sequence, this.debug);
             // notifications have to happen only where observe has been re-enabled
             // otherwise some listener might produce changes that would go unnoticed
-            this.observe();
+            this.observe(results.newDocument);
             // the state was fully replaced
             if (results.newDocument !== tree) {
-                // object was reset, proxify it again
-                this.prepareProxifiedObject(results.newDocument);
-
-                this.queue.obj = this.obj;
-
                 // validate json response
                 findRangeErrors(this.obj, this.onIncomingPatchValidationError);
                 // Catch errors in onStateReset
