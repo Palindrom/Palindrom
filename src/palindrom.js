@@ -4,15 +4,18 @@
  * MIT license
  */
 
-import PalindromNetworkChannel from './palindrom-network-channel';
-import { applyPatch, validate } from 'fast-json-patch';
+import PalindromNetworkChannel from './palindrom-network-channel.js';
+
+import { require } from './requireShim.js';
+
+const { applyPatch, validate } = require('fast-json-patch');
 import JSONPatcherProxy from 'jsonpatcherproxy';
-import { JSONPatchQueueSynchronous, JSONPatchQueue } from 'json-patch-queue';
+const { JSONPatchQueueSynchronous, JSONPatchQueue } = require('json-patch-queue');
 import JSONPatchOT from 'json-patch-ot';
 import JSONPatchOTAgent from 'json-patch-ot-agent';
-import { PalindromError, PalindromConnectionError } from './palindrom-errors';
-import Reconnector from './reconnector';
-import NoQueue from './noqueue';
+import { PalindromError, PalindromConnectionError } from './palindrom-errors.js';
+import Reconnector from './reconnector.js';
+import NoQueue from './noqueue.js';
 
 /* this variable is bumped automatically when you call npm version */
 const palindromVersion = '6.2.0';

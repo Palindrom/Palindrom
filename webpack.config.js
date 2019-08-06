@@ -23,7 +23,8 @@ module.exports = [
         externals: {
             websocket: 'WebSocket',
             './URLShim': 'URL',
-            'node-fetch': 'null'
+            'node-fetch': 'null',
+            './requireShim.js': 'null'
         },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
@@ -42,7 +43,8 @@ module.exports = [
         externals: {
             websocket: 'WebSocket',
             './URLShim': 'URL',
-            'node-fetch': 'null'
+            'node-fetch': 'null',
+            './requireShim.js': 'null'
         },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
@@ -65,7 +67,8 @@ module.exports = [
         externals: {
             websocket: 'WebSocket',
             './URLShim': 'URL',
-            'node-fetch': 'null'
+            'node-fetch': 'null',
+            './requireShim.js': 'null'
         },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
@@ -84,7 +87,8 @@ module.exports = [
         externals: {
             websocket: 'WebSocket',
             './URLShim': 'URL',
-            'node-fetch': 'null'
+            'node-fetch': 'null',
+            './requireShim.js': 'null'
         },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
     },
@@ -100,7 +104,8 @@ module.exports = [
         externals: {
             websocket: 'window.MockWebSocket',
             './URLShim': 'URL',
-            'node-fetch': 'null'
+            'node-fetch': 'null',
+            './requireShim.js': 'null'
         },
         resolve: {
             extensions: ['.js']
@@ -115,6 +120,9 @@ module.exports = [
             libraryTarget: 'commonjs'
         },
         mode: 'development',
+        externals: {
+         './requireShim.js': '../src/requireShimNothing.js'
+        },
         target: 'node',
         resolve: {
             extensions: ['.js'],
