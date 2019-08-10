@@ -6,7 +6,7 @@
  */
 
 const colors = require("colors");
-const SauceLabs = require("saucelabs");
+const SauceLabs = require("saucelabs").default;
 const webdriver = require("selenium-webdriver");
 const Promise = require("bluebird");
 const retryUntil = require("bluebird-retry");
