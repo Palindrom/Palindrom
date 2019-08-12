@@ -6,11 +6,9 @@
 
 import PalindromNetworkChannel from './palindrom-network-channel.js';
 
-import { require } from './requireShim.js';
-
-const { applyPatch, validate } = require('fast-json-patch');
+import { applyPatch, validate }  from 'fast-json-patch';
 import JSONPatcherProxy from 'jsonpatcherproxy';
-const { JSONPatchQueueSynchronous, JSONPatchQueue } = require('json-patch-queue');
+import { JSONPatchQueueSynchronous, JSONPatchQueue } from 'json-patch-queue';
 import JSONPatchOT from 'json-patch-ot';
 import JSONPatchOTAgent from 'json-patch-ot-agent';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors.js';
