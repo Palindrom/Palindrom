@@ -60,7 +60,7 @@
     "serve": "^11.1.0",
     "sinon": "^7.3.2",
     "sinon-chai": "^3.3.0",
-    "webpack": "^4.38.0",
+    "webpack": "^4.39.1",
     "webpack-cli": "^3.3.6",
     "webpack-node-externals": "^1.7.2"
   },
