@@ -101,6 +101,10 @@ module.exports = [
             libraryTarget: 'var'
         },
         mode: 'development',
+        optimization: {
+            // We no not want to minimize our code for testing
+            minimize: false
+        },
         externals: {
             websocket: 'window.MockWebSocket',
             './URLShim': 'URL',
@@ -109,7 +113,8 @@ module.exports = [
         },
         resolve: {
             extensions: ['.js']
-        }
+        },
+        devtool: "source-map"
     },
     /* bundle tests for node */
     {
