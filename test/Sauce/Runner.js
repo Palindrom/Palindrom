@@ -26,14 +26,6 @@ if (!username) {
       accessKey: accessKey,
       name: "Palindrom in Firefox",
       "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER
-    },
-    {
-      browserName: "MicrosoftEdge",
-      platform: "Windows 10",
-      username: username,
-      accessKey: accessKey,
-      name: "Palindrom in MicrosoftEdge",
-      "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER
     }
   ];
 
@@ -41,7 +33,6 @@ if (!username) {
       try {
           await CapabilityRunner(allCaps[0]);
           await CapabilityRunner(allCaps[1]);
-          await CapabilityRunner(allCaps[2]);
 
           console.log('Done!');
           process.exit(0);
