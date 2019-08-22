@@ -44,6 +44,8 @@ describe('Palindrom', () => {
             assert(fetchMock.calls().length === 2);
 
             fetchMock.restore();
+            // stop all networking and DOM activity of abandoned instance
+            palindrom.stop();
         });
     });
 });

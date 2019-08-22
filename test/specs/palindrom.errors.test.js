@@ -7,13 +7,13 @@ import { Server as MockSocketServer } from 'mock-socket';
 import { sleep, getTestURL } from '../utils';
 
 describe('Palindrom', () => {
+    let palindrom;
+    afterEach(() => {
+        fetchMock.restore();
+        // stop all networking and DOM activity of abandoned instance
+        palindrom.stop();
+    });
     describe('#error responses', () => {
-        beforeEach(() => {
-
-        });
-        afterEach(() => {
-            fetchMock.restore();
-        });
         context('Network', function() {
             it('should NOT dispatch connection-error event on HTTP 400 response, containing JSON', async () => {
                 const spy = sinon.spy();
@@ -23,7 +23,7 @@ describe('Palindrom', () => {
                     body: '{"hello": "world"}'
                 });
 
-                const palindrom = new Palindrom({
+                palindrom = new Palindrom({
                     remoteUrl: getTestURL('testURL'),
                     onConnectionError: spy
                 });
@@ -41,7 +41,7 @@ describe('Palindrom', () => {
                     body: 'Bad Request'
                 });
 
-                const palindrom = new Palindrom({
+                palindrom = new Palindrom({
                     remoteUrl: getTestURL('testURL'),
                     onConnectionError: spy
                 });
@@ -60,7 +60,7 @@ describe('Palindrom', () => {
                     body: '{"hello": "world"}'
                 });
 
-                new Palindrom({
+                palindrom = new Palindrom({
                     remoteUrl: getTestURL('testURL'),
                     onConnectionError: spy
                 });
@@ -78,7 +78,7 @@ describe('Palindrom', () => {
                     body: 'Server Error'
                 });
 
-                new Palindrom({
+                palindrom = new Palindrom({
                     remoteUrl: getTestURL('testURL'),
                     onConnectionError: spy
                 });
@@ -97,7 +97,7 @@ describe('Palindrom', () => {
                     body: '{"hello": "world"}'
                 });
 
-                new Palindrom({
+                palindrom = new Palindrom({
                     remoteUrl: getTestURL('testURL'),
                     onStateReset: () => { throw new Error(); },
                     onError: spy
@@ -122,7 +122,7 @@ describe('Palindrom', () => {
                     body: '{"hello": "world"}'
                 });
 
-                const palindrom = new Palindrom({
+                palindrom = new Palindrom({
                     remoteUrl: getTestURL('testURL'),
                     onConnectionError: spy
                 });
@@ -154,7 +154,7 @@ describe('Palindrom', () => {
                     body: '{"hello": "world"}'
                 });
 
-                const palindrom = new Palindrom({
+                palindrom = new Palindrom({
                     remoteUrl: getTestURL('testURL'),
                     onConnectionError: spy
                 });
@@ -186,7 +186,7 @@ describe('Palindrom', () => {
                     body: '{"hello": "world"}'
                 });
 
-                const palindrom = new Palindrom({
+                palindrom = new Palindrom({
                     remoteUrl: getTestURL('testURL'),
                     onConnectionError: spy
                 });
@@ -224,7 +224,7 @@ describe('Palindrom', () => {
             context('HTTP', () => {
                 it('Initial response: out of range numbers should call onIncomingPatchValidationError event with a RangeError', async () => {
                     const onIncomingPatchValidationError = sinon.spy().named('onIncomingPatchValidationError');
-                    const palindrom = new Palindrom({
+                    palindrom = new Palindrom({
                         remoteUrl,
                         onIncomingPatchValidationError
                     });
@@ -242,7 +242,7 @@ describe('Palindrom', () => {
                 it('Outgoing patch: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {
                     const onOutgoingPatchValidationError = sinon.spy().named('onOutgoingPatchValidationError');
     
-                    new Palindrom({
+                    palindrom = new Palindrom({
                         remoteUrl,
                         onStateReset: obj =>
                             obj.amount = Number.MAX_SAFE_INTEGER + 1
@@ -276,7 +276,7 @@ describe('Palindrom', () => {
                 it('Outgoing patch: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {    
                     const onOutgoingPatchValidationError = sinon.spy().named('onOutgoingPatchValidationError');
     
-                    const palindrom = new Palindrom({
+                    palindrom = new Palindrom({
                         remoteUrl,
                         useWebSocket: true,
                         onOutgoingPatchValidationError,
@@ -314,7 +314,7 @@ describe('Palindrom', () => {
                         });
                     });
     
-                    new Palindrom({
+                    palindrom = new Palindrom({
                         remoteUrl,
                         useWebSocket: true,
                         onIncomingPatchValidationError
