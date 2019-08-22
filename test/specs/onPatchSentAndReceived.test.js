@@ -12,6 +12,8 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
     const remoteUrl = getTestURL('testURL');
     let onPatchReceived;
     let onPatchSent;
+    let palindrom;
+
     beforeEach(() => {
         onPatchReceived = sinon.spy().named('onPatchReceived');
         onPatchSent = sinon.spy().named('onPatchSent');
@@ -22,12 +24,14 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
     });
     afterEach(() => {
         fetchMock.restore();
+        // stop all networking and DOM activity of abandoned instance
+        palindrom.stop();
     });
     describe('HTTP', function() {
         it('should call onPatchSent and onPatchReceived callbacks when a patch is sent and received', async () => {
             let tempObj;
 
-            new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl,
                 onStateReset: function(obj) {
                     tempObj = obj;
@@ -78,7 +82,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
         it('should call onPatchReceived even if the patch was bad', async () => {
             let tempObj;
 
-            new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl,
                 onStateReset: function(obj) {
                     tempObj = obj;
@@ -142,7 +146,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
             });
             let tempObj;
 
-            new Palindrom({
+            palindrom = new Palindrom({
                 useWebSocket: true,
                 remoteUrl,
                 onStateReset: function(obj) {
@@ -205,7 +209,7 @@ describe('Callbacks, onPatchSent and onPatchReceived', () => {
     
             let tempObj;
     
-            new Palindrom({
+            palindrom = new Palindrom({
                 remoteUrl: remoteUrl,
                 onStateReset: function(obj) {
                     tempObj = obj;

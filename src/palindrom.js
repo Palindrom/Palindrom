@@ -324,6 +324,14 @@ class Palindrom {
             this.remoteObj = JSON.parse(JSON.stringify(this.obj));
         }
     }
+    /**
+     * Stops all networking, stops listeners, heartbeats, etc.
+     */
+    stop() {
+        this.unobserve();
+        this.reconnector.stopReconnecting();
+        this.network.stop();
+    }
 }
 
 /**

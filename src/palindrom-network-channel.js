@@ -263,12 +263,24 @@ export default class PalindromNetworkChannel {
             }
         };
     }
+    /**
+     * Closes WebSocket connection
+     */
     closeConnection() {
         if (this._ws) {
             this._ws.onclose = () => {};
             this._ws.close();
             this._ws = null;
         }
+    }
+    /**
+     * Stops any communication. Closes WebScoket connection, stops heartbeat
+     * @see .closeConnection
+     */
+    stop() {
+        this.closeConnection();
+        this.heartbeat.stop();
+        this.heartbeat = new NoHeartbeat();
     }
     /**
      * @param {String} href

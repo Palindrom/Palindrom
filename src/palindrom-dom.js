@@ -323,6 +323,16 @@ class AbortError extends Error {};
         }
 
         /**
+         * Stops all networking, stops listeners, heartbeats, etc.
+         * @see Palindrom.stop
+         * @see .unlisten()
+         */
+        stop(){
+            this.unlisten();
+            super.stop(...arguments);
+        }
+
+        /**
          * Returns information if a given element is an internal application link that Palindrom should intercept into a history push
          * @param elem HTMLElement or String
          * @returns {boolean}

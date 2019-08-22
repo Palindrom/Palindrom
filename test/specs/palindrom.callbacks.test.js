@@ -5,6 +5,7 @@ import sinon from 'sinon';
 import { sleep, getTestURL } from '../utils';
 
 describe('Callbacks', () => {
+    let palindrom;
     beforeEach(() => {
         fetchMock.mock(getTestURL('testURL'), {
             status: 200,
@@ -13,13 +14,15 @@ describe('Callbacks', () => {
     });
     afterEach(function() {
         fetchMock.restore();
+        // stop all networking and DOM activity of abandoned instance
+        palindrom.stop();
     });
 
     it('should call onLocalChange callback for an outgoing patch', async () => {
         const sentSpy = sinon.spy();
         let tempObj;
 
-        new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl: getTestURL('testURL'),
             onLocalChange: sentSpy,
             onStateReset: function(obj) {
@@ -43,7 +46,7 @@ describe('Callbacks', () => {
 
     it('should call onStateReset callback for an applied patch on root (initial state)', async () => {
         let stateWasReset = false;
-        const palindrom = new Palindrom({
+        palindrom = new Palindrom({
             remoteUrl: getTestURL('testURL'),
             onStateReset: () => (stateWasReset = true)
         });
