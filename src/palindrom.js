@@ -5,12 +5,12 @@
  */
 
 import PalindromNetworkChannel from './palindrom-network-channel.js';
-
-import { applyPatch, validate }  from 'fast-json-patch';
-import JSONPatcherProxy from 'jsonpatcherproxy';
-import { JSONPatchQueueSynchronous, JSONPatchQueue } from 'json-patch-queue';
-import JSONPatchOT from 'json-patch-ot';
-import JSONPatchOTAgent from 'json-patch-ot-agent';
+import { applyPatch, validate }  from 'fast-json-patch/index.mjs';
+import { JSONPatcherProxy } from 'jsonpatcherproxy';
+import { JSONPatchQueue } from 'json-patch-queue';
+import { JSONPatchQueueSynchronous } from 'json-patch-queue/src/json-patch-queue-synchronous.js';
+import { JSONPatchOT } from 'json-patch-ot';
+import { JSONPatchOTAgent } from 'json-patch-ot-agent';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors.js';
 import Reconnector from './reconnector.js';
 import NoQueue from './noqueue.js';

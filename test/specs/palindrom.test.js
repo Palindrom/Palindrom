@@ -1,12 +1,28 @@
-import { Palindrom } from '../../src/palindrom';
-import { expect, assert } from 'chai';
+import { Palindrom } from '../../src/palindrom.js';
+// ugly CJS to ESM translation done by mocha
+import chai from 'chai';
+const assert = chai.assert;
+const expect = chai.expect;
+
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import { sleep, getTestURL } from '../utils';
-const currentVersion = require('../../package.json').version;
+import { sleep, getTestURL } from '../utils/index.js';
+// import { version as currentVersion } from '../../package.json';
+
 
 describe('Palindrom', () => {
     let palindrom;
+    let currentVersion;
+    before(async ()=>{
+        if(typeof window === 'undefined'){
+            currentVersion = await import('../../package.json')
+                .then(pkg => pkg.default.version);
+        } else {
+            currentVersion = await fetch('../../package.json')
+                .then(response => response.json())
+                .then(json => json.version);
+        }
+    });
     afterEach(() => {
         fetchMock.restore();
         // stop all networking and DOM activity of abandoned instance
@@ -28,16 +44,17 @@ describe('Palindrom', () => {
         });
     });
     describe('#constructor', () => {
+        const remoteURL = getTestURL('testURL');
         it('should initiate an HTTP GET request withot body when initiated, and call the callback function', async () => {
-            const mock = fetchMock.mock(getTestURL('testURL'), {
+            const mock = fetchMock.mock(remoteURL, {
                 status: 200,
-                headers: { Location: getTestURL('testURL') },
+                headers: { Location: remoteURL },
                 body: '{"hello": "world"}'
             });
             const spy = sinon.spy();
 
             palindrom = new Palindrom({
-                remoteUrl: getTestURL('testURL'),
+                remoteUrl: remoteURL,
                 onStateReset: spy
             });
 
@@ -54,14 +71,14 @@ describe('Palindrom', () => {
             assert.deepEqual(spy.getCall(0).args[0], { hello: 'world' });
         });
         it('should accept a JSON that has an empty string as a key', async () => {
-            fetchMock.mock(getTestURL('testURL'), {
+            fetchMock.mock(remoteURL, {
                 status: 200,
-                headers: { Location: getTestURL('testURL') },
+                headers: { Location: remoteURL },
                 body: '{"hello": "world","": {"hola": "mundo"}}'
             });
             const spy = sinon.spy();
             palindrom = new Palindrom({
-                remoteUrl: getTestURL('testURL'),
+                remoteUrl: remoteURL,
                 onStateReset: spy
             });
             await sleep();

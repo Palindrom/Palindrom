@@ -4,10 +4,11 @@ import { Heartbeat, NoHeartbeat } from './heartbeat.js';
 /* this package will be empty in the browser bundle,
 and will import https://www.npmjs.com/package/websocket in node */
 import WebSocket from 'websocket';
-import nodeFetch from 'node-fetch';
+import importedFetch from 'node-fetch';
 
 const CLIENT = 'Client';
 const SERVER = 'Server';
+const glob = typeof globalThis !== 'undefined' && globalThis || typeof window !== 'undefined' && window || typeof global !== 'undefined' && global; 
 
 /**
  * Replaces http and https to ws and wss in a URL and returns it as a string.
@@ -384,8 +385,8 @@ export default class PalindromNetworkChannel {
         }
 
         this.onSend(data, url, method);
-
-        let isomorphicFetch = typeof global !== 'undefined' && global.fetch || nodeFetch;
+        
+        let isomorphicFetch = glob && glob.fetch || importedFetch;
 
         const response = await isomorphicFetch(url, config);
         const dataPromise = response.json();
