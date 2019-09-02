@@ -143,6 +143,93 @@ module.exports = URL;
 
 /***/ }),
 /* 3 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Heartbeat; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return NoHeartbeat; });
+/* harmony import */ var _palindrom_errors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
+
+const CLIENT = 'Client';
+/**
+ * Guarantees some communication to server and monitors responses for timeouts.
+ * @param sendHeartbeatAction will be called to send a heartbeat
+ * @param onError will be called if no response will arrive after `timeoutMs` since a message has been sent
+ * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
+ * @param timeoutMs should a response fail to arrive in this time, `onError` will be called
+ * @constructor
+ */
+function Heartbeat(
+    sendHeartbeatAction,
+    onError,
+    intervalMs,
+    timeoutMs
+) {
+    let scheduledSend;
+    let scheduledError;
+
+    /**
+     * Call this function at the beginning of operation and after successful reconnection.
+     */
+    this.start = function() {
+        if (scheduledSend) {
+            return;
+        }
+        scheduledSend = setTimeout(() => {
+            this.notifySend();
+            sendHeartbeatAction();
+        }, intervalMs);
+    };
+
+    /**
+     * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
+     */
+    this.notifySend = function() {
+        clearTimeout(scheduledSend); // sending heartbeat will not be necessary until our response arrives
+        scheduledSend = null;
+        if (scheduledError) {
+            return;
+        }
+        scheduledError = setTimeout(() => {
+            scheduledError = null;
+            onError(
+                new _palindrom_errors__WEBPACK_IMPORTED_MODULE_0__[/* PalindromConnectionError */ "a"](
+                    "Timeout has passed and response hasn't arrived",
+                    CLIENT,
+                    this.remoteUrl,
+                    'Unknown'
+                )
+            ); // timeout has passed and response hasn't arrived
+        }, timeoutMs);
+    };
+
+    /**
+     * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
+     */
+    this.notifyReceive = function() {
+        clearTimeout(scheduledError);
+        scheduledError = null;
+        this.start();
+    };
+
+    /**
+     * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
+     */
+    this.stop = () => {
+        clearTimeout(scheduledSend);
+        scheduledSend = null;
+        clearTimeout(scheduledError);
+        scheduledError = null;
+    };
+}
+
+function NoHeartbeat() {
+    this.start = this.stop = this.notifySend = this.notifyReceive = () => {};
+}
+
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports) {
 
 /*!
@@ -317,93 +404,6 @@ exports.PatchError = PatchError;
 
 
 /***/ }),
-/* 4 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Heartbeat; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return NoHeartbeat; });
-/* harmony import */ var _palindrom_errors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
-
-const CLIENT = 'Client';
-/**
- * Guarantees some communication to server and monitors responses for timeouts.
- * @param sendHeartbeatAction will be called to send a heartbeat
- * @param onError will be called if no response will arrive after `timeoutMs` since a message has been sent
- * @param intervalMs if no request will be sent in that time, a heartbeat will be issued
- * @param timeoutMs should a response fail to arrive in this time, `onError` will be called
- * @constructor
- */
-function Heartbeat(
-    sendHeartbeatAction,
-    onError,
-    intervalMs,
-    timeoutMs
-) {
-    let scheduledSend;
-    let scheduledError;
-
-    /**
-     * Call this function at the beginning of operation and after successful reconnection.
-     */
-    this.start = function() {
-        if (scheduledSend) {
-            return;
-        }
-        scheduledSend = setTimeout(() => {
-            this.notifySend();
-            sendHeartbeatAction();
-        }, intervalMs);
-    };
-
-    /**
-     * Call this method just before a message is sent. This will prevent unnecessary heartbeats.
-     */
-    this.notifySend = function() {
-        clearTimeout(scheduledSend); // sending heartbeat will not be necessary until our response arrives
-        scheduledSend = null;
-        if (scheduledError) {
-            return;
-        }
-        scheduledError = setTimeout(() => {
-            scheduledError = null;
-            onError(
-                new _palindrom_errors__WEBPACK_IMPORTED_MODULE_0__[/* PalindromConnectionError */ "a"](
-                    "Timeout has passed and response hasn't arrived",
-                    CLIENT,
-                    this.remoteUrl,
-                    'Unknown'
-                )
-            ); // timeout has passed and response hasn't arrived
-        }, timeoutMs);
-    };
-
-    /**
-     * Call this method when a message arrives from other party. Failing to do so will result in false positive `onError` calls
-     */
-    this.notifyReceive = function() {
-        clearTimeout(scheduledError);
-        scheduledError = null;
-        this.start();
-    };
-
-    /**
-     * Call this method to disable heartbeat temporarily. This is *not* automatically called when error is detected
-     */
-    this.stop = () => {
-        clearTimeout(scheduledSend);
-        scheduledSend = null;
-        clearTimeout(scheduledError);
-        scheduledError = null;
-    };
-}
-
-function NoHeartbeat() {
-    this.start = this.stop = this.notifySend = this.notifyReceive = () => {};
-}
-
-
-/***/ }),
 /* 5 */
 /***/ (function(module, exports) {
 
@@ -418,7 +418,7 @@ module.exports = WebSocket;
  * (c) 2017 Joachim Wester
  * MIT license
  */
-var helpers_1 = __webpack_require__(3);
+var helpers_1 = __webpack_require__(4);
 var core_1 = __webpack_require__(7);
 /* export all core functions */
 var core_2 = __webpack_require__(7);
@@ -429,7 +429,7 @@ exports.getValueByPointer = core_2.getValueByPointer;
 exports.validate = core_2.validate;
 exports.validator = core_2.validator;
 /* export some helpers */
-var helpers_2 = __webpack_require__(3);
+var helpers_2 = __webpack_require__(4);
 exports.JsonPatchError = helpers_2.PatchError;
 exports.deepClone = helpers_2._deepClone;
 exports.escapePathComponent = helpers_2.escapePathComponent;
@@ -623,7 +623,7 @@ var _equals = __webpack_require__(14);
 var areEquals = function (a, b) {
     return _equals(a, b, equalsOptions);
 };
-var helpers_1 = __webpack_require__(3);
+var helpers_1 = __webpack_require__(4);
 exports.JsonPatchError = helpers_1.PatchError;
 exports.deepClone = helpers_1._deepClone;
 /* We use a Javascript hash to store each
@@ -1015,7 +1015,7 @@ exports.validate = validate;
 /* harmony import */ var _URLShim__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
 /* harmony import */ var _URLShim__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_URLShim__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _palindrom_errors__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(0);
-/* harmony import */ var _heartbeat__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(4);
+/* harmony import */ var _heartbeat__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* harmony import */ var websocket__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5);
 /* harmony import */ var websocket__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(websocket__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var node_fetch__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9);
@@ -1133,7 +1133,7 @@ class PalindromNetworkChannel {
         this.heartbeat.stop();
         this.palindrom.reconnector.triggerReconnection();
         this.onConnectionError(palindromError);
-    }    
+    }
     /**
      * Handle an error which probably won't go away on itself (basically forward upstream)
      * @param {PalindromConnectionError} palindromError
@@ -1151,7 +1151,7 @@ class PalindromNetworkChannel {
         this.heartbeat.notifyReceive();
         this.onReceive(...arguments);
     }
-    
+
     /**
      * Send any text message by currently established channel
      * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
@@ -1285,12 +1285,24 @@ class PalindromNetworkChannel {
             }
         };
     }
+    /**
+     * Closes WebSocket connection
+     */
     closeConnection() {
         if (this._ws) {
             this._ws.onclose = () => {};
             this._ws.close();
             this._ws = null;
         }
+    }
+    /**
+     * Stops any communication. Closes WebScoket connection, stops heartbeat
+     * @see .closeConnection
+     */
+    stop() {
+        this.closeConnection();
+        this.heartbeat.stop();
+        this.heartbeat = new _heartbeat__WEBPACK_IMPORTED_MODULE_2__[/* NoHeartbeat */ "b"]();
     }
     /**
      * @param {String} href
@@ -1316,23 +1328,6 @@ class PalindromNetworkChannel {
     }
 
     _setRemoteUrl(remoteUrl) {
-        if (
-            this.remoteUrlSet &&
-            this.remoteUrl &&
-            this.remoteUrl != remoteUrl
-        ) {
-            const message = [
-                'Session lost.',
-                'Server replied with a different session ID than the already set one.',
-                'Possibly a server restart happened while you were working.',
-                'Please reload the page.',
-                'Previous session ID: ' + this.remoteUrl,
-                'New session ID: ' + remoteUrl
-            ].join('\n');
-
-            throw new _palindrom_errors__WEBPACK_IMPORTED_MODULE_1__[/* PalindromError */ "b"](message);
-        }
-        this.remoteUrlSet = true;
         this.remoteUrl = new _URLShim__WEBPACK_IMPORTED_MODULE_0___default.a(remoteUrl, this.remoteUrl.href);
     }
 
@@ -3017,6 +3012,14 @@ class palindrom_Palindrom {
         if (this.debug) {
             this.remoteObj = JSON.parse(JSON.stringify(this.obj));
         }
+    }
+    /**
+     * Stops all networking, stops listeners, heartbeats, etc.
+     */
+    stop() {
+        this.unobserve();
+        this.reconnector.stopReconnecting();
+        this.network.stop();
     }
 }
 

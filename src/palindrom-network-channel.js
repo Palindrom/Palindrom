@@ -111,7 +111,7 @@ export default class PalindromNetworkChannel {
         this.heartbeat.stop();
         this.palindrom.reconnector.triggerReconnection();
         this.onConnectionError(palindromError);
-    }    
+    }
     /**
      * Handle an error which probably won't go away on itself (basically forward upstream)
      * @param {PalindromConnectionError} palindromError
@@ -129,7 +129,7 @@ export default class PalindromNetworkChannel {
         this.heartbeat.notifyReceive();
         this.onReceive(...arguments);
     }
-    
+
     /**
      * Send any text message by currently established channel
      * @TODO: handle readyState 2-CLOSING & 3-CLOSED (tomalec)
@@ -306,23 +306,6 @@ export default class PalindromNetworkChannel {
     }
 
     _setRemoteUrl(remoteUrl) {
-        if (
-            this.remoteUrlSet &&
-            this.remoteUrl &&
-            this.remoteUrl != remoteUrl
-        ) {
-            const message = [
-                'Session lost.',
-                'Server replied with a different session ID than the already set one.',
-                'Possibly a server restart happened while you were working.',
-                'Please reload the page.',
-                'Previous session ID: ' + this.remoteUrl,
-                'New session ID: ' + remoteUrl
-            ].join('\n');
-
-            throw new PalindromError(message);
-        }
-        this.remoteUrlSet = true;
         this.remoteUrl = new URL(remoteUrl, this.remoteUrl.href);
     }
 
