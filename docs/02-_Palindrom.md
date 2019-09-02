@@ -35,7 +35,7 @@ var palindrom = new Palindrom({property: value});
 
 Property               | Type          | Default                | Description
 ---                    | ---           | ---                    | ---
-`remoteUrl`            | **`String`**      |  **Required**          | PATCH server URL
+`remoteUrl`            | **`String`**      |  **Required**          | PATCH server URL. The remote URL should be absolute, but in a Web browser environment you can provide a relative URL that will be resolved using the window location as the base URL. The remote URL is not constant. It can be redirected by the server to a new URL by sending a response with a HTTP header `location` or `x-location`. If that happens, any current WebSocket connections will be kept, however new requests will be sent to the new remote URL.
 `onStateReset`         | *Function*    |                        | Called after initial state object is received from the server (NOT necessarily after WS connection was established), **it can be called again if the state was reset by a root-replacing patch**. Arguments: **`Object`** New state object
 `useWebSocket`         | *Boolean*     | `false`                | Set to `true` to enable WebSocket support
 `debug`                | *Boolean*     | `true`                 | Toggle debugging mode
@@ -119,7 +119,7 @@ You can upgrade the communication protocol to use WebSocket by setting `useWebSo
 
 WebSocket is a replacement for requests that would be sent using `HTTP PATCH` otherwise. The requests sent over `HTTP GET` (such as link clicks) are not affected.
 
-:bulb: Note that this is an experimental implementation in which the WebSocket upgrade request URL taken from `X-Location` header of your first AJAX call response.
+The WebSocket URL is determined automatically by replacing the `http(s)://` in the `remoteURL` with `ws(s)://`.
 
 Sample:
 
