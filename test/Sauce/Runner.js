@@ -14,6 +14,7 @@ if (!username) {
     {
       browserName: "chrome",
       platform: "Windows 10",
+      flags: ['--enable-experimental-web-platform-features'],
       username: username,
       accessKey: accessKey,
       name: "Palindrom in Chrome",
