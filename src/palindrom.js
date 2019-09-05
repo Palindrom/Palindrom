@@ -207,14 +207,6 @@ class Palindrom {
     }
 
     handleLocalChange(operation) {
-        // it's a single operation, we need to check only it's value
-        operation.value &&
-            findRangeErrors(
-                operation.value,
-                this.onOutgoingPatchValidationError,
-                operation.path
-            );
-
         const patch = [operation];
         if (this.debug) {
             this.validateSequence(this.remoteObj, patch);
