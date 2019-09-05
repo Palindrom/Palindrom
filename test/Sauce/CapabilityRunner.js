@@ -14,7 +14,7 @@ const retryUntil = require("bluebird-retry");
 function CapabilityRunner(caps) {
   return new Promise(function(resolve, reject) {
     console.log("");
-    console.log(caps.name.green);
+    console.log((caps.name+ ': Running tests').green);
 
     const username = caps.username;
     const accessKey = caps.accessKey;
@@ -94,13 +94,15 @@ function CapabilityRunner(caps) {
       console.log("Ending session: " + driver.sessionID);
 
       const result = {
-        name: "Summary: Passed: " +
+        name: caps.name + 
+          " summary: Passed: " +
           resultsSummary.passed +
           ", pending: " +
           resultsSummary.pending +
           ", failed: " +
           resultsSummary.failed,
-        passed: hadErrored === 0
+        passed: hadErrored === 0,
+        'custom-data': resultsSummary
       };
 
       driver.quit();

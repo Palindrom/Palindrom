@@ -16,7 +16,7 @@ if (!username) {
       platform: "Windows 10",
       username: username,
       accessKey: accessKey,
-      name: "Chrome: Running tests",
+      name: "Palindrom in Chrome",
       "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER
     },
     {
@@ -24,7 +24,7 @@ if (!username) {
       platform: "Windows 10",
       username: username,
       accessKey: accessKey,
-      name: "Firefox: Running tests",
+      name: "Palindrom in Firefox",
       "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER
     },
     {
@@ -32,7 +32,7 @@ if (!username) {
       platform: "Windows 10",
       username: username,
       accessKey: accessKey,
-      name: "MicrosoftEdge: Running tests",
+      name: "Palindrom in MicrosoftEdge",
       "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER
     }
   ];
