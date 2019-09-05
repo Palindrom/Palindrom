@@ -1,8 +1,11 @@
-import { Palindrom } from '../../src/palindrom';
-import assert from 'assert';
+import { Palindrom } from '../../src/palindrom.js';
+// ugly CJS to ESM translation done by mocha
+import chai from 'chai';
+const assert = chai.assert;
+
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import { sleep, getTestURL } from '../utils';
+import { sleep, getTestURL } from '../utils/index.js';
 
 describe('Callbacks', () => {
     let palindrom;
