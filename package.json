@@ -34,14 +34,14 @@
     }
   ],
   "dependencies": {
-    "events": "^1.1.1",
-    "fast-json-patch": "^2.0.7",
-    "json-patch-ot": "^1.0.1",
-    "json-patch-ot-agent": "2.0.0-rc.0",
+    "events": "^3.0.0",
+    "fast-json-patch": "^3.0.0-0",
+    "json-patch-ot": "^3.0.0-0",
+    "json-patch-ot-agent": "^2.0.0-rc.1",
     "jsonpatcherproxy": "^0.0.10",
-    "node-fetch": "^2.3.0",
+    "node-fetch": "^2.6.0",
     "url": "^0.11.0",
-    "websocket": "^1.0.26"
+    "websocket": "^1.0.29"
   },
   "devDependencies": {
     "@webcomponents/webcomponentsjs": "^2.2.10",
@@ -59,7 +59,7 @@
     "sinon": "^7.4.2",
     "sinon-chai": "^3.3.0",
     "webpack": "^4.39.3",
-    "webpack-cli": "^3.3.6",
+    "webpack-cli": "^3.3.7",
     "webpack-node-externals": "^1.7.2"
   },
   "scripts": {
