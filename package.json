@@ -35,7 +35,7 @@
   ],
   "dependencies": {
     "events": "^3.0.0",
-    "fast-json-patch": "^3.0.0-0",
+    "fast-json-patch": "^3.0.0-1",
     "json-patch-ot": "^3.0.0-0",
     "json-patch-ot-agent": "^2.0.0-rc.1",
     "jsonpatcherproxy": "^0.0.10",
