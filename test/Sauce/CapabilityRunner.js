@@ -6,7 +6,7 @@
  */
 
 const colors = require("colors");
-const SauceLabs = require("saucelabs");
+const SauceLabs = require("saucelabs").default;
 const webdriver = require("selenium-webdriver");
 const Promise = require("bluebird");
 const retryUntil = require("bluebird-retry");
@@ -105,7 +105,7 @@ function CapabilityRunner(caps) {
 
       driver.quit();
 
-      saucelabs.updateJob(driver.sessionID, result, function() {
+      saucelabs.updateJob(username, driver.sessionID, result).then(function() {
         if (hadErrored === 0) {
           resolve();
         } else {
