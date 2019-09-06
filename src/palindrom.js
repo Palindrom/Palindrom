@@ -6,10 +6,11 @@
 
 import PalindromNetworkChannel from './palindrom-network-channel';
 import { applyPatch, validate } from 'fast-json-patch';
-import JSONPatcherProxy from 'jsonpatcherproxy';
-import { JSONPatchQueueSynchronous, JSONPatchQueue } from 'json-patch-queue';
-import JSONPatchOT from 'json-patch-ot';
-import JSONPatchOTAgent from 'json-patch-ot-agent';
+import { JSONPatcherProxy } from 'jsonpatcherproxy';
+import { JSONPatchQueue } from 'json-patch-queue';
+import { JSONPatchQueueSynchronous } from 'json-patch-queue/src/json-patch-queue-synchronous';
+import { JSONPatchOT } from 'json-patch-ot';
+import { JSONPatchOTAgent } from 'json-patch-ot-agent';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors';
 import Reconnector from './reconnector';
 import NoQueue from './noqueue';
