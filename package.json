@@ -38,7 +38,7 @@
     "fast-json-patch": "^3.0.0-1",
     "json-patch-ot": "^3.0.0-0",
     "json-patch-ot-agent": "^2.0.0-rc.1",
-    "jsonpatcherproxy": "^0.0.10",
+    "jsonpatcherproxy": "^0.1.0-0",
     "node-fetch": "^2.6.0",
     "url": "^0.11.0",
     "websocket": "^1.0.29"
