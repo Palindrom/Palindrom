@@ -1,15 +1,15 @@
-import './inject-mock-websocket';
+import './inject-mock-websocket.js';
 
-import './specs/palindrom.callbacks.test';
-import './specs/palindrom.test';
-import './specs/palindrom.validate.test';
-import './specs/palindrom.websockets.test';
-import './specs/onPatchSentAndReceived.test';
-import './specs/palindrom.errors.test';
+import './specs/palindrom.callbacks.test.js';
+import './specs/palindrom.test.js';
+import './specs/palindrom.validate.test.js';
+import './specs/palindrom.websockets.test.js';
+import './specs/onPatchSentAndReceived.test.js';
+import './specs/palindrom.errors.test.js';
 import './specs/palindrom.ignore.defineProperty.test.js';
-import './specs/palindrom.filter.test';
-import './specs/client/heartbeat';
+import './specs/palindrom.filter.test.js';
+import './specs/client/heartbeat.js';
 
 import './specs/browser-package.js';
-import './specs/dom/index';
-import './specs/dom/ot'; //fixme: this does not clean up well, must be the last one
+import './specs/dom/index.js';
+import './specs/dom/ot.js'; //fixme: this does not clean up well, must be the last one

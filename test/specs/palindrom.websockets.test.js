@@ -1,11 +1,11 @@
 import { Server as MockSocketServer } from 'mock-socket';
-import { Palindrom } from '../../src/palindrom';
+import { Palindrom } from '../../src/palindrom.js';
 import chai, { expect, assert } from 'chai';
 import sinonChai  from "sinon-chai";
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import { PalindromConnectionError } from '../../src/palindrom-errors';
-import { sleep, getTestURL } from '../utils';
+import { PalindromConnectionError } from '../../src/palindrom-errors.js';
+import { sleep, getTestURL } from '../utils/index.js';
 
 chai.use(sinonChai);
 

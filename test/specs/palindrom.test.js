@@ -1,8 +1,8 @@
-import { Palindrom } from '../../src/palindrom';
+import { Palindrom } from '../../src/palindrom.js';
 import { expect, assert } from 'chai';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import { sleep, getTestURL } from '../utils';
+import { sleep, getTestURL } from '../utils/index.js';
 const currentVersion = require('../../package.json').version;
 
 describe('Palindrom', () => {

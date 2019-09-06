@@ -1,10 +1,10 @@
-import { Palindrom } from '../../src/palindrom';
-import { PalindromError } from '../../src/palindrom-errors';
+import { Palindrom } from '../../src/palindrom.js';
+import { PalindromError } from '../../src/palindrom-errors.js';
 import assert from 'assert';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { Server as MockSocketServer } from 'mock-socket';
-import { sleep, getTestURL } from '../utils';
+import { sleep, getTestURL } from '../utils/index.js';
 
 describe('Palindrom', () => {
     let palindrom;

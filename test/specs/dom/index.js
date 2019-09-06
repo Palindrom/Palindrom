@@ -1,8 +1,8 @@
-import { PalindromDOM } from '../../../src/palindrom-dom';
+import { PalindromDOM } from '../../../src/palindrom-dom.js';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import chai, { expect, assert } from 'chai';
-import { sleep, getTestURL, createAndClickOnLinkNested, createAndClickOnLinkNestedShadowDOM, createAndClickOnLinkNestedShadowDOMContent, createAndClickOnLink, createAndClickOnLinkWithoutPrevention } from '../../utils';
+import { sleep, getTestURL, createAndClickOnLinkNested, createAndClickOnLinkNestedShadowDOM, createAndClickOnLinkNestedShadowDOMContent, createAndClickOnLink, createAndClickOnLinkWithoutPrevention } from '../../utils/index.js';
 import chaiAsPromised from "chai-as-promised";
 fetchMock.config.overwriteRoutes = true;
 chai.use(chaiAsPromised);
