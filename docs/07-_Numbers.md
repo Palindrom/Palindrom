@@ -13,9 +13,8 @@ It is not a limitation of JSON, but of JavaScript, that all numbers are stored i
 
 #### Numbers validation
 
-To ensure the validity of your data all the time, Palindrom validates each number it comes across and throws an error when it encounters an out-of-range value, from both endpoints:
+To ensure the validity of your data, Palindrom validates each number it receives from the remote and throws an error when it encounters an out-of-range value. It calls `onIncomingPatchValidationError` with a `RangeError` with an elaborate message.
 
-- **From Server's endpoint**: It calls `onIncomingPatchValidationError` with a `RangeError` with an elaborate message.
-- **From Client's endpoint**: It calls `onOutgoingPatchValidationError` with a `RangeError` with an elaborate message.
+For more information about this callback, please refer to Section 2.
 
-For more information about these callbacks, please refer to Section 2.
+> Please note, that Palindrom does not validate outgoing patches. Palindrom operates in JavaScript environment, if you are using numbers above `MAX_SAFE_INTEGER` in JavaScript you should already expect the unexpected. Also, the `JSONPatcherProxy` used by Palindrom to observe changes in your object may not observe the changes that happen above `MAX_SAFE_INTEGER`, see [limitations section in JSONPatcherProxy README](https://github.com/Palindrom/JSONPatcherProxy#limitations)
