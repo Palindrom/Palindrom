@@ -239,7 +239,7 @@ describe('Palindrom', () => {
                             1}, variable path is: /amount`
                     );
                 });
-                it('Outgoing patch: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {
+                it('Outgoing patch: out of range numbers should not call onOutgoingPatchValidationError callback', async () => {
                     const onOutgoingPatchValidationError = sinon.spy().named('onOutgoingPatchValidationError');
     
                     palindrom = new Palindrom({
@@ -252,17 +252,7 @@ describe('Palindrom', () => {
     
                     await sleep(20);
     
-                    assert(onOutgoingPatchValidationError.calledOnce, `Expected \`onOutgoingPatchValidationError\` to be called once, but was called ${onOutgoingPatchValidationError.callCount} times`);
-    
-                    const errorPassed = onOutgoingPatchValidationError.getCall(0).args[0];
-    
-                    assert(errorPassed instanceof RangeError);
-    
-                    assert.equal(
-                        errorPassed.message,
-                        `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
-                            1}, variable path is: /amount`
-                    );
+                    assert(onOutgoingPatchValidationError.notCalled, `Expected \`onOutgoingPatchValidationError\` not to be called, but was called ${onOutgoingPatchValidationError.callCount} times`);
                 });
             });
             context('WebSocket', () => {
@@ -272,32 +262,6 @@ describe('Palindrom', () => {
                 });
                 afterEach(() => {
                     mockSocketServer.stop();
-                });
-                it('Outgoing patch: out of range numbers should call onOutgoingPatchValidationError event with a RangeError', async () => {    
-                    const onOutgoingPatchValidationError = sinon.spy().named('onOutgoingPatchValidationError');
-    
-                    palindrom = new Palindrom({
-                        remoteUrl,
-                        useWebSocket: true,
-                        onOutgoingPatchValidationError,
-                        onStateReset: obj => obj.amount = Number.MAX_SAFE_INTEGER + 1,
-                    });
-    
-                    await sleep();
-    
-                    // make sure WS is up
-                    assert.equal(palindrom.network._ws.readyState, 1);
-    
-                    assert(onOutgoingPatchValidationError.calledOnce);
-    
-                    const errorPassed = onOutgoingPatchValidationError.getCall(0).args[0];
-    
-                    assert(errorPassed instanceof RangeError);
-    
-                    assert.equal(
-                        errorPassed.message,
-                        `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER + 1}, variable path is: /amount`
-                    );
                 });
                 it('Incoming patch: out of range numbers should call onIncomingPatchValidationError event with a RangeError', async () => {    
                     const onIncomingPatchValidationError = sinon.spy().named('onIncomingPatchValidationError');
@@ -329,6 +293,23 @@ describe('Palindrom', () => {
                         `A number that is either bigger than Number.MAX_INTEGER_VALUE or smaller than Number.MIN_INTEGER_VALUE has been encountered in a patch, value is: ${Number.MAX_SAFE_INTEGER +
                             1}, variable path is: /amount`
                     );
+                });
+                it('Outgoing patch: out of range numbers should not call onOutgoingPatchValidationError callback', async () => {    
+                    const onOutgoingPatchValidationError = sinon.spy().named('onOutgoingPatchValidationError');
+    
+                    palindrom = new Palindrom({
+                        remoteUrl,
+                        useWebSocket: true,
+                        onOutgoingPatchValidationError,
+                        onStateReset: obj => obj.amount = Number.MAX_SAFE_INTEGER + 1,
+                    });
+    
+                    await sleep();
+    
+                    // make sure WS is up
+                    assert.equal(palindrom.network._ws.readyState, 1, 'Web Socket should be ready');
+    
+                    assert(onOutgoingPatchValidationError.notCalled, `Expected \`onOutgoingPatchValidationError\` not to be called, but was called ${onOutgoingPatchValidationError.callCount} times`);
                 });
             });
         });
