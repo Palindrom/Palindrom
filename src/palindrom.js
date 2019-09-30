@@ -8,7 +8,6 @@ import PalindromNetworkChannel from './palindrom-network-channel';
 import { applyPatch, validate } from 'fast-json-patch';
 import { JSONPatcherProxy } from 'jsonpatcherproxy';
 import { JSONPatchQueue } from 'json-patch-queue';
-import { JSONPatchQueueSynchronous } from 'json-patch-queue/src/json-patch-queue-synchronous';
 import { JSONPatchOT } from 'json-patch-ot';
 import { JSONPatchOTAgent } from 'json-patch-ot-agent';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors';
@@ -103,39 +102,28 @@ class Palindrom {
             options.pingIntervalS
         );
         /**
-         * how many OT operations are there in each patch 0, 1 or 2
+         * how many meta (OT) operations are there in each patch 0 or 2
          */
         this.OTPatchIndexOffset = 0;
         // choose queuing engine
-        if (options.localVersionPath) {
-            if (!options.remoteVersionPath) {
-                this.OTPatchIndexOffset = 1;
-                // just versioning
-                this.queue = new JSONPatchQueueSynchronous(
+        if (options.localVersionPath && options.remoteVersionPath) {
+            // double versioning or OT
+            this.OTPatchIndexOffset = 2;
+            if (options.ot) {
+                this.queue = new JSONPatchOTAgent(
                     this.obj,
-                    options.localVersionPath,
+                    JSONPatchOT.transform,
+                    [options.localVersionPath, options.remoteVersionPath],
                     this.validateAndApplySequence.bind(this),
                     options.purity
                 );
             } else {
-                this.OTPatchIndexOffset = 2;
-                // double versioning or OT
-                if (options.ot) {
-                    this.queue = new JSONPatchOTAgent(
-                        this.obj,
-                        JSONPatchOT.transform,
-                        [options.localVersionPath, options.remoteVersionPath],
-                        this.validateAndApplySequence.bind(this),
-                        options.purity
-                    );
-                } else {
-                    this.queue = new JSONPatchQueue(
-                        this.obj,
-                        [options.localVersionPath, options.remoteVersionPath],
-                        this.validateAndApplySequence.bind(this),
-                        options.purity
-                    ); // full or noop OT
-                }
+                this.queue = new JSONPatchQueue(
+                    this.obj,
+                    [options.localVersionPath, options.remoteVersionPath],
+                    this.validateAndApplySequence.bind(this),
+                    options.purity
+                ); // full or noop OT
             }
         } else {
             // no queue - just api

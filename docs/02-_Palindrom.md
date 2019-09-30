@@ -49,7 +49,7 @@ Property               | Type          | Default                | Description
 `onConnectionError`    | *Function*    |                        | Helper callback triggered when socket connection closed, socket connection failed to establish, http requiest failed. Arguments: **`PalindromConnectionError`** `error`). `PalindromConnectionError` has the following properties: (**`String`** `message`, **`String`** `side <Server\|Client>`, **`String`** `url`, **`String`** `connectionType`). It extends ES6 Error class, it has the stack trace with all the information `Error` class offers.
 `onIncomingPatchValidationError`    | *Function*    |                        | Helper callback triggered when a wrong patch is received. Arguments: **`Error`** Error object
 `onOutgoingPatchValidationError`    | *Function*    |                        | Helper callback triggered when a wrong patch is locally issued. Arguments: **`Error`** Error object
-`localVersionPath`     | *JSONPointer* | `disabled`             | local version path, set it to enable Versioned JSON Patch communication
+`localVersionPath`     | *JSONPointer* | `disabled`             | local version path, set it (and `remoteVersionPath`) to enable Versioned JSON Patch communication
 `remoteVersionPath`    | *JSONPointer* | `disabled`             | remote version path, set it (and `localVersionPath`) to enable Versioned JSON Patch communication
 `ot`                   | *Boolean*     | `false`                | `true` to enable OT (requires `localVersionPath` and `remoteVersionPath`)
 `purity`               | *Boolean*     | `false`                | `true` to enable purist mode of OT
