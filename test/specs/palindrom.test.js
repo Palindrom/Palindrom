@@ -3,7 +3,9 @@ import { expect, assert } from 'chai';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { sleep, getTestURL } from '../utils/index.js';
-const currentVersion = require('../../package.json').version;
+// import { version as currentVersion } from '../../package.json';
+import package_json from '../../package.json';
+const currentVersion = package_json.version;
 
 describe('Palindrom', () => {
     let palindrom;
