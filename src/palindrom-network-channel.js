@@ -185,9 +185,9 @@ export default class PalindromNetworkChannel {
         const upgradeURL = this.wsUrl;
 
         this.closeConnection();
+        // use injected Mock if available,
         // in node, WebSocket will have `w3cwebsocket` prop. In the browser it won't
-
-        const UsedSocket = WebSocket.w3cwebsocket || WebSocket;
+        const UsedSocket =  typeof global !== 'undefined' && global.WebSocket || WebSocket.w3cwebsocket || WebSocket;
         this._ws = new UsedSocket(upgradeURL);
         this._ws.onopen = event => {
             this.onStateChange(this._ws.readyState, upgradeURL);

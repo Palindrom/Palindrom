@@ -110,20 +110,5 @@ module.exports = [
             extensions: ['.js']
         },
         devtool: "source-map"
-    },
-    /* bundle tests for node */
-    {
-        entry: './test/runner.js',
-        output: {
-            filename: '../test/runner-node.js',
-            library: 'Tests',
-            libraryTarget: 'commonjs'
-        },
-        mode: 'development',
-        target: 'node',
-        resolve: {
-            extensions: ['.js'],
-            alias: { websocket: '../test/inject-mock-websocket.js' }
-        }
     }
 ];

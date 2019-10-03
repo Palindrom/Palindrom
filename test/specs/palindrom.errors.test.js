@@ -3,7 +3,8 @@ import { PalindromError } from '../../src/palindrom-errors.js';
 import assert from 'assert';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import { Server as MockSocketServer } from 'mock-socket';
+import * as MockSocket from 'mock-socket';
+const MockSocketServer = (MockSocket.default || MockSocket).Server
 import { sleep, getTestURL } from '../utils/index.js';
 
 describe('Palindrom', () => {

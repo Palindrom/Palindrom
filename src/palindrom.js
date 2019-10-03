@@ -5,7 +5,7 @@
  */
 
 import PalindromNetworkChannel from './palindrom-network-channel.js';
-import { applyPatch, validate } from 'fast-json-patch';
+import { applyPatch, validate } from 'fast-json-patch/index.mjs';
 import { JSONPatcherProxy } from 'jsonpatcherproxy';
 import { JSONPatchQueue } from 'json-patch-queue';
 import { JSONPatchOT } from 'json-patch-ot';

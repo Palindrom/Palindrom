@@ -2,7 +2,7 @@ import { Palindrom } from '../../src/palindrom.js';
 import assert from 'assert';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import { validate, JsonPatchError } from 'fast-json-patch';
+import { validate, JsonPatchError } from 'fast-json-patch/index.mjs';
 import { sleep, getTestURL } from '../utils/index.js';
 
 describe('Palindrom', () => {

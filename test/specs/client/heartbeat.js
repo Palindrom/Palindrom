@@ -1,5 +1,6 @@
 import { Palindrom } from '../../../src/palindrom.js';
-import chai, { expect, assert } from 'chai';
+import chai from 'chai';
+const expect = chai.expect;
 import sinonChai  from "sinon-chai";
 import { sleep, getTestURL } from '../../utils/index.js';
 import sinon from 'sinon';

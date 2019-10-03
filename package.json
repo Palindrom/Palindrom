@@ -23,6 +23,7 @@
     "url": "http://www.starcounter.com/"
   },
   "main": "./src/palindrom-dom.js",
+  "type": "module",
   "files": [
     "dist/*",
     "src/*"
@@ -67,8 +68,8 @@
     "serve": "serve",
     "test": "npm run build && npm run test-node && npm run test-sauce",
     "test-sauce": "node test/Sauce/Runner.js",
-    "test-node": "mocha test/runner-node.js",
-    "debug-tests-node": "mocha --inspect-brk test/runner-node.js",
+    "test-node": " mocha --experimental-modules --delay test/mocha-run.js",
+    "test-node:debug": " mocha --inspect-brk --experimental-modules --delay test/mocha-run.js",
     "build-watch": "webpack  --watch",
     "build": "webpack"
   }

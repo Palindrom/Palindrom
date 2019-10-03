@@ -1,7 +1,11 @@
 import { PalindromDOM } from '../../../src/palindrom-dom.js';
 import assert from 'assert';
 import fetchMock from 'fetch-mock';
-import { Server as MockSocketServer, MockWebSocket } from 'mock-socket';
+import * as MockSocket from 'mock-socket';
+const {
+    Server: MockSocketServer,
+    MockWebSocket
+}  = (MockSocket.default || MockSocket);
 import { sleep, getTestURL } from '../../utils/index.js';
 
 /** only run DOM tests in browsers */
