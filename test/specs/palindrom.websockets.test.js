@@ -14,6 +14,10 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     const remoteUrl = getTestURL('testURL');
     const wsUrl = getTestURL('testURL', false, true);
     let palindrom;
+    let webSocketConnection;
+    beforeEach(() => {
+        webSocketConnection = sinon.spy().named('Web Socket connection');
+    });
     afterEach(() => {
         fetchMock.restore();
         mockSocketServer.stop();
@@ -21,8 +25,6 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         palindrom.stop();
         palindrom = undefined;
     });
-
-
 
     describe('Before HTTP connection is established', () => {
         const remoteUrl = getTestURL('testURL/koko');
@@ -34,7 +36,6 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             });
         });
         it("shouldn't start a Web Socket connection", async () => {
-            const webSocketConnection = sinon.spy().named('Web Socket Connection');
             mockSocketServer.on('connection', webSocketConnection);
     
     
@@ -87,21 +88,13 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     
     describe('After HTTP connection is established', () => {
         const remoteUrl = getTestURL('testURL/koko');
-        let webSocketConnection;
         beforeEach(() => {
             mockSocketServer = new MockSocketServer(getTestURL('testURL/koko', false, true));
-            webSocketConnection = sinon.spy().named('Web Socket connection');
             mockSocketServer.on('connection', webSocketConnection);
             fetchMock.mock(remoteUrl, {
                 status: 200,
                 body: '{"hello": "world"}'
             });
-        });
-        afterEach(() => {
-            fetchMock.restore();
-            mockSocketServer.stop();
-            // stop all networking and DOM activity of abandoned instance
-            palindrom.stop();
         });
         it("should start a Web Socket connection", async () => {
             palindrom = new Palindrom({
@@ -209,29 +202,10 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         });
     });
 
-
-    it('should try to open WebSocket connection', async () => {
-        mockSocketServer = new MockSocketServer(wsUrl);
-        fetchMock.mock(remoteUrl, {
-            status: 200,
-            headers: { location: remoteUrl },
-            body: '{"hello": "world"}'
-        });
-
-        palindrom = new Palindrom({
-            remoteUrl,
-            useWebSocket: true
-        });
-        /* socket should be undefined before HTTP delay */
-        assert(typeof palindrom.network._ws === 'undefined');
-
-        await sleep();
-        /* socket should NOT be undefined after HTTP delay */
-        assert(typeof palindrom.network._ws !== 'undefined');
-    });
-
     it('should calculate WebSocket URL correctly', async () => {
         mockSocketServer = new MockSocketServer(wsUrl);
+        mockSocketServer.on('connection', webSocketConnection);
+            
         fetchMock.mock(remoteUrl, {
             status: 200,
             headers: { location: remoteUrl },
@@ -244,8 +218,9 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         });
 
         await sleep();
-        assert.equal(
-            palindrom.network._ws.url,
+
+        const websocket = webSocketConnection.lastCall.args[0];
+        expect(websocket, "Web Socket").to.have.property('url', 
             getTestURL('testURL', false, true)
         );
     });
@@ -254,6 +229,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         mockSocketServer = new MockSocketServer(
             getTestURL('default/this_is_a_nice_url', false, true)
         );
+        mockSocketServer.on('connection', webSocketConnection);
 
         fetchMock.mock(remoteUrl, {
             status: 200,
@@ -267,8 +243,9 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         });
 
         await sleep();
-        assert.equal(
-            palindrom.network._ws.url,
+        
+        const websocket = webSocketConnection.lastCall.args[0];
+        expect(websocket, "Web Socket").to.have.property('url', 
             getTestURL('default/this_is_a_nice_url', false, true)
         );
     });
@@ -277,6 +254,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         mockSocketServer = new MockSocketServer(
             getTestURL('default/this_is_a_nice_url', false, true)
         );
+        mockSocketServer.on('connection', webSocketConnection);
 
         fetchMock.mock(remoteUrl, {
             status: 200,
@@ -290,8 +268,8 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         });
 
         await sleep();
-        assert.equal(
-            palindrom.network._ws.url,
+        const websocket = webSocketConnection.lastCall.args[0];
+        expect(websocket, "Web Socket").to.have.property('url', 
             getTestURL('default/this_is_a_nice_url', false, true)
         );
     });
@@ -300,6 +278,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         mockSocketServer = new MockSocketServer(
             getTestURL('default/this_is_a_nice_url', false, true)
         );
+        mockSocketServer.on('connection', webSocketConnection);
 
         fetchMock.mock(getTestURL('testURL/koko'), {
             status: 200,
@@ -313,8 +292,8 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         });
 
         await sleep();
-        assert.equal(
-            palindrom.network._ws.url,
+        const websocket = webSocketConnection.lastCall.args[0];
+        expect(websocket, "Web Socket").to.have.property('url', 
             getTestURL('default/this_is_a_nice_url', false, true)
         );
     });
@@ -323,6 +302,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         mockSocketServer = new MockSocketServer(
             getTestURL('testURL/default/this_is_a_nice_url', false, true)
         );
+        mockSocketServer.on('connection', webSocketConnection);
 
         fetchMock.mock(getTestURL('testURL/koko'), {
             status: 200,
@@ -336,8 +316,8 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         });
 
         await sleep();
-        assert.equal(
-            palindrom.network._ws.url,
+        const websocket = webSocketConnection.lastCall.args[0];
+        expect(websocket, "Web Socket").to.have.property('url', 
             getTestURL('testURL/default/this_is_a_nice_url', false, true)
         );
     });
@@ -345,6 +325,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         mockSocketServer = new MockSocketServer(
             'wss://localhost/testURL/default/this_is_a_nice_url'
         );
+        mockSocketServer.on('connection', webSocketConnection);
 
         fetchMock.mock('https://localhost/testURL/koko', {
             status: 200,
@@ -358,9 +339,9 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         });
 
         await sleep();
-        assert(
-            palindrom.network._ws.url ===
-                'wss://localhost/testURL/default/this_is_a_nice_url'
+        const websocket = webSocketConnection.lastCall.args[0];
+        expect(websocket, "Web Socket").to.have.property('url', 
+            'wss://localhost/testURL/default/this_is_a_nice_url'
         );
     });
 
@@ -368,6 +349,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         mockSocketServer = new MockSocketServer(
             getTestURL('test/this_is_a_nice_url', false, true)
         );
+        mockSocketServer.on('connection', webSocketConnection);
 
         const remoteUrl = getTestURL('testURL/koko');
 
@@ -383,9 +365,9 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
         });
 
         await sleep();
-        assert(
-            palindrom.network._ws.url ===
-                getTestURL('test/this_is_a_nice_url', false, true)
+        const websocket = webSocketConnection.lastCall.args[0];
+        expect(websocket, "Web Socket").to.have.property('url', 
+            getTestURL('test/this_is_a_nice_url', false, true)
         );
     });
     
