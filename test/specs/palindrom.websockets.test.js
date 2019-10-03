@@ -27,9 +27,8 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     });
 
     describe('Before HTTP connection is established', () => {
-        const remoteUrl = getTestURL('testURL/koko');
         beforeEach(() => {
-            mockSocketServer = new MockSocketServer(getTestURL('testURL/koko', false, true));
+            mockSocketServer = new MockSocketServer(wsUrl);
             fetchMock.mock(remoteUrl, {
                 status: 200,
                 body: '{"hello": "world"}'
@@ -88,7 +87,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     
     describe('After HTTP connection is established', () => {
         it("should start a Web Socket connection", async () => {
-            mockSocketServer = new MockSocketServer(getTestURL('testURL/koko', false, true));
+            mockSocketServer = new MockSocketServer(wsUrl);
             mockSocketServer.on('connection', webSocketConnection);
             fetchMock.mock(remoteUrl, {
                 status: 200,
@@ -122,7 +121,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
 
             const websocket = webSocketConnection.lastCall.args[0];
             expect(websocket, "Web Socket").to.have.property('url', 
-                getTestURL('testURL/koko', false, true)
+                wsUrl
             );
         });
 
@@ -181,14 +180,14 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             );
             mockSocketServer.on('connection', webSocketConnection);
 
-            fetchMock.mock(getTestURL('testURL/koko'), {
+            fetchMock.mock(remoteUrl, {
                 status: 200,
                 headers: { location: '/default/this_is_a_nice_url' },
                 body: '{"hello": "world"}'
             });
 
             palindrom = new Palindrom({
-                remoteUrl: getTestURL('testURL/koko'),
+                remoteUrl: remoteUrl,
                 useWebSocket: true
             });
 
@@ -205,14 +204,14 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
             );
             mockSocketServer.on('connection', webSocketConnection);
 
-            fetchMock.mock(getTestURL('testURL/koko'), {
+            fetchMock.mock(remoteUrl, {
                 status: 200,
                 headers: { location: 'default/this_is_a_nice_url' },
                 body: '{"hello": "world"}'
             });
 
             palindrom = new Palindrom({
-                remoteUrl: getTestURL('testURL/koko'),
+                remoteUrl,
                 useWebSocket: true
             });
 
@@ -245,12 +244,10 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
                 'wss://localhost/testURL/default/this_is_a_nice_url'
             );
         });
-        
+
         describe('', () => {
-            
-            const remoteUrl = getTestURL('testURL/koko');
             beforeEach(() => {
-                mockSocketServer = new MockSocketServer(getTestURL('testURL/koko', false, true));
+                mockSocketServer = new MockSocketServer(wsUrl);
                 mockSocketServer.on('connection', webSocketConnection);
                 fetchMock.mock(remoteUrl, {
                     status: 200,
@@ -358,7 +355,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
     
     it('should send a patch over HTTP before ws.readyState is OPENED, and over WebSocket after ws.readyState is OPENED', async () => {
         const socketMessageSpy = sinon.spy().named('socket message');
-        mockSocketServer = new MockSocketServer(getTestURL('testURL/koko', false, true));
+        mockSocketServer = new MockSocketServer(wsUrl);
         mockSocketServer.on('connection', socket => {
             socket.on('message', socketMessageSpy);
         });
