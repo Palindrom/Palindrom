@@ -245,32 +245,7 @@ describe('Sockets - if `useWebSocket` flag is provided', () => {
                 'wss://localhost/testURL/default/this_is_a_nice_url'
             );
         });
-
-        it('should use same host, port, username, and password as provided in remoteUrl', async () => {
-            mockSocketServer = new MockSocketServer(
-                getTestURL('test/this_is_a_nice_url', false, true)
-            );
-            mockSocketServer.on('connection', webSocketConnection);
-
-            const remoteUrl = getTestURL('testURL/koko');
-
-            fetchMock.mock(remoteUrl, {
-                status: 200,
-                headers: { location: getTestURL('test/this_is_a_nice_url') },
-                body: '{"hello": "world"}'
-            });
-
-            palindrom = new Palindrom({
-                remoteUrl,
-                useWebSocket: true
-            });
-
-            await sleep();
-            const websocket = webSocketConnection.lastCall.args[0];
-            expect(websocket, "Web Socket").to.have.property('url', 
-                getTestURL('test/this_is_a_nice_url', false, true)
-            );
-        });
+        
         describe('', () => {
             
             const remoteUrl = getTestURL('testURL/koko');
