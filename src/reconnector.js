@@ -37,7 +37,7 @@ export default function Reconnector(
         } else {
             onReconnectionCountdown(timeToCurrentReconnectionMs);
             timeToCurrentReconnectionMs -= 1000;
-            setTimeout(step, 1000);
+            reconnection = setTimeout(step, 1000);
         }
     };
 
