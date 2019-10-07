@@ -10,5 +10,6 @@ import './specs/palindrom.ignore.defineProperty.test.js';
 import './specs/palindrom.filter.test';
 import './specs/client/heartbeat';
 
+import './specs/browser-package.js';
 import './specs/dom/index';
 import './specs/dom/ot'; //fixme: this does not clean up well, must be the last one
