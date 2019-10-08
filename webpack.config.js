@@ -7,7 +7,7 @@ module.exports = [
         entry: './src/palindrom.js',
         output: {
             filename: 'palindrom.js',
-            libraryExport: 'default',
+            libraryExport: 'Palindrom',
             library: 'Palindrom',
             libraryTarget: 'var'
         },
@@ -31,7 +31,7 @@ module.exports = [
         entry: './src/palindrom.js',
         output: {
             filename: 'palindrom.min.js',
-            libraryExport: 'default',
+            libraryExport: 'Palindrom',
             library: 'Palindrom',
             libraryTarget: 'var'
         },
@@ -50,7 +50,7 @@ module.exports = [
         entry: './src/palindrom-dom.js',
         output: {
             filename: 'palindrom-dom.js',
-            libraryExport: 'default',
+            libraryExport: 'PalindromDOM',
             library: 'PalindromDOM',
             libraryTarget: 'var'
         },
@@ -73,7 +73,7 @@ module.exports = [
         entry: './src/palindrom-dom.js',
         output: {
             filename: 'palindrom-dom.min.js',
-            libraryExport: 'default',
+            libraryExport: 'PalindromDOM',
             library: 'PalindromDOM',
             libraryTarget: 'var'
         },
