@@ -22,7 +22,6 @@ module.exports = [
         /* (see: https://webpack.js.org/configuration/externals/) */
         externals: {
             websocket: 'WebSocket',
-            './URLShim': 'URL',
             'node-fetch': 'null'
         },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
@@ -41,7 +40,6 @@ module.exports = [
         },
         externals: {
             websocket: 'WebSocket',
-            './URLShim': 'URL',
             'node-fetch': 'null'
         },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
@@ -64,7 +62,6 @@ module.exports = [
         },
         externals: {
             websocket: 'WebSocket',
-            './URLShim': 'URL',
             'node-fetch': 'null'
         },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
@@ -83,7 +80,6 @@ module.exports = [
         },
         externals: {
             websocket: 'WebSocket',
-            './URLShim': 'URL',
             'node-fetch': 'null'
         },
         plugins: [new webpack.BannerPlugin('Palindrom, version: ' + version)]
@@ -103,7 +99,6 @@ module.exports = [
         },
         externals: {
             websocket: 'window.MockWebSocket',
-            './URLShim': 'URL',
             'node-fetch': 'null'
         },
         resolve: {
