@@ -1,4 +1,3 @@
-import URL from './URLShim.js';
 import { PalindromError, PalindromConnectionError } from './palindrom-errors.js';
 import { Heartbeat, NoHeartbeat } from './heartbeat.js';
 /* this package will be empty in the browser bundle,
