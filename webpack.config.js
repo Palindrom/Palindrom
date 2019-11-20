@@ -104,6 +104,16 @@ module.exports = [
         resolve: {
             extensions: ['.js']
         },
-        devtool: "source-map"
+        devtool: "source-map",
+        // add special loader, not to use it at all, just to make webpack not throw an error when parsing non executable code with `import.meta`
+        // Thanks https://github.com/webpack/webpack/issues/6719, to be removed once fixed in webpack.
+        module: {
+            rules: [
+              {
+                test: /\.js$/,
+                loader: require.resolve('@open-wc/webpack-import-meta-loader')
+              }
+            ]
+        }
     }
 ];

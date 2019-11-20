@@ -5,11 +5,23 @@ import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { sleep, getTestURL } from '../utils/index.js';
 // import { version as currentVersion } from '../../package.json';
-import package_json from '../../package.json';
-const currentVersion = package_json.version;
 
 describe('Palindrom', () => {
     let palindrom;
+    let currentVersion;
+    before(async ()=>{
+        if(typeof require !== 'undefined'){ // in webpack shim JSON modules with its require
+            currentVersion = require('../../package.json').version;
+        } else if(typeof window === 'undefined'){ // in node shim JSON modules with imported require
+            const createRequire = await import('module').then(m=>m.createRequire);
+            const require = createRequire(import.meta.url);
+            currentVersion = require('../../package.json').version;
+        } else {
+            currentVersion = await fetch('../../package.json')
+                .then(response => response.json())
+                .then(json => json.version);
+        }
+    });
     afterEach(() => {
         fetchMock.restore();
         // stop all networking and DOM activity of abandoned instance
