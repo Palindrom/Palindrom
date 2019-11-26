@@ -1,4 +1,4 @@
-const CapabilityRunner = require("./CapabilityRunner");
+import CapabilityRunner  from './CapabilityRunner.js';
 
 const username = process.env.SAUCE_USERNAME;
 const accessKey = process.env.SAUCE_ACCESS_KEY;

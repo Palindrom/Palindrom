@@ -5,11 +5,16 @@
  * MIT license
  */
 
-const colors = require("colors");
-const SauceLabs = require("saucelabs").default;
-const webdriver = require("selenium-webdriver");
-const Promise = require("bluebird");
-const retryUntil = require("bluebird-retry");
+import 'colors';
+import Promise from "bluebird";
+// hack the pre-ESM weird packages
+// it's default.default
+import sauceLabs from 'saucelabs';
+const SauceLabs = sauceLabs.default;
+// named "default"
+import {default as webdriver} from 'selenium-webdriver';
+// named "default"
+import {default as retryUntil} from 'bluebird-retry';
 
 function CapabilityRunner(caps) {
   return new Promise(function(resolve, reject) {
@@ -118,4 +123,4 @@ function CapabilityRunner(caps) {
   });
 }
 
-module.exports = CapabilityRunner;
+export default CapabilityRunner;
