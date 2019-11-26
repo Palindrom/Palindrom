@@ -1,5 +1,6 @@
 import { PalindromDOM } from '../../../src/palindrom-dom.js';
-import assert from 'assert';
+import chai from 'chai';
+const { assert } = chai;
 import fetchMock from 'fetch-mock';
 import * as MockSocket from 'mock-socket';
 const {

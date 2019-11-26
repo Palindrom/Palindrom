@@ -1,6 +1,7 @@
 import { Palindrom } from '../../src/palindrom.js';
 import { PalindromError } from '../../src/palindrom-errors.js';
-import assert from 'assert';
+import chai from 'chai';
+const { assert } = chai;
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import * as MockSocket from 'mock-socket';

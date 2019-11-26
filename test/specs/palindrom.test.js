@@ -10,9 +10,7 @@ describe('Palindrom', () => {
     let palindrom;
     let currentVersion;
     before(async ()=>{
-        if(typeof require !== 'undefined'){ // in webpack shim JSON modules with its require
-            currentVersion = require('../../package.json').version;
-        } else if(typeof window === 'undefined'){ // in node shim JSON modules with imported require
+        if(typeof window === 'undefined'){ // in node shim JSON modules with imported require
             const createRequire = await import('module').then(m=>m.createRequire);
             const require = createRequire(import.meta.url);
             currentVersion = require('../../package.json').version;

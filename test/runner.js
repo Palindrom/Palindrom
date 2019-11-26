@@ -1,5 +1,3 @@
-import './inject-mock-websocket.js';
-
 import './specs/palindrom.callbacks.test.js';
 import './specs/palindrom.test.js';
 import './specs/palindrom.validate.test.js';
