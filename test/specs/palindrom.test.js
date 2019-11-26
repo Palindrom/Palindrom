@@ -5,14 +5,18 @@ import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { sleep, getTestURL } from '../utils/index.js';
 // import { version as currentVersion } from '../../package.json';
+// Workaround Edge's lack of dynamic import
+// Load everything, so browser could load empty module, without complaints for missing named export.
+import * as nodeModule from 'module';
 
 describe('Palindrom', () => {
     let palindrom;
     let currentVersion;
     before(async ()=>{
         if(typeof window === 'undefined'){ // in node shim JSON modules with imported require
-            const createRequire = await import('module').then(m=>m.createRequire);
-            const require = createRequire(import.meta.url);
+            // Once Edge moves to Chromium/supports dynamic imports we can get back to bellow
+            // const createRequire = await import('module').then(m=>m.createRequire);
+            const require = nodeModule.createRequire(import.meta.url);
             currentVersion = require('../../package.json').version;
         } else {
             currentVersion = await fetch('../../package.json')

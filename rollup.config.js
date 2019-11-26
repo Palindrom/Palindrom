@@ -23,7 +23,8 @@ const plugins = [
 // use native browser `fetch` and `WebSocket` instead of packages used in NodeJS
 const globals = {
     'node-fetch': 'fetch',
-    'websocket': 'WebSocket'
+    'websocket': 'WebSocket',
+    'module': 'window'
 }
 const external = ['websocket', 'node-fetch', 'module'];
 // bundle for browser, export all named exports
