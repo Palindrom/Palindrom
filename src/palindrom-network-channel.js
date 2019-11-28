@@ -2,8 +2,11 @@ import { PalindromError, PalindromConnectionError } from './palindrom-errors.js'
 import { Heartbeat, NoHeartbeat } from './heartbeat.js';
 /* this package will be empty in the browser bundle,
 and will import https://www.npmjs.com/package/websocket in node */
-import WebSocket from 'websocket';
 import nodeFetch from 'node-fetch';
+import importedWebSocket from 'websocket';
+// unify global object, to read widow and injected mocks for fetch and WebSocket in the same fashion
+const glob = typeof globalThis !== 'undefined' && globalThis || typeof window !== 'undefined' && window || typeof global !== 'undefined' && global;
+
 
 const CLIENT = 'Client';
 const SERVER = 'Server';
@@ -184,10 +187,11 @@ export default class PalindromNetworkChannel {
         const upgradeURL = this.wsUrl;
 
         this.closeConnection();
-        // use injected Mock if available,
+        // use injected/mocked socket if available
+        let  isomorphicWebSocket =  glob.WebSocket || importedWebSocket;
         // in node, WebSocket will have `w3cwebsocket` prop. In the browser it won't
-        const UsedSocket =  typeof global !== 'undefined' && global.WebSocket || WebSocket.w3cwebsocket || WebSocket;
-        this._ws = new UsedSocket(upgradeURL);
+        isomorphicWebSocket =  isomorphicWebSocket.w3cwebsocket || isomorphicWebSocket;
+        this._ws = new isomorphicWebSocket(upgradeURL);
         this._ws.onopen = event => {
             this.onStateChange(this._ws.readyState, upgradeURL);
             onSocketOpenCallback && onSocketOpenCallback(event);
@@ -384,7 +388,7 @@ export default class PalindromNetworkChannel {
 
         this.onSend(data, url, method);
 
-        let isomorphicFetch = typeof global !== 'undefined' && global.fetch || nodeFetch;
+        const isomorphicFetch = glob.fetch || nodeFetch;
 
         const response = await isomorphicFetch(url, config);
         const dataPromise = response.json();

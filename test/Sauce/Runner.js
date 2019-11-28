@@ -36,12 +36,24 @@ if (!username) {
       "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER
     }
   ];
+  const importCaps = [
+    {
+      browserName: "chrome",
+      platform: "Windows 10",
+      username: username,
+      accessKey: accessKey, 
+      flags: ['--enable-experimental-web-platform-features'],      
+      name: "Palindrom in Chrome(with import-maps",
+      "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER
+    }
+  ];
 
   (async function() {
       try {
           await CapabilityRunner(allCaps[0]);
           await CapabilityRunner(allCaps[1]);
           await CapabilityRunner(allCaps[2]);
+          await CapabilityRunner(importCaps[0], true);
 
           console.log('Done!');
           process.exit(0);

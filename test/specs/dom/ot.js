@@ -5,14 +5,14 @@ import fetchMock from 'fetch-mock';
 import * as MockSocket from 'mock-socket';
 const {
     Server: MockSocketServer,
-    MockWebSocket
+    WebSocket: MockWebSocket
 }  = (MockSocket.default || MockSocket);
 import { sleep, getTestURL } from '../../utils/index.js';
 
 /** only run DOM tests in browsers */
 if (typeof window !== 'undefined') {
-    if (!global.MockWebSocket) {
-        global.MockWebSocket = MockWebSocket;
+    if (!window.MockWebSocket) {
+        window.MockWebSocket = MockWebSocket;
     }
 
     const initialResponse = {

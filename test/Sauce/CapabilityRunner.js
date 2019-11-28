@@ -16,7 +16,7 @@ import {default as webdriver} from 'selenium-webdriver';
 // named "default"
 import {default as retryUntil} from 'bluebird-retry';
 
-function CapabilityRunner(caps) {
+function CapabilityRunner(caps, importMap = false) {
   return new Promise(function(resolve, reject) {
     console.log("");
     console.log((caps.name+ ': Running tests').green);
@@ -39,6 +39,8 @@ function CapabilityRunner(caps) {
       .build();
 
     driver.get(
+      importMap ? 
+      "http://localhost:5000/test/ImportMapRunner.html" :
       "http://localhost:5000/test/MochaSpecRunner.html"
     );
 

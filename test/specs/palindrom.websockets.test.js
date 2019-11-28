@@ -9,7 +9,7 @@ import sinon from 'sinon';
 import { PalindromConnectionError } from '../../src/palindrom-errors.js';
 import { sleep, getTestURL } from '../utils/index.js';
 
-chai.use(sinonChai);
+sinonChai && chai.use(sinonChai);
 
 describe('Sockets - if `useWebSocket` flag is provided', () => {
     let mockSocketServer;

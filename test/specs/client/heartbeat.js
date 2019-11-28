@@ -7,7 +7,7 @@ import sinon from 'sinon';
 
 import fetchMock from 'fetch-mock';
 
-chai.use(sinonChai);
+sinonChai && chai.use(sinonChai);
 
 const localVersion = '_ver#s';
 const remoteVersion = '_ver#c$';

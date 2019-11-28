@@ -8,7 +8,7 @@ import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
 import { sleep, getTestURL } from '../utils/index.js';
 
-chai.use(sinonChai);
+sinonChai && chai.use(sinonChai);
 
 describe('Callbacks, onPatchSent and onPatchReceived', () => {
     const remoteUrl = getTestURL('testURL');
