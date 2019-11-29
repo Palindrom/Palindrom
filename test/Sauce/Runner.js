@@ -41,10 +41,13 @@ if (!username) {
       browserName: "chrome",
       platform: "Windows 10",
       username: username,
-      accessKey: accessKey, 
-      flags: ['--enable-experimental-web-platform-features'],      
-      name: "Palindrom in Chrome(with import-maps",
-      "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER
+      accessKey: accessKey,
+      'goog:chromeOptions': {
+        args: ['--enable-experimental-web-platform-features']
+      }, 
+      name: "Palindrom in Chrome (with import-maps)",
+      "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER,
+      extendedDebugging : true
     }
   ];
 
