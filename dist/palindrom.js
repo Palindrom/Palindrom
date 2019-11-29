@@ -1,9 +1,9 @@
 /*! Palindrom, version: 6.3.0 */
-(function (exports, WebSocket, nodeFetch) {
+(function (exports, nodeFetch, importedWebSocket) {
             'use strict';
 
-            WebSocket = WebSocket && WebSocket.hasOwnProperty('default') ? WebSocket['default'] : WebSocket;
             nodeFetch = nodeFetch && nodeFetch.hasOwnProperty('default') ? nodeFetch['default'] : nodeFetch;
+            importedWebSocket = importedWebSocket && importedWebSocket.hasOwnProperty('default') ? importedWebSocket['default'] : importedWebSocket;
 
             var global$1 = (typeof global !== "undefined" ? global :
                         typeof self !== "undefined" ? self :
@@ -114,6 +114,10 @@
             function NoHeartbeat() {
                 this.start = this.stop = this.notifySend = this.notifyReceive = () => {};
             }
+
+            // unify global object, to read widow and injected mocks for fetch and WebSocket in the same fashion
+            const glob = typeof globalThis !== 'undefined' && globalThis || typeof window !== 'undefined' && window || typeof global$1 !== 'undefined' && global$1;
+
 
             const CLIENT$1 = 'Client';
             const SERVER = 'Server';
@@ -294,10 +298,11 @@
                     const upgradeURL = this.wsUrl;
 
                     this.closeConnection();
-                    // use injected Mock if available,
+                    // use injected/mocked socket if available
+                    let  isomorphicWebSocket =  glob.WebSocket || importedWebSocket;
                     // in node, WebSocket will have `w3cwebsocket` prop. In the browser it won't
-                    const UsedSocket =  typeof global$1 !== 'undefined' && global$1.WebSocket || WebSocket.w3cwebsocket || WebSocket;
-                    this._ws = new UsedSocket(upgradeURL);
+                    isomorphicWebSocket =  isomorphicWebSocket.w3cwebsocket || isomorphicWebSocket;
+                    this._ws = new isomorphicWebSocket(upgradeURL);
                     this._ws.onopen = event => {
                         this.onStateChange(this._ws.readyState, upgradeURL);
                         onSocketOpenCallback && onSocketOpenCallback(event);
@@ -494,7 +499,7 @@
 
                     this.onSend(data, url, method);
 
-                    let isomorphicFetch = typeof global$1 !== 'undefined' && global$1.fetch || nodeFetch;
+                    const isomorphicFetch = glob.fetch || nodeFetch;
 
                     const response = await isomorphicFetch(url, config);
                     const dataPromise = response.json();
@@ -2529,4 +2534,4 @@
 
             exports.Palindrom = Palindrom;
 
-}(this.window = this.window || {}, WebSocket, fetch));
+}(this.window = this.window || {}, fetch, WebSocket));
