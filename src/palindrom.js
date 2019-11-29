@@ -15,7 +15,7 @@ import Reconnector from './reconnector.js';
 import NoQueue from './noqueue.js';
 
 /* this variable is bumped automatically when you call npm version */
-const palindromVersion = '6.3.0';
+const palindromVersion = '6.4.0-0';
 
 if (typeof global === 'undefined') {
     if (typeof window !== 'undefined') {

@@ -1,4 +1,4 @@
-/*! PalindromDOM, version: 6.3.0 */
+/*! PalindromDOM, version: 6.4.0-0 */
 (function (exports, nodeFetch, importedWebSocket) {
             'use strict';
 
@@ -2201,7 +2201,7 @@
              */
 
             /* this variable is bumped automatically when you call npm version */
-            const palindromVersion = '6.3.0';
+            const palindromVersion = '6.4.0-0';
 
             /**
              * Defines a connection to a remote PATCH server, serves an object that is persistent between browser and server.
