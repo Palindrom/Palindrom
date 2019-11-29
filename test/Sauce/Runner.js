@@ -1,4 +1,4 @@
-const CapabilityRunner = require("./CapabilityRunner");
+import CapabilityRunner  from './CapabilityRunner.js';
 
 const username = process.env.SAUCE_USERNAME;
 const accessKey = process.env.SAUCE_ACCESS_KEY;
@@ -36,12 +36,27 @@ if (!username) {
       "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER
     }
   ];
+  const importCaps = [
+    {
+      browserName: "chrome",
+      platform: "Windows 10",
+      username: username,
+      accessKey: accessKey,
+      'goog:chromeOptions': {
+        args: ['--enable-experimental-web-platform-features']
+      }, 
+      name: "Palindrom in Chrome (with import-maps)",
+      "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER,
+      extendedDebugging : true
+    }
+  ];
 
   (async function() {
       try {
           await CapabilityRunner(allCaps[0]);
           await CapabilityRunner(allCaps[1]);
           await CapabilityRunner(allCaps[2]);
+          await CapabilityRunner(importCaps[0], true);
 
           console.log('Done!');
           process.exit(0);

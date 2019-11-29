@@ -17,7 +17,7 @@
     ".npmignore",
     ".travis.yml",
     "bump-version.json",
-    "webpack.config.json",
+    "rollup.config.js",
     "node_modules"
   ]
 }

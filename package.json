@@ -23,6 +23,7 @@
     "url": "http://www.starcounter.com/"
   },
   "main": "./src/palindrom-dom.js",
+  "type": "module",
   "files": [
     "dist/*",
     "src/*"
@@ -45,31 +46,32 @@
   },
   "devDependencies": {
     "@webcomponents/webcomponentsjs": "^2.2.10",
-    "bluebird": "^3.5.5",
+    "bluebird": "^3.7.1",
     "bluebird-retry": "^0.11.0",
     "chai": "^4.2.0",
-    "chai-as-promised": "^7.1.1",
-    "colors": "^1.3.3",
-    "fetch-mock": "^7.3.9",
+    "colors": "^1.4.0",
+    "fetch-mock": "^8.0.0",
     "mocha": "^6.2.0",
     "mock-socket": "^9.0.0",
-    "saucelabs": "^2.3.0",
+    "rollup": "^1.27.5",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^5.1.2",
+    "saucelabs": "^3.0.1",
     "selenium-webdriver": "^3.6.0",
     "serve": "^11.1.0",
     "sinon": "^7.4.2",
-    "sinon-chai": "^3.3.0",
-    "webpack": "^4.39.3",
-    "webpack-cli": "^3.3.7",
-    "webpack-node-externals": "^1.7.2"
+    "sinon-chai": "^3.3.0"
   },
   "scripts": {
-    "version": "node ./bump-version.js && webpack && git add -A",
+    "version": "node ./bump-version.js && rollup --config && git add -A",
     "serve": "serve",
     "test": "npm run build && npm run test-node && npm run test-sauce",
     "test-sauce": "node test/Sauce/Runner.js",
-    "test-node": "mocha test/runner-node.js",
-    "debug-tests-node": "mocha --inspect-brk test/runner-node.js",
-    "build-watch": "webpack  --watch",
-    "build": "webpack"
+    "test-node": " mocha --experimental-modules --delay test/mocha-run.cjs",
+    "test-node:debug": " mocha --inspect-brk --experimental-modules --delay test/mocha-run.cjs",
+    "build-watch": "rollup --config  --watch",
+    "build": "rollup --config"
   }
 }

@@ -1,12 +1,14 @@
-import { Server as MockSocketServer } from 'mock-socket';
-import { Palindrom } from '../../src/palindrom';
-import chai, { expect, assert } from 'chai';
+import * as MockSocket from 'mock-socket';
+const MockSocketServer = (MockSocket.default || MockSocket).Server
+import { Palindrom } from '../../src/palindrom.js';
+import chai from 'chai';
+const { expect, assert } = chai;
 import sinonChai  from "sinon-chai";
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import { sleep, getTestURL } from '../utils';
+import { sleep, getTestURL } from '../utils/index.js';
 
-chai.use(sinonChai);
+sinonChai && chai.use(sinonChai);
 
 describe('Callbacks, onPatchSent and onPatchReceived', () => {
     const remoteUrl = getTestURL('testURL');

@@ -1,13 +1,18 @@
-import { PalindromDOM } from '../../../src/palindrom-dom';
-import assert from 'assert';
+import { PalindromDOM } from '../../../src/palindrom-dom.js';
+import chai from 'chai';
+const { assert } = chai;
 import fetchMock from 'fetch-mock';
-import { Server as MockSocketServer, MockWebSocket } from 'mock-socket';
-import { sleep, getTestURL } from '../../utils';
+import * as MockSocket from 'mock-socket';
+const {
+    Server: MockSocketServer,
+    WebSocket: MockWebSocket
+}  = (MockSocket.default || MockSocket);
+import { sleep, getTestURL } from '../../utils/index.js';
 
 /** only run DOM tests in browsers */
 if (typeof window !== 'undefined') {
-    if (!global.MockWebSocket) {
-        global.MockWebSocket = MockWebSocket;
+    if (!window.MockWebSocket) {
+        window.MockWebSocket = MockWebSocket;
     }
 
     const initialResponse = {

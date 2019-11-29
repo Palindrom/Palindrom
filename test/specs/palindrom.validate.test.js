@@ -1,9 +1,10 @@
-import { Palindrom } from '../../src/palindrom';
-import assert from 'assert';
+import { Palindrom } from '../../src/palindrom.js';
+import chai from 'chai';
+const { assert } = chai;
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import { validate, JsonPatchError } from 'fast-json-patch';
-import { sleep, getTestURL } from '../utils';
+import { validate, JsonPatchError } from 'fast-json-patch/index.mjs';
+import { sleep, getTestURL } from '../utils/index.js';
 
 describe('Palindrom', () => {
     let palindrom;

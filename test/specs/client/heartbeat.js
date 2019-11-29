@@ -1,12 +1,13 @@
-import { Palindrom } from '../../../src/palindrom';
-import chai, { expect, assert } from 'chai';
+import { Palindrom } from '../../../src/palindrom.js';
+import chai from 'chai';
+const expect = chai.expect;
 import sinonChai  from "sinon-chai";
-import { sleep, getTestURL } from '../../utils';
+import { sleep, getTestURL } from '../../utils/index.js';
 import sinon from 'sinon';
 
 import fetchMock from 'fetch-mock';
 
-chai.use(sinonChai);
+sinonChai && chai.use(sinonChai);
 
 const localVersion = '_ver#s';
 const remoteVersion = '_ver#c$';

@@ -26,16 +26,9 @@ See [Dependencies page](06-_Dependencies.md) for details about what's in the bun
 npm install palindrom --save
 ```
 
-Then you can require it CommonJS or ES6/TS style:
+Then you can import it ES Modules style:
 
 ```js
-// CommonJS
-// require Palindrom constructor
-const Palindrom = require('palindrom').Palindrom;
-// or, require PalindromDOM constructor
-const PalindromDOM = require('palindrom').PalindromDOM;
-
-// ES6/TS
 // import Palindrom constructor
 import { Palindrom } from 'palindrom';
 // or, import PalindromDOM constructor

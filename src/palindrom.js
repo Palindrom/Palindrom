@@ -4,15 +4,15 @@
  * MIT license
  */
 
-import PalindromNetworkChannel from './palindrom-network-channel';
-import { applyPatch, validate } from 'fast-json-patch';
+import PalindromNetworkChannel from './palindrom-network-channel.js';
+import { applyPatch, validate } from 'fast-json-patch/index.mjs';
 import { JSONPatcherProxy } from 'jsonpatcherproxy';
 import { JSONPatchQueue } from 'json-patch-queue';
 import { JSONPatchOT } from 'json-patch-ot';
 import { JSONPatchOTAgent } from 'json-patch-ot-agent';
-import { PalindromError, PalindromConnectionError } from './palindrom-errors';
-import Reconnector from './reconnector';
-import NoQueue from './noqueue';
+import { PalindromError, PalindromConnectionError } from './palindrom-errors.js';
+import Reconnector from './reconnector.js';
+import NoQueue from './noqueue.js';
 
 /* this variable is bumped automatically when you call npm version */
 const palindromVersion = '6.3.0';

@@ -44,7 +44,6 @@ bower install Palindrom --save
 Then add source to your HTML
 
 ```html
-
 <!-- include Palindrom bundle -->
 <script src="bower_components/Palindrom/dist/palindrom.js"></script>
 ```
@@ -56,14 +55,9 @@ See [Dependencies section](https://github.com/Palindrom/Palindrom#dependencies) 
 npm install palindrom --save
 ```
 
-Then you can require it CommonJS or ES6/TS style:
+Then you can import it ES Modules style:
 
 ```js
-// CommonJS
-const Palindrom = require('palindrom').Palindrom;
-const PalindromDOM = require('palindrom').PalindromDOM;
-
-// ES6/TS
 import { Palindrom } from 'palindrom';
 import { PalindromDOM } from 'palindrom';
 ```

@@ -1,11 +1,10 @@
-import { PalindromDOM } from '../../../src/palindrom-dom';
+import { PalindromDOM } from '../../../src/palindrom-dom.js';
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import chai, { expect, assert } from 'chai';
-import { sleep, getTestURL, createAndClickOnLinkNested, createAndClickOnLinkNestedShadowDOM, createAndClickOnLinkNestedShadowDOMContent, createAndClickOnLink, createAndClickOnLinkWithoutPrevention } from '../../utils';
-import chaiAsPromised from "chai-as-promised";
+import chai from 'chai';
+const { expect, assert } = chai;
+import { sleep, getTestURL, createAndClickOnLinkNested, createAndClickOnLinkNestedShadowDOM, createAndClickOnLinkNestedShadowDOMContent, createAndClickOnLink, createAndClickOnLinkWithoutPrevention } from '../../utils/index.js';
 fetchMock.config.overwriteRoutes = true;
-chai.use(chaiAsPromised);
 
 /** only run DOM tests in browsers */
 if (typeof window !== 'undefined') {
@@ -531,8 +530,17 @@ if (typeof window !== 'undefined') {
                             'palindrom-after-redirect',
                             handler
                         );
-                        const morphPromise = palindrom.morphUrl(getTestURL('testURL-599'))
-                        await assert.isRejected(morphPromise, Error, /HTTP.*509/);
+                        const morphPromise = palindrom.morphUrl(getTestURL('testURL-599'));
+                        const morphPromiseRejection = morphPromise
+                            .then(
+                                () => { 
+                                    assert.fail('morphUrl promise should be rejected, but was resolved'); 
+                                },
+                                reason => reason
+                            );
+                        const rejection = await morphPromiseRejection;
+                        expect(rejection).to.be.instanceOf(Error);
+                        expect(rejection).to.have.property('message').that.match(/HTTP.*509/);
 
                         await sleep()
                         assert.equal(hasFiredEvent, false);

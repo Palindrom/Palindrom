@@ -1,7 +1,8 @@
-import { Palindrom } from '../../src/palindrom';
+import { Palindrom } from '../../src/palindrom.js';
 import fetchMock from 'fetch-mock';
-import assert from 'assert';
-import { sleep, getTestURL } from '../utils';
+import chai from 'chai';
+const { assert } = chai;
+import { sleep, getTestURL } from '../utils/index.js';
 
 describe('Palindrom', () => {
     describe('#ignore by defineProperty', () => {

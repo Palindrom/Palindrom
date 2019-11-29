@@ -1,8 +1,9 @@
-import { Palindrom } from '../../src/palindrom';
-import assert from 'assert';
+import { Palindrom } from '../../src/palindrom.js';
+import chai from 'chai';
+const { assert } = chai;
 import fetchMock from 'fetch-mock';
 import sinon from 'sinon';
-import { sleep, getTestURL } from '../utils';
+import { sleep, getTestURL } from '../utils/index.js';
 
 describe('Callbacks', () => {
     let palindrom;
