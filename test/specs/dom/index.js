@@ -353,7 +353,6 @@ if (typeof window !== 'undefined') {
                     fetchMock.restore();
                 });
 
-
                 describe('should send JSON Patch HTTP request once history state get changed', function() {
                     it('by `palindrom.morphURL(url)` method', async () => {
                         const url = getTestURL('newUrl');
