@@ -2,8 +2,10 @@
 (function (exports, nodeFetch, importedWebSocket) {
             'use strict';
 
-            nodeFetch = nodeFetch && nodeFetch.hasOwnProperty('default') ? nodeFetch['default'] : nodeFetch;
-            importedWebSocket = importedWebSocket && importedWebSocket.hasOwnProperty('default') ? importedWebSocket['default'] : importedWebSocket;
+            function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+
+            var nodeFetch__default = /*#__PURE__*/_interopDefaultLegacy(nodeFetch);
+            var importedWebSocket__default = /*#__PURE__*/_interopDefaultLegacy(importedWebSocket);
 
             var global$1 = (typeof global !== "undefined" ? global :
                         typeof self !== "undefined" ? self :
@@ -187,7 +189,11 @@
                     if (pingIntervalS) {
                         const intervalMs = pingIntervalS * 1000;
                         this.heartbeat = new Heartbeat(
-                            () => {this.send([]);},
+                            () => {
+                                if (!this.isAwaitingPatchUsingHTTP) {
+                                    this.send([]);
+                                }
+                            },
                             this._handleConnectionError.bind(this),
                             intervalMs,
                             intervalMs
@@ -299,7 +305,7 @@
 
                     this.closeConnection();
                     // use injected/mocked socket if available
-                    let  isomorphicWebSocket =  glob.WebSocket || importedWebSocket;
+                    let  isomorphicWebSocket =  glob.WebSocket || importedWebSocket__default['default'];
                     // in node, WebSocket will have `w3cwebsocket` prop. In the browser it won't
                     isomorphicWebSocket =  isomorphicWebSocket.w3cwebsocket || isomorphicWebSocket;
                     this._ws = new isomorphicWebSocket(upgradeURL);
@@ -403,6 +409,8 @@
                  * @see #_fetch
                  */
                 async getPatchUsingHTTP(href) {
+                    this.isAwaitingPatchUsingHTTP = true;
+                    
                     // we don't need to try catch here because we want the error to be thrown at whoever calls getPatchUsingHTTP
                     const method = 'GET';
                     const data = await this._fetch(
@@ -413,9 +421,12 @@
                         true
                     );
 
+                    this.isAwaitingPatchUsingHTTP = false;
+
                     //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
                     //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
                     this._notifyReceive(data, href, method);
+                    
                     return data;
                 }
 
@@ -499,7 +510,7 @@
 
                     this.onSend(data, url, method);
 
-                    const isomorphicFetch = glob.fetch || nodeFetch;
+                    const isomorphicFetch = glob.fetch || nodeFetch__default['default'];
 
                     const response = await isomorphicFetch(url, config);
                     const dataPromise = response.json();
@@ -2533,5 +2544,7 @@
             }
 
             exports.Palindrom = Palindrom;
+
+            Object.defineProperty(exports, '__esModule', { value: true });
 
 }(this.window = this.window || {}, fetch, WebSocket));
