@@ -1,4 +1,4 @@
-import { Palindrom } from '../../../src/palindrom.js';
+import { PalindromDOM } from '../../../src/palindrom-dom.js';
 import chai from 'chai';
 const expect = chai.expect;
 import sinonChai  from "sinon-chai";
@@ -8,6 +8,7 @@ import sinon from 'sinon';
 import fetchMock from 'fetch-mock';
 
 sinonChai && chai.use(sinonChai);
+//fetchMock.config.overwriteRoutes = true;
 
 const localVersion = '_ver#s';
 const remoteVersion = '_ver#c$';
@@ -30,7 +31,7 @@ describe('HTTP Client', () => {
                 body: '{"hello": "world"}'
             }, {name: 'establish'});
 
-            palindrom = new Palindrom({
+            palindrom = new PalindromDOM({
                 remoteUrl: getTestURL('testURL'),
                 ot: true,
                 localVersionPath,
@@ -63,7 +64,7 @@ describe('HTTP Client', () => {
                 
                 onReconnectionCountdown = sinon.spy();
                 onReconnectionEnd = sinon.spy();
-                palindrom = new Palindrom({
+                palindrom = new PalindromDOM({
                     remoteUrl: getTestURL('testURL'),
                     ot: true,
                     localVersionPath,
@@ -115,6 +116,35 @@ describe('HTTP Client', () => {
                 expect(pingCall.headers).to.have.property('Accept','application/json-patch+json');
                 
             }).timeout(pingIntervalS*2*1000);
+            
+            it(`should NOT send empty (\`[]\`) after ${pingIntervalS} seconds after establish if there is an ongoing request`, async () => {
+                const currLoc = window.location.href;
+                const url = getTestURL('newUrl');
+                
+                // The `newUrl` takes more time to respond than the ping timeout.
+                fetchMock.mock(url, {
+                    status: 200,
+                    body: `[
+                        { "op": "replace", "path": "${remoteVersionPath}", "value": 101 },
+                        { "op": "test", "path": "${localVersionPath}", "value": 1 }
+                    ]`
+                }, {
+                    delay: pingIntervalS * 1000 + 50
+                });
+                
+                // Establish connection.
+                expect(fetchMock.calls('establish')).to.be.lengthOf(1);
+                expect(fetchMock.called(/testURL/)).to.be.ok;
+                
+                // Navigate to a slow page.
+                await palindrom.morphUrl(url);
+                expect(window.location.pathname).to.equal('/newUrl');
+                history.pushState(null, null, currLoc);
+                
+                // There shall be no ping if there is a pending navigation request.
+                expect(fetchMock.calls('ping')).to.be.lengthOf(0);
+            }).timeout(pingIntervalS * 2 * 1000);
+            
             it(`should send empty patch (\`[]\`) after ${pingIntervalS} seconds after sending local change`, async () => {
 
                 // establish

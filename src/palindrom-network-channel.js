@@ -76,7 +76,11 @@ export default class PalindromNetworkChannel {
         if (pingIntervalS) {
             const intervalMs = pingIntervalS * 1000;
             this.heartbeat = new Heartbeat(
-                () => {this.send([]);},
+                () => {
+                    if (!this.isAwaitingPatchUsingHTTP) {
+                        this.send([]);
+                    }
+                },
                 this._handleConnectionError.bind(this),
                 intervalMs,
                 intervalMs
@@ -292,6 +296,8 @@ export default class PalindromNetworkChannel {
      * @see #_fetch
      */
     async getPatchUsingHTTP(href) {
+        this.isAwaitingPatchUsingHTTP = true;
+        
         // we don't need to try catch here because we want the error to be thrown at whoever calls getPatchUsingHTTP
         const method = 'GET';
         const data = await this._fetch(
@@ -302,9 +308,12 @@ export default class PalindromNetworkChannel {
             true
         );
 
+        this.isAwaitingPatchUsingHTTP = false;
+
         //TODO the below assertion should pass. However, some tests wrongly respond with an object instead of a patch
         //console.assert(data instanceof Array, "expecting parsed JSON-Patch");
         this._notifyReceive(data, href, method);
+        
         return data;
     }
 
