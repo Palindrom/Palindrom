@@ -1,4 +1,4 @@
-import { version } from "./package.json";
+const pkg = require('./package.json');
 import { terser } from "rollup-plugin-terser";
 import commonjs from 'rollup-plugin-commonjs';
 import nodeResolve from 'rollup-plugin-node-resolve';
@@ -48,12 +48,12 @@ export default [
             {
                 ...output,
                 file: 'dist/palindrom.js',
-                banner: `/*! Palindrom, version: ${version} */`
+                banner: `/*! Palindrom, version: ${pkg.version} */`
             },
             {
                 ...output,
                 file: 'dist/palindrom.min.js',
-                banner: `/*! Palindrom, version: ${version} */`
+                banner: `/*! Palindrom, version: ${pkg.version} */`
             }
         ],
         plugins
@@ -66,12 +66,12 @@ export default [
             {
                 ...output,
                 file: 'dist/palindrom-dom.js',
-                banner: `/*! PalindromDOM, version: ${version} */`
+                banner: `/*! PalindromDOM, version: ${pkg.version} */`
             },
             {
                 ...output,
                 file: 'dist/palindrom-dom.min.js',
-                banner: `/*! PalindromDOM, version: ${version} */`
+                banner: `/*! PalindromDOM, version: ${pkg.version} */`
             }
         ],
         plugins

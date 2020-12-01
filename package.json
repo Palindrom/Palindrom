@@ -50,7 +50,7 @@
     "bluebird-retry": "^0.11.0",
     "chai": "^4.2.0",
     "colors": "^1.4.0",
-    "fetch-mock": "^8.0.0",
+    "fetch-mock": "^9.11.0",
     "mocha": "^6.2.0",
     "mock-socket": "^9.0.0",
     "rollup": "^1.27.5",
